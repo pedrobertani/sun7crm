@@ -12,7 +12,7 @@ Base inicial do CRM comercial, construída a partir do visual da demo aprovada. 
 - Contatos com responsável, interesse, observações e temperatura manual.
 - Dois quadros Kanban, com edição, ordem e transferência de cartões ao remover etapas.
 - Movimentação por arraste no desktop ou seletor de etapa, inclusive por teclado/toque.
-- Tarefas manuais, prazos e conclusão.
+- Tarefas manuais em Lista ou Kanban (A fazer, Em andamento, Concluídas), com prazo, responsável e movimentação por arraste ou seletor.
 - Equipe, perfis de visualização, identidade e templates estética/genérico.
 - Sete paletas de cores por empresa, incluindo as cinco opções do StudioPro, aplicadas também a gráficos e modais.
 - Configurações em abas: Minha conta, Empresa, Aparência e Sobre a prévia, conforme o perfil.

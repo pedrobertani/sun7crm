@@ -2215,3 +2215,96 @@ td small {
     gap: 10px;
   }
 }
+.tasks-view-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 17px;
+  flex-wrap: wrap;
+}
+.tasks-filterbar {
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  margin-bottom: 19px;
+}
+.tasks-filterbar > .search {
+  margin-left: auto;
+}
+.tasks-kanban {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(245px, 1fr));
+  gap: 16px;
+  align-items: stretch;
+}
+.tasks-kanban > .kanban-column {
+  width: auto;
+  min-width: 245px;
+  min-height: 430px;
+}
+.task-card-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+.task-card-heading > strong {
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.6;
+  color: #355462;
+  overflow-wrap: anywhere;
+}
+.task-kanban-card.task-complete .task-card-heading > strong {
+  color: #8a9d9d;
+  text-decoration: line-through;
+}
+.task-card-contact {
+  font-size: 11px !important;
+  line-height: 1.6;
+}
+.task-card-meta {
+  display: flex;
+  gap: 7px;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 15px;
+}
+.task-card-owner {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 10px;
+  color: #80999e;
+  margin-top: 10px;
+}
+.add-task-column {
+  justify-content: center;
+  width: 100%;
+  margin-top: 5px;
+  background: transparent;
+}
+@media (max-width: 760px) {
+  .tasks-kanban {
+    gap: 12px;
+    grid-template-columns: repeat(3, minmax(250px, 1fr));
+  }
+  .tasks-filterbar > .search {
+    margin-left: 0;
+  }
+  .tasks-view-toolbar .segmented {
+    flex-shrink: 1;
+  }
+}
+/* A aplicação mantém a rolagem nos painéis, inclusive com cartões longos. */
+html,
+body,
+#root {
+  height: 100%;
+  overflow: hidden;
+}
+.preview-entry {
+  height: 100dvh;
+  overflow: auto;
+}

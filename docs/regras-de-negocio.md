@@ -45,3 +45,7 @@ As configurações são organizadas em Minha conta, Empresa, Aparência e Sobre 
 ## Atalhos dos indicadores
 
 Os ícones dos cards do dashboard são atalhos acessíveis. O restante do card é informativo, sem uma seta adicional. Novos contatos e quentes abrem Contatos com período e temperatura aplicáveis; valor do funil de leads abre o mesmo quadro e período; tarefas abre as pendentes. No painel do Caio, os cards abrem Empresas preservando o filtro da carteira e aplicando o critério do indicador. A mensalidade abre as empresas ativas que compõem a soma contratada. Filtros recebidos são exibidos e podem ser limpos.
+
+## Kanban de tarefas
+
+Tarefas podem ser visualizadas em Lista ou Quadro Kanban. As etapas iniciais são A fazer, Em andamento e Concluídas. Arrastar ou selecionar uma etapa altera o mesmo cadastro; não duplica a tarefa. Em andamento continua contando como pendente no dashboard. Concluir e reabrir mantêm prazo, contato e responsável. Os filtros são preservados ao trocar de visualização. Dados antigos sem etapa aparecem em A fazer ou Concluídas conforme a conclusão já registrada. O gestor acompanha as tarefas da empresa; os outros perfis veem e movimentam as próprias.

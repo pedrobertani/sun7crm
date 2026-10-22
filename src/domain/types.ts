@@ -63,6 +63,7 @@ export interface Task {
   ownerId: string;
   dueDate: string;
   done: boolean;
+  status?: 'todo' | 'in_progress' | 'done';
 }
 export interface Snapshot {
   version: 1;

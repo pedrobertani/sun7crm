@@ -34,3 +34,9 @@ No navegador, o ícone de quentes abriu três contatos com a temperatura e o per
 ## Rodapé e saída
 
 Conferidos um único link Configurações, botão Sair no rodapé, saída para a tela de entrada simulada, persistência dessa tela ao recarregar e ao navegar diretamente para Contatos, retorno voluntário à prévia e botão visível com menu recolhido. Build e TypeScript passaram após a alteração.
+
+## Tarefas em Kanban
+
+Testes cobrem a compatibilidade dos registros antigos, andamento e conclusão no indicador do dashboard, reabertura sem perder vínculos, preservação de outras empresas e escopo por responsável.
+
+No navegador, uma tarefa foi movida para Em andamento e a mesma etapa apareceu na lista; depois foi concluída e permaneceu em Concluídas após recarregar. A rolagem do quadro permanece dentro da área de trabalho.
