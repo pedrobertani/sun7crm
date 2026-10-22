@@ -1,3 +1,4 @@
+import type { CrmTheme } from '../lib/themes';
 export type Role = 'admin' | 'manager' | 'seller' | 'reception';
 export type Template = 'aesthetic' | 'generic';
 export type Temperature = 'unclassified' | 'cold' | 'warm' | 'hot';
@@ -12,6 +13,7 @@ export interface Company {
   createdAt: string;
   enabled: boolean;
   logo?: string;
+  theme?: CrmTheme;
 }
 export interface Member {
   id: string;

@@ -20,3 +20,7 @@
 - Criação e conclusão de tarefa, com visualização na aba Concluídas.
 
 A inspeção visual foi feita no navegador desktop da prévia. Media queries e alternativas por toque estão implementadas; não houve validação em aparelho físico. Autenticação, RLS e segurança de servidor não foram testadas porque ainda não existem nesta fase. Não interpretar os testes de filtros da prévia como validação de segurança de produção.
+
+## Paletas
+
+Testes de compatibilidade com empresas sem preferência anterior, independência do template, lista de paletas, contraste do texto nos botões e consistência dos tokens.

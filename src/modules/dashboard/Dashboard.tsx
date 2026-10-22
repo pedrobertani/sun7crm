@@ -1,3 +1,4 @@
+import { themePalette } from '../../lib/themes';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
@@ -32,7 +33,7 @@ import { visibleContacts } from '../../domain/operations';
 import { today, shiftDate, currency, dateLabel } from '../../lib/format';
 import { Heading, Kpi, Panel, Empty } from '../../components/shared';
 import { Button } from '../../components/ui/button';
-const palette = ['#236d62', '#65a398', '#b8d4cc', '#d4a15c'];
+const adminPalette = themePalette('sun7').chart;
 function ChartEmpty() {
   return (
     <Empty
@@ -47,6 +48,7 @@ export function CompanyDashboard() {
   const date = today();
   const from = shiftDate(date, -Number(days) + 1);
   const company = data.companies.find((c) => c.id === session.companyId)!;
+  const palette = themePalette(company.theme, company.template).chart;
   const all = visibleContacts(data, session);
   const contacts = all.filter((c) => c.createdAt >= from && c.createdAt <= date);
   const allOpps = data.opportunities.filter(
@@ -143,8 +145,8 @@ export function CompanyDashboard() {
                 <AreaChart data={trend} margin={{ left: -22, right: 12, top: 8, bottom: 0 }}>
                   <defs>
                     <linearGradient id="contactsFill" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor="#236d62" stopOpacity={0.19} />
-                      <stop offset="100%" stopColor="#236d62" stopOpacity={0} />
+                      <stop offset="0%" stopColor={palette[0]} stopOpacity={0.19} />
+                      <stop offset="100%" stopColor={palette[0]} stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eaf0ee" />
@@ -165,7 +167,7 @@ export function CompanyDashboard() {
                     name="Novos contatos"
                     type="monotone"
                     dataKey="novos"
-                    stroke="#236d62"
+                    stroke={palette[0]}
                     fill="url(#contactsFill)"
                     strokeWidth={2.5}
                   />
@@ -307,6 +309,7 @@ export function CompanyDashboard() {
 }
 export function AdminDashboard() {
   const { data } = useCrm();
+  const palette = adminPalette;
   const [filter, setFilter] = useState('all');
   const [days, setDays] = useState('30');
   const date = today();
@@ -417,7 +420,7 @@ export function AdminDashboard() {
                 <Bar
                   name="Novas empresas"
                   dataKey="empresas"
-                  fill="#236d62"
+                  fill={palette[0]}
                   radius={[5, 5, 0, 0]}
                   maxBarSize={45}
                 />

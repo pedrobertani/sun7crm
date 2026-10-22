@@ -2,7 +2,7 @@
 
 ## Etapa atual
 
-Aplicação cliente estática em React + Vite + TypeScript. Tailwind CSS e componentes shadcn/Radix compõem a interface; Recharts produz gráficos a partir dos registros fictícios. A aparência segue a demo SUN7CRM: menu claro, verde discreto, cartões e área de trabalho com rolagem independente. O template genérico usa azul.
+Aplicação cliente estática em React + Vite + TypeScript. Tailwind CSS e componentes shadcn/Radix compõem a interface; Recharts produz gráficos a partir dos registros fictícios. A aparência segue a demo SUN7CRM: menu claro, verde discreto, cartões e área de trabalho com rolagem independente. O template genérico inicia em azul; o gestor pode escolher outra paleta sem alterar o segmento ou o template. A seleção é compartilhada pela equipe da empresa nesta prévia local.
 
 `CrmRepository` delimita a persistência; `BrowserRepository` guarda um snapshot versionado no navegador. Contato, oportunidade, quadro, etapa e tarefa têm identidades próprias. As movimentações usam IDs estáveis, nunca o nome de uma coluna como evento de negócio.
 

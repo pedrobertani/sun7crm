@@ -1,3 +1,5 @@
+import { CRM_THEMES, resolveTheme, type CrmTheme } from '../../lib/themes';
+import { Check } from 'lucide-react';
 import { Input } from '../../components/ui/input';
 import { useState, type FormEvent } from 'react';
 import { Settings2, ShieldCheck, RotateCcw, Upload, FlaskConical } from 'lucide-react';
@@ -17,6 +19,7 @@ export function Settings() {
   const [name, setName] = useState(company.name);
   const [segment, setSegment] = useState(company.segment);
   const [template, setTemplate] = useState(company.template);
+  const [theme, setTheme] = useState<CrmTheme>(resolveTheme(company.theme, company.template).value);
   const manager = session.role === 'manager';
   function save(e: FormEvent) {
     e.preventDefault();
@@ -28,7 +31,9 @@ export function Settings() {
       update((d) => ({
         ...d,
         companies: d.companies.map((c) =>
-          c.id === company.id ? { ...c, name: name.trim(), segment: segment.trim(), template } : c,
+          c.id === company.id
+            ? { ...c, name: name.trim(), segment: segment.trim(), template, theme }
+            : c,
         ),
       }))
     ) {
@@ -189,11 +194,44 @@ export function Settings() {
                   value={template}
                   onChange={(e) => setTemplate(e.target.value as typeof template)}
                 >
-                  <option value="aesthetic">Estética · verde</option>
-                  <option value="generic">Genérico · azul</option>
+                  <option value="aesthetic">Estética</option>
+                  <option value="generic">Genérico</option>
                 </select>
               </label>
             </div>
+            <fieldset className="theme-fieldset">
+              <legend>Cores da empresa</legend>
+              <p className="small-note">
+                Escolha uma paleta para os menus, botões e gráficos de toda a equipe. A cor é
+                independente do template.
+              </p>
+              <div className="theme-grid" role="radiogroup" aria-label="Paleta de cores da empresa">
+                {CRM_THEMES.map((t) => (
+                  <label
+                    key={t.value}
+                    className={'theme-option ' + (theme === t.value ? 'selected' : '')}
+                  >
+                    <input
+                      type="radio"
+                      name="company-theme"
+                      value={t.value}
+                      checked={theme === t.value}
+                      onChange={() => setTheme(t.value)}
+                    />
+                    <span className="theme-name">
+                      {t.label}
+                      {theme === t.value && <Check size={14} />}
+                    </span>
+                    <span className="theme-swatches">
+                      {t.colors.map((color) => (
+                        <i key={color} style={{ background: color }} />
+                      ))}
+                    </span>
+                  </label>
+                ))}
+              </div>
+              <p className="small-note">A escolha será aplicada ao salvar a identidade.</p>
+            </fieldset>
             <FormError message={error} />
             <div className="form-actions">
               <Button>Salvar identidade</Button>
@@ -234,6 +272,7 @@ export function Settings() {
               setName('Clínica Aurora');
               setSegment('Estética e bem-estar');
               setTemplate('aesthetic');
+              setTheme('sun7');
             }}
           >
             Restaurar exemplos

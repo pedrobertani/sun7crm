@@ -1,3 +1,4 @@
+import { useThemeStyle } from '../theme-provider';
 import * as Dialog from '@radix-ui/react-dialog';
 import { X } from 'lucide-react';
 import type { ReactNode } from 'react';
@@ -14,11 +15,12 @@ export function Modal({
   onOpenChange: (v: boolean) => void;
   children: ReactNode;
 }) {
+  const colors = useThemeStyle();
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay className="dialog-overlay" />
-        <Dialog.Content className="dialog-content">
+        <Dialog.Content className="dialog-content" style={colors}>
           <div className="dialog-head">
             <div>
               <Dialog.Title>{title}</Dialog.Title>

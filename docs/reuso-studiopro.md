@@ -10,3 +10,7 @@ Fonte: `pedrobertani/nail-studio-saas`, branch `main`, leitura realizada em 22/1
 | `components/masked-inputs.tsx` | `src/components/currency-input.tsx`: extraída a máscara monetária; removido campo de horário não utilizado     | `928320cc5268027850acb2ef37f954a5b0f02859` |
 
 O componente de diálogo do StudioPro também foi consultado (`b55295225e21a72f1ddd1e35de49ec37d55834af`); esta base usa um wrapper Radix próprio com o layout da demo. Não são copiadas integrações Next.js, agenda, assinaturas, pagamentos, OAuth ou políticas RLS do outro produto. A autenticação do SUN7CRM será implementada com suas próprias regras.
+
+## Paletas de cores
+
+Reaproveitadas as cinco opções e cores de origem de `lib/studio-themes.ts` (SHA `09ceea25e16ba3fdb544a065ffcc0f01ea805bf3`): Nude, Neutro, Elegante, Rosé e Clássico. Mantidas também SUN7CRM e Azul. A aplicação dos tokens foi adaptada ao CSS do SUN7CRM, incluindo modais e gráficos. Os tons primários são escurecidos somente quando necessário para garantir contraste de 4,5:1 com o texto branco dos botões. A paleta é independente do template; modo escuro não faz parte desta alteração.

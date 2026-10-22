@@ -84,6 +84,7 @@ export function Companies() {
       monthlyAmount: amount,
       createdAt: editing?.createdAt || today(),
       logo: editing?.logo,
+      theme: editing?.theme,
     };
     if (
       update((d) => ({

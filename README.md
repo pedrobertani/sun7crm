@@ -14,6 +14,7 @@ Base inicial do CRM comercial, construída a partir do visual da demo aprovada. 
 - Movimentação por arraste no desktop ou seletor de etapa, inclusive por teclado/toque.
 - Tarefas manuais, prazos e conclusão.
 - Equipe, perfis de visualização, identidade e templates estética/genérico.
+- Sete paletas de cores por empresa, incluindo as cinco opções do StudioPro, aplicadas também a gráficos e modais.
 - Rotas via HashRouter para funcionar em hospedagem estática sem regras de servidor.
 
 ## Executar

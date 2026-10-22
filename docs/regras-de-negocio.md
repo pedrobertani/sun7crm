@@ -35,3 +35,7 @@ Decisões confirmadas nesta conversa orientam a casca. Propostas aguardam o reto
 ## Limites da base
 
 Alterar a etapa apenas muda a posição do cartão. Não registra venda, não dispara mensagens nem cria cadências. O valor das oportunidades é estimativa, não receita. A mensalidade da carteira é soma contratada, não dinheiro recebido. Desativar uma empresa nesta prévia altera sua classificação; o seletor de demonstração continua permitindo visualizá-la.
+
+## Identidade e cores
+
+O gestor escolhe uma paleta em Configurações > Identidade da empresa e salva a identidade. Opções: SUN7CRM, Azul, Nude, Neutro, Elegante, Rosé e Clássico. A preferência pertence à empresa, é independente do template e se aplica aos menus, botões, destaques, gráficos e modais de sua equipe. O painel da plataforma mantém a identidade SUN7CRM. Nesta etapa a preferência é persistida somente neste navegador.
