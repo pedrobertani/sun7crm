@@ -1,3 +1,4 @@
+import { filterCompanies } from '../../domain/filters';
 import { themePalette } from '../../lib/themes';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -107,26 +108,32 @@ export function CompanyDashboard() {
       <div className="kpis">
         <Kpi
           label="Novos contatos"
+          to={`/contatos?de=${from}&ate=${date}`}
           value={contacts.length}
           foot="Cadastrados no período"
           icon={<Users size={19} />}
         />
         <Kpi
           label="Oportunidades quentes"
+          to={`/contatos?temperatura=hot&de=${from}&ate=${date}`}
           value={contacts.filter((c) => c.temperature === 'hot').length}
           foot="Temperatura definida pela equipe"
           icon={<Flame size={19} />}
           tone="amber"
         />
         <Kpi
-          label="Valor em oportunidades"
-          value={currency(opps.reduce((s, o) => s + o.value, 0))}
+          label="Valor no funil de leads"
+          to={`/funil/leads?de=${from}&ate=${date}`}
+          value={currency(
+            opps.filter((o) => o.boardId === leadBoard.id).reduce((s, o) => s + o.value, 0),
+          )}
           foot="Estimado · não representa receita"
           icon={<TrendingUp size={19} />}
           tone="teal"
         />
         <Kpi
           label="Tarefas pendentes"
+          to="/tarefas?status=pending"
           value={pending.length}
           foot={overdue + ' atrasadas · todos os períodos'}
           icon={<ListTodo size={19} />}
@@ -314,17 +321,7 @@ export function AdminDashboard() {
   const [days, setDays] = useState('30');
   const date = today();
   const from = shiftDate(date, -Number(days) + 1);
-  const companies = data.companies.filter(
-    (c) =>
-      filter === 'all' ||
-      (filter === 'active'
-        ? c.enabled
-        : filter === 'upcoming'
-          ? c.enabled && c.dueDate >= date && c.dueDate <= shiftDate(date, 7)
-          : filter === 'new'
-            ? c.createdAt >= from
-            : c.enabled && c.dueDate < date),
-  );
+  const companies = filterCompanies(data.companies, filter, from, date);
   const active = companies.filter((c) => c.enabled);
   const upcoming = active.filter((c) => c.dueDate >= date && c.dueDate <= shiftDate(date, 7));
   const news = companies.filter((c) => c.createdAt >= from && c.createdAt <= date);
@@ -374,12 +371,14 @@ export function AdminDashboard() {
       <div className="kpis">
         <Kpi
           label="Empresas ativas"
+          to={`/empresas?carteira=${filter}&periodo=${days}&situacao=active`}
           value={active.length}
           foot="Habilitadas para uso na prévia"
           icon={<Building2 size={19} />}
         />
         <Kpi
           label="Próximas a vencer"
+          to={`/empresas?carteira=${filter}&periodo=${days}&situacao=upcoming`}
           value={upcoming.length}
           foot="Entre hoje e os próximos 7 dias"
           icon={<CalendarClock size={19} />}
@@ -387,6 +386,7 @@ export function AdminDashboard() {
         />
         <Kpi
           label="Novas empresas"
+          to={`/empresas?carteira=${filter}&periodo=${days}&situacao=new`}
           value={news.length}
           foot="Cadastradas no período selecionado"
           icon={<UserPlus size={19} />}
@@ -394,6 +394,7 @@ export function AdminDashboard() {
         />
         <Kpi
           label="Mensalidade da carteira"
+          to={`/empresas?carteira=${filter}&periodo=${days}&situacao=active`}
           value={currency(active.reduce((s, c) => s + c.monthlyAmount, 0))}
           foot="Soma contratada · não recebimentos"
           icon={<Wallet size={19} />}

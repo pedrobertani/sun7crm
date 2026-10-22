@@ -2017,3 +2017,118 @@ td small {
     padding: 11px;
   }
 }
+/* Navegação por seções, baseada nas configurações do StudioPro. */
+.settings-tabs {
+  display: flex;
+  gap: 8px;
+  padding: 7px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  margin-bottom: 22px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--primary) transparent;
+}
+.settings-tabs a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex: 1;
+  min-width: max-content;
+  padding: 11px 17px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 550;
+  white-space: nowrap;
+}
+.settings-tabs a:hover {
+  background: var(--soft);
+  color: var(--primary);
+}
+.settings-tabs a.active {
+  background: var(--primary);
+  color: #fff;
+  border-color: var(--primary);
+}
+.settings-section {
+  max-width: 1100px;
+}
+.settings-section .theme-fieldset {
+  border-top: 0;
+  margin-top: 0;
+  padding-top: 0;
+}
+.settings-section .theme-fieldset legend {
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+@media (max-width: 540px) {
+  .settings-tabs {
+    gap: 5px;
+    padding: 5px;
+    margin-bottom: 17px;
+  }
+  .settings-tabs a {
+    flex: 0 0 auto;
+    padding: 10px 12px;
+    font-size: 11px;
+  }
+  .settings-tabs a svg {
+    width: 15px;
+    height: 15px;
+  }
+}
+.kpi-shortcut {
+  height: 32px;
+  width: 32px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 1px solid transparent;
+  display: grid;
+  place-items: center;
+  color: color-mix(in srgb, var(--primary) 60%, white);
+  background: transparent;
+  transition:
+    background-color 0.12s,
+    color 0.12s,
+    border-color 0.12s;
+}
+.kpi-shortcut:hover,
+.kpi-shortcut:focus-visible {
+  background: var(--soft);
+  color: var(--primary);
+  border-color: color-mix(in srgb, var(--primary) 18%, white);
+}
+.kpi.amber .kpi-shortcut {
+  color: #b08d56;
+}
+.kpi.rose .kpi-shortcut {
+  color: #b37888;
+}
+.applied-filter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 9px 13px;
+  margin-bottom: 15px;
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 8px;
+  font-size: 11px;
+  color: var(--muted);
+}
+@media (max-width: 760px) {
+  .kpi-shortcut {
+    width: 34px;
+    height: 34px;
+  }
+  .kpi-top > span {
+    line-height: 1.5;
+  }
+}

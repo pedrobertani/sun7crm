@@ -38,4 +38,10 @@ Alterar a etapa apenas muda a posição do cartão. Não registra venda, não di
 
 ## Identidade e cores
 
-O gestor escolhe uma paleta em Configurações > Identidade da empresa e salva a identidade. Opções: SUN7CRM, Azul, Nude, Neutro, Elegante, Rosé e Clássico. A preferência pertence à empresa, é independente do template e se aplica aos menus, botões, destaques, gráficos e modais de sua equipe. O painel da plataforma mantém a identidade SUN7CRM. Nesta etapa a preferência é persistida somente neste navegador.
+O gestor escolhe uma paleta em Configurações > Aparência e salva a aparência. Opções: SUN7CRM, Azul, Nude, Neutro, Elegante, Rosé e Clássico. A preferência pertence à empresa, é independente do template e se aplica aos menus, botões, destaques, gráficos e modais de sua equipe. O painel da plataforma mantém a identidade SUN7CRM. Nesta etapa a preferência é persistida somente neste navegador.
+
+As configurações são organizadas em Minha conta, Empresa, Aparência e Sobre a prévia. Empresa e Aparência são exclusivas do gestor. As abas usam links com URL própria; rascunhos de dados e de cores permanecem ao alternar as seções, e cada formulário salva somente o seu grupo de configurações.
+
+## Atalhos dos indicadores
+
+Os ícones dos cards do dashboard são atalhos acessíveis. O restante do card é informativo, sem uma seta adicional. Novos contatos e quentes abrem Contatos com período e temperatura aplicáveis; valor do funil de leads abre o mesmo quadro e período; tarefas abre as pendentes. No painel do Caio, os cards abrem Empresas preservando o filtro da carteira e aplicando o critério do indicador. A mensalidade abre as empresas ativas que compõem a soma contratada. Filtros recebidos são exibidos e podem ser limpos.

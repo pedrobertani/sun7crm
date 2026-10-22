@@ -1,3 +1,6 @@
+import { useSearchParams } from 'react-router-dom';
+import { readPeriod, inPeriod } from '../../domain/filters';
+import { dateLabel } from '../../lib/format';
 import { Input } from '../../components/ui/input';
 import { useState, type FormEvent } from 'react';
 import { Plus, Pencil, Phone, ArrowUpRight, Users } from 'lucide-react';
@@ -8,6 +11,7 @@ import { visibleContacts } from '../../domain/operations';
 import { initials, uid, today } from '../../lib/format';
 import {
   Heading,
+  AppliedFilter,
   SearchInput,
   TemperatureBadge,
   Empty,
@@ -28,13 +32,24 @@ const blank = {
 export function Contacts() {
   const { data, session, update, notice } = useCrm();
   const [query, setQuery] = useState('');
-  const [temperature, setTemperature] = useState('all');
+  const [params, setParams] = useSearchParams();
+  const temperature = Object.keys(temperatureLabels).includes(params.get('temperatura') || '')
+    ? params.get('temperatura')!
+    : 'all';
+  const period = readPeriod(params);
+  function setTemperature(value: string) {
+    const next = new URLSearchParams(params);
+    if (value === 'all') next.delete('temperatura');
+    else next.set('temperatura', value);
+    setParams(next);
+  }
   const [editing, setEditing] = useState<Contact | null | undefined>(undefined);
   const [form, setForm] = useState(blank);
   const [error, setError] = useState('');
   const members = data.members.filter((m) => m.companyId === session.companyId && m.active);
   const contacts = visibleContacts(data, session).filter(
     (c) =>
+      inPeriod(c.createdAt, period) &&
       (temperature === 'all' || c.temperature === temperature) &&
       (c.name + ' ' + c.phone + ' ' + c.interests)
         .toLocaleLowerCase()
@@ -117,6 +132,12 @@ export function Contacts() {
           </Button>
         )}
       </Heading>
+      {(period.from || period.to) && (
+        <AppliedFilter
+          label={`Cadastros de ${period.from ? dateLabel(period.from) : 'qualquer data'} até ${period.to ? dateLabel(period.to) : 'hoje'}`}
+          onClear={() => setParams({})}
+        />
+      )}
       <div className="card">
         <div className="toolbar">
           <SearchInput

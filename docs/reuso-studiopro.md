@@ -14,3 +14,7 @@ O componente de diálogo do StudioPro também foi consultado (`b55295225e21a72f1
 ## Paletas de cores
 
 Reaproveitadas as cinco opções e cores de origem de `lib/studio-themes.ts` (SHA `09ceea25e16ba3fdb544a065ffcc0f01ea805bf3`): Nude, Neutro, Elegante, Rosé e Clássico. Mantidas também SUN7CRM e Azul. A aplicação dos tokens foi adaptada ao CSS do SUN7CRM, incluindo modais e gráficos. Os tons primários são escurecidos somente quando necessário para garantir contraste de 4,5:1 com o texto branco dos botões. A paleta é independente do template; modo escuro não faz parte desta alteração.
+
+## Navegação das configurações
+
+Padrão de seções adaptado de `app/admin/settings/layout.tsx` (SHA `da96594796eb58934adde522f9051ec0800a435a`): navegação horizontal com ícones, estado ativo e rolagem horizontal em telas pequenas. No SUN7CRM, os links usam React Router e as seções são Minha conta, Empresa, Aparência e Sobre a prévia.

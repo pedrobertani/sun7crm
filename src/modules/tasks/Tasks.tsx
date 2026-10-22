@@ -1,3 +1,4 @@
+import { useSearchParams } from 'react-router-dom';
 import { Input } from '../../components/ui/input';
 import { useState, type FormEvent } from 'react';
 import { Plus, CalendarDays, Check, Circle } from 'lucide-react';
@@ -9,7 +10,13 @@ import { Button } from '../../components/ui/button';
 import { Modal } from '../../components/ui/modal';
 export function Tasks() {
   const { data, session, update, notice } = useCrm();
-  const [filter, setFilter] = useState('pending');
+  const [params, setParams] = useSearchParams();
+  const filter = ['pending', 'overdue', 'done', 'all'].includes(params.get('status') || '')
+    ? params.get('status')!
+    : 'pending';
+  function setFilter(value: string) {
+    setParams({ status: value });
+  }
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
   const [error, setError] = useState('');

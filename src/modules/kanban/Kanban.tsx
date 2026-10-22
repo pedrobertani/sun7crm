@@ -1,6 +1,8 @@
+import { readPeriod, inPeriod } from '../../domain/filters';
+import { dateLabel } from '../../lib/format';
 import { Input } from '../../components/ui/input';
 import { useState, type FormEvent } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, useSearchParams, Link } from 'react-router-dom';
 import {
   SlidersHorizontal,
   Plus,
@@ -24,6 +26,7 @@ import { currency, initials, uid } from '../../lib/format';
 import type { BoardKind, Opportunity } from '../../domain/types';
 import {
   Heading,
+  AppliedFilter,
   SearchInput,
   TemperatureBadge,
   Empty,
@@ -34,6 +37,8 @@ import { Button } from '../../components/ui/button';
 import { Modal } from '../../components/ui/modal';
 export function Kanban() {
   const { kind } = useParams();
+  const [params, setParams] = useSearchParams();
+  const period = readPeriod(params);
   const boardKind: BoardKind = kind === 'clients' ? 'clients' : 'leads';
   const { data, session, update, notice } = useCrm();
   const board = data.boards.find((b) => b.companyId === session.companyId && b.kind === boardKind)!;
@@ -48,7 +53,12 @@ export function Kanban() {
   const [selected, setSelected] = useState<Opportunity | null>(null);
   const contacts = visibleContacts(data, session);
   const opps = data.opportunities
-    .filter((o) => o.boardId === board.id && contacts.some((c) => c.id === o.contactId))
+    .filter(
+      (o) =>
+        inPeriod(o.createdAt, period) &&
+        o.boardId === board.id &&
+        contacts.some((c) => c.id === o.contactId),
+    )
     .filter((o) =>
       contacts
         .find((c) => c.id === o.contactId)
@@ -144,13 +154,25 @@ export function Kanban() {
           </Link>
         </Button>
       </Heading>
+      {(period.from || period.to) && (
+        <AppliedFilter
+          label={`Oportunidades criadas de ${period.from ? dateLabel(period.from) : 'qualquer data'} até ${period.to ? dateLabel(period.to) : 'hoje'}`}
+          onClear={() => setParams({})}
+        />
+      )}
       <div className="kanban-toolbar">
         <div className="segmented">
-          <Link className={boardKind === 'leads' ? 'active' : ''} to="/funil/leads">
+          <Link
+            className={boardKind === 'leads' ? 'active' : ''}
+            to={'/funil/leads' + (params.toString() ? '?' + params.toString() : '')}
+          >
             <LayoutGrid size={15} />
             Leads
           </Link>
-          <Link className={boardKind === 'clients' ? 'active' : ''} to="/funil/clients">
+          <Link
+            className={boardKind === 'clients' ? 'active' : ''}
+            to={'/funil/clients' + (params.toString() ? '?' + params.toString() : '')}
+          >
             <Users size={15} />
             Clientes
           </Link>

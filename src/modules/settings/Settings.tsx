@@ -1,5 +1,6 @@
+import { Link, useSearchParams } from 'react-router-dom';
 import { CRM_THEMES, resolveTheme, type CrmTheme } from '../../lib/themes';
-import { Check } from 'lucide-react';
+import { Check, UserRound, Building2, Palette, Info } from 'lucide-react';
 import { Input } from '../../components/ui/input';
 import { useState, type FormEvent } from 'react';
 import { Settings2, ShieldCheck, RotateCcw, Upload, FlaskConical } from 'lucide-react';
@@ -21,7 +22,19 @@ export function Settings() {
   const [template, setTemplate] = useState(company.template);
   const [theme, setTheme] = useState<CrmTheme>(resolveTheme(company.theme, company.template).value);
   const manager = session.role === 'manager';
-  function save(e: FormEvent) {
+  const [params] = useSearchParams();
+  const tabs = [
+    { value: 'conta', label: 'Minha conta', icon: UserRound },
+    ...(manager
+      ? [
+          { value: 'empresa', label: 'Empresa', icon: Building2 },
+          { value: 'aparencia', label: 'Aparência', icon: Palette },
+        ]
+      : []),
+    { value: 'previa', label: 'Sobre a prévia', icon: Info },
+  ];
+  const active = tabs.some((tab) => tab.value === params.get('aba')) ? params.get('aba')! : 'conta';
+  function saveCompany(e: FormEvent) {
     e.preventDefault();
     if (!name.trim()) {
       setError('Informe o nome da empresa.');
@@ -31,14 +44,23 @@ export function Settings() {
       update((d) => ({
         ...d,
         companies: d.companies.map((c) =>
-          c.id === company.id
-            ? { ...c, name: name.trim(), segment: segment.trim(), template, theme }
-            : c,
+          c.id === company.id ? { ...c, name: name.trim(), segment: segment.trim(), template } : c,
         ),
       }))
     ) {
       setError('');
-      notice('Identidade atualizada.');
+      notice('Dados da empresa atualizados.');
+    }
+  }
+  function saveAppearance(e: FormEvent) {
+    e.preventDefault();
+    if (
+      update((d) => ({
+        ...d,
+        companies: d.companies.map((c) => (c.id === company.id ? { ...c, theme } : c)),
+      }))
+    ) {
+      notice('Aparência atualizada para a empresa.');
     }
   }
   async function upload(file?: File) {
@@ -69,176 +91,207 @@ export function Settings() {
         title="Configurações"
         description="Sua conta, identidade da empresa e opções deste ambiente de validação."
       />
-      <div className="settings-grid">
-        <Panel
-          title="Minha conta"
-          description="Informações do perfil em visualização."
-          action={<ShieldCheck size={20} className="muted" />}
-        >
-          <div className="detail-person">
-            <span className="avatar big">
-              {initials(session.role === 'admin' ? 'Caio' : member?.name || 'Usuário')}
-            </span>
-            <div>
-              <h3>{session.role === 'admin' ? 'Caio' : member?.name || 'Usuário da prévia'}</h3>
-              <p>{roleLabels[session.role]}</p>
-              <small className="muted">{member?.email || 'Administração da plataforma'}</small>
-            </div>
-          </div>
-          <Button variant="outline" onClick={() => setPassword(true)}>
-            Alterar minha senha
-          </Button>
-          <p className="small-note">
-            {session.role === 'admin'
-              ? 'A recuperação excepcional do administrador será definida antes da ativação real.'
-              : session.role === 'manager'
-                ? 'Se perder sua senha, solicite a redefinição a Caio.'
-                : 'Se perder sua senha, solicite a redefinição ao gestor da sua equipe.'}
-          </p>
-        </Panel>
-        <Panel
-          title="Sobre a prévia"
-          description="Uma base para validarmos juntos."
-          action={<FlaskConical size={20} className="muted" />}
-        >
-          <div className="status-list">
-            <div>
-              <span className="status-dot" />
-              <strong>Dados somente no navegador</strong>
-            </div>
-            <p>
-              Os cadastros são fictícios. Não são sincronizados entre dispositivos e podem ser
-              apagados ao limpar o navegador.
-            </p>
-            <div>
-              <Settings2 size={15} />
-              <strong>Perfis para demonstração</strong>
-            </div>
-            <p>
-              Os seletores do topo trocam a empresa e a visão de usuário. Não representam login ou
-              controle de segurança real.
-            </p>
-          </div>
-          <Button variant="outline" onClick={() => setConfirm(true)}>
-            <RotateCcw size={15} />
-            Restaurar dados de exemplo
-          </Button>
-        </Panel>
-      </div>
-      {manager && (
-        <Panel
-          title="Identidade da empresa"
-          description="Personalize a apresentação da sua área de trabalho."
-        >
-          <form key={company.id} onSubmit={save}>
-            <div className="brand-editor">
-              <span className="brand-preview">
-                {company.logo ? (
-                  <img src={company.logo} alt={'Logo ' + company.name} />
-                ) : (
-                  initials(company.name)
-                )}
+      <nav className="settings-tabs" aria-label="Seções das configurações">
+        {tabs.map(({ value, label, icon: Icon }) => (
+          <Link
+            key={value}
+            to={'/configuracoes?aba=' + value}
+            aria-current={active === value ? 'page' : undefined}
+            className={active === value ? 'active' : ''}
+          >
+            <Icon size={17} />
+            <span>{label}</span>
+          </Link>
+        ))}
+      </nav>
+      <div className="settings-section">
+        {active === 'conta' && (
+          <Panel
+            title="Minha conta"
+            description="Informações do perfil em visualização."
+            action={<ShieldCheck size={20} className="muted" />}
+          >
+            <div className="detail-person">
+              <span className="avatar big">
+                {initials(session.role === 'admin' ? 'Caio' : member?.name || 'Usuário')}
               </span>
               <div>
-                <label className="btn btn-outline upload-label">
-                  <Upload size={15} />
-                  Enviar logo
+                <h3>{session.role === 'admin' ? 'Caio' : member?.name || 'Usuário da prévia'}</h3>
+                <p>{roleLabels[session.role]}</p>
+                <small className="muted">{member?.email || 'Administração da plataforma'}</small>
+              </div>
+            </div>
+            <Button variant="outline" onClick={() => setPassword(true)}>
+              Alterar minha senha
+            </Button>
+            <p className="small-note">
+              {session.role === 'admin'
+                ? 'A recuperação excepcional do administrador será definida antes da ativação real.'
+                : session.role === 'manager'
+                  ? 'Se perder sua senha, solicite a redefinição a Caio.'
+                  : 'Se perder sua senha, solicite a redefinição ao gestor da sua equipe.'}
+            </p>
+          </Panel>
+        )}
+        {active === 'empresa' && manager && (
+          <Panel title="Empresa" description="Dados, logo e template da sua empresa.">
+            <form key={company.id} onSubmit={saveCompany}>
+              <div className="brand-editor">
+                <span className="brand-preview">
+                  {company.logo ? (
+                    <img src={company.logo} alt={'Logo ' + company.name} />
+                  ) : (
+                    initials(company.name)
+                  )}
+                </span>
+                <div>
+                  <label className="btn btn-outline upload-label">
+                    <Upload size={15} />
+                    Enviar logo
+                    <Input
+                      className="sr-only"
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      onChange={(e) => void upload(e.target.files?.[0])}
+                    />
+                  </label>
+                  <p className="small-note">PNG, JPG ou WebP · até 500 KB</p>
+                </div>
+                {company.logo && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() =>
+                      update((d) => ({
+                        ...d,
+                        companies: d.companies.map((c) =>
+                          c.id === company.id ? { ...c, logo: undefined } : c,
+                        ),
+                      }))
+                    }
+                  >
+                    Remover
+                  </Button>
+                )}
+              </div>
+              <div className="form-grid">
+                <label className="form-row">
+                  Nome da empresa
                   <Input
-                    className="sr-only"
-                    type="file"
-                    accept="image/png,image/jpeg,image/webp"
-                    onChange={(e) => void upload(e.target.files?.[0])}
+                    required
+                    value={name}
+                    maxLength={100}
+                    onChange={(e) => setName(e.target.value)}
                   />
                 </label>
-                <p className="small-note">PNG, JPG ou WebP · até 500 KB</p>
-              </div>
-              {company.logo && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() =>
-                    update((d) => ({
-                      ...d,
-                      companies: d.companies.map((c) =>
-                        c.id === company.id ? { ...c, logo: undefined } : c,
-                      ),
-                    }))
-                  }
-                >
-                  Remover
-                </Button>
-              )}
-            </div>
-            <div className="form-grid">
-              <label className="form-row">
-                Nome da empresa
-                <Input
-                  required
-                  value={name}
-                  maxLength={100}
-                  onChange={(e) => setName(e.target.value)}
-                />
-              </label>
-              <label className="form-row">
-                Segmento
-                <Input
-                  value={segment}
-                  maxLength={100}
-                  onChange={(e) => setSegment(e.target.value)}
-                />
-              </label>
-              <label className="form-row">
-                Template
-                <select
-                  value={template}
-                  onChange={(e) => setTemplate(e.target.value as typeof template)}
-                >
-                  <option value="aesthetic">Estética</option>
-                  <option value="generic">Genérico</option>
-                </select>
-              </label>
-            </div>
-            <fieldset className="theme-fieldset">
-              <legend>Cores da empresa</legend>
-              <p className="small-note">
-                Escolha uma paleta para os menus, botões e gráficos de toda a equipe. A cor é
-                independente do template.
-              </p>
-              <div className="theme-grid" role="radiogroup" aria-label="Paleta de cores da empresa">
-                {CRM_THEMES.map((t) => (
-                  <label
-                    key={t.value}
-                    className={'theme-option ' + (theme === t.value ? 'selected' : '')}
+                <label className="form-row">
+                  Segmento
+                  <Input
+                    value={segment}
+                    maxLength={100}
+                    onChange={(e) => setSegment(e.target.value)}
+                  />
+                </label>
+                <label className="form-row">
+                  Template
+                  <select
+                    value={template}
+                    onChange={(e) => setTemplate(e.target.value as typeof template)}
                   >
-                    <input
-                      type="radio"
-                      name="company-theme"
-                      value={t.value}
-                      checked={theme === t.value}
-                      onChange={() => setTheme(t.value)}
-                    />
-                    <span className="theme-name">
-                      {t.label}
-                      {theme === t.value && <Check size={14} />}
-                    </span>
-                    <span className="theme-swatches">
-                      {t.colors.map((color) => (
-                        <i key={color} style={{ background: color }} />
-                      ))}
-                    </span>
-                  </label>
-                ))}
+                    <option value="aesthetic">Estética</option>
+                    <option value="generic">Genérico</option>
+                  </select>
+                </label>
               </div>
-              <p className="small-note">A escolha será aplicada ao salvar a identidade.</p>
-            </fieldset>
-            <FormError message={error} />
-            <div className="form-actions">
-              <Button>Salvar identidade</Button>
+
+              <FormError message={error} />
+              <div className="form-actions">
+                <Button>Salvar empresa</Button>
+              </div>
+            </form>
+          </Panel>
+        )}
+        {active === 'aparencia' && manager && (
+          <Panel
+            title="Aparência"
+            description="Personalize as cores da área de trabalho da sua equipe."
+          >
+            <form onSubmit={saveAppearance}>
+              <fieldset className="theme-fieldset">
+                <legend>Cores da empresa</legend>
+                <p className="small-note">
+                  Escolha uma paleta para os menus, botões e gráficos de toda a equipe. A cor é
+                  independente do template.
+                </p>
+                <div
+                  className="theme-grid"
+                  role="radiogroup"
+                  aria-label="Paleta de cores da empresa"
+                >
+                  {CRM_THEMES.map((t) => (
+                    <label
+                      key={t.value}
+                      className={'theme-option ' + (theme === t.value ? 'selected' : '')}
+                    >
+                      <input
+                        type="radio"
+                        name="company-theme"
+                        value={t.value}
+                        checked={theme === t.value}
+                        onChange={() => setTheme(t.value)}
+                      />
+                      <span className="theme-name">
+                        {t.label}
+                        {theme === t.value && <Check size={14} />}
+                      </span>
+                      <span className="theme-swatches">
+                        {t.colors.map((color) => (
+                          <i key={color} style={{ background: color }} />
+                        ))}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+                <p className="small-note">A escolha será aplicada ao salvar a aparência.</p>
+              </fieldset>
+              <div className="form-actions">
+                <Button>Salvar aparência</Button>
+              </div>
+            </form>
+          </Panel>
+        )}
+        {active === 'previa' && (
+          <Panel
+            title="Sobre a prévia"
+            description="Uma base para validarmos juntos."
+            action={<FlaskConical size={20} className="muted" />}
+          >
+            <div className="status-list">
+              <div>
+                <span className="status-dot" />
+                <strong>Dados somente no navegador</strong>
+              </div>
+              <p>
+                Os cadastros são fictícios. Não são sincronizados entre dispositivos e podem ser
+                apagados ao limpar o navegador.
+              </p>
+              <div>
+                <Settings2 size={15} />
+                <strong>Perfis para demonstração</strong>
+              </div>
+              <p>
+                Os seletores do topo trocam a empresa e a visão de usuário. Não representam login ou
+                controle de segurança real.
+              </p>
             </div>
-          </form>
-        </Panel>
-      )}
+            <Button variant="outline" onClick={() => setConfirm(true)}>
+              <RotateCcw size={15} />
+              Restaurar dados de exemplo
+            </Button>
+          </Panel>
+        )}
+      </div>
       <Modal
         open={password}
         onOpenChange={setPassword}

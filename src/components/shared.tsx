@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { Input } from './ui/input';
 import type { ReactNode } from 'react';
 import { Search, Plus } from 'lucide-react';
@@ -58,24 +59,44 @@ export function Kpi({
   foot,
   icon,
   tone = '',
+  to,
 }: {
   label: string;
   value: ReactNode;
   foot: string;
   icon: ReactNode;
   tone?: string;
+  to?: string;
 }) {
   return (
     <div className={'card kpi ' + tone}>
       <div className="kpi-top">
         <span>{label}</span>
-        <span className="kpi-icon">{icon}</span>
+        {to ? (
+          <Link to={to} className="kpi-shortcut" aria-label={'Ver ' + label} title={'Ver ' + label}>
+            {icon}
+          </Link>
+        ) : (
+          <span className="kpi-icon">{icon}</span>
+        )}
       </div>
       <strong className="kpi-value">{value}</strong>
       <span className="kpi-foot">{foot}</span>
     </div>
   );
 }
+
+export function AppliedFilter({ label, onClear }: { label: string; onClear: () => void }) {
+  return (
+    <div className="applied-filter">
+      <span>{label}</span>
+      <Button type="button" variant="ghost" size="sm" onClick={onClear}>
+        Limpar filtros
+      </Button>
+    </div>
+  );
+}
+
 export function Empty({
   title,
   description,

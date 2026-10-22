@@ -1,3 +1,6 @@
+import { useSearchParams } from 'react-router-dom';
+import { filterCompanies, companyFilterLabels } from '../../domain/filters';
+import { AppliedFilter } from '../../components/shared';
 import { CurrencyInput } from '../../components/currency-input';
 import { Input } from '../../components/ui/input';
 import { useState, type FormEvent } from 'react';
@@ -22,15 +25,28 @@ const initial = {
 export function Companies() {
   const { data, update, notice } = useCrm();
   const [query, setQuery] = useState('');
-  const [status, setStatus] = useState('all');
+  const [params, setParams] = useSearchParams();
+  const status = params.get('situacao') || 'all';
+  const portfolio = params.get('carteira') || 'all';
+  const days = ['7', '30', '90'].includes(params.get('periodo') || '')
+    ? Number(params.get('periodo'))
+    : 30;
+  const date = today(),
+    from = shiftDate(date, -days + 1);
+  function setStatus(value: string) {
+    const next = new URLSearchParams(params);
+    next.set('situacao', value);
+    setParams(next);
+  }
   const [editing, setEditing] = useState<Company | null | undefined>();
   const [form, setForm] = useState(initial);
   const [error, setError] = useState('');
-  const companies = data.companies.filter(
-    (c) =>
-      c.name.toLocaleLowerCase().includes(query.toLocaleLowerCase()) &&
-      (status === 'all' || c.enabled === (status === 'active')),
-  );
+  const companies = filterCompanies(
+    filterCompanies(data.companies, portfolio, from, date),
+    status,
+    from,
+    date,
+  ).filter((c) => c.name.toLocaleLowerCase().includes(query.toLocaleLowerCase()));
   function open(c: Company | null) {
     setEditing(c);
     setError('');
@@ -142,6 +158,12 @@ export function Companies() {
           Nova empresa
         </Button>
       </Heading>
+      {params.toString() && (
+        <AppliedFilter
+          label={`Painel: ${[companyFilterLabels[portfolio] || 'Todas as empresas', ...(status !== portfolio ? [companyFilterLabels[status] || 'Todas as situações'] : [])].join(' · ')}${status === 'new' || portfolio === 'new' ? ` · últimos ${days} dias` : ''}`}
+          onClear={() => setParams({})}
+        />
+      )}
       <div className="card">
         <div className="toolbar">
           <SearchInput value={query} onChange={setQuery} placeholder="Buscar empresa" />
@@ -153,6 +175,9 @@ export function Companies() {
             <option value="all">Todas as situações</option>
             <option value="active">Ativas</option>
             <option value="inactive">Desativadas</option>
+            <option value="upcoming">Vencem em até 7 dias</option>
+            <option value="new">Novas no período</option>
+            <option value="overdue">Com vencimento passado</option>
           </select>
           <span className="muted result-count">{companies.length} empresas</span>
         </div>

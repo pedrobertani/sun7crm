@@ -6,7 +6,7 @@ Base inicial do CRM comercial, construída a partir do visual da demo aprovada. 
 
 **Protótipo de desenvolvimento sem banco de dados, backend ou autenticação real.** Os dados são fictícios e ficam no `localStorage` do navegador. Não inserir dados pessoais reais ou senhas. Os seletores do topo permitem validar diferentes visões; não representam autorização de produção.
 
-- Dashboard da empresa com gráficos, indicadores e período selecionável.
+- Dashboard da empresa com gráficos, indicadores e período selecionável. Cards abrem as telas de detalhe com os filtros correspondentes.
 - Painel do Caio com filtros, empresas, mensalidade individual e vencimento.
 - Cadastro de empresas e gestor fictício, sem sistema de planos.
 - Contatos com responsável, interesse, observações e temperatura manual.
@@ -15,6 +15,7 @@ Base inicial do CRM comercial, construída a partir do visual da demo aprovada. 
 - Tarefas manuais, prazos e conclusão.
 - Equipe, perfis de visualização, identidade e templates estética/genérico.
 - Sete paletas de cores por empresa, incluindo as cinco opções do StudioPro, aplicadas também a gráficos e modais.
+- Configurações em abas: Minha conta, Empresa, Aparência e Sobre a prévia, conforme o perfil.
 - Rotas via HashRouter para funcionar em hospedagem estática sem regras de servidor.
 
 ## Executar

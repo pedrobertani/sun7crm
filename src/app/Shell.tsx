@@ -206,7 +206,11 @@ export function AppShell() {
                 <span>
                   Dados fictícios salvos neste navegador. Perfis simulados para validação.
                 </span>
-                <Button variant="ghost" size="sm" onClick={() => navigate('/configuracoes')}>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => navigate('/configuracoes?aba=previa')}
+                >
                   Sobre a prévia <ChevronRight size={13} />
                 </Button>
               </div>
