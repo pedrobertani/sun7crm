@@ -26,3 +26,7 @@ A troca do adaptador local por Supabase exigirá chamadas assíncronas, carregam
 Não há tokens, senhas, login, e-mails de autenticação, banco, APIs ou serviço de envio de mensagens. Os botões de senha apresentam o fluxo previsto e não coletam credenciais. Os exemplos usam e-mails reservados `.example`/`example.com` e nomes fictícios.
 
 Antes do piloto real, implementar e testar autorização no servidor, isolamento entre empresas, limites de requisição, revogação de sessões, política de senhas, recuperação excepcional de Caio, auditoria sem segredos e backup/restauração.
+
+## Saída da prévia
+
+O rodapé mostra o usuário e um botão Sair; Configurações aparece apenas na navegação da área de trabalho. Sair encerra a visualização simulada, limpa o perfil em memória e abre `/entrar`. Um marcador em sessionStorage mantém essa tela após recarregar a mesma aba. Entrar na prévia retorna ao perfil inicial sem apagar cadastros locais. Isso é apenas navegação da demonstração: a versão com Supabase deverá encerrar e revogar a sessão real pelo provedor.

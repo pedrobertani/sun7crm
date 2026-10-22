@@ -30,3 +30,7 @@ Testes de compatibilidade com empresas sem preferência anterior, independência
 Configurações: conferidas alternância entre seções, preservação de rascunho, salvamento independente de cores e dados, URL da seção após recarregar e ausência das abas de gestão na visão de vendedor. Filtros dos atalhos têm testes de fronteiras do período, D+7 e interseção da carteira.
 
 No navegador, o ícone de quentes abriu três contatos com a temperatura e o período corretos; o ícone do valor de leads abriu quatro oportunidades no período de sete dias com o mesmo total do card (R$ 3.190,00); o ícone de próximos vencimentos no painel administrativo abriu as duas empresas correspondentes.
+
+## Rodapé e saída
+
+Conferidos um único link Configurações, botão Sair no rodapé, saída para a tela de entrada simulada, persistência dessa tela ao recarregar e ao navegar diretamente para Contatos, retorno voluntário à prévia e botão visível com menu recolhido. Build e TypeScript passaram após a alteração.

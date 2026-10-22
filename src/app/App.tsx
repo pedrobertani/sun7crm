@@ -1,3 +1,4 @@
+import { PreviewEntry } from './PreviewEntry';
 import { Component, type ReactNode } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { CrmProvider, useCrm } from './context';
@@ -13,7 +14,14 @@ import { Settings } from '../modules/settings/Settings';
 import { Button } from '../components/ui/button';
 const repository = new BrowserRepository(window.localStorage);
 function Workspace() {
-  const { session } = useCrm();
+  const { session, signedOut } = useCrm();
+  if (signedOut)
+    return (
+      <Routes>
+        <Route path="/entrar" element={<PreviewEntry />} />
+        <Route path="*" element={<Navigate to="/entrar" replace />} />
+      </Routes>
+    );
   return (
     <Routes>
       <Route element={<AppShell />}>

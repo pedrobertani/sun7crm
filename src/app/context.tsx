@@ -5,6 +5,9 @@ interface Context {
   data: Snapshot;
   session: Session;
   setSession: (s: Session) => void;
+  signedOut: boolean;
+  logout: () => void;
+  enterPreview: () => void;
   update: (f: (d: Snapshot) => Snapshot) => boolean;
   reset: () => void;
   notice: (message: string) => void;
@@ -23,6 +26,13 @@ export function CrmProvider({
     companyId: 'aurora',
     memberId: 'aurora-manager',
   });
+  const [signedOut, setSignedOut] = useState(() => {
+    try {
+      return window.sessionStorage.getItem('sun7crm:preview:signed-out') === '1';
+    } catch {
+      return false;
+    }
+  });
   const [message, setMessage] = useState('');
   const notice = (msg: string) => {
     setMessage(msg);
@@ -33,6 +43,25 @@ export function CrmProvider({
       data,
       session,
       setSession,
+      signedOut,
+      logout: () => {
+        setSignedOut(true);
+        setMessage('');
+        setSession({ role: 'manager', companyId: 'aurora', memberId: 'aurora-manager' });
+        try {
+          window.sessionStorage.setItem('sun7crm:preview:signed-out', '1');
+        } catch {
+          /* O estado em memória continua encerrado. */
+        }
+      },
+      enterPreview: () => {
+        setSignedOut(false);
+        try {
+          window.sessionStorage.removeItem('sun7crm:preview:signed-out');
+        } catch {
+          /* Entrada local sem persistência da sessão simulada. */
+        }
+      },
       notice,
       update: (f: (d: Snapshot) => Snapshot) => {
         try {
@@ -57,7 +86,7 @@ export function CrmProvider({
         }
       },
     }),
-    [data, session, repository],
+    [data, session, repository, signedOut],
   );
   return (
     <CrmContext.Provider value={value}>

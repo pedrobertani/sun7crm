@@ -2132,3 +2132,86 @@ td small {
     line-height: 1.5;
   }
 }
+.logout-button {
+  display: grid;
+  place-items: center;
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: #647f8d;
+}
+.logout-button:hover {
+  background: #fff2f3;
+  color: #b34c62;
+  border-color: #f5dce2;
+}
+.collapsed .user-block {
+  flex-direction: column;
+  gap: 8px;
+}
+.preview-entry {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: #f6f8fa;
+}
+.preview-entry-card {
+  width: 100%;
+  max-width: 420px;
+  padding: 32px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  text-align: center;
+}
+.preview-entry-card .logo {
+  justify-content: center;
+  margin-bottom: 33px;
+}
+.entry-status-icon {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #eaf4f1;
+  color: #236d62;
+  margin: 0 auto 21px;
+}
+.preview-entry-card h1 {
+  font-size: 23px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+.preview-entry-card p {
+  font-size: 13px;
+  line-height: 1.8;
+  color: var(--muted);
+  margin: 13px 0 24px;
+}
+.preview-entry-card > .btn {
+  width: 100%;
+}
+.preview-entry-card > small {
+  display: block;
+  font-size: 10px;
+  line-height: 1.7;
+  color: #8ca0a7;
+  margin-top: 21px;
+}
+@media (max-width: 760px) {
+  .logout-button {
+    width: 40px;
+    height: 40px;
+    flex-basis: 40px;
+  }
+  .collapsed .user-block {
+    flex-direction: row;
+    gap: 10px;
+  }
+}

@@ -8,6 +8,7 @@ import {
   Users,
   ListTodo,
   Settings,
+  LogOut,
   Building2,
   UsersRound,
   PanelLeftClose,
@@ -30,7 +31,7 @@ const businessLinks = [
   { to: '/tarefas', label: 'Tarefas', icon: ListTodo },
 ];
 export function AppShell() {
-  const { data, session, setSession } = useCrm();
+  const { data, session, setSession, logout } = useCrm();
   const [collapsed, setCollapsed] = useState(false);
   const [mobile, setMobile] = useState(false);
   const navigate = useNavigate();
@@ -137,14 +138,25 @@ export function AppShell() {
             </nav>
           </div>
           <div className="sidebar-bottom">
-            <NavLink to="/configuracoes" className="user-block" onClick={() => setMobile(false)}>
+            <div className="user-block">
               <span className="avatar">{initials(admin ? 'Caio' : member?.name || 'Usuário')}</span>
               <span className="hide-collapsed">
                 <strong>{admin ? 'Caio' : member?.name || 'Usuário'}</strong>
                 <small>{roleLabels[session.role]}</small>
               </span>
-              <Settings size={16} className="hide-collapsed" />
-            </NavLink>
+              <button
+                type="button"
+                className="logout-button"
+                aria-label="Sair"
+                title="Sair"
+                onClick={() => {
+                  logout();
+                  navigate('/entrar', { replace: true });
+                }}
+              >
+                <LogOut size={18} />
+              </button>
+            </div>
             <div className="sidebar-note hide-collapsed">
               <FlaskConical size={12} /> Ambiente de validação
             </div>
