@@ -5170,3 +5170,108 @@ body,
     font-size: 21px;
   }
 }
+
+
+/* Fluxo autenticado separado do ambiente de demonstração. */
+.secure-access-page {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: min(690px, 75vh);
+  padding-block: 54px 80px;
+}
+.secure-access-card {
+  width: min(100%, 660px);
+  background: var(--surface, #fff);
+  color: var(--ink, #14283c);
+  border: 1px solid var(--line, #e1e7eb);
+  border-radius: 10px;
+  padding: clamp(22px, 4vw, 36px);
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  box-shadow: 0 12px 32px rgba(19, 49, 58, 0.035);
+}
+.secure-access-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--primary, #236d62);
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+.secure-access-card h1 {
+  font-size: clamp(22px, 3.5vw, 28px);
+  line-height: 1.25;
+  letter-spacing: -0.025em;
+}
+.secure-access-card > p {
+  color: var(--muted, #6a8190);
+  line-height: 1.7;
+}
+.secure-access-card form {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 16px;
+}
+.secure-access-card .form-row { display: flex; flex-direction: column; gap: 7px; }
+.secure-access-card .form-row input { width: 100%; }
+.secure-access-error {
+  color: #a93748;
+  background: #fff2f3;
+  border: 1px solid #f4d3d8;
+  border-radius: 6px;
+  padding: 12px;
+  line-height: 1.6;
+}
+.secure-access-foot {
+  border-top: 1px solid var(--line, #e1e7eb);
+  padding-top: 18px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+.secure-access-foot a {
+  color: var(--primary, #236d62);
+  font-weight: 650;
+}
+.secure-document {
+  border: 1px solid var(--line, #e1e7eb);
+  border-radius: 8px;
+  padding: 16px;
+}
+.secure-document h2 { font-size: 16px; margin-bottom: 4px; }
+.secure-document-content {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 245px;
+  overflow-y: auto;
+  line-height: 1.65;
+  padding: 14px 16px;
+  border-radius: 6px;
+  background: #f6f8fa;
+  color: var(--ink, #14283c);
+  margin-top: 10px;
+}
+.secure-check {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  line-height: 1.5;
+}
+.secure-check input[type="checkbox"] {
+  flex: none;
+  min-height: 18px;
+  height: 18px;
+  width: 18px;
+  margin: 2px 0 0;
+}
+@media (max-width: 680px) {
+  .secure-access-page { padding-block: 20px 55px; }
+  .secure-access-card { padding: 21px; }
+  .secure-access-foot { align-items: stretch; }
+}
