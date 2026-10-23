@@ -1,30 +1,10 @@
 import { useState, type CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
-import {
-  ArrowRight,
-  ArrowUpRight,
-  Check,
-  KanbanSquare,
-  ListTodo,
-  ChartNoAxesCombined,
-  UsersRound,
-  Palette,
-  Building2,
-  Clock3,
-  CheckCircle2,
-  Plus,
-  CalendarDays,
-  MessageSquareText,
-  Target,
-  Gift,
-  Package,
-  HeartHandshake,
-} from 'lucide-react';
+import { ArrowRight, Check, CheckCircle2, Plus } from 'lucide-react';
 import { PublicShell } from './PublicShell';
 const modules = [
   {
     id: 'atendimento',
-    icon: KanbanSquare,
     label: 'Atendimento por etapas',
     title: 'Entenda o interesse. Acompanhe a conversa.',
     description:
@@ -38,7 +18,6 @@ const modules = [
   },
   {
     id: 'tarefas',
-    icon: ListTodo,
     label: 'Tarefas e rotina',
     title: 'Toda conversa merece um próximo passo.',
     description:
@@ -52,7 +31,6 @@ const modules = [
   },
   {
     id: 'gestao',
-    icon: ChartNoAxesCombined,
     label: 'Indicadores',
     title: 'Veja o movimento antes de decidir a prioridade.',
     description:
@@ -66,7 +44,6 @@ const modules = [
   },
   {
     id: 'equipe',
-    icon: UsersRound,
     label: 'Equipe',
     title: 'Responsáveis definidos. Atendimento mais organizado.',
     description:
@@ -80,7 +57,6 @@ const modules = [
   },
   {
     id: 'identidade',
-    icon: Palette,
     label: 'Sua identidade',
     title: 'A sua empresa também aparece no sistema.',
     description:
@@ -121,7 +97,6 @@ function ContactExample() {
           R$ 890,00 <small>valor estimado</small>
         </strong>
         <div className="fx-next-action">
-          <Clock3 size={15} />
           <span>Próxima ação: retomar orçamento</span>
         </div>
         <div className="fx-example-fields">
@@ -164,6 +139,7 @@ function TasksExample() {
     ['Retomar orçamento', 'Juliana · Hoje'],
     ['Acompanhar indicação', 'Bruna · Amanhã'],
   ];
+  const progress = Math.round((done.length / tasks.length) * 100);
   return (
     <div className="fx-tasks">
       <div className="fx-example-top">
@@ -172,12 +148,10 @@ function TasksExample() {
       </div>
       <div className="fx-task-summary">
         <strong>
-          {3 - done.length}
+          {tasks.length - done.length}
           <small>tarefas pendentes</small>
         </strong>
-        <span>
-          <CalendarDays size={16} /> Próximas ações
-        </span>
+        <span>Próximas ações</span>
       </div>
       {tasks.map(([title, detail]) => (
         <label className={'fx-task-row ' + (done.includes(title) ? 'is-done' : '')} key={title}>
@@ -199,8 +173,19 @@ function TasksExample() {
           )}
         </label>
       ))}
+      <div
+        className="fx-task-progress"
+        role="progressbar"
+        aria-label="Tarefas concluídas no exemplo"
+        aria-valuemin={0}
+        aria-valuemax={tasks.length}
+        aria-valuenow={done.length}
+        aria-valuetext={`${done.length} de ${tasks.length} tarefas concluídas (${progress}%)`}
+      >
+        <span style={{ width: `${progress}%` }} />
+      </div>
       <p className="fx-example-note" role="status">
-        {done.length} de 3 tarefas concluídas neste exemplo.
+        {done.length} de {tasks.length} tarefas concluídas neste exemplo · {progress}%.
       </p>
     </div>
   );
@@ -265,7 +250,6 @@ function TeamExample() {
     <div className="fx-team">
       <div className="fx-example-top">
         <strong>Pessoas e responsabilidades</strong>
-        <UsersRound size={18} />
       </div>
       {[
         ['MC', 'Mariana Costa', 'Gestor', 'Acompanha a empresa'],
@@ -296,7 +280,6 @@ function IdentityExample() {
     <div className="fx-branding">
       <div className="fx-example-top">
         <strong>A identidade da sua empresa</strong>
-        <Palette size={18} />
       </div>
       <div className="fx-brand-preview" style={{ '--sample-brand': color } as CSSProperties}>
         <div>
@@ -312,15 +295,9 @@ function IdentityExample() {
           <strong>{name.trim() || 'Sua empresa'}</strong>
         </div>
         <nav aria-label="Menu ilustrativo">
-          <span>
-            <ChartNoAxesCombined size={15} /> Visão geral
-          </span>
-          <span>
-            <KanbanSquare size={15} /> Novos contatos
-          </span>
-          <span>
-            <ListTodo size={15} /> Tarefas
-          </span>
+          <span>Visão geral</span>
+          <span>Novos contatos</span>
+          <span>Tarefas</span>
         </nav>
       </div>
       <label className="fx-brand-name">
@@ -361,7 +338,7 @@ export function FeatureExplorer() {
   return (
     <div className="feature-explorer">
       <div className="fx-switcher" aria-label="Explorar funcionalidades">
-        {modules.map(({ id, icon: Icon, label }, i) => (
+        {modules.map(({ id, label }, i) => (
           <button
             type="button"
             key={id}
@@ -369,7 +346,6 @@ export function FeatureExplorer() {
             onClick={() => setActive(i)}
             className={active === i ? 'active' : ''}
           >
-            <Icon size={18} />
             <span>{label}</span>
           </button>
         ))}
@@ -384,7 +360,6 @@ export function FeatureExplorer() {
           <ul>
             {module.bullets.map((text) => (
               <li key={text}>
-                <Check size={15} />
                 <span>{text}</span>
               </li>
             ))}
@@ -440,46 +415,36 @@ function PlannedFeatures() {
       <div className="planned-grid">
         {[
           [
-            Clock3,
             'Acompanhamento após a consulta',
             'Sequência após a consulta sem fechamento: 24 horas, 3, 7, 15, 21 e 29 dias; depois, acompanhamento mensal. Gatilhos, pausas e encerramento ainda serão definidos.',
           ],
           [
-            Target,
             'Estratégias do mês',
             'Organização de ações como tráfego pago, indicação, parcerias e campanhas sazonais.',
           ],
           [
-            Package,
             'Serviços e produtos',
             'Evolução do campo de interesse atual para um cadastro estruturado do que cada empresa oferece.',
           ],
           [
-            MessageSquareText,
             'Apoio à conversa',
             'Materiais de quebra de objeções e orientações por etapa, com conteúdo específico para cada operação.',
           ],
           [
-            HeartHandshake,
             'Indicações de clientes',
             'Relacionamento com quem já é cliente e acompanhamento das oportunidades que chegam por indicação.',
           ],
           [
-            Gift,
             'Embaixadores e campanhas',
             'Cadastro, pontuação, comissões e premiações. Períodos, estornos e regras de cálculo ainda precisam ser definidos.',
           ],
-        ].map(([Icon, title, text]) => {
-          const I = Icon as typeof Clock3;
-          return (
-            <article key={String(title)}>
-              <I size={21} />
-              <span>Em alinhamento</span>
-              <h3>{String(title)}</h3>
-              <p>{String(text)}</p>
-            </article>
-          );
-        })}
+        ].map(([title, text]) => (
+          <article key={title}>
+            <span>Em alinhamento</span>
+            <h3>{title}</h3>
+            <p>{text}</p>
+          </article>
+        ))}
       </div>
     </section>
   );
@@ -529,14 +494,12 @@ export function FeaturesPage() {
                   <h3>{title}</h3>
                   <p>{text}</p>
                 </div>
-                <Check size={16} />
               </article>
             ))}
           </div>
         </section>
         <section className="features-admin public-container">
           <div className="features-admin-heading">
-            <Building2 size={24} />
             <div>
               <span className="home-eyebrow">PARA QUEM ADMINISTRA A PLATAFORMA</span>
               <h2>Uma visão própria para cuidar das empresas.</h2>
@@ -561,7 +524,6 @@ export function FeaturesPage() {
               <strong>2</strong>
             </div>
             <div className="admin-showcase-note">
-              <ChartNoAxesCombined size={21} />
               <span>
                 Filtros para acompanhar
                 <br />
@@ -600,10 +562,7 @@ export function FeaturesPage() {
               'Assistentes de IA',
               'Módulo financeiro',
             ].map((s) => (
-              <span key={s}>
-                {s}
-                <ArrowUpRight size={16} />
-              </span>
+              <span key={s}>{s}</span>
             ))}
           </div>
         </section>

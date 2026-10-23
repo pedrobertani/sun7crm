@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { ShieldCheck, ArrowRight } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { useCrm } from '../../app/context';
 import { LEGAL } from '../../domain/legal';
 import { roleLabels } from '../../domain/config';
@@ -21,9 +21,6 @@ export function Acceptance() {
     <PublicShell title="Primeiro acesso · SUN7CRM">
       <main className="consent-page public-container">
         <section className="consent-card">
-          <span className="consent-icon">
-            <ShieldCheck size={28} />
-          </span>
           <span className="home-eyebrow">PRIMEIRO ACESSO</span>
           <h1>
             Antes de explorar,

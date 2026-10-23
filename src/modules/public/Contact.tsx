@@ -1,4 +1,4 @@
-import { ArrowUpRight, MessageCircle } from 'lucide-react';
+import { ArrowUpRight } from 'lucide-react';
 import { PublicShell } from './PublicShell';
 
 const WHATSAPP_MESSAGE = 'Olá, vim pelo SUN7CRM e gostaria de saber mais sobre o sistema.';
@@ -21,9 +21,6 @@ export function ContactPage() {
           </p>
         </div>
         <section className="contact-card" aria-labelledby="whatsapp-title">
-          <span className="contact-icon">
-            <MessageCircle size={30} />
-          </span>
           <h2 id="whatsapp-title">Atendimento pelo WhatsApp</h2>
           <p>Uma conversa para entender o que você precisa.</p>
           <a

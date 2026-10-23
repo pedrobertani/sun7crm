@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ArrowLeft, FileText } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { LEGAL } from '../../domain/legal';
 import { PublicShell } from './PublicShell';
 const privacy = [
@@ -97,7 +97,6 @@ export function LegalPage({ kind }: { kind: 'privacy' | 'terms' }) {
           <ArrowLeft size={16} /> Voltar ao acesso
         </Link>
         <div className="legal-heading">
-          <FileText size={26} />
           <span className="home-eyebrow">TRANSPARÊNCIA</span>
           <h1>{title}</h1>
           <p>

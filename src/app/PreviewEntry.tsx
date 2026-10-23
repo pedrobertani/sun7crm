@@ -1,5 +1,5 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { ArrowRight, FlaskConical, Building2 } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { useCrm } from './context';
 import { roleLabels } from '../domain/config';
 import type { Role } from '../domain/types';
@@ -23,7 +23,6 @@ export function PreviewEntry() {
           <h1>Sua próxima boa conversa começa aqui.</h1>
           <p>Escolha uma empresa e um perfil de exemplo para explorar o CRM.</p>
           <div className="access-note">
-            <FlaskConical size={21} />
             <p>
               Este acesso é simulado. Não informe senhas ou dados pessoais reais. A criação de
               contas será feita pelo administrador e pelos gestores na versão com autenticação.
@@ -34,7 +33,6 @@ export function PreviewEntry() {
           </Link>
         </div>
         <section className="access-card">
-          <Building2 size={29} />
           <h2>Explorar a demo</h2>
           <p>Experimente a rotina da empresa e da equipe.</p>
           <form

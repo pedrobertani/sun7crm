@@ -55,5 +55,6 @@ As telas não acessam `localStorage` diretamente. O adaptador `BrowserRepository
 - [Arquitetura e limites](docs/arquitetura.md)
 - [Reuso do StudioPro](docs/reuso-studiopro.md)
 - [Validação realizada](docs/validacao.md)
+- [Diretrizes de interface](docs/diretrizes-de-interface.md)
 
 A demo comercial anterior permanece separada. Integrações WhatsApp/Meta/IA, cobrança automática, financeiro, cadências e comissões não estão implementadas nesta base.

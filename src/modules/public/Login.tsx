@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, Clock3 } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
 import { BrandSymbol, PublicShell } from './PublicShell';
@@ -32,7 +32,6 @@ export function LoginPage() {
           <p>Use o e-mail e a senha fornecidos pelo responsável pelo seu acesso.</p>
 
           <div className="login-status" id="login-status" role="status">
-            <Clock3 size={19} />
             <div>
               <strong>Acesso em preparação</strong>
               <p>

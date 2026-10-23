@@ -3011,15 +3011,8 @@ body,
   line-height: 1.8;
 }
 .access-note {
-  display: flex;
-  gap: 15px;
-  align-items: flex-start;
   color: #797263;
   padding: 25px 0 32px;
-}
-.access-note svg {
-  flex-shrink: 0;
-  margin-top: 4px;
 }
 .access-note p {
   font-size: 12px;
@@ -3032,14 +3025,11 @@ body,
   padding: 35px;
   background: #fff;
 }
-.access-card > svg {
-  color: #797263;
-}
 .access-card h2 {
   font-size: 25px;
   letter-spacing: -0.6px;
   font-weight: 650;
-  margin-top: 19px;
+  margin-top: 0;
 }
 .access-card > p {
   font-size: 12px;
@@ -3076,11 +3066,6 @@ body,
 }
 .legal-heading {
   padding-top: 35px;
-}
-.legal-heading > svg {
-  display: block;
-  color: #797263;
-  margin-bottom: 19px;
 }
 .legal-heading h1 {
   font-size: 40px;
@@ -3163,16 +3148,6 @@ body,
   border-radius: 17px;
   padding: 40px;
   box-shadow: 0 20px 60px #221a0d08;
-}
-.consent-icon {
-  display: grid;
-  width: 56px;
-  height: 56px;
-  place-items: center;
-  border-radius: 15px;
-  background: #f1efea;
-  color: #797263;
-  margin-bottom: 23px;
 }
 .consent-card h1 {
   font-size: 32px;
@@ -3793,6 +3768,19 @@ body,
   display: block;
   margin-top: 6px;
 }
+.fx-task-progress {
+  height: 6px;
+  margin-top: 20px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e6e0d2;
+}
+.fx-task-progress > span {
+  display: block;
+  height: 100%;
+  background: #ad8b43;
+  border-radius: inherit;
+}
 .fx-task-row.is-done strong {
   text-decoration: line-through;
   color: #797263;
@@ -4105,27 +4093,12 @@ body,
   color: #797263;
   margin-top: 7px;
 }
-.features-catalog-grid svg {
-  color: #797263;
-  margin-top: 4px;
-  flex-shrink: 0;
-}
 .features-admin {
   background: #f1efeb;
   padding: 37px 40px;
   border: 1px solid #e6e2da;
   border-radius: 14px;
   margin-bottom: 70px;
-}
-.features-admin-heading {
-  display: flex;
-  align-items: flex-start;
-  gap: 20px;
-}
-.features-admin-heading > svg {
-  color: #797263;
-  flex-shrink: 0;
-  margin-top: 4px;
 }
 .features-admin h2 {
   font-size: 27px;
@@ -4193,11 +4166,8 @@ body,
   border: 1px solid #e9e6d8;
   border-radius: 10px;
 }
-.planned-grid article > svg {
-  color: #ab9a65;
-}
 .planned-grid article > span {
-  float: right;
+  display: inline-flex;
   color: #a79873;
   font-size: 8px;
   border: 1px solid #e5dfc8;
@@ -4205,7 +4175,7 @@ body,
   padding: 4px 7px;
 }
 .planned-grid h3 {
-  margin-top: 22px;
+  margin-top: 16px;
   font-size: 15px;
   font-weight: 600;
 }
@@ -4418,9 +4388,6 @@ body,
     padding: 27px 22px;
     margin-bottom: 45px;
   }
-  .features-admin-heading {
-    gap: 13px;
-  }
   .features-admin h2 {
     font-size: 24px;
   }
@@ -4542,9 +4509,6 @@ body,
   .fx-example-fields {
     gap: 8px;
   }
-  .features-admin-heading > svg {
-    display: none;
-  }
 }
 /* Identidade SUN7: símbolo original, preto, branco e dourado no site público. */
 .public-site {
@@ -4608,6 +4572,7 @@ body,
   color: #ebc76a;
 }
 .public-header .public-access {
+  min-height: 44px;
   border-color: #b98e35;
   background: #d9b251;
   color: #1c1913;
@@ -4625,6 +4590,7 @@ body,
   border-color: #ded7c8;
 }
 .public-site .btn:not(.btn-outline):not(.btn-ghost):not(.btn-danger) {
+  min-height: 44px;
   background: #d9b251;
   color: #211b10;
   border-color: #d9b251;
@@ -4751,18 +4717,12 @@ body,
   color: #afa78e;
   padding-block: 23px 28px;
 }
-.access-note svg {
-  color: #c6a354;
-}
 .access-intro .home-text-link {
   color: #d2b363;
 }
 .access-card {
   box-shadow: 0 15px 45px #57441a0b;
   border-color: #e3dccd;
-}
-.access-card > svg {
-  color: #aa822e;
 }
 .access-card h2 {
   color: #242323;
@@ -4790,10 +4750,6 @@ body,
 }
 .public-footer .sun7-symbol {
   --symbol-height: 38px;
-}
-.consent-icon {
-  background: #f7efd9;
-  color: #a47d29;
 }
 .legal-check input {
   accent-color: #aa822a;
@@ -4966,19 +4922,12 @@ body,
   line-height: 1.85;
 }
 .login-status {
-  display: flex;
-  align-items: flex-start;
-  gap: 11px;
   padding: 14px;
   margin-block: 22px;
   border: 1px solid #eee3c7;
   border-radius: 9px;
   background: #fcf8ee;
   color: #8e6b25;
-}
-.login-status > svg {
-  flex-shrink: 0;
-  margin-top: 2px;
 }
 .login-status strong {
   font-size: 12px;
@@ -5114,16 +5063,6 @@ body,
   padding: 35px;
   box-shadow: 0 15px 45px #57441a09;
 }
-.contact-icon {
-  display: grid;
-  place-items: center;
-  width: 60px;
-  height: 60px;
-  background: #f8f0dc;
-  color: #a47c29;
-  border-radius: 15px;
-  margin-bottom: 25px;
-}
 .contact-card h2 {
   font-size: 22px;
   font-weight: 650;
@@ -5183,7 +5122,7 @@ body,
   .public-header .public-access {
     grid-area: access;
     justify-self: end;
-    min-height: 40px;
+    min-height: 44px;
     padding: 10px 12px;
     font-size: 12px;
   }

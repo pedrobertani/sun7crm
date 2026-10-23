@@ -66,3 +66,15 @@ Conferidos o botão Acessar do cabeçalho abrindo `/acessar`, Explorar a demo ab
 Áreas de 320, 390 e 900 px conferidas em iframes locais, além da janela desktop: sem transbordamento horizontal, formulário antes da apresentação nas telas menores e título dentro da largura disponível. A ferramenta temporária de conferência foi removida antes do build. Os 33 testes existentes passaram; a autenticação real continua fora da validação desta etapa.
 
 Ajuste visual posterior: removido o ícone decorativo acima de Acesse sua conta e ocultada a opção Esqueci minha senha. O título passa a iniciar junto ao espaçamento interno do cartão, sem reservar o espaço do ícone.
+
+## Redução de elementos decorativos
+
+Removidos ícones de abertura e avisos em Primeiro acesso, Login, Demo, Contato e documentos. A apresentação de funcionalidades usa rótulos e texto, sem ícones decorativos nos seletores, cartões, listas e exemplos. Botões principais das páginas públicas têm altura mínima de 44 px CSS. Identidade visual, ações de navegação e indicadores de estado dos controles permanecem funcionais. As confirmações de documentos mantêm os mesmos estados e validações.
+
+As referências de interação indicadas pelo usuário estão em `diretrizes-de-interface.md`. Progresso e porcentagens ficam vinculados a etapas ou quantidades verificáveis; esta alteração não adiciona progresso fictício aos fluxos.
+
+O exemplo interativo Tarefas e rotina da apresentação mostra uma barra, a contagem de tarefas concluídas e a porcentagem calculada sobre as três tarefas do próprio exemplo. Marcar e desmarcar atualiza o mesmo estado local do exemplo; não altera os cadastros da demo.
+
+Conferidos no navegador os estados de 0/3 (0%), 1/3 (33%), 3/3 (100%) e a reabertura para 2/3 (67%). A contagem de pendências acompanha as mesmas tarefas.
+
+No navegador, Primeiro acesso sem confirmações e com somente uma confirmação manteve o botão indisponível; com as duas, o botão foi habilitado. Nenhuma confirmação final foi enviada nessa conferência. O exemplo de etapa em Funcionalidades continuou atualizando o texto ao selecionar Agendado; não houve transbordamento horizontal na janela desktop, e o botão Acessar mediu 44 px de altura. Os quatro testes de domínio de aceite passaram.

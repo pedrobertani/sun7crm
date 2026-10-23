@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, ArrowUpRight, Check } from 'lucide-react';
+import { ArrowRight, ArrowUpRight } from 'lucide-react';
 import { PublicShell } from './PublicShell';
 function BoardIllustration() {
   return (
@@ -76,7 +76,6 @@ function BoardIllustration() {
                 <b>{c.value}</b>
                 <div>
                   <small>Próxima ação definida</small>
-                  <Check size={13} />
                 </div>
               </div>
             ))}
@@ -84,9 +83,7 @@ function BoardIllustration() {
         ))}
       </div>
       <div className="product-bottom">
-        <span>
-          <Check size={14} /> Tudo tem um próximo passo.
-        </span>
+        <span>Tudo tem um próximo passo.</span>
         <span>3 etapas ilustradas</span>
       </div>
     </div>
