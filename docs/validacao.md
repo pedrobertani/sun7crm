@@ -64,3 +64,5 @@ Conferência no navegador com áreas de 320, 390, 760, 1.000 e 1.920 px, além d
 Conferidos o botão Acessar do cabeçalho abrindo `/acessar`, Explorar a demo abrindo `/demo`, entrada no dashboard fictício por Continuar e saída retornando a `/demo`. `/login` redireciona para `/acessar`, e `/entrar` permanece como entrada compatível da prévia. O aviso e os três controles de acesso (e-mail, senha e Entrar) indicam indisponibilidade: nenhum dado de autenticação é recebido, enviado ou persistido. A orientação Esqueci minha senha abre e respeita a hierarquia equipe → gestor → administrador.
 
 Áreas de 320, 390 e 900 px conferidas em iframes locais, além da janela desktop: sem transbordamento horizontal, formulário antes da apresentação nas telas menores e título dentro da largura disponível. A ferramenta temporária de conferência foi removida antes do build. Os 33 testes existentes passaram; a autenticação real continua fora da validação desta etapa.
+
+Ajuste visual posterior: removido o ícone decorativo acima de Acesse sua conta e ocultada a opção Esqueci minha senha. O título passa a iniciar junto ao espaçamento interno do cartão, sem reservar o espaço do ícone.

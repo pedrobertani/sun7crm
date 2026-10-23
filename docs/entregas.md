@@ -7,7 +7,7 @@ A base visual aprovada é o ponto de partida do produto. A implementação conti
 - Cabeçalho Acessar → tela de login da conta em `/acessar`.
 - Explorar a demo → entrada da demonstração em `/demo`, com empresas e perfis fictícios.
 - E-mail, senha e Entrar indisponíveis até a conexão da autenticação. Sem login por dados locais ou cadastro público.
-- Orientação para senha perdida conforme a hierarquia já definida.
+- Recuperação de senha oculta na tela por enquanto; a hierarquia de redefinição permanece definida nas regras de negócio.
 - Documentos públicos acessíveis nos dois caminhos. O aceite local da demo não será aceito como evidência de uma sessão real.
 
 ## Próximas entregas, na ordem das dependências

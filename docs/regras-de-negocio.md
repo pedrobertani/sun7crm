@@ -64,7 +64,7 @@ Nos funis e nas tarefas, arrastar começa pela alça de pontinhos. O gesto usa e
 
 Site público, recursos, Termos de Uso e Política de Privacidade ficam disponíveis antes da entrada. Cada pessoa confirma os Termos e a leitura da Política no primeiro acesso e quando houver alteração relevante que exija nova confirmação. O gestor não confirma pela equipe. A prévia simula essa regra por identidade/empresa/versão em armazenamento local, sem criar autenticação ou evidência jurídica de identidade. Detalhes e pendências de produção: `privacidade-e-primeiro-acesso.md`.
 
-O botão Acessar do cabeçalho abre o login da conta. Explorar a demo abre a demonstração com empresas e perfis fictícios, sem senha. A tela de login está preparada visualmente, com campos indisponíveis enquanto não houver autenticação. O administrador da plataforma cadastra o gestor, que cadastra a equipe. Não há cadastro público ou recuperação automática por e-mail. A orientação de senha perdida respeita a hierarquia equipe → gestor → administrador da plataforma.
+O botão Acessar do cabeçalho abre o login da conta. Explorar a demo abre a demonstração com empresas e perfis fictícios, sem senha. A tela de login está preparada visualmente, com campos indisponíveis enquanto não houver autenticação. O administrador da plataforma cadastra o gestor, que cadastra a equipe. Não há cadastro público ou recuperação automática por e-mail. Recuperação de senha fica oculta na tela de login por enquanto. A regra prevista de redefinição mantém a hierarquia equipe → gestor → administrador da plataforma.
 
 ## Identidade institucional SUN7CRM
 

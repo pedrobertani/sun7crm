@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, ChevronDown, Clock3, LogIn } from 'lucide-react';
+import { ArrowRight, Clock3 } from 'lucide-react';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
 import { BrandSymbol, PublicShell } from './PublicShell';
@@ -28,9 +28,6 @@ export function LoginPage() {
         </section>
 
         <section className="login-card" aria-labelledby="login-title">
-          <span className="login-icon">
-            <LogIn size={25} />
-          </span>
           <h2 id="login-title">Acesse sua conta</h2>
           <p>Use o e-mail e a senha fornecidos pelo responsável pelo seu acesso.</p>
 
@@ -75,15 +72,6 @@ export function LoginPage() {
             </fieldset>
           </form>
 
-          <details className="login-recovery">
-            <summary>
-              Esqueci minha senha <ChevronDown size={16} />
-            </summary>
-            <p>
-              Se você faz parte da equipe, peça a redefinição ao gestor da empresa. Se você é
-              gestor, solicite ao administrador da plataforma.
-            </p>
-          </details>
           <p className="login-provisioning">
             O gestor recebe seu acesso do administrador da plataforma e cadastra os integrantes da
             equipe. A troca da própria senha ficará disponível nas configurações da conta.
