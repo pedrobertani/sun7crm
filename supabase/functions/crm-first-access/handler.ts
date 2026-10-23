@@ -4,7 +4,7 @@ import { keys, password, uuid } from '../_shared/validation.ts';
 
 // Apenas o proprio usuario autenticado pode substituir a senha temporaria.
 // A identitidade vem de Auth.getUser(token), nunca do JSON enviado.
-export async function completeFirstAccess({ actorId, body, backend }: CommandContext) {
+export async function completeFirstAccess({ actorId, requestId, body, backend }: CommandContext) {
   keys(body, ['password']);
   const nextPassword = password(body.password);
   const nonce = uuid(
@@ -26,7 +26,7 @@ export async function completeFirstAccess({ actorId, body, backend }: CommandCon
       p_nonce: nonce,
     });
   } catch {
-    backend.report('FIRST_ACCESS_REVIEW_REQUIRED', actorId);
+    backend.report('FIRST_ACCESS_REVIEW_REQUIRED', requestId);
     throw new HttpError(
       503,
       'FIRST_ACCESS_REVIEW_REQUIRED',
