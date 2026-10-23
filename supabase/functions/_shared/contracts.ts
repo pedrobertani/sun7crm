@@ -4,9 +4,13 @@ export type JsonObject = Record<string, unknown>;
 export interface Backend {
   authenticate(token: string): Promise<string | null>;
   rpc<T>(name: string, args: JsonObject): Promise<T>;
-  createUser(input: { email: string; operationId: string }): Promise<{ id: string }>;
+  createUser(input: {
+    email: string;
+    password: string;
+    operationId: string;
+  }): Promise<{ id: string }>;
   deleteUser(userId: string): Promise<void>;
-  resetPassword(userId: string): Promise<void>;
+  resetPassword(userId: string, password: string): Promise<void>;
   report(code: string, requestId: string): void;
 }
 
