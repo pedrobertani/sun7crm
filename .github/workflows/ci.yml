@@ -18,4 +18,6 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run test:db
+      - run: npm run typecheck:functions
+      - run: npm run test:functions
       - run: npm run build

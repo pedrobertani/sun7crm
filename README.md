@@ -4,7 +4,7 @@ Base inicial do CRM comercial, construída a partir do visual da demo aprovada. 
 
 ## Estado atual
 
-**Protótipo de desenvolvimento sem banco de dados, backend ou autenticação real.** Os dados são fictícios e ficam no `localStorage` do navegador. Não inserir dados pessoais reais ou senhas. Os seletores do topo permitem validar diferentes visões; não representam autorização de produção.
+**A interface publicada continua como demo local, com login real ainda indisponível.** Os dados da demo são fictícios e ficam no `localStorage` do navegador. O repositório também contém migrações e as primeiras Edge Functions para integração ao Supabase. Não inserir dados pessoais reais ou senhas na demo. Os seletores do topo permitem validar diferentes visões; não representam autorização de produção.
 
 - Dashboard da empresa com gráficos, indicadores e período selecionável. Cards abrem as telas de detalhe com os filtros correspondentes.
 - Demo pública com perfis de gestor, vendedor/consultora e recepção; entrada direta, sem aceite de documentos.
@@ -32,6 +32,8 @@ npm run dev
 npm run typecheck
 npm test
 npm run test:db
+npm run typecheck:functions
+npm run test:functions
 npm run build
 ```
 
@@ -39,7 +41,9 @@ O resultado estático é gerado em `dist/`. Nenhuma chave ou configuração Supa
 
 ## Fundação Supabase preparada
 
-A migração inicial, o bootstrap do administrador e o roteiro de aplicação estão em [supabase/README.md](supabase/README.md). O SQL cria a estrutura vazia e políticas de isolamento; não foi aplicado ao projeto remoto. A demo continua usando seu adaptador local. Dados reais, login e comandos administrativos dependem da integração com Supabase Auth e Edge Functions.
+A migração inicial, o bootstrap do administrador e o roteiro de aplicação estão em [supabase/README.md](supabase/README.md). O usuário informou a execução desses dois scripts no Supabase; não houve verificação remota pelo desenvolvimento. A migração adicional e três Edge Functions têm código e testes locais, com publicação remota ainda pendente. A demo continua usando seu adaptador local. Dados reais e login dependem da integração com a sessão, os aceites e os formulários.
+
+Os endpoints `crm-create-company`, `crm-create-user` e `crm-reset-password` têm responsabilidades separadas. Contratos, autorização, segredos padrão, publicação e limites estão em [docs/edge-functions.md](docs/edge-functions.md). Os testes de handlers requerem Node 24.
 
 ## Organização
 

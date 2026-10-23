@@ -1,6 +1,6 @@
 # Banco inicial do SUN7CRM
 
-Migração preparada para o projeto Supabase informado (`oduhbimlxnuyqliayvpl`). A aplicação continua em React + Vite + TypeScript; Supabase fornece Postgres, Auth e o futuro backend em Edge Functions. O arquivo SQL não depende de Next.js e ainda não foi executado no projeto remoto.
+Migrações preparadas para o projeto Supabase informado (`oduhbimlxnuyqliayvpl`). A aplicação continua em React + Vite + TypeScript; Supabase fornece Postgres, Auth e o backend em Edge Functions. O usuário informou a execução da fundação e do bootstrap do administrador; não houve verificação remota. A migração adicional e as funções desta entrega ainda precisam de publicação. O SQL não depende de Next.js.
 
 ## Aplicação
 
@@ -46,7 +46,7 @@ Não há exclusão direta de dados operacionais pela Data API nesta primeira mig
 ## Próxima integração
 
 - O cliente sob demanda está preparado em `src/lib/supabase.ts`, com armazenamento de sessão separado da demo e chave publicável. Conectar a sessão real, os módulos e o adapter assíncrono permanece uma próxima entrega. A existência das variáveis de ambiente não habilita o login por si só.
-- Edge Functions verificando a identidade do solicitante e a hierarquia Caio → gestor → equipe antes de criar ou redefinir usuários. A Admin API e as chaves elevadas pertencem ao backend.
+- Três Edge Functions já preparadas, cada uma com responsabilidade própria, para criar empresa, criar usuário e redefinir senha de outra pessoa. Aplicar a migração adicional `20261023203000_crm_edge_commands.sql`, publicar os endpoints e validar no ambiente real. A Admin API e as chaves elevadas pertencem ao backend. Guia: `../docs/edge-functions.md`.
 - Comandos transacionais para criação da empresa/gestor/quadros, edição/ordem de etapas, transferência antes de exclusão e limites de quadros/etapas ainda provisórios. A migração permite leitura dos quadros e movimento de cartões, mas não libera sua edição estrutural pelo navegador.
 - Publicação dos documentos finais e definição das versões exigidas, seguida de interface de aceite do usuário real. A migração não liga os rascunhos atuais automaticamente.
 - Upload de logos com bucket e políticas de Storage; `logo_path` armazena o caminho, sem criar bucket público nesta etapa.

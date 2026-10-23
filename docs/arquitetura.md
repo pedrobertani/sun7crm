@@ -23,7 +23,7 @@ A troca do adaptador local por Supabase exigirá chamadas assíncronas, carregam
 
 ## Segurança nesta fase
 
-Não há tokens, senhas, login, e-mails de autenticação, banco, APIs ou serviço de envio de mensagens. Os botões de senha apresentam o fluxo previsto e não coletam credenciais. Os exemplos usam e-mails reservados `.example`/`example.com` e nomes fictícios.
+A interface da demo não usa tokens, senhas, login real ou serviço de envio de mensagens. Os botões de senha apresentam o fluxo previsto e não coletam credenciais. Os exemplos usam e-mails reservados `.example`/`example.com` e nomes fictícios. Migrações e endpoints administrativos estão preparados separadamente para a futura integração.
 
 Antes do piloto real, implementar e testar autorização no servidor, isolamento entre empresas, limites de requisição, revogação de sessões, política de senhas, recuperação excepcional de Caio, auditoria sem segredos e backup/restauração.
 
@@ -41,7 +41,15 @@ A próxima etapa da autenticação deverá conectar cadastro administrativo, ses
 
 ## Fundação de banco preparada
 
-`supabase/migrations/20261023190000_crm_foundation.sql` cria a estrutura inicial e as políticas RLS, sem provisionamento de usuários ou dados fictícios. O roteiro e os limites estão em `supabase/README.md`. Os testes de banco usam PostgreSQL em memória com um stub local de Auth; ainda não houve aplicação ao Supabase remoto nem validação da Data API. Nenhuma chave secreta faz parte dos arquivos do projeto.
+`supabase/migrations/20261023190000_crm_foundation.sql` cria a estrutura inicial e as políticas RLS, sem provisionamento de usuários ou dados fictícios. O roteiro e os limites estão em `supabase/README.md`. O usuário informou aplicação da fundação e do bootstrap administrativo no Supabase; não houve verificação remota. Os testes de banco usam PostgreSQL em memória com um stub local de Auth. Nenhuma chave secreta faz parte dos arquivos do projeto.
+
+## Edge Functions por responsabilidade
+
+Três endpoints independentes em `supabase/functions`: criar empresa, criar usuário e redefinir senha de outra pessoa. Cada diretório mantém seu caso de uso; `_shared` reúne apenas infraestrutura. Login e troca da própria senha usam Supabase Auth diretamente na integração futura.
+
+A migração `20261023203000_crm_edge_commands.sql` oferece transações SQL exclusivas do backend, com autorização própria e grants limitados a `service_role`. Usuários da plataforma não invocam esses comandos diretamente. Auth e banco são serviços separados: a provisão de conta tem reserva, confirmação e cancelamento serializados para tratar falhas parciais. Não há roteador único com `action`.
+
+O runtime usa os dicionários de chaves padrão injetados pelo Supabase, sem credenciais no código. Mantém verificação de JWT na plataforma e valida o usuário pelo Auth antes da autorização. A publicação dessas funções e sua ligação aos formulários ainda estão pendentes. Contratos e restrições estão em `edge-functions.md`.
 
 ## Administração fora da demo pública
 
