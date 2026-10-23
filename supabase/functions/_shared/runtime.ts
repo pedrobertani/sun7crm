@@ -26,7 +26,18 @@ export function serve(command: Command) {
     };
     return {
       auth: createClient(url, injectedKey('SUPABASE_PUBLISHABLE_KEYS', 'sb_publishable_'), options),
-      admin: createClient(url, injectedKey('SUPABASE_SECRET_KEYS', 'sb_secret_'), options),
+      admin: (() => {
+        const secret = injectedKey('SUPABASE_SECRET_KEYS', 'sb_secret_');
+        const secretFetch: typeof fetch = (input, init) => {
+          const request = new Request(input, init);
+          const headers = new Headers(request.headers);
+          if (headers.get('Authorization') === 'Bearer ' + secret) {
+            headers.delete('Authorization');
+          }
+          return fetch(new Request(request, { headers }));
+        };
+        return createClient(url, secret, { ...options, global: { fetch: secretFetch } });
+      })(),
     };
   };
   const backend: Backend = {
