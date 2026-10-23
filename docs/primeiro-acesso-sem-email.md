@@ -20,9 +20,11 @@ Enquanto quem cadastra a conta conhecer a senha inicial, **não é possível pro
 
 ## Implementação pendente
 
-A versão atual das Edge Functions já cria contas com senha inicial sem enviar e-mails. A obrigação de trocar a senha *antes dos aceites* ainda precisa ser aplicada **no backend/banco e no frontend**; esconder páginas na interface não é suficiente. A conclusão do primeiro acesso deve ser validada pelo backend para não permitir pular a troca via API. A alteração própria da senha precisa utilizar uma sessão autenticada, com controles de autorização adequados.
+**Backend implementado e publicado no Supabase (23/10/2026):** migração `crm_first_access` e reforço `crm_first_access_status_invoker`; função `crm-first-access` publicada em v1. O registro `crm_profiles.password_change_required` começa em `true`; o usuário autenticado chama `crm-first-access` para alterar a senha e permitir a posterior confirmação individual dos documentos. O banco exige a troca antes dos aceites e dos dados comerciais. Um reset administrativo remarca a exigência. Não há envio de e-mail.
 
-A branch `feat/seguranca-primeiro-acesso-20261023` mantém a configuração do gateway alinhada ao deploy atual, mas **ainda não implementa o bloqueio de primeiro acesso**. Não liberar usuários reais até completar e testar esse fluxo.
+**Ainda pendente:** implementar a interface de login, o formulário de troca e a tela de aceite no site real; publicar versões finais de Termos e Política. A demonstração continua separada. **Não foi realizado um teste ponta a ponta com login real**, pois o frontend não está integrado.
+
+A branch `feat/seguranca-primeiro-acesso-20261023` contém o endpoint, migrações e configuração. O bloqueio do banco já foi publicado. Não liberar usuários reais até finalizar as telas, os documentos e os testes integrados.
 
 ## Critérios mínimos de validação
 
@@ -40,3 +42,11 @@ A branch `feat/seguranca-primeiro-acesso-20261023` mantém a configuração do g
 ## Evolução futura
 
 Ao registrar domínio e SMTP do SUN7CRM, avaliar convites e recuperação por e-mail com links de uso único e prazo curto, preservando o registro de aceite individual.
+
+## Validação feita nesta etapa
+
+- Testes locais de 10 cenários do handler, com Auth e banco simulados: passaram.
+- Banco real: migrações aplicadas e consulta de permissões confirmou que os comandos de conclusão são exclusivos do backend.
+- A política de inserção dos aceites exige `crm_private.has_completed_first_access()`.
+- O Advisor de segurança não aponta mais a função de status como SECURITY DEFINER executável por usuários autenticados.
+- Testes completos com sessão real, login, recuperação administrativa e isolamento entre empresas ainda pendentes.
