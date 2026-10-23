@@ -9,7 +9,7 @@
     "typecheck": "tsc -b",
     "test": "vitest run",
     "test:db": "node --test supabase/tests/foundation.node.mjs supabase/tests/edge-commands.node.mjs",
-    "test:functions": "node --test supabase/tests/functions.node.mjs",
+    "test:functions": "node --test supabase/tests/functions.node.mjs supabase/tests/first-access.node.mjs",
     "typecheck:functions": "tsc -p supabase/tsconfig.json"
   },
   "dependencies": {
