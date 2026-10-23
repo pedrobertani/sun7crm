@@ -26,6 +26,7 @@ describe('Primeiro acesso', () => {
   it('exige aceite individual das duas versões atuais', () => {
     expect(legalReadiness(required, published, []).accepted).toBe(false);
     expect(legalReadiness(required, published, required.slice(0, 1)).accepted).toBe(false);
+    expect(legalReadiness(required, published, required.slice(0, 1)).pending).toEqual([required[1]]);
     expect(legalReadiness(required, published, required).accepted).toBe(true);
     expect(legalReadiness(required, published, [
       {kind: 'terms', version: 'old'},
