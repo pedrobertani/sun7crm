@@ -9,3 +9,6 @@ verify_jwt = false
 
 [functions.crm-reset-password]
 verify_jwt = false
+
+[functions.crm-first-access]
+verify_jwt = false
