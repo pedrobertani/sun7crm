@@ -4,6 +4,7 @@ import { Home } from '../modules/public/Home';
 import { LoginPage } from '../modules/public/Login';
 import { LegalPage } from '../modules/public/LegalPages';
 import { PreviewEntry } from './PreviewEntry';
+import { RealAccess } from '../modules/auth/RealAccess';
 import { Component, type ReactNode } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { CrmProvider, useCrm } from './context';
@@ -76,6 +77,7 @@ export function App() {
           <Route path="/recursos" element={<FeaturesPage />} />
           <Route path="/contato" element={<ContactPage />} />
           <Route path="/acessar" element={<LoginPage />} />
+          <Route path="/conta/*" element={<RealAccess />} />
           <Route path="/login" element={<Navigate to="/acessar" replace />} />
           <Route path="/admin/*" element={<Navigate to="/acessar" replace />} />
           <Route path="/demo" element={<PreviewEntry />} />
