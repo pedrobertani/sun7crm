@@ -17,7 +17,7 @@ type Gate =
   | { stage: 'loading' }
   | { stage: 'password'; email: string }
   | { stage: 'legal-unavailable'; email: string }
-  | { stage: 'accept'; email: string; documents: PublishedDocument[] }
+  | { stage: 'accept'; email: string; documents: PublishedDocument[]; pending: RequiredDocument[] }
   | { stage: 'ready'; email: string }
   | { stage: 'error'; message: string };
 
@@ -69,7 +69,7 @@ export function RealAccess() {
         if (!active) return;
         if (!result.ready) setGate({ stage: 'legal-unavailable', email: auth.user.email || '' });
         else if (!result.accepted) {
-          setGate({ stage: 'accept', email: auth.user.email || '', documents: result.documents });
+          setGate({ stage: 'accept', email: auth.user.email || '', documents: result.documents, pending: result.pending });
         } else setGate({ stage: 'ready', email: auth.user.email || '' });
       } catch {
         if (active) setGate({
@@ -133,7 +133,7 @@ export function RealAccess() {
     try {
       const supabase = getSupabaseClient();
       const { error } = await supabase.from('crm_legal_acceptances').insert(
-        gate.documents.map((doc) => ({ kind: doc.kind, version: doc.version })),
+        gate.pending.map((doc) => ({ kind: doc.kind, version: doc.version })),
       );
       if (error) throw error;
       setRefresh((value) => value + 1);
