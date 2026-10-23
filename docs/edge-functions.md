@@ -10,13 +10,13 @@ Cada operação tem diretório, endpoint e caso de uso próprios. Não existe ro
 | `crm-create-user`    | Criar uma conta no Auth e seu perfil/vínculo na empresa             | Caio cria gestor; gestor ativo cria vendedor/recepção na própria empresa habilitada   |
 | `crm-reset-password` | Redefinir a senha de outro usuário                                  | Caio redefine gestor; gestor redefine vendedor/recepção da própria empresa habilitada |
 
-Login e troca da própria senha pertencem ao Supabase Auth e terão integração direta pela aplicação. Não há cadastro público, recuperação automática por e-mail nem mudança obrigatória de senha no primeiro login. Nenhuma função cria outro administrador da plataforma.
+Login e troca da própria senha pertencem ao Supabase Auth e terão integração direta pela aplicação. Não há cadastro público nem e-mails nesta fase. A senha inicial é definida por quem cadastra o usuário e deve ser obrigatoriamente trocada pelo próprio usuário antes dos aceites e do acesso operacional. Nenhuma função cria outro administrador da plataforma.
 
 `_shared` contém somente infraestrutura: autenticação, cliente Supabase, CORS, contratos técnicos, validações primitivas e respostas de erro. Regras e sequência de cada caso de uso ficam em seu diretório. As funções SQL internas existem para transações, conferência de permissões e conciliação; não são endpoints abertos ao navegador.
 
 ## Estado da entrega
 
-Código e migração adicional preparados e testados localmente. A aplicação da fundação e o bootstrap do administrador no Supabase foram informados pelo usuário; não houve inspeção remota dessa execução. A nova migração e as funções desta entrega ainda precisam ser publicadas no Supabase.
+Código e migração adicional preparados e testados localmente. A aplicação da fundação e o bootstrap do administrador no Supabase foram informados pelo usuário; não houve inspeção remota dessa execução. A migração administrativa, as migrações de primeiro acesso e a função `crm-first-access` foram aplicadas/publicadas no Supabase em 23/10/2026. O frontend ainda depende de integração.
 
 O frontend publicado continua como demo local; o login real permanece indisponível. Os formulários ainda não chamam estas funções. O próximo passo de interface é integrar sessão real, leitura/publicação dos documentos, confirmação individual e os formulários administrativos.
 
@@ -34,7 +34,7 @@ Não é necessário cadastrar um segredo personalizado nesta etapa. Não se usa 
 
 `CRM_ALLOWED_ORIGINS` é opcional: lista de origens separadas por vírgula. O padrão já permite `https://sun7crm-base.dreamygull10.chatgpt.site`. Para desenvolvimento local, configurar explicitamente a origem local junto da origem desejada. CORS restringe o navegador; autenticação e autorização também são obrigatórias em chamadas sem `Origin`.
 
-`verify_jwt = true` permanece ativado para os três endpoints. O código ainda exige `Authorization: Bearer <JWT da sessão>`, consulta `auth.getUser(token)` no servidor e rejeita chaves de API no lugar da sessão. O ator é derivado dessa resposta, nunca do corpo enviado. Dados do perfil e metadata editável não concedem privilégios.
+`verify_jwt = false` está configurado nos quatro endpoints devido ao modelo de chaves modernas. Isso não libera operações anônimas: cada função exige JWT de sessão validado via `Auth.getUser(token)` antes de chamar operações privilegiadas. O código ainda exige `Authorization: Bearer <JWT da sessão>`, consulta `auth.getUser(token)` no servidor e rejeita chaves de API no lugar da sessão. O ator é derivado dessa resposta, nunca do corpo enviado. Dados do perfil e metadata editável não concedem privilégios.
 
 Os comandos SQL expostos têm `EXECUTE` somente para `service_role`, `search_path` vazio e autorização própria. As tabelas privadas de controle têm RLS e não possuem grants de leitura/escrita para `anon`, `authenticated` ou `service_role`; as rotinas controladas fazem o acesso. Manter `crm_private` fora dos schemas expostos na Data API.
 
@@ -62,6 +62,8 @@ Retorna `company_id` e `enabled: false`. Valor em centavos inteiros; vencimento 
 A mesma chave de idempotência e os mesmos dados devolvem a empresa existente. Dados diferentes com a mesma chave retornam conflito. Falha de cobrança ou quadro desfaz o cadastro completo da empresa.
 
 ### Criar usuário
+
+Contas criadas sem envio de e-mail. A senha preenchida pelo responsável é **temporária**: `crm_profiles.password_change_required=true`. Antes da troca, o banco impede acesso operacional e aceite individual. O frontend de troca obrigatória ainda será integrado.
 
 ```json
 {
@@ -97,7 +99,7 @@ Não solicita a senha antiga. Rejeita redefinição da própria conta por esse e
 
 A tentativa é persistida antes da alteração no Auth, com ator, empresa, alvo e horário. O resultado fica como `succeeded`, `unconfirmed` ou `pending`, sem senha. Uma falha de rede não é tratada como prova de que a senha permaneceu igual; a função orienta conferir o acesso. Repetir o mesmo UUID não executa novamente a redefinição.
 
-Limites iniciais: cinco tentativas por alvo e 30 por solicitante a cada 15 minutos. O reset não altera vínculos, perfis ou habilitação da empresa. Não se presume revogação imediata de todos os access tokens existentes; a política de duração e revogação de sessões deverá ser validada no Auth do projeto antes do piloto.
+Limites iniciais: cinco tentativas por alvo e 30 por solicitante a cada 15 minutos. O reset não altera vínculos, cargos ou habilitação da empresa, mas marca a senha como temporária novamente, exigindo troca no próximo acesso. Não se presume revogação imediata de todos os access tokens existentes; a política de duração e revogação de sessões deverá ser validada no Auth do projeto antes do piloto.
 
 ## Publicação no projeto informado
 
@@ -131,3 +133,10 @@ Documentação oficial consultada em 23/10/2026:
 - https://supabase.com/docs/reference/javascript/auth-getuser
 - https://supabase.com/docs/reference/javascript/auth-admin-createuser
 - https://supabase.com/docs/reference/javascript/auth-admin-updateuserbyid
+
+
+## Primeiro acesso obrigatório — adição posterior
+
+Endpoint `crm-first-access` (POST) exige JWT de sessão validado pelo Auth, `Idempotency-Key` e JSON `{ "password": "NOVA_SENHA_PESSOAL" }`. Altera a senha de **quem está autenticado**, nunca de identificador fornecido no body. Um nonce de versão impede que uma conclusão antiga ignore reset administrativo concorrente. O SQL disponibiliza `crm_first_access_status()` para ler o próprio estado sem privilégio de escrita.
+
+Backend publicado, mas interface real e testes ponta a ponta ainda pendentes. Sem envio de e-mail. A demonstração permanece separada.
