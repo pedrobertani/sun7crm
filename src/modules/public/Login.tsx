@@ -1,10 +1,44 @@
-import { Link } from 'react-router-dom';
+import { useState, type FormEvent } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
 import { BrandSymbol, PublicShell } from './PublicShell';
+import { getSupabaseClient } from '../../lib/supabase';
 
 export function LoginPage() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const confirmation = (location.state as { message?: string } | null)?.message;
+
+  async function signIn(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (loading) return;
+    setLoading(true);
+    setError('');
+    try {
+      const supabase = getSupabaseClient();
+      const { data, error: authError } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password,
+      });
+      if (authError || !data.user || !data.session || data.user.is_anonymous) {
+        setError('Não foi possível entrar. Verifique o e-mail e a senha.');
+        return;
+      }
+      setPassword('');
+      navigate('/conta', { replace: true, state: null });
+    } catch {
+      setError('Não foi possível conectar ao acesso seguro. Verifique a configuração do Supabase.');
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <PublicShell title="Acessar · SUN7CRM">
       <main className="login-page public-container">
@@ -29,20 +63,14 @@ export function LoginPage() {
 
         <section className="login-card" aria-labelledby="login-title">
           <h2 id="login-title">Acesse sua conta</h2>
-          <p>Use o e-mail e a senha fornecidos pelo responsável pelo seu acesso.</p>
+          <p>Use seu e-mail e a senha inicial fornecida pelo responsável pelo cadastro.
+            Na primeira entrada você definirá uma senha pessoal.</p>
 
-          <div className="login-status" id="login-status" role="status">
-            <div>
-              <strong>Acesso em preparação</strong>
-              <p>
-                As contas ainda não estão liberadas. Enquanto isso,{' '}
-                <Link to="/demo">explore a demo</Link>.
-              </p>
-            </div>
-          </div>
+          {confirmation && <div className="login-status" role="status"><p>{confirmation}</p></div>}
+          {error && <p role="alert" className="secure-access-error">{error}</p>}
 
-          <form aria-label="Acessar sua conta" onSubmit={(event) => event.preventDefault()}>
-            <fieldset disabled aria-describedby="login-status">
+          <form aria-label="Acessar sua conta" onSubmit={(event) => void signIn(event)}>
+            <fieldset disabled={loading}>
               <label className="form-row" htmlFor="login-email">
                 E-mail
                 <Input
@@ -51,6 +79,8 @@ export function LoginPage() {
                   type="email"
                   autoComplete="username"
                   placeholder="seuemail@empresa.com"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
                   required
                 />
               </label>
@@ -62,22 +92,24 @@ export function LoginPage() {
                   type="password"
                   autoComplete="current-password"
                   placeholder="Sua senha"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
                   required
                 />
               </label>
-              <Button type="submit">
-                Entrar <ArrowRight size={17} />
+              <Button type="submit" disabled={!email.trim() || !password}>
+                {loading ? 'Entrando...' : 'Entrar'} <ArrowRight size={17} />
               </Button>
             </fieldset>
           </form>
 
           <p className="login-provisioning">
-            O gestor recebe seu acesso do administrador da plataforma e cadastra os integrantes da
-            equipe. A troca da própria senha ficará disponível nas configurações da conta.
+            Não existe autocadastro nesta etapa. Caio cria o gestor e cada gestor cadastra sua equipe.
+            Os documentos são confirmados individualmente após a troca da senha inicial.
           </p>
           <div className="access-legal-links">
-            <Link to="/termos">Termos de Uso</Link>
-            <Link to="/privacidade">Política de Privacidade</Link>
+            <Link to="/termos">Termos de Uso (prévia)</Link>
+            <Link to="/privacidade">Política de Privacidade (prévia)</Link>
           </div>
         </section>
       </main>
