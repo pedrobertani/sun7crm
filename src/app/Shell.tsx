@@ -179,10 +179,9 @@ export function AppShell() {
               <strong>{current}</strong>
             </div>
             <div className="top-controls">
-              <span className="preview-tag">
-                <span />
-                PRÉVIA
-              </span>
+              <Link to="/" className="demo-site-link">
+                Voltar ao site
+              </Link>
               <label>
                 <span className="sr-only">Empresa da prévia</span>
                 <select

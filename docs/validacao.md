@@ -78,3 +78,9 @@ O exemplo interativo Tarefas e rotina da apresentação mostra uma barra, a cont
 Conferidos no navegador os estados de 0/3 (0%), 1/3 (33%), 3/3 (100%) e a reabertura para 2/3 (67%). A contagem de pendências acompanha as mesmas tarefas.
 
 No navegador, Primeiro acesso sem confirmações e com somente uma confirmação manteve o botão indisponível; com as duas, o botão foi habilitado. Nenhuma confirmação final foi enviada nessa conferência. O exemplo de etapa em Funcionalidades continuou atualizando o texto ao selecionar Agendado; não houve transbordamento horizontal na janela desktop, e o botão Acessar mediu 44 px de altura. Os quatro testes de domínio de aceite passaram.
+
+## Retorno da demo ao site — 23/10/2026
+
+O cabeçalho fixo da área de demonstração apresenta Voltar ao site, com destino à página inicial na mesma aba. O link fica disponível em todas as telas do shell e não encerra a sessão simulada nem altera cadastros. A entrada da demo e o primeiro acesso já mantêm a navegação pública.
+
+Conferidos no navegador o percurso site → demo → dashboard → Voltar ao site e o retorno em uma área de 320 px. O link mediu 44 px de altura. Cabeçalho sem transbordamento horizontal nas áreas de 320, 390 e 1.001 px, simuladas em iframes locais; não houve teste em aparelho físico. A página temporária de conferência foi removida antes do build.

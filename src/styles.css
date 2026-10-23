@@ -425,21 +425,26 @@ svg {
   padding: 8px 9px;
   max-width: 175px;
 }
-.preview-tag {
-  display: flex;
-  gap: 6px;
+.demo-site-link {
+  display: inline-flex;
   align-items: center;
-  font-size: 9px;
-  font-weight: 650;
-  letter-spacing: 0.11em;
-  color: #8b9b9f;
-  margin-right: 5px;
+  justify-content: center;
+  flex-shrink: 0;
+  min-height: 44px;
+  padding: 0 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 550;
+  color: #385361;
+  white-space: nowrap;
 }
-.preview-tag span {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: #c8a66e;
+.demo-site-link:hover {
+  background: #f4f6f6;
+}
+.demo-site-link:focus-visible {
+  outline: 2px solid #385361;
+  outline-offset: 3px;
 }
 .workspace {
   flex: 1;
@@ -1697,9 +1702,6 @@ td small {
     font-size: 11px;
     min-height: 34px;
     padding: 6px 7px;
-  }
-  .preview-tag {
-    font-size: 8px;
   }
   .page {
     padding: 15px 15px 30px;
