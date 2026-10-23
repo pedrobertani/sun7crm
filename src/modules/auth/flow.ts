@@ -40,7 +40,7 @@ export function legalReadiness(
     );
   });
   if (documents.some((doc) => !doc))
-    return { ready: false, accepted: false, documents: [] as PublishedDocument[] };
+    return { ready: false, accepted: false, documents: [] as PublishedDocument[], pending: [] as RequiredDocument[] };
   return {
     ready: true,
     accepted: required.every((item) =>
