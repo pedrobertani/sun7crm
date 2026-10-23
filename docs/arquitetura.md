@@ -29,4 +29,12 @@ Antes do piloto real, implementar e testar autorização no servidor, isolamento
 
 ## Saída da prévia
 
-O rodapé mostra o usuário e um botão Sair; Configurações aparece apenas na navegação da área de trabalho. Sair encerra a visualização simulada, limpa o perfil em memória e abre `/entrar`. Um marcador em sessionStorage mantém essa tela após recarregar a mesma aba. Entrar na prévia retorna ao perfil inicial sem apagar cadastros locais. Isso é apenas navegação da demonstração: a versão com Supabase deverá encerrar e revogar a sessão real pelo provedor.
+O rodapé mostra o usuário e um botão Sair; Configurações aparece apenas na navegação da área de trabalho. Sair encerra a visualização simulada, limpa o perfil em memória e abre `/demo`. Um marcador em sessionStorage mantém essa tela após recarregar a mesma aba. Entrar na prévia retorna ao perfil inicial sem apagar cadastros locais. Isso é apenas navegação da demonstração: a versão com Supabase deverá encerrar e revogar a sessão real pelo provedor.
+
+## Acesso às contas separado da demonstração
+
+O cabeçalho público direciona Acessar para `/acessar`. A página de login não usa o seletor de perfis para autenticar: apresenta e-mail e senha indisponíveis até a conexão com o provedor de identidade. O envio é prevenido mesmo nesta fase de interface. Não há criação pública de contas nem autenticação local por senha. `/login` é um alias de `/acessar`.
+
+Explorar a demo direciona para `/demo`; `/entrar` continua compatível com os links anteriores. O seletor de empresa e perfil, os dados fictícios, a confirmação simulada de documentos e a área de trabalho são exclusivos do fluxo de demonstração. Uma futura sessão autenticada não poderá usar a sessão simulada como autorização, reaproveitar seus aceites como evidência ou liberar dados reais a partir dela.
+
+A próxima etapa da autenticação deverá conectar cadastro administrativo, sessão real, autorização por vínculo ativo e registro dos aceites no servidor. A tela inicial não implementa esses controles por conta própria.

@@ -93,7 +93,9 @@ export function CompanyDashboard() {
           (data.members.find((m) => m.id === session.memberId)?.name.split(' ')[0] || 'equipe') +
           ' 👋'
         }
-        description={'Acompanhe o movimento comercial da ' + company.name + '.'}
+        description={
+          'Acompanhe o movimento comercial da ' + (company.displayName || company.name) + '.'
+        }
       >
         <select
           aria-label="Período do dashboard"

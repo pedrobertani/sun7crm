@@ -6,6 +6,7 @@ export type BoardKind = 'leads' | 'clients';
 export interface Company {
   id: string;
   name: string;
+  displayName?: string;
   segment: string;
   template: Template;
   monthlyAmount: number;

@@ -40,3 +40,27 @@ Conferidos um único link Configurações, botão Sair no rodapé, saída para a
 Testes cobrem a compatibilidade dos registros antigos, andamento e conclusão no indicador do dashboard, reabertura sem perder vínculos, preservação de outras empresas e escopo por responsável.
 
 No navegador, uma tarefa foi movida para Em andamento e a mesma etapa apareceu na lista; depois foi concluída e permaneceu em Concluídas após recarregar. A rolagem do quadro permanece dentro da área de trabalho.
+
+## Apresentação das funcionalidades
+
+A página inicial concentra a apresentação principal, a ilustração do quadro e os acessos à demo e às funcionalidades. A página `/#/recursos` reúne os exemplos interativos e detalha os 12 grupos de recursos da prévia, o painel administrativo, seis frentes em alinhamento e integrações futuras. Os exemplos da apresentação não alteram cadastros do CRM. O quadro ilustrativo da abertura permanece sem inclinação. Na apresentação pública, os termos usados são contatos, quadros de atendimento e etapas; os nomes dos módulos internos do CRM foram preservados.
+
+## Contato e simplificação da home — 23/10/2026
+
+Página `/#/contato` acessível pelo menu e pelo rodapé, com botão para o WhatsApp em nova aba. O número é usado apenas no destino do link. A mensagem pré-preenchida é “Olá, vim pelo SUN7CRM e gostaria de saber mais sobre o sistema.” O botão apenas abre a conversa; não envia mensagens automaticamente. Conferidos no navegador a home sem as seções duplicadas de funcionalidades, a navegação pública, o endereço exato do WhatsApp, a seleção de etapa no exemplo e a rolagem da página de recursos (4.531 px de conteúdo em uma área de 936 px, com deslocamento de 1.872 px). TypeScript e build de produção passaram.
+
+## Rolagem das páginas públicas
+
+O shell público possui altura limitada à viewport e rolagem vertical própria, pois html/body/root são fixos para manter a rolagem interna do CRM. Home, recursos, acesso, primeiro acesso e documentos compartilham esse shell. Ao trocar de rota, a posição é reiniciada no contêiner público, e não em window. A área de trabalho continua com rolagem própria em `.workspace`.
+
+## Espaçamento da abertura e cabeçalho responsivo — 23/10/2026
+
+Texto e quadro da home alinhados pelo topo, com 32 px após o cabeçalho no desktop e 24 px nas telas menores. O cabeçalho compacto organiza logo e acesso à demo na primeira linha; Funcionalidades, Contato e Privacidade ficam agrupados na segunda, com espaçamento fixo. Até 1.000 px, a apresentação usa uma coluna para evitar apertar o texto ao lado do quadro.
+
+Conferência no navegador com áreas de 320, 390, 760, 1.000 e 1.920 px, além da janela desktop: nenhuma rolagem horizontal na página, links dentro da largura disponível e espaçamentos superiores de 24/32 px. Em 320 px, o título ocupa três linhas sem transbordar. Navegação para Contato e retorno pela logo conferidos na área de 390 px. As larguras foram simuladas em iframes locais; não houve teste em aparelho físico. A página temporária de conferência foi removida antes do pacote de produção.
+
+## Login separado da demonstração — 23/10/2026
+
+Conferidos o botão Acessar do cabeçalho abrindo `/acessar`, Explorar a demo abrindo `/demo`, entrada no dashboard fictício por Continuar e saída retornando a `/demo`. `/login` redireciona para `/acessar`, e `/entrar` permanece como entrada compatível da prévia. O aviso e os três controles de acesso (e-mail, senha e Entrar) indicam indisponibilidade: nenhum dado de autenticação é recebido, enviado ou persistido. A orientação Esqueci minha senha abre e respeita a hierarquia equipe → gestor → administrador.
+
+Áreas de 320, 390 e 900 px conferidas em iframes locais, além da janela desktop: sem transbordamento horizontal, formulário antes da apresentação nas telas menores e título dentro da largura disponível. A ferramenta temporária de conferência foi removida antes do build. Os 33 testes existentes passaram; a autenticação real continua fora da validação desta etapa.

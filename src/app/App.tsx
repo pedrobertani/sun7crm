@@ -1,3 +1,9 @@
+import { ContactPage } from '../modules/public/Contact';
+import { FeaturesPage } from '../modules/public/Features';
+import { Home } from '../modules/public/Home';
+import { LoginPage } from '../modules/public/Login';
+import { LegalPage } from '../modules/public/LegalPages';
+import { Acceptance } from '../modules/public/Acceptance';
 import { PreviewEntry } from './PreviewEntry';
 import { Component, type ReactNode } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
@@ -14,46 +20,42 @@ import { Settings } from '../modules/settings/Settings';
 import { Button } from '../components/ui/button';
 const repository = new BrowserRepository(window.localStorage);
 function Workspace() {
-  const { session, signedOut } = useCrm();
-  if (signedOut)
-    return (
-      <Routes>
-        <Route path="/entrar" element={<PreviewEntry />} />
-        <Route path="*" element={<Navigate to="/entrar" replace />} />
-      </Routes>
-    );
+  const { session, signedOut, acceptance } = useCrm();
+  if (signedOut) return <Navigate to="/demo" replace />;
+  if (!acceptance)
+    return <Acceptance key={session.companyId + ':' + session.role + ':' + session.memberId} />;
   return (
     <Routes>
       <Route element={<AppShell />}>
         <Route
-          index
+          path="painel"
           element={session.role === 'admin' ? <AdminDashboard /> : <CompanyDashboard />}
         />
         <Route
           path="contatos"
-          element={session.role === 'admin' ? <Navigate to="/" /> : <Contacts />}
+          element={session.role === 'admin' ? <Navigate to="/painel" /> : <Contacts />}
         />
         <Route
           path="funil/:kind"
-          element={session.role === 'admin' ? <Navigate to="/" /> : <Kanban />}
+          element={session.role === 'admin' ? <Navigate to="/painel" /> : <Kanban />}
         />
         <Route
           path="tarefas"
-          element={session.role === 'admin' ? <Navigate to="/" /> : <Tasks />}
+          element={session.role === 'admin' ? <Navigate to="/painel" /> : <Tasks />}
         />
         <Route
           path="equipe"
-          element={session.role === 'manager' ? <Team /> : <Navigate to="/" />}
+          element={session.role === 'manager' ? <Team /> : <Navigate to="/painel" />}
         />
         <Route
           path="empresas"
-          element={session.role === 'admin' ? <Companies /> : <Navigate to="/" />}
+          element={session.role === 'admin' ? <Companies /> : <Navigate to="/painel" />}
         />
         <Route
           path="configuracoes"
           element={<Settings key={session.companyId + session.memberId} />}
         />
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="*" element={<Navigate to="/painel" replace />} />
       </Route>
     </Routes>
   );
@@ -88,7 +90,18 @@ export function App() {
   return (
     <ErrorBoundary>
       <CrmProvider repository={repository}>
-        <Workspace />
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/recursos" element={<FeaturesPage />} />
+          <Route path="/contato" element={<ContactPage />} />
+          <Route path="/acessar" element={<LoginPage />} />
+          <Route path="/login" element={<Navigate to="/acessar" replace />} />
+          <Route path="/demo" element={<PreviewEntry />} />
+          <Route path="/entrar" element={<PreviewEntry />} />
+          <Route path="/privacidade" element={<LegalPage kind="privacy" />} />
+          <Route path="/termos" element={<LegalPage kind="terms" />} />
+          <Route path="*" element={<Workspace />} />
+        </Routes>
       </CrmProvider>
     </ErrorBoundary>
   );

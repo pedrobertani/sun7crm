@@ -1,3 +1,4 @@
+import { LEGAL } from '../../domain/legal';
 import { Link, useSearchParams } from 'react-router-dom';
 import { CRM_THEMES, resolveTheme, type CrmTheme } from '../../lib/themes';
 import { Check, UserRound, Building2, Palette, Info } from 'lucide-react';
@@ -11,15 +12,13 @@ import { Heading, Panel, FormError } from '../../components/shared';
 import { Button } from '../../components/ui/button';
 import { Modal } from '../../components/ui/modal';
 export function Settings() {
-  const { data, session, update, notice, reset } = useCrm();
+  const { data, session, update, notice, reset, acceptance } = useCrm();
   const company = data.companies.find((c) => c.id === session.companyId)!;
   const member = data.members.find((m) => m.id === session.memberId);
   const [password, setPassword] = useState(false);
   const [confirm, setConfirm] = useState(false);
   const [error, setError] = useState('');
-  const [name, setName] = useState(company.name);
-  const [segment, setSegment] = useState(company.segment);
-  const [template, setTemplate] = useState(company.template);
+  const [name, setName] = useState(company.displayName || company.name);
   const [theme, setTheme] = useState<CrmTheme>(resolveTheme(company.theme, company.template).value);
   const manager = session.role === 'manager';
   const [params] = useSearchParams();
@@ -31,11 +30,13 @@ export function Settings() {
           { value: 'aparencia', label: 'Aparência', icon: Palette },
         ]
       : []),
+    { value: 'privacidade', label: 'Privacidade', icon: ShieldCheck },
     { value: 'previa', label: 'Sobre a prévia', icon: Info },
   ];
   const active = tabs.some((tab) => tab.value === params.get('aba')) ? params.get('aba')! : 'conta';
   function saveCompany(e: FormEvent) {
     e.preventDefault();
+    if (!manager) return;
     if (!name.trim()) {
       setError('Informe o nome da empresa.');
       return;
@@ -44,7 +45,7 @@ export function Settings() {
       update((d) => ({
         ...d,
         companies: d.companies.map((c) =>
-          c.id === company.id ? { ...c, name: name.trim(), segment: segment.trim(), template } : c,
+          c.id === company.id ? { ...c, displayName: name.trim() } : c,
         ),
       }))
     ) {
@@ -54,6 +55,7 @@ export function Settings() {
   }
   function saveAppearance(e: FormEvent) {
     e.preventDefault();
+    if (!manager) return;
     if (
       update((d) => ({
         ...d,
@@ -64,7 +66,7 @@ export function Settings() {
     }
   }
   async function upload(file?: File) {
-    if (!file) return;
+    if (!manager || !file) return;
     if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type) || file.size > 500000) {
       setError('Selecione uma imagem PNG, JPG ou WebP de até 500 KB.');
       return;
@@ -128,20 +130,23 @@ export function Settings() {
               {session.role === 'admin'
                 ? 'A recuperação excepcional do administrador será definida antes da ativação real.'
                 : session.role === 'manager'
-                  ? 'Se perder sua senha, solicite a redefinição a Caio.'
+                  ? 'Se perder sua senha, solicite a redefinição ao administrador da plataforma.'
                   : 'Se perder sua senha, solicite a redefinição ao gestor da sua equipe.'}
             </p>
           </Panel>
         )}
         {active === 'empresa' && manager && (
-          <Panel title="Empresa" description="Dados, logo e template da sua empresa.">
+          <Panel
+            title="Empresa"
+            description="Personalize o nome e o logo que sua equipe vê na área de trabalho."
+          >
             <form key={company.id} onSubmit={saveCompany}>
               <div className="brand-editor">
                 <span className="brand-preview">
                   {company.logo ? (
                     <img src={company.logo} alt={'Logo ' + company.name} />
                   ) : (
-                    initials(company.name)
+                    initials(company.displayName || company.name)
                   )}
                 </span>
                 <div>
@@ -177,7 +182,7 @@ export function Settings() {
               </div>
               <div className="form-grid">
                 <label className="form-row">
-                  Nome da empresa
+                  Nome exibido no sistema
                   <Input
                     required
                     value={name}
@@ -185,26 +190,7 @@ export function Settings() {
                     onChange={(e) => setName(e.target.value)}
                   />
                 </label>
-                <label className="form-row">
-                  Segmento
-                  <Input
-                    value={segment}
-                    maxLength={100}
-                    onChange={(e) => setSegment(e.target.value)}
-                  />
-                </label>
-                <label className="form-row">
-                  Template
-                  <select
-                    value={template}
-                    onChange={(e) => setTemplate(e.target.value as typeof template)}
-                  >
-                    <option value="aesthetic">Estética</option>
-                    <option value="generic">Genérico</option>
-                  </select>
-                </label>
               </div>
-
               <FormError message={error} />
               <div className="form-actions">
                 <Button>Salvar empresa</Button>
@@ -221,8 +207,7 @@ export function Settings() {
               <fieldset className="theme-fieldset">
                 <legend>Cores da empresa</legend>
                 <p className="small-note">
-                  Escolha uma paleta para os menus, botões e gráficos de toda a equipe. A cor é
-                  independente do template.
+                  Escolha uma paleta para os menus, botões e gráficos de toda a equipe.
                 </p>
                 <div
                   className="theme-grid"
@@ -259,6 +244,37 @@ export function Settings() {
                 <Button>Salvar aparência</Button>
               </div>
             </form>
+          </Panel>
+        )}
+        {active === 'privacidade' && (
+          <Panel
+            title="Privacidade e documentos"
+            description="Consulte as condições de uso e as informações sobre tratamento de dados."
+          >
+            <div className="access-legal-links">
+              <Link to="/termos" target="_blank" rel="noopener noreferrer">
+                Termos de Uso
+              </Link>
+              <Link to="/privacidade" target="_blank" rel="noopener noreferrer">
+                Política de Privacidade
+              </Link>
+            </div>
+            <p className="small-note">
+              Versão dos Termos: {LEGAL.terms}
+              <br />
+              Versão da Política: {LEGAL.privacy}
+            </p>
+            <p className="small-note">
+              {acceptance
+                ? 'Confirmação simulada registrada em ' +
+                  new Date(acceptance.acceptedAt).toLocaleString('pt-BR') +
+                  ', neste navegador.'
+                : 'Nenhuma confirmação registrada para este perfil.'}
+            </p>
+            <div className="info-box">
+              O registro desta demo é local. Os documentos ainda são preliminares e a aplicação não
+              deve receber dados reais.
+            </div>
           </Panel>
         )}
         {active === 'previa' && (
@@ -323,8 +339,6 @@ export function Settings() {
               reset();
               setConfirm(false);
               setName('Clínica Aurora');
-              setSegment('Estética e bem-estar');
-              setTemplate('aesthetic');
               setTheme('sun7');
             }}
           >

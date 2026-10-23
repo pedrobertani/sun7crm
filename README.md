@@ -17,6 +17,7 @@ Base inicial do CRM comercial, construída a partir do visual da demo aprovada. 
 - Sete paletas de cores por empresa, incluindo as cinco opções do StudioPro, aplicadas também a gráficos e modais.
 - Configurações em abas: Minha conta, Empresa, Aparência e Sobre a prévia, conforme o perfil.
 - Rotas via HashRouter para funcionar em hospedagem estática sem regras de servidor.
+- Acesso às contas em `/#/acessar`, separado da demonstração pública em `/#/demo`. O formulário de login permanece indisponível até conectar a autenticação; não aceita nem armazena credenciais. A rota antiga `/#/entrar` continua abrindo a demo.
 
 ## Executar
 

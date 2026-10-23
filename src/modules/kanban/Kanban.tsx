@@ -1,3 +1,4 @@
+import { useCardDrag } from '../../hooks/useCardDrag';
 import { readPeriod, inPeriod } from '../../domain/filters';
 import { dateLabel } from '../../lib/format';
 import { Input } from '../../components/ui/input';
@@ -49,7 +50,6 @@ export function Kanban() {
   const [error, setError] = useState('');
   const [deleteId, setDeleteId] = useState('');
   const [targetId, setTargetId] = useState('');
-  const [dragover, setDragover] = useState('');
   const [selected, setSelected] = useState<Opportunity | null>(null);
   const contacts = visibleContacts(data, session);
   const opps = data.opportunities
@@ -69,8 +69,8 @@ export function Kanban() {
   const movable = manager || session.role === 'seller';
   function move(id: string, stage: string) {
     if (update((d) => moveOpportunity(d, session, id, stage))) notice('Oportunidade movida.');
-    setDragover('');
   }
+  const startDrag = useCardDrag(move);
   function saveStage(e: FormEvent) {
     e.preventDefault();
     const err = stageNameError(board.stages, stageName, renaming);
@@ -190,18 +190,8 @@ export function Kanban() {
               <section
                 key={stage.id}
                 aria-label={'Etapa ' + stage.name}
-                className={'kanban-column ' + (dragover === stage.id ? 'dragover' : '')}
-                onDragOver={(e) => {
-                  if (movable) {
-                    e.preventDefault();
-                    setDragover(stage.id);
-                  }
-                }}
-                onDragLeave={() => setDragover('')}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  if (movable) move(e.dataTransfer.getData('text/plain'), stage.id);
-                }}
+                className="kanban-column"
+                data-drop-stage={stage.id}
               >
                 <div className="column-head">
                   <div>
@@ -215,15 +205,21 @@ export function Kanban() {
                   {rows.map((o) => {
                     const c = contacts.find((c) => c.id === o.contactId)!;
                     return (
-                      <article
-                        key={o.id}
-                        className="opportunity-card"
-                        draggable={movable}
-                        onDragStart={(e) => e.dataTransfer.setData('text/plain', o.id)}
-                      >
+                      <article key={o.id} className="opportunity-card" draggable={false}>
                         <div className="opportunity-top">
                           <TemperatureBadge value={c.temperature} />
-                          {movable && <GripVertical size={15} className="muted" />}
+                          {movable && (
+                            <button
+                              type="button"
+                              className="card-drag-handle"
+                              aria-label={'Arrastar ' + c.name}
+                              title="Arrastar para outra etapa"
+                              onPointerDown={(e) => startDrag(e, o.id, stage.id)}
+                              onContextMenu={(e) => e.preventDefault()}
+                            >
+                              <GripVertical size={18} />
+                            </button>
+                          )}
                         </div>
                         <button className="contact-link" onClick={() => setSelected(o)}>
                           {c.name}

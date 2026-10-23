@@ -1,7 +1,7 @@
 import { ThemeProvider } from '../components/theme-provider';
 import { themeStyle } from '../lib/themes';
-import { useState } from 'react';
-import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
   KanbanSquare,
@@ -24,7 +24,7 @@ import type { Role } from '../domain/types';
 import { initials } from '../lib/format';
 import { Button } from '../components/ui/button';
 const businessLinks = [
-  { to: '/', label: 'Dashboard', icon: LayoutDashboard },
+  { to: '/painel', label: 'Dashboard', icon: LayoutDashboard },
   { to: '/funil/leads', label: 'Funil de leads', icon: KanbanSquare },
   { to: '/funil/clients', label: 'Funil de clientes', icon: KanbanSquare },
   { to: '/contatos', label: 'Contatos', icon: Users },
@@ -39,9 +39,13 @@ export function AppShell() {
   const company = data.companies.find((c) => c.id === session.companyId)!;
   const member = data.members.find((m) => m.id === session.memberId);
   const admin = session.role === 'admin';
+  const workspaceName = admin ? 'SUN7CRM' : company.displayName || company.name;
+  useEffect(() => {
+    document.title = workspaceName;
+  }, [workspaceName]);
   const links = admin
     ? [
-        { to: '/', label: 'Visão geral', icon: LayoutDashboard },
+        { to: '/painel', label: 'Visão geral', icon: LayoutDashboard },
         { to: '/empresas', label: 'Empresas', icon: Building2 },
       ]
     : businessLinks;
@@ -58,7 +62,7 @@ export function AppShell() {
       (m) => m.companyId === companyId && m.role === role && m.active,
     );
     setSession({ role, companyId, memberId: member?.id || '' });
-    navigate('/');
+    navigate('/painel');
     setMobile(false);
   }
   const colors = themeStyle(admin ? 'sun7' : company?.theme, company?.template);
@@ -81,11 +85,24 @@ export function AppShell() {
         )}
         <aside className={'sidebar ' + (mobile ? 'is-open' : '')}>
           <div className="sidebar-head">
-            <NavLink to="/" className="logo" aria-label="SUN7CRM início">
-              <span className="mark">7</span>
+            <NavLink
+              to="/painel"
+              className={'logo ' + (!admin ? 'workspace-logo' : '')}
+              aria-label={workspaceName + ' início'}
+              title={workspaceName}
+            >
+              <span className="mark">
+                {!admin && company.logo ? (
+                  <img src={company.logo} alt={'Logo ' + workspaceName} />
+                ) : admin ? (
+                  '7'
+                ) : (
+                  initials(workspaceName)
+                )}
+              </span>
               <span className="brand">
-                <strong>SUN7CRM</strong>
-                <small>GESTÃO COMERCIAL</small>
+                <strong>{workspaceName}</strong>
+                {admin && <small>GESTÃO COMERCIAL</small>}
               </span>
             </NavLink>
             <button
@@ -103,21 +120,6 @@ export function AppShell() {
               <X size={20} />
             </button>
           </div>
-          <div className="company-identity">
-            <span className="company-avatar">
-              {!admin && company?.logo ? (
-                <img src={company.logo} alt="" />
-              ) : admin ? (
-                'S7'
-              ) : (
-                initials(company?.name || 'Empresa')
-              )}
-            </span>
-            <div className="hide-collapsed">
-              <strong>{admin ? 'SUN7CRM' : company?.name}</strong>
-              <small>{admin ? 'Painel da plataforma' : company?.segment}</small>
-            </div>
-          </div>
           <div className="sidebar-workspace">
             <p className="sbar-label hide-collapsed">
               {admin ? 'ADMINISTRAÇÃO' : 'ÁREA DE TRABALHO'}
@@ -127,7 +129,7 @@ export function AppShell() {
                 <NavLink
                   key={to}
                   to={to}
-                  end={to === '/'}
+                  end={to === '/painel'}
                   title={collapsed ? label : undefined}
                   onClick={() => setMobile(false)}
                 >
@@ -151,7 +153,7 @@ export function AppShell() {
                 title="Sair"
                 onClick={() => {
                   logout();
-                  navigate('/entrar', { replace: true });
+                  navigate('/demo', { replace: true });
                 }}
               >
                 <LogOut size={18} />
@@ -227,6 +229,14 @@ export function AppShell() {
                 </Button>
               </div>
               <Outlet />
+              <nav className="workspace-legal" aria-label="Documentos do sistema">
+                <Link to="/privacidade" target="_blank" rel="noopener noreferrer">
+                  Privacidade
+                </Link>
+                <Link to="/termos" target="_blank" rel="noopener noreferrer">
+                  Termos de Uso
+                </Link>
+              </nav>
             </div>
           </main>
         </div>

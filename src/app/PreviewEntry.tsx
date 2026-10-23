@@ -1,36 +1,85 @@
-import { useNavigate } from 'react-router-dom';
-import { ArrowRight, LogOut } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { ArrowRight, FlaskConical, Building2 } from 'lucide-react';
 import { useCrm } from './context';
+import { roleLabels } from '../domain/config';
+import type { Role } from '../domain/types';
 import { Button } from '../components/ui/button';
+import { PublicShell, BrandSymbol } from '../modules/public/PublicShell';
 export function PreviewEntry() {
-  const { enterPreview } = useCrm();
+  const { data, session, setSession, enterPreview } = useCrm();
   const navigate = useNavigate();
+  function choose(role: Role, companyId = session.companyId) {
+    const member = data.members.find(
+      (m) => m.companyId === companyId && m.role === role && m.active,
+    );
+    setSession({ role, companyId, memberId: member?.id || '' });
+  }
   return (
-    <main className="preview-entry">
-      <div className="preview-entry-card">
-        <div className="logo">
-          <span className="mark">7</span>
-          <span className="brand">
-            <strong>SUN7CRM</strong>
-            <small>GESTÃO COMERCIAL</small>
-          </span>
+    <PublicShell title="Explorar a demo · SUN7CRM">
+      <main className="access-page public-container">
+        <div className="access-intro">
+          <BrandSymbol className="access-symbol" />
+          <span className="home-eyebrow">DEMONSTRAÇÃO DO SUN7CRM</span>
+          <h1>Sua próxima boa conversa começa aqui.</h1>
+          <p>Escolha uma empresa e um perfil de exemplo para explorar o CRM.</p>
+          <div className="access-note">
+            <FlaskConical size={21} />
+            <p>
+              Este acesso é simulado. Não informe senhas ou dados pessoais reais. A criação de
+              contas será feita pelo administrador e pelos gestores na versão com autenticação.
+            </p>
+          </div>
+          <Link className="home-text-link" to="/recursos">
+            Conheça o que você pode explorar <ArrowRight size={16} />
+          </Link>
         </div>
-        <div className="entry-status-icon">
-          <LogOut size={25} />
-        </div>
-        <h1>Você saiu da prévia</h1>
-        <p>Quando quiser continuar explorando, é só entrar novamente.</p>
-        <Button
-          onClick={() => {
-            enterPreview();
-            navigate('/', { replace: true });
-          }}
-        >
-          Entrar na prévia
-          <ArrowRight size={16} />
-        </Button>
-        <small>Ambiente de validação com dados fictícios e acesso simulado.</small>
-      </div>
-    </main>
+        <section className="access-card">
+          <Building2 size={29} />
+          <h2>Explorar a demo</h2>
+          <p>Experimente a rotina da empresa e da equipe.</p>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              enterPreview();
+              navigate('/painel');
+            }}
+          >
+            <label className="form-row">
+              Empresa de exemplo
+              <select
+                value={session.companyId}
+                onChange={(e) => choose(session.role, e.target.value)}
+              >
+                {data.companies.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.displayName || c.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="form-row">
+              Perfil de exemplo
+              <select value={session.role} onChange={(e) => choose(e.target.value as Role)}>
+                {Object.entries(roleLabels).map(([v, l]) => (
+                  <option key={v} value={v}>
+                    {l}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <Button>
+              Continuar <ArrowRight size={17} />
+            </Button>
+          </form>
+          <small>
+            No primeiro acesso de cada perfil, você verá a confirmação simulada dos documentos.
+          </small>
+          <div className="access-legal-links">
+            <Link to="/termos">Termos de Uso</Link>
+            <Link to="/privacidade">Política de Privacidade</Link>
+          </div>
+        </section>
+      </main>
+    </PublicShell>
   );
 }

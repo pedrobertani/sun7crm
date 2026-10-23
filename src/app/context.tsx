@@ -1,3 +1,9 @@
+import {
+  readAcceptances,
+  recordAcceptance,
+  currentAcceptance,
+  type LegalAcceptance,
+} from '../domain/legal';
 import { createContext, useContext, useState, useMemo, type ReactNode } from 'react';
 import type { CrmRepository } from '../data/repository';
 import type { Snapshot, Session } from '../domain/types';
@@ -6,6 +12,8 @@ interface Context {
   session: Session;
   setSession: (s: Session) => void;
   signedOut: boolean;
+  acceptance: LegalAcceptance | undefined;
+  acceptLegal: (terms: boolean, privacy: boolean) => boolean;
   logout: () => void;
   enterPreview: () => void;
   update: (f: (d: Snapshot) => Snapshot) => boolean;
@@ -33,6 +41,7 @@ export function CrmProvider({
       return false;
     }
   });
+  const [acceptances, setAcceptances] = useState(() => readAcceptances(window.localStorage));
   const [message, setMessage] = useState('');
   const notice = (msg: string) => {
     setMessage(msg);
@@ -44,6 +53,20 @@ export function CrmProvider({
       session,
       setSession,
       signedOut,
+      acceptance: currentAcceptance(acceptances, session),
+      acceptLegal: (terms: boolean, privacy: boolean) => {
+        try {
+          setAcceptances(
+            recordAcceptance(window.localStorage, acceptances, session, terms, privacy),
+          );
+          return true;
+        } catch {
+          notice(
+            'Não foi possível registrar a confirmação. Verifique se o navegador permite salvar dados e tente novamente.',
+          );
+          return false;
+        }
+      },
       logout: () => {
         setSignedOut(true);
         setMessage('');
@@ -86,7 +109,7 @@ export function CrmProvider({
         }
       },
     }),
-    [data, session, repository, signedOut],
+    [data, session, repository, signedOut, acceptances],
   );
   return (
     <CrmContext.Provider value={value}>
