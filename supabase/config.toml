@@ -1,11 +1,11 @@
 project_id = "sun7crm"
 
-# Sessão de usuário obrigatória. O código também valida a identidade no Auth.
+# Chaves modernas: o gateway não valida sb_publishable, mas cada função exige JWT de sessão e usa Auth.getUser + autorização no banco.
 [functions.crm-create-company]
-verify_jwt = true
+verify_jwt = false
 
 [functions.crm-create-user]
-verify_jwt = true
+verify_jwt = false
 
 [functions.crm-reset-password]
-verify_jwt = true
+verify_jwt = false
