@@ -1,6 +1,6 @@
 import type { CommandContext } from '../_shared/contracts.ts';
 import { HttpError } from '../_shared/errors.ts';
-import { fingerprint, invalid, keys, password, text, uuid } from '../_shared/validation.ts';
+import { fingerprint, invalid, keys, text, uuid } from '../_shared/validation.ts';
 
 interface Provisioning {
   state: 'pending' | 'complete' | 'cancelled';
@@ -9,7 +9,7 @@ interface Provisioning {
 }
 
 export async function createUser({ actorId, requestId, body, backend }: CommandContext) {
-  keys(body, ['company_id', 'role', 'display_name', 'email', 'password']);
+  keys(body, ['company_id', 'role', 'display_name', 'email']);
   const companyId = uuid(body.company_id, 'empresa');
   const role = body.role;
   if (typeof role !== 'string' || !['manager', 'seller', 'reception'].includes(role))
@@ -17,7 +17,6 @@ export async function createUser({ actorId, requestId, body, backend }: CommandC
   const displayName = text(body.display_name, 'nome');
   const email = text(body.email, 'e-mail', 254).toLowerCase();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) invalid('Informe um e-mail válido.');
-  const initialPassword = password(body.password);
   const args = { p_actor: actorId, p_request_id: requestId };
   const prepared = await backend.rpc<Provisioning>('crm_edge_prepare_user', {
     ...args,
@@ -36,7 +35,6 @@ export async function createUser({ actorId, requestId, body, backend }: CommandC
   try {
     createdUser = await backend.createUser({
       email,
-      password: initialPassword,
       operationId: requestId,
     });
     const result = await backend.rpc<Provisioning>('crm_edge_finish_user', {
