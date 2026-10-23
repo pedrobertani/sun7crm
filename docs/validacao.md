@@ -84,3 +84,19 @@ No navegador, Primeiro acesso sem confirmações e com somente uma confirmação
 O cabeçalho fixo da área de demonstração apresenta Voltar ao site, com destino à página inicial na mesma aba. O link fica disponível em todas as telas do shell e não encerra a sessão simulada nem altera cadastros. A entrada da demo e o primeiro acesso já mantêm a navegação pública.
 
 Conferidos no navegador o percurso site → demo → dashboard → Voltar ao site e o retorno em uma área de 320 px. O link mediu 44 px de altura. Cabeçalho sem transbordamento horizontal nas áreas de 320, 390 e 1.001 px, simuladas em iframes locais; não houve teste em aparelho físico. A página temporária de conferência foi removida antes do build.
+
+## Demo com entrada direta — 23/10/2026
+
+Esta decisão substitui o fluxo de confirmação simulada descrito nas validações anteriores. A demo não apresenta tela de aceite ao entrar ou trocar de empresa/perfil; não lê nem grava novas confirmações. O requisito de aceite individual no primeiro acesso à conta real continua previsto para a futura autenticação, com registro no servidor. Documentos públicos e consultas opcionais continuam disponíveis.
+
+No navegador, Continuar abriu diretamente o painel do administrador. Trocas para Recepção e Casa & Forma mantiveram o dashboard sem apresentar documentos ou botão de confirmação. Após recarregar, o dashboard do perfil inicial continuou acessível e Voltar ao site permaneceu visível. O aviso de confirmação simulada foi retirado do cartão de entrada e da página de funcionalidades; Configurações não indica falta de aceite da demo.
+
+## Administração reservada e fundação Supabase — 23/10/2026
+
+A decisão posterior retira a administração do Caio da demo pública. Entrada e seletor interno oferecem gestor, vendedor/consultora e recepção. O provider rejeita perfil administrativo, as rotas da demo não montam o dashboard administrativo ou o cadastro de empresas e `/admin/*` e `/empresas` direcionam ao acesso ainda indisponível. As telas administrativas foram preservadas no código. A apresentação pública também deixou de incluir a vitrine e os itens administrativos entre os recursos exploráveis.
+
+Conferidos no navegador os três perfis disponíveis na entrada e no seletor interno, a entrada direta no dashboard do gestor e o direcionamento de `/empresas` e `/admin` à tela de acesso. Nenhum dos seletores apresentou a opção de Caio.
+
+O script de migração foi aplicado a PostgreSQL em memória (PGlite), com fixture local de Auth, duas empresas e diferentes vínculos. Os 25 testes passaram, incluindo RLS entre empresas, ausência de acesso anônimo, ausência de promoção de perfil pelo cliente, cobrança restrita, chaves estrangeiras compostas, etapa do quadro, desativação de vínculo/empresa, conclusão/reabertura de tarefas, versões e autoria dos aceites reais, auditoria e bootstrap administrativo. Os 33 testes existentes da aplicação também passaram. Não houve execução de SQL ou provisão de contas no Supabase remoto; JWT, Auth, Data API, Storage e Edge Functions do projeto real ainda precisam de validação.
+
+`getSupabaseClient()` foi preparado sob demanda, com armazenamento de sessão próprio e somente variáveis públicas. O provider da demo não usa esse cliente. Nenhuma chave secreta foi colocada nos arquivos; as configurações públicas locais permanecem fora do Git.

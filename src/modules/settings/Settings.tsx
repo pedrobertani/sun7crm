@@ -12,7 +12,7 @@ import { Heading, Panel, FormError } from '../../components/shared';
 import { Button } from '../../components/ui/button';
 import { Modal } from '../../components/ui/modal';
 export function Settings() {
-  const { data, session, update, notice, reset, acceptance } = useCrm();
+  const { data, session, update, notice, reset } = useCrm();
   const company = data.companies.find((c) => c.id === session.companyId)!;
   const member = data.members.find((m) => m.id === session.memberId);
   const [password, setPassword] = useState(false);
@@ -265,15 +265,12 @@ export function Settings() {
               Versão da Política: {LEGAL.privacy}
             </p>
             <p className="small-note">
-              {acceptance
-                ? 'Confirmação simulada registrada em ' +
-                  new Date(acceptance.acceptedAt).toLocaleString('pt-BR') +
-                  ', neste navegador.'
-                : 'Nenhuma confirmação registrada para este perfil.'}
+              Na demo, os documentos são apenas para consulta. O aceite está previsto para o
+              primeiro acesso à conta real.
             </p>
             <div className="info-box">
-              O registro desta demo é local. Os documentos ainda são preliminares e a aplicação não
-              deve receber dados reais.
+              Os dados desta demo ficam no navegador. Os documentos ainda são preliminares e a
+              aplicação não deve receber dados reais.
             </div>
           </Panel>
         )}

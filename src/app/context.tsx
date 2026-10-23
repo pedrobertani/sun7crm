@@ -1,19 +1,12 @@
-import {
-  readAcceptances,
-  recordAcceptance,
-  currentAcceptance,
-  type LegalAcceptance,
-} from '../domain/legal';
 import { createContext, useContext, useState, useMemo, type ReactNode } from 'react';
 import type { CrmRepository } from '../data/repository';
 import type { Snapshot, Session } from '../domain/types';
+import { previewRoleLabels } from '../domain/config';
 interface Context {
   data: Snapshot;
   session: Session;
   setSession: (s: Session) => void;
   signedOut: boolean;
-  acceptance: LegalAcceptance | undefined;
-  acceptLegal: (terms: boolean, privacy: boolean) => boolean;
   logout: () => void;
   enterPreview: () => void;
   update: (f: (d: Snapshot) => Snapshot) => boolean;
@@ -41,7 +34,6 @@ export function CrmProvider({
       return false;
     }
   });
-  const [acceptances, setAcceptances] = useState(() => readAcceptances(window.localStorage));
   const [message, setMessage] = useState('');
   const notice = (msg: string) => {
     setMessage(msg);
@@ -51,22 +43,10 @@ export function CrmProvider({
     () => ({
       data,
       session,
-      setSession,
-      signedOut,
-      acceptance: currentAcceptance(acceptances, session),
-      acceptLegal: (terms: boolean, privacy: boolean) => {
-        try {
-          setAcceptances(
-            recordAcceptance(window.localStorage, acceptances, session, terms, privacy),
-          );
-          return true;
-        } catch {
-          notice(
-            'Não foi possível registrar a confirmação. Verifique se o navegador permite salvar dados e tente novamente.',
-          );
-          return false;
-        }
+      setSession: (next: Session) => {
+        if (Object.keys(previewRoleLabels).includes(next.role)) setSession(next);
       },
+      signedOut,
       logout: () => {
         setSignedOut(true);
         setMessage('');
@@ -109,7 +89,7 @@ export function CrmProvider({
         }
       },
     }),
-    [data, session, repository, signedOut, acceptances],
+    [data, session, repository, signedOut],
   );
   return (
     <CrmContext.Provider value={value}>

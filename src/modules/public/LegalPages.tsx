@@ -5,7 +5,7 @@ import { PublicShell } from './PublicShell';
 const privacy = [
   [
     'Sobre este documento',
-    'Esta é uma versão preliminar para validar a experiência do SUN7CRM. A demo usa cadastros fictícios e armazenamento no navegador. Não há autenticação real, banco de dados de clientes nem integração ativa com WhatsApp, Meta, Google ou inteligência artificial. Não insira dados reais ou informações de saúde nesta prévia. A confirmação na demo é uma simulação de ciência, sem contratação de serviço.',
+    'Esta é uma versão preliminar para validar a experiência do SUN7CRM. A demo usa cadastros fictícios e armazenamento no navegador. Não há autenticação real, banco de dados de clientes nem integração ativa com WhatsApp, Meta, Google ou inteligência artificial. Não insira dados reais ou informações de saúde nesta prévia. A demo pode ser explorada sem confirmação de documentos e sem contratação de serviço.',
   ],
   [
     'Quem trata os dados',
@@ -13,7 +13,7 @@ const privacy = [
   ],
   [
     'Dados e finalidades',
-    'A base do CRM prevê nome, telefone, e-mail, responsável pelo atendimento, interesses, temperatura comercial, observações, etapas do funil, valores estimados e tarefas. Os cadastros da equipe contêm nome, e-mail e perfil. O cadastro administrativo contém dados da empresa, valor contratado e vencimento. Essas informações servem para organizar o atendimento, acompanhar oportunidades e administrar o serviço. Na demo, as alterações e confirmações são guardadas neste navegador; não são sincronizadas entre dispositivos.',
+    'A base do CRM prevê nome, telefone, e-mail, responsável pelo atendimento, interesses, temperatura comercial, observações, etapas do funil, valores estimados e tarefas. Os cadastros da equipe contêm nome, e-mail e perfil. O cadastro administrativo contém dados da empresa, valor contratado e vencimento. Essas informações servem para organizar o atendimento, acompanhar oportunidades e administrar o serviço. Na demo, as alterações são guardadas neste navegador; não são sincronizadas entre dispositivos.',
   ],
   [
     'Bases legais e informações sensíveis',
@@ -21,7 +21,7 @@ const privacy = [
   ],
   [
     'Armazenamento local e tecnologias',
-    'A aplicação grava os dados fictícios e o registro simulado de confirmação no armazenamento local do navegador (localStorage). Um indicador de saída da prévia usa o armazenamento da sessão (sessionStorage). Limpar esses dados remove os cadastros locais e pode exigir nova confirmação. O código desta demo não instala ferramentas de publicidade, pixels de marketing ou cookies opcionais de análise. O provedor de hospedagem pode tratar registros técnicos necessários para disponibilizar o site, conforme suas próprias condições.',
+    'A aplicação grava os dados fictícios no armazenamento local do navegador (localStorage). Um indicador de saída da prévia usa o armazenamento da sessão (sessionStorage). A demo não exige nem grava novas confirmações de documentos. Registros simulados de versões anteriores podem permanecer até a limpeza dos dados do site, mas não são usados para liberar a demo. O código desta demo não instala ferramentas de publicidade, pixels de marketing ou cookies opcionais de análise. O provedor de hospedagem pode tratar registros técnicos necessários para disponibilizar o site, conforme suas próprias condições.',
   ],
   [
     'Compartilhamento e infraestrutura',
@@ -33,7 +33,7 @@ const privacy = [
   ],
   [
     'Retenção e eliminação',
-    'Na demo, os dados locais permanecem até serem substituídos pela restauração dos exemplos ou removidos nas configurações do navegador. A restauração de cadastros de exemplo não apaga o registro separado de confirmação. Para remover todos os registros locais, limpe os dados deste site no navegador. Na produção, prazos de retenção, exclusão, anonimização e cópias de segurança deverão ser definidos conforme a finalidade, o contrato e as obrigações legais aplicáveis.',
+    'Na demo, os dados locais permanecem até serem substituídos pela restauração dos exemplos ou removidos nas configurações do navegador. A restauração de cadastros de exemplo não apaga eventuais confirmações simuladas de versões anteriores. Para remover todos os registros locais, limpe os dados deste site no navegador. Na produção, prazos de retenção, exclusão, anonimização e cópias de segurança deverão ser definidos conforme a finalidade, o contrato e as obrigações legais aplicáveis.',
   ],
   [
     'Direitos e solicitações',
@@ -41,13 +41,13 @@ const privacy = [
   ],
   [
     'Versões e alterações',
-    'Os documentos ficam disponíveis no site e nas configurações da conta. A demo registra a versão dos Termos, a versão desta Política, a identidade simulada e a data da confirmação no navegador. Alterações relevantes que exijam nova ciência serão apresentadas antes do acesso à área de trabalho. A produção precisará de registro verificável no servidor; o registro local da demo não comprova identidade ou consentimento de clientes.',
+    'Os documentos ficam disponíveis no site e nas configurações para consulta opcional durante a demo. Na operação real, está previsto apresentar os documentos no primeiro acesso à conta e quando houver alteração relevante que exija nova ciência, com registro verificável no servidor. Nenhum registro local de demonstração comprova identidade ou consentimento de clientes.',
   ],
 ];
 const terms = [
   [
     'Natureza da prévia',
-    'Este documento preliminar descreve as condições de exploração da demo do SUN7CRM. A demo é um ambiente de validação, não um serviço contratado ou uma operação de CRM com dados reais. Os perfis são simulados e não são solicitadas credenciais. A confirmação exibida neste ambiente é apenas uma simulação do fluxo de primeiro acesso e não celebra contrato, gera cobrança ou inicia assinatura.',
+    'Este documento preliminar descreve as condições de exploração da demo do SUN7CRM. A demo é um ambiente de validação, não um serviço contratado ou uma operação de CRM com dados reais. Os perfis são simulados e não são solicitadas credenciais. A entrada é direta, sem etapa de aceite; explorar a demo não celebra contrato, gera cobrança ou inicia assinatura.',
   ],
   [
     'Recursos disponíveis',
@@ -79,7 +79,7 @@ const terms = [
   ],
   [
     'Documentos e confirmação',
-    'A confirmação da demo vincula apenas a pessoa e a empresa simuladas selecionadas, com as versões exibidas e uma data local. A produção exigirá confirmação individual associada ao usuário autenticado e registro no servidor. Os documentos podem ser consultados sem confirmar e a pessoa pode sair da prévia sem prosseguir. Mudanças relevantes poderão exigir nova confirmação.',
+    'A demo não exige confirmação de documentos para entrar ou trocar de empresa e perfil. Os documentos ficam disponíveis para consulta opcional. Na produção, está prevista a confirmação individual associada ao usuário autenticado e registrada no servidor, no primeiro acesso e quando houver mudanças relevantes. Os registros simulados de versões anteriores não serão usados como evidência de aceite de uma conta real.',
   ],
   [
     'Identificação e contato',

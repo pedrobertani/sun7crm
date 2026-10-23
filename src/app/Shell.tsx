@@ -19,7 +19,7 @@ import {
   FlaskConical,
 } from 'lucide-react';
 import { useCrm } from './context';
-import { roleLabels } from '../domain/config';
+import { previewRoleLabels, roleLabels } from '../domain/config';
 import type { Role } from '../domain/types';
 import { initials } from '../lib/format';
 import { Button } from '../components/ui/button';
@@ -203,7 +203,7 @@ export function AppShell() {
                   value={session.role}
                   onChange={(e) => switchView(e.target.value as Role)}
                 >
-                  {Object.entries(roleLabels).map(([v, l]) => (
+                  {Object.entries(previewRoleLabels).map(([v, l]) => (
                     <option key={v} value={v}>
                       {l}
                     </option>

@@ -392,11 +392,9 @@ const catalog = [
   ['Visão do atendimento', 'Indicadores, gráficos, filtros de período e atalhos para os detalhes.'],
   ['Equipe', 'Cadastros fictícios e visões de gestor, consultora e recepção.'],
   ['Identidade da empresa', 'Nome exibido, logo e paletas de cores personalizáveis.'],
-  ['Administração da plataforma', 'Empresas, gestor, valor e vencimento individuais, sem planos.'],
-  ['Visão da plataforma', 'Empresas ativas, novas, próximas do vencimento e soma contratada.'],
   [
-    'Documentos e primeiro acesso',
-    'Termos, privacidade e confirmação individual simulada por versão.',
+    'Documentos para consulta',
+    'Termos e privacidade disponíveis no site, sem aceite para explorar a demo.',
   ],
 ];
 function PlannedFeatures() {
@@ -482,8 +480,8 @@ export function FeaturesPage() {
               <h2>Uma visão completa da prévia.</h2>
             </div>
             <p>
-              Os fluxos estão disponíveis com dados fictícios salvos no navegador. Perfis, acesso e
-              confirmação de documentos são simulações.
+              Os fluxos estão disponíveis com dados fictícios salvos no navegador. Empresas e perfis
+              são simulados, com entrada direta na demo.
             </p>
           </div>
           <div className="features-catalog-grid">
@@ -497,43 +495,6 @@ export function FeaturesPage() {
               </article>
             ))}
           </div>
-        </section>
-        <section className="features-admin public-container">
-          <div className="features-admin-heading">
-            <div>
-              <span className="home-eyebrow">PARA QUEM ADMINISTRA A PLATAFORMA</span>
-              <h2>Uma visão própria para cuidar das empresas.</h2>
-            </div>
-          </div>
-          <p>
-            O painel administrativo reúne a carteira de empresas. O valor e o vencimento são
-            definidos individualmente, enquanto a equipe de cada empresa utiliza seu próprio
-            ambiente de trabalho.
-          </p>
-          <div className="admin-showcase">
-            <div>
-              <small>Empresas ativas</small>
-              <strong>12</strong>
-            </div>
-            <div>
-              <small>Próximas do vencimento</small>
-              <strong>3</strong>
-            </div>
-            <div>
-              <small>Novas no período</small>
-              <strong>2</strong>
-            </div>
-            <div className="admin-showcase-note">
-              <span>
-                Filtros para acompanhar
-                <br />
-                cada parte da carteira.
-              </span>
-            </div>
-          </div>
-          <small>
-            Números ilustrativos. A soma contratada do painel não representa receita recebida.
-          </small>
         </section>
         <PlannedFeatures />
         <section className="features-future public-container">

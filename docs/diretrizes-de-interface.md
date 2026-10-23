@@ -16,7 +16,7 @@ Objetivo definido: a tela deve exigir menos esforço para entender o que está a
 
 Percentuais exigem um denominador claro. Exemplo: três de cinco tarefas concluídas podem aparecer como 60%. Só atualizar após conclusão registrada; visitar uma tela não conclui a tarefa. Se não houver uma sequência ou um total definidos, mostrar estado e próximo passo.
 
-Etapa de atendimento não equivale a percentual de venda. A posição no quadro não deve gerar uma barra arbitrária de chance de fechamento. Nos documentos de primeiro acesso, manter duas confirmações explícitas e independentes, sem marcar automaticamente ou sugerir que a leitura aconteceu.
+Etapa de atendimento não equivale a percentual de venda. A posição no quadro não deve gerar uma barra arbitrária de chance de fechamento. A demo não exige aceite para explorar. No futuro primeiro acesso à conta real, manter duas confirmações explícitas e independentes, sem marcar automaticamente ou sugerir que a leitura aconteceu.
 
 ## Padrão visual
 

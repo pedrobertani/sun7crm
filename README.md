@@ -7,8 +7,8 @@ Base inicial do CRM comercial, construída a partir do visual da demo aprovada. 
 **Protótipo de desenvolvimento sem banco de dados, backend ou autenticação real.** Os dados são fictícios e ficam no `localStorage` do navegador. Não inserir dados pessoais reais ou senhas. Os seletores do topo permitem validar diferentes visões; não representam autorização de produção.
 
 - Dashboard da empresa com gráficos, indicadores e período selecionável. Cards abrem as telas de detalhe com os filtros correspondentes.
-- Painel do Caio com filtros, empresas, mensalidade individual e vencimento.
-- Cadastro de empresas e gestor fictício, sem sistema de planos.
+- Demo pública com perfis de gestor, vendedor/consultora e recepção; entrada direta, sem aceite de documentos.
+- Painel do Caio e cadastro administrativo preservados no código para integração ao acesso real, fora das rotas da demo pública.
 - Contatos com responsável, interesse, observações e temperatura manual.
 - Dois quadros Kanban, com edição, ordem e transferência de cartões ao remover etapas.
 - Movimentação por arraste no desktop ou seletor de etapa, inclusive por teclado/toque.
@@ -31,10 +31,15 @@ npm run dev
 ```sh
 npm run typecheck
 npm test
+npm run test:db
 npm run build
 ```
 
 O resultado estático é gerado em `dist/`. Nenhuma chave ou configuração Supabase é necessária nesta etapa.
+
+## Fundação Supabase preparada
+
+A migração inicial, o bootstrap do administrador e o roteiro de aplicação estão em [supabase/README.md](supabase/README.md). O SQL cria a estrutura vazia e políticas de isolamento; não foi aplicado ao projeto remoto. A demo continua usando seu adaptador local. Dados reais, login e comandos administrativos dependem da integração com Supabase Auth e Edge Functions.
 
 ## Organização
 

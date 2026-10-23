@@ -8,7 +8,8 @@ A base visual aprovada é o ponto de partida do produto. A implementação conti
 - Explorar a demo → entrada da demonstração em `/demo`, com empresas e perfis fictícios.
 - E-mail, senha e Entrar indisponíveis até a conexão da autenticação. Sem login por dados locais ou cadastro público.
 - Recuperação de senha oculta na tela por enquanto; a hierarquia de redefinição permanece definida nas regras de negócio.
-- Documentos públicos acessíveis nos dois caminhos. O aceite local da demo não será aceito como evidência de uma sessão real.
+- Demo com entrada direta e troca livre de empresa/perfil, sem etapa de aceite. Documentos públicos acessíveis para consulta opcional nos dois caminhos. O aceite individual fica previsto para a sessão real, com registro no servidor; registros antigos da demo não serão usados como evidência.
+- Perfil e telas administrativas do Caio fora da demo pública. Código de gerenciamento preservado para o acesso real.
 
 ## Próximas entregas, na ordem das dependências
 

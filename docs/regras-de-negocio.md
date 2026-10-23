@@ -62,9 +62,11 @@ Nos funis e nas tarefas, arrastar começa pela alça de pontinhos. O gesto usa e
 
 ## Site e primeiro acesso
 
-Site público, recursos, Termos de Uso e Política de Privacidade ficam disponíveis antes da entrada. Cada pessoa confirma os Termos e a leitura da Política no primeiro acesso e quando houver alteração relevante que exija nova confirmação. O gestor não confirma pela equipe. A prévia simula essa regra por identidade/empresa/versão em armazenamento local, sem criar autenticação ou evidência jurídica de identidade. Detalhes e pendências de produção: `privacidade-e-primeiro-acesso.md`.
+Site público, recursos, Termos de Uso e Política de Privacidade ficam disponíveis antes da entrada. A demo abre direto no painel, sem etapa de aceite e sem nova confirmação ao trocar de empresa ou perfil. Os documentos ficam disponíveis para consulta opcional. No acesso real, está previsto que cada pessoa confirme os Termos e a leitura da Política no primeiro acesso e quando houver alteração relevante que exija nova confirmação, com registro no servidor. O gestor não confirma pela equipe. Detalhes e pendências de produção: `privacidade-e-primeiro-acesso.md`.
 
 O botão Acessar do cabeçalho abre o login da conta. Explorar a demo abre a demonstração com empresas e perfis fictícios, sem senha. A tela de login está preparada visualmente, com campos indisponíveis enquanto não houver autenticação. O administrador da plataforma cadastra o gestor, que cadastra a equipe. Não há cadastro público ou recuperação automática por e-mail. Recuperação de senha fica oculta na tela de login por enquanto. A regra prevista de redefinição mantém a hierarquia equipe → gestor → administrador da plataforma.
+
+A demo pública oferece somente gestor, vendedor/consultora e recepção. A administração de Caio não faz parte dessa demonstração; o painel e o cadastro de empresas ficam preservados no projeto para o acesso administrativo real.
 
 ## Identidade institucional SUN7CRM
 

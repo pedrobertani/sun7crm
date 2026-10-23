@@ -19,7 +19,7 @@ Valores monetários do domínio são inteiros em centavos. O campo de moeda trab
 - Migrações versionadas, ambientes separados, segredos fora do frontend.
 - Hospedagem estática na Cloudflare. Região do banco e eventual migração/reivindicação do Bolt Database precisam ser verificadas antes do provisionamento.
 
-A troca do adaptador local por Supabase exigirá chamadas assíncronas, carregamento, tratamento de falhas, concorrência, autenticação e testes de RLS. Não criar tabelas ou contas de produção nesta etapa.
+A troca do adaptador local por Supabase exigirá chamadas assíncronas, carregamento, tratamento de falhas, concorrência, autenticação e testes de RLS. A preparação das migrações foi autorizada; o frontend continua local até a conexão explícita com o projeto Supabase escolhido.
 
 ## Segurança nesta fase
 
@@ -35,6 +35,14 @@ O rodapé mostra o usuário e um botão Sair; Configurações aparece apenas na 
 
 O cabeçalho público direciona Acessar para `/acessar`. A página de login não usa o seletor de perfis para autenticar: apresenta e-mail e senha indisponíveis até a conexão com o provedor de identidade. O envio é prevenido mesmo nesta fase de interface. Não há criação pública de contas nem autenticação local por senha. `/login` é um alias de `/acessar`.
 
-Explorar a demo direciona para `/demo`; `/entrar` continua compatível com os links anteriores. O seletor de empresa e perfil, os dados fictícios, a confirmação simulada de documentos e a área de trabalho são exclusivos do fluxo de demonstração. Uma futura sessão autenticada não poderá usar a sessão simulada como autorização, reaproveitar seus aceites como evidência ou liberar dados reais a partir dela.
+Explorar a demo direciona para `/demo`; `/entrar` continua compatível com os links anteriores. O seletor de empresa e perfil, os dados fictícios e a área de trabalho são exclusivos do fluxo de demonstração. A demo abre direto no painel, sem verificar ou registrar aceite de documentos. Uma futura sessão autenticada não poderá usar a sessão simulada como autorização, reaproveitar registros antigos da demo como evidência de aceite ou liberar dados reais a partir dela.
 
 A próxima etapa da autenticação deverá conectar cadastro administrativo, sessão real, autorização por vínculo ativo e registro dos aceites no servidor. A tela inicial não implementa esses controles por conta própria.
+
+## Fundação de banco preparada
+
+`supabase/migrations/20261023190000_crm_foundation.sql` cria a estrutura inicial e as políticas RLS, sem provisionamento de usuários ou dados fictícios. O roteiro e os limites estão em `supabase/README.md`. Os testes de banco usam PostgreSQL em memória com um stub local de Auth; ainda não houve aplicação ao Supabase remoto nem validação da Data API. Nenhuma chave secreta faz parte dos arquivos do projeto.
+
+## Administração fora da demo pública
+
+A demonstração permite somente gestor, vendedor/consultora e recepção. O provider rejeita seleção do perfil administrativo, e as rotas públicas da demonstração não montam AdminDashboard nem Companies. `/admin/*` e `/empresas` direcionam à página de acesso, que permanece indisponível até a integração de autenticação. As telas de gerenciamento do Caio são preservadas no código para o ambiente real. Essa separação de navegação não substitui autorização no backend; não há dados reais na demo.

@@ -29,17 +29,14 @@ Essa revisão se limita aos arquivos acima. Não constitui auditoria completa do
 - Site institucional em `/#/`, recursos em `/#/recursos`, demonstração em `/#/demo` (compatível com `/#/entrar`) e tela de login em `/#/acessar`, ainda sem autenticação e com campos indisponíveis.
 - Documentos públicos em `/#/termos` e `/#/privacidade`, disponíveis sem confirmação.
 - Dashboard passa a `/#/painel`; demais rotas internas são preservadas.
-- Qualquer rota da área de trabalho verifica a confirmação local do par de versões vigente.
-- Dois controles desmarcados: aceite dos Termos e declaração de leitura/ciência da Política.
-- Não há consentimento de marketing, publicidade ou tratamento sensível embutido nessas confirmações.
-- Botão permanece desabilitado até as duas confirmações. A função de gravação também valida as duas condições.
-- Registro local por identidade simulada e empresa, com versões, data ISO e origem. Administrador possui identidade da plataforma.
-- Ao trocar para pessoa/empresa sem registro, a confirmação reaparece. Versão anterior não libera versão nova. Nenhum cadastro criado pelo gestor presume aceite do integrante.
-- Falha de escrita no armazenamento impede liberação; retorno informa erro.
-- Sair sem confirmar encerra a sessão simulada e retorna ao site.
+- A demo abre diretamente no painel após escolher a empresa e o perfil; nenhuma rota de demonstração verifica ou registra aceite.
+- Trocar de empresa ou perfil não apresenta documentos nem exige nova confirmação.
+- O provider da demo não lê nem grava confirmações; a tela de aceite foi retirada desse fluxo.
+- A etapa de aceite individual permanece como requisito da futura autenticação real, sem aceitar automaticamente pela pessoa.
+- Voltar ao site retorna à página inicial; Sair encerra a sessão simulada e retorna à entrada da demo.
 - Consultas permanentes nas configurações, na aba Privacidade, e no rodapé da área de trabalho.
 
-O registro é uma simulação no localStorage. Pode ser alterado por quem usa o navegador, não comprova identidade e não é evidência adequada para operação real. A data vem do dispositivo. Limpar os dados do site remove esse registro; restaurar cadastros fictícios não o elimina. Os textos e o botão explicitam que o teste não contrata serviço nem produz cobrança.
+Versões anteriores simulavam uma confirmação no localStorage. Registros antigos podem continuar no navegador, mas não são lidos nem usados para liberar a demo atual, não comprovam identidade e não serão aproveitados como aceite de uma conta real. Limpar os dados do site remove esses registros. Os documentos continuam preliminares e a demo não contrata serviço nem produz cobrança. As funções de domínio antigas permanecem sem ligação com o fluxo atual; não implementam o requisito de produção abaixo.
 
 ## Regras propostas para a autenticação real
 
@@ -81,4 +78,4 @@ A identidade visual da empresa não muda a identidade do fornecedor. Não afirma
 
 ## Validação
 
-Os testes cobrem confirmação incompleta, persistência por identidade/empresa, mudança de versão, armazenamento inválido e falha de gravação. A validação pelo navegador verificou o bloqueio inicial, a exigência das duas confirmações, a entrada, a persistência após recarregar e a nova confirmação ao trocar de perfil. A autenticação e o controle no servidor permanecem futuros.
+Os testes de domínio existentes cobrem o registro simulado da implementação anterior; não demonstram controle de acesso real. No navegador, a demo abriu diretamente no painel administrativo, permitiu trocar para Recepção e Casa & Forma sem apresentar documentos e permaneceu acessível após recarregar. A autenticação, o aceite real e o controle no servidor permanecem futuros.

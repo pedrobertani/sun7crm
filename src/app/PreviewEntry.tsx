@@ -1,7 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { useCrm } from './context';
-import { roleLabels } from '../domain/config';
+import { previewRoleLabels } from '../domain/config';
 import type { Role } from '../domain/types';
 import { Button } from '../components/ui/button';
 import { PublicShell, BrandSymbol } from '../modules/public/PublicShell';
@@ -58,7 +58,7 @@ export function PreviewEntry() {
             <label className="form-row">
               Perfil de exemplo
               <select value={session.role} onChange={(e) => choose(e.target.value as Role)}>
-                {Object.entries(roleLabels).map(([v, l]) => (
+                {Object.entries(previewRoleLabels).map(([v, l]) => (
                   <option key={v} value={v}>
                     {l}
                   </option>
@@ -69,13 +69,6 @@ export function PreviewEntry() {
               Continuar <ArrowRight size={17} />
             </Button>
           </form>
-          <small>
-            No primeiro acesso de cada perfil, você verá a confirmação simulada dos documentos.
-          </small>
-          <div className="access-legal-links">
-            <Link to="/termos">Termos de Uso</Link>
-            <Link to="/privacidade">Política de Privacidade</Link>
-          </div>
         </section>
       </main>
     </PublicShell>
