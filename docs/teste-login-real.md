@@ -1,4 +1,7 @@
 # SUN7CRM — Teste do login real e primeiro acesso
+
+> **Atualização de homologação em 23/10/2026:** o Supabase contém as versões `homologacao-2026-10-23-r3` dos Termos e da Política, exigidas para as duas contas administrativas existentes. **Não existe mais a rota `/#/teste/primeiro-acesso`.** Faça login real por `/#/acessar`, troque sua senha inicial caso solicitado e registre, pessoalmente, o aceite dos dois documentos. Os registros de aceite são persistidos no banco; após isso, o acesso passa a respeitar o perfil da conta. **Somente dados fictícios são permitidos durante a homologação**, pois o projeto ainda usa o plano Free e depende de auditoria e da ativação do Pro antes da comercialização. Os documentos definitivos receberão outras versões e exigirão novo aceite. O site público só exibirá essa alteração depois da publicação da branch no ChatGPT Sites. O histórico abaixo descreve verificações anteriores à ativação dos documentos.
+
 23/10/2026 — etapa de integração (sem dados reais de clínicas)
 
 ## Separação de ambientes
