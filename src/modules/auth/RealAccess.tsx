@@ -226,10 +226,9 @@ export function RealAccess({
               </p>
               <p>
                 O acesso operacional está bloqueado até a publicação dos Termos e da Política de
-                Privacidade definitivos. As minutas públicas não serão consideradas aceites reais. Você pode experimentar as telas de confirmação em um ambiente simulado sem desbloquear a conta.
+                Privacidade definitivos. Os documentos de homologação devem ser confirmados por você, individualmente, antes de utilizar o ambiente autenticado.
               </p>
               <p className="small-note">{UNSAFE_DATA_MESSAGE}</p>
-              <Link to="/teste/primeiro-acesso" className="legal-test-access-link">Testar tela de troca e aceite das minutas →</Link>
               <Button
                 type="button"
                 onClick={() => setRefresh((value) => value + 1)}
@@ -243,8 +242,8 @@ export function RealAccess({
             <>
               <h1>Confirmação individual</h1>
               <p>
-                Leia os documentos vigentes de sua conta, <strong>{gate.email}</strong>. A
-                confirmação ficará registrada individualmente no Supabase.
+                Leia os documentos de homologação vinculados à sua conta, <strong>{gate.email}</strong>. A
+                confirmação ficará registrada individualmente no Supabase. Esta versão é para testes internos e uma nova confirmação será solicitada após aprovação dos documentos definitivos.
               </p>
               <form onSubmit={acceptDocuments}>
                 {gate.documents.map((doc) => (
@@ -282,8 +281,8 @@ export function RealAccess({
             <>
               <h1>{adminPage ? 'Acesso restrito à administração' : 'Conta verificada'}</h1>
               <p>
-                Sessão real de <strong>{gate.email}</strong>, senha pessoal configurada e versões
-                vigentes dos documentos confirmadas.
+                Sessão real de <strong>{gate.email}</strong>, senha pessoal configurada e documentos
+                de homologação confirmados para testes internos.
               </p>
               <p>
                 {adminPage
