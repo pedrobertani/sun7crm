@@ -32,6 +32,18 @@ afterEach(() => {
 });
 
 describe('Demonstração e sistema oficial', () => {
+  it('mantém Estratégias e Embaixadores acessíveis e separados por empresa na demo', () => {
+    vi.stubGlobal('window', { localStorage: storage(), sessionStorage: storage() });
+    for (const path of ['/demo/estrategias', '/demo/embaixadores']) {
+      const html = page(path);
+      expect(html).toContain('href="/demo/estrategias');
+      expect(html).toContain('href="/demo/embaixadores');
+      expect(html).not.toContain('Confirmação individual');
+      expect(html).not.toContain('href="/admin');
+    }
+    expect(page('/demo/estrategias')).toContain('Nova estratégia');
+    expect(page('/demo/embaixadores')).toContain('Registrar indicação');
+  });
   it('renderiza o login oficial sem inicializar dados fictícios ou storage da demo', () => {
     const read = vi.spyOn(BrowserRepository.prototype, 'read');
     const html = page('/acessar');

@@ -1,5 +1,6 @@
 import type { Snapshot } from '../domain/types';
 import { createSeed } from './seed';
+import { marketingSeed } from './marketingSeed';
 export interface CrmRepository {
   read(): Snapshot;
   write(data: Snapshot): void;
@@ -15,7 +16,16 @@ export class BrowserRepository implements CrmRepository {
     try {
       const data: unknown = JSON.parse(raw);
       if (!isSnapshot(data)) throw Error('Formato incompatível');
-      return data;
+      const examples = marketingSeed(data.companies);
+      // Migração aditiva: preserva os cadastros locais de versões anteriores.
+      return {
+        ...data,
+        strategies: Array.isArray(data.strategies) ? data.strategies : examples.strategies,
+        ambassadors: Array.isArray(data.ambassadors) ? data.ambassadors : examples.ambassadors,
+        ambassadorSales: Array.isArray(data.ambassadorSales)
+          ? data.ambassadorSales
+          : examples.ambassadorSales,
+      };
     } catch {
       this.storage.removeItem(KEY);
       return createSeed();

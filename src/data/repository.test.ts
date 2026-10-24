@@ -16,6 +16,26 @@ function memoryStorage(): Storage {
   };
 }
 describe('persistência local', () => {
+  it('adiciona estratégias e embaixadores sem apagar uma demo salva na versão anterior', () => {
+    const storage = memoryStorage();
+    const previous = new BrowserRepository(storage).read();
+    previous.contacts[0].name = 'Nome preservado';
+    const legacy = { ...previous } as Partial<typeof previous>;
+    delete legacy.strategies;
+    delete legacy.ambassadors;
+    delete legacy.ambassadorSales;
+    storage.setItem('sun7crm:prototype:v1', JSON.stringify(legacy));
+    const migrated = new BrowserRepository(storage).read();
+    expect(migrated.contacts[0].name).toBe('Nome preservado');
+    expect(migrated.strategies.some((s) => s.companyId === previous.companies[0].id)).toBe(true);
+    expect(migrated.ambassadors.length).toBeGreaterThan(0);
+    migrated.strategies = [];
+    migrated.ambassadors = [];
+    migrated.ambassadorSales = [];
+    new BrowserRepository(storage).write(migrated);
+    expect(new BrowserRepository(storage).read().strategies).toEqual([]);
+    expect(new BrowserRepository(storage).read().ambassadors).toEqual([]);
+  });
   it('persiste alterações ao abrir uma nova instância', () => {
     const storage = memoryStorage(),
       r = new BrowserRepository(storage),

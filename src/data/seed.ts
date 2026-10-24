@@ -1,6 +1,7 @@
 import type { Snapshot } from '../domain/types';
 import { today, shiftDate } from '../lib/format';
 import { defaultStages } from '../domain/config';
+import { marketingSeed } from './marketingSeed';
 export function createSeed(): Snapshot {
   const date = today();
   const companies: Snapshot['companies'] = [
@@ -191,5 +192,14 @@ export function createSeed(): Snapshot {
       done: true,
     },
   ]);
-  return { version: 1, companies, members, boards, contacts, opportunities, tasks };
+  return {
+    version: 1,
+    companies,
+    members,
+    boards,
+    contacts,
+    opportunities,
+    tasks,
+    ...marketingSeed(companies),
+  };
 }

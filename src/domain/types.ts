@@ -74,6 +74,37 @@ export interface Snapshot {
   boards: Board[];
   opportunities: Opportunity[];
   tasks: Task[];
+  strategies: Strategy[];
+  ambassadors: Ambassador[];
+  ambassadorSales: AmbassadorSale[];
+}
+export interface Strategy {
+  id: string;
+  companyId: string;
+  name: string;
+  month: string;
+  channel: string;
+  status: 'planned' | 'active' | 'completed';
+  budget: number;
+  ownerId: string;
+  notes: string;
+}
+export interface Ambassador {
+  id: string;
+  companyId: string;
+  name: string;
+  commissionRate: number;
+  active: boolean;
+  reward: string;
+}
+export interface AmbassadorSale {
+  id: string;
+  companyId: string;
+  ambassadorId: string;
+  customer: string;
+  value: number;
+  date: string;
+  cancelled: boolean;
 }
 export interface Session {
   role: Role;

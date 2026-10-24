@@ -17,6 +17,8 @@ import {
   X,
   ChevronRight,
   FlaskConical,
+  Megaphone,
+  Award,
 } from 'lucide-react';
 import { useCrm } from './context';
 import { previewRoleLabels, roleLabels } from '../domain/config';
@@ -29,6 +31,8 @@ const businessLinks = [
   { to: '/demo/funil/clients', label: 'Funil de clientes', icon: KanbanSquare },
   { to: '/demo/contatos', label: 'Contatos', icon: Users },
   { to: '/demo/tarefas', label: 'Tarefas', icon: ListTodo },
+  { to: '/demo/estrategias', label: 'Estratégias', icon: Megaphone },
+  { to: '/demo/embaixadores', label: 'Embaixadores', icon: Award },
 ];
 export function AppShell() {
   const { data, session, setSession, logout } = useCrm();
