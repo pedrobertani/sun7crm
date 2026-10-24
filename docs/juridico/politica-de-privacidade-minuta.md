@@ -2,7 +2,7 @@
 
 Versão 2026-10-23-r3 · 23 de outubro de 2026 · minuta para validação
 
-> **MINUTA — NÃO VIGENTE.** Estes textos estão em preparação e não são os documentos vigentes de uma contratação. O endereço da fornecedora e o WhatsApp de privacidade já foram informados, mas os prazos concretos de conservação, exclusão e retenção de backups, além dos testes de restauração, ainda precisam ser confirmados antes da ativação. A consulta não registra aceite nem libera o acesso operacional.
+> **MINUTA — NÃO VIGENTE.** A fornecedora está identificada e a estratégia para o lançamento prevê Supabase Pro com backups diários e janela de sete dias. O projeto atual ainda opera no plano Free. A ativação do Pro, a verificação dos backups, o teste de recuperação, a definição dos demais prazos de conservação e a revisão jurídica devem ser concluídos antes da operação com clientes reais. Esta minuta não é vigente, sua consulta não registra aceite e o acesso operacional permanece bloqueado.
 
 ## 1. Escopo e identificação do responsável
 
@@ -46,6 +46,8 @@ O banco principal do projeto está configurado no Supabase na região de São Pa
 
 Antes da ativação, serão concluídos o inventário dos suboperadores, a verificação das regiões e dos fluxos reais e as garantias contratuais aplicáveis. Se houver transferência internacional, serão informados finalidade, duração, países ou destinos pertinentes, destinatários e mecanismo legal utilizado, com acesso às informações e salvaguardas cabíveis. Não se presume que cláusulas estrangeiras ou a escolha da região do banco, isoladamente, atendam às exigências brasileiras.
 
+O lançamento comercial está planejado para o plano Supabase Pro, com backups do banco disponibilizados diariamente e acesso às cópias dos últimos sete dias, de acordo com a documentação e o contrato com o prestador. A organização do projeto está atualmente no plano Free; a confirmação do Pro, da realização efetiva dos backups e das restrições técnicas ocorrerá antes de receber dados operacionais reais. Esse compromisso de lançamento não significa que o serviço de backup Pro esteja em vigor durante os testes.
+
 ## 7. Compartilhamento, acesso e serviços externos
 
 Os dados ficam acessíveis à equipe autorizada da própria empresa conforme seu perfil e aos prestadores necessários à execução, manutenção e proteção do serviço, com limitação de acesso e obrigações compatíveis. Acesso técnico deve ser justificado e limitado à necessidade. Pode haver atendimento a ordem ou obrigação legal e defesa de direitos, com divulgação restrita ao necessário.
@@ -77,6 +79,12 @@ Antes da ativação, serão fixados e divulgados os prazos concretos para solici
 Obrigações legais, ordem de preservação e exercício regular de direitos podem exigir conservação restrita e justificada por período próprio. A obrigação de guarda de registros de acesso do art. 15 do Marco Civil da Internet deve ser atendida quando aplicável; o logger de erros não substitui esses registros. Cópias de segurança também precisam de ciclo definido e medidas para impedir que uma restauração reintroduza dados eliminados indevidamente.
 
 A contratante deverá manter suas próprias rotinas de gestão, revisão e, quando disponibilizada a função, exportação dos dados de sua operação, especialmente antes do encerramento. A gestão das cópias de infraestrutura efetivamente mantidas pelo fornecedor continua sujeita às medidas de segurança, finalidade restrita à recuperação, retenção proporcional e procedimentos de eliminação compatíveis com a legislação. Sem comprovação da configuração do plano e testes, não há promessa de restauro individual, periodicidade fixa ou prazo definido para expiração de backups.
+
+Na configuração prevista para produção com Supabase Pro, as cópias diárias do banco PostgreSQL ficam disponíveis dentro de janela de sete dias, sujeita às condições do provedor. A janela de backup não substitui os prazos específicos, ainda a definir, de conservação de cadastros, logs, auditoria ou dados contratuais. Uma exclusão operacional pode continuar refletida temporariamente em cópia anterior e deverá ser considerada nos controles de restauração e de expiração das cópias, observadas as obrigações legais.
+
+Quando viável e autorizado, a recuperação poderá utilizar um projeto Supabase temporário gerado a partir de backup físico, separado da produção. Como a cópia contém o banco completo e registros de todas as empresas, o acesso e a exportação serão limitados a pessoal habilitado, com seleção e conferência dos registros vinculados à empresa afetada, das chaves estrangeiras, das exclusões anteriores e das operações posteriores ao backup. O projeto auxiliar será desativado e eliminado ao final do procedimento, respeitados os requisitos legais e de segurança. O recurso de restauração para projeto novo é oferecido em beta pelo Supabase e sua disponibilidade, preço e limites dependem do fornecedor; não se promete que sempre estará acessível.
+
+O backup do PostgreSQL não inclui os próprios arquivos mantidos no Supabase Storage, somente os metadados do banco; logotipos e outros anexos exigem política específica de preservação. A SUN7CRM não assegura recuperação integral ou instantânea nem restauração sem perdas ou interrupções; deve empregar as medidas de segurança compatíveis com o serviço contratado e tratar incidentes segundo a lei.
 
 ## 11. Direitos e atendimento aos titulares
 
