@@ -73,7 +73,9 @@ test('notificações por perfil, vencimento e erros técnicos: isolamento no ban
       "insert into public.crm_legal_documents(kind,version,body,content_sha256) values($1,'local-fixture','Fixture local; não publicar','')",
       [kind],
     );
-    await q("insert into public.crm_legal_requirements(kind,version) values($1,'local-fixture')", [
+    // A migração de homologação já configura a versão exigida. A fixture local
+    // ativa uma versão própria sem alterar documentos imutáveis de homologação.
+    await q("insert into public.crm_legal_requirements(kind,version) values($1,'local-fixture') on conflict (kind) do update set version=excluded.version", [
       kind,
     ]);
     for (const n of [1, 2, 3, 4, 5, 7])
