@@ -40,6 +40,16 @@ describe('Demonstração e sistema oficial', () => {
     expect(read).not.toHaveBeenCalled();
     expect(html).not.toContain('Prévia em desenvolvimento');
   });
+  it('abre a simulacao juridica sem consultar dados reais e sem habilitar acesso oficial', () => {
+    const read = vi.spyOn(BrowserRepository.prototype, 'read');
+    const html = page('/teste/primeiro-acesso');
+    expect(html).toContain('SIMULAÇÃO DE PRIMEIRO ACESSO');
+    expect(html).toContain('SEM VALIDADE DE ACEITE');
+    expect(html).toContain('Começar simulação');
+    expect(html).not.toContain('crm_legal_acceptances');
+    expect(html).not.toContain('Painel de administração');
+    expect(read).not.toHaveBeenCalled();
+  });
   it('protege rotas oficiais antes de renderizar qualquer painel ou cadastro', () => {
     const read = vi.spyOn(BrowserRepository.prototype, 'read');
     for (const route of [
