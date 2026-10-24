@@ -127,9 +127,6 @@ export function LoginPage() {
             O cadastro é feito pelo responsável pelo seu acesso. Cada pessoa define sua senha e
             confirma os documentos individualmente.
           </p>
-          <p className="login-test-access">
-            Durante os testes, você pode <Link to="/teste/primeiro-acesso">simular o primeiro acesso e os aceites</Link> sem usar conta ou documentos definitivos.
-          </p>
           <div className="access-legal-links">
             <Link to="/termos">Termos de Uso (prévia)</Link>
             <Link to="/privacidade">Política de Privacidade (prévia)</Link>
