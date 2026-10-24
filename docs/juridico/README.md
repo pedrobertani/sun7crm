@@ -1,6 +1,6 @@
 # Documentos de uso e privacidade — preparação para publicação
 
-Revisão: 23/10/2026, horário de Brasília. Situação: **minutas, não vigentes**.
+Revisão: 23/10/2026, horário de Brasília, com complementos para planejamento da publicação comercial. Situação: **minutas, não vigentes**.
 
 ## Entrega e fonte de conteúdo
 
@@ -40,6 +40,15 @@ O pedido de atribuir toda a responsabilidade ao usuário não foi convertido em 
 | Incidentes                           | Formalizar recebimento, contenção, investigação, preservação, avaliação do risco, responsáveis e comunicação. Prazo geral da Resolução 15/2024: três dias úteis para comunicação do controlador à ANPD e aos titulares quando devida, observadas exceções e regras específicas. Não presumir enquadramento de pequeno porte.                                                                                                             |
 | Saúde e menores                      | Escopo comercial atual não habilita prontuário, dados sensíveis ou cadastro de crianças/adolescentes. Interesses e observações também podem revelar saúde. Qualquer ampliação exige análise específica e controles, não apenas mudança de texto.                                                                                                                                                                                         |
 | Segurança e armazenamento            | Controles de Auth, troca temporária, RLS, autorização e logger reduzido existem e têm testes. A sessão real usa armazenamento do navegador; a demo mantém dados fictícios locais. O código revisado não instala pixels de publicidade. Confirmar também práticas dos fornecedores e procedimento de recuperação.                                                                                                                         |
+
+## Infraestrutura de backups para lançamento (decisão de produto)
+
+- **Situação atual confirmada:** organização do projeto SUN7CRM no plano Free; não afirmar que Pro ou rotina contratada de backups já esteja ativa.
+- **Decisão de lançamento:** migrar a organização/projeto para Supabase Pro **antes** de aceitar clientes reais. O Pro oferece backups automáticos diários do banco PostgreSQL e janela de sete dias disponíveis, segundo [documentação do provedor](https://supabase.com/docs/guides/platform/backups).
+- **Recuperação prevista:** diante de incidente, avaliar restaurar cópia para **novo projeto isolado** e depois recuperar seletivamente registros de um tenant, verificando dependências e preservando as atualizações de produção. A função [Restore to a new project](https://supabase.com/docs/guides/platform/clone-project) está em beta, depende de plano pago com backup físico, clona TODO o banco (inclusive Auth dos usuários e dados de todas as clínicas), requer acesso estritamente restrito, permite custos adicionais, e não inclui arquivos do Storage, Edge Functions ou configuração completa do Auth.
+- **Limitações:** o backup diário pode não conter alterações posteriores; não prometer perda zero, restauro de registro único sob demanda, tempo garantido de recuperação ou ausência de indisponibilidade.
+- **Storage:** tratar arquivos e logotipos separadamente, pois backups PostgreSQL guardam apenas seus metadados.
+- **Checklist antes de clientes reais:** confirmar Pro ativo e backups visíveis; verificar elegibilidade e custos de clone; testar recuperação em ambiente isolado com dados fictícios; validar extração por empresa, chaves estrangeiras e reaplicação de exclusões; controlar credenciais do clone; documentar auditoria e destruição do projeto temporário; determinar prazos distintos de exportação, conservação e exclusão dos demais dados; validar juridicamente as versões finais.
 
 ## Publicação definitiva
 
