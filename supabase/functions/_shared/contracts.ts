@@ -1,4 +1,12 @@
 export type JsonObject = Record<string, unknown>;
+export interface ErrorContext {
+  operationId?: string | null;
+  actorId?: string | null;
+  status?: number;
+  message?: string;
+  exceptionType?: string;
+  trace?: string;
+}
 
 // Porta de infraestrutura. Cada endpoint mantém seu próprio caso de uso.
 export interface Backend {
@@ -11,12 +19,13 @@ export interface Backend {
   }): Promise<{ id: string }>;
   deleteUser(userId: string): Promise<void>;
   resetPassword(userId: string, password: string): Promise<void>;
-  report(code: string, requestId: string): void;
+  report(code: string, requestId: string, context?: ErrorContext): void | Promise<void>;
 }
 
 export interface CommandContext {
   actorId: string;
   requestId: string;
+  traceId?: string;
   body: JsonObject;
   backend: Backend;
 }

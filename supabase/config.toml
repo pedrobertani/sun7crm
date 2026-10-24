@@ -12,3 +12,6 @@ verify_jwt = false
 
 [functions.crm-first-access]
 verify_jwt = false
+
+[functions.crm-update-company]
+verify_jwt = false

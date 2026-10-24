@@ -97,7 +97,7 @@ export function Settings() {
         {tabs.map(({ value, label, icon: Icon }) => (
           <Link
             key={value}
-            to={'/configuracoes?aba=' + value}
+            to={'/demo/configuracoes?aba=' + value}
             aria-current={active === value ? 'page' : undefined}
             className={active === value ? 'active' : ''}
           >

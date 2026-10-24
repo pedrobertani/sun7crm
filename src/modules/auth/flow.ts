@@ -28,7 +28,13 @@ export function legalReadiness(
   if (
     required.length !== 2 ||
     kinds.some((kind) => required.filter((item) => item.kind === kind).length !== 1)
-  ) return { ready: false, accepted: false, documents: [] as PublishedDocument[], pending: [] as RequiredDocument[] };
+  )
+    return {
+      ready: false,
+      accepted: false,
+      documents: [] as PublishedDocument[],
+      pending: [] as RequiredDocument[],
+    };
   const documents = kinds.map((kind) => {
     const requirement = required.find((item) => item.kind === kind)!;
     return published.find(
@@ -40,14 +46,21 @@ export function legalReadiness(
     );
   });
   if (documents.some((doc) => !doc))
-    return { ready: false, accepted: false, documents: [] as PublishedDocument[], pending: [] as RequiredDocument[] };
+    return {
+      ready: false,
+      accepted: false,
+      documents: [] as PublishedDocument[],
+      pending: [] as RequiredDocument[],
+    };
   return {
     ready: true,
     accepted: required.every((item) =>
       accepted.some((record) => record.kind === item.kind && record.version === item.version),
     ),
     documents: documents as PublishedDocument[],
-    pending: required.filter((item) =>
-      !accepted.some((record) => record.kind === item.kind && record.version === item.version)),
+    pending: required.filter(
+      (item) =>
+        !accepted.some((record) => record.kind === item.kind && record.version === item.version),
+    ),
   };
 }

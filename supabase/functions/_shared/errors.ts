@@ -3,12 +3,20 @@ export class HttpError extends Error {
   code: string;
   constructor(status: number, code: string, message: string) {
     super(message);
+    this.name = 'HttpError';
     this.status = status;
     this.code = code;
   }
 }
 
 export function databaseError(error: { code?: string; message?: string }): HttpError {
+  if (error.message?.includes('CRM_MANAGER_REQUIRED')) {
+    return new HttpError(
+      400,
+      'MANAGER_REQUIRED',
+      'Cadastre um gestor ativo antes de habilitar a empresa.',
+    );
+  }
   if (error.message?.includes('CRM_LEGAL_REQUIRED')) {
     return new HttpError(403, 'LEGAL_REQUIRED', 'Confirme os documentos vigentes para continuar.');
   }

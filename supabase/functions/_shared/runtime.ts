@@ -15,7 +15,7 @@ function injectedKey(name: string, prefix: string): string {
   throw new HttpError(503, 'SERVER_CONFIGURATION', 'O serviço ainda não está configurado.');
 }
 
-export function serve(command: Command) {
+export function serve(command: Command, functionName: string) {
   // Clientes separados: o JWT do solicitante nunca substitui a credencial administrativa.
   const clients = () => {
     const url = Deno.env.get('SUPABASE_URL');
@@ -43,6 +43,16 @@ export function serve(command: Command) {
   const backend: Backend = {
     async authenticate(token) {
       const { data, error } = await clients().auth.auth.getUser(token);
+      if (
+        error &&
+        (!error.status || error.status >= 500 || error.name === 'AuthRetryableFetchError')
+      ) {
+        throw new HttpError(
+          503,
+          'AUTH_UNAVAILABLE',
+          'O serviço de acesso está indisponível. Tente novamente em instantes.',
+        );
+      }
       return error || !data.user || data.user.is_anonymous ? null : data.user.id;
     },
     async rpc<T>(name: string, args: Record<string, unknown>): Promise<T> {
@@ -80,9 +90,42 @@ export function serve(command: Command) {
           'Não foi possível confirmar a redefinição da senha.',
         );
     },
-    report(code, requestId) {
-      // Somente códigos controlados e identificadores. Nunca registrar corpo, e-mail, senha, JWT ou chaves.
-      console.error(JSON.stringify({ code, request_id: requestId }));
+    async report(code, requestId, context = {}) {
+      const event = {
+        function_name: functionName,
+        request_id: requestId,
+        operation_id: context.operationId || null,
+        actor_user_id: context.actorId || null,
+        execution_id: Deno.env.get('SB_EXECUTION_ID') || null,
+        http_status: context.status || 503,
+        error_code: code,
+        safe_message: context.message || 'A operação precisa de revisão técnica.',
+        exception_type: context.exceptionType || 'HttpError',
+        trace: context.trace || '',
+      };
+      // Console com campos controlados. Nunca corpo, e-mail, senha, JWT ou chaves.
+      console.error(
+        JSON.stringify({
+          function_name: functionName,
+          code,
+          request_id: requestId,
+          operation_id: event.operation_id,
+        }),
+      );
+      try {
+        const { error } = await clients()
+          .admin.rpc('crm_log_function_error', { p_event: event })
+          .abortSignal(AbortSignal.timeout(1500));
+        if (error) throw Error('Log indisponível');
+      } catch {
+        console.error(
+          JSON.stringify({
+            function_name: functionName,
+            code: 'ERROR_LOG_UNAVAILABLE',
+            request_id: requestId,
+          }),
+        );
+      }
     },
   };
   const origins = (Deno.env.get('CRM_ALLOWED_ORIGINS') || DEFAULT_ORIGIN)

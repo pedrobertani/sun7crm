@@ -21,16 +21,24 @@ describe('Primeiro acesso', () => {
   it('não libera sistema sem documentos finais de ambas as categorias', () => {
     expect(legalReadiness([], [], []).ready).toBe(false);
     expect(legalReadiness(required, published.slice(0, 1), []).ready).toBe(false);
-    expect(legalReadiness(required, published.map((doc) => ({ ...doc, content_sha256: '' })), []).ready).toBe(false);
+    expect(
+      legalReadiness(
+        required,
+        published.map((doc) => ({ ...doc, content_sha256: '' })),
+        [],
+      ).ready,
+    ).toBe(false);
   });
   it('exige aceite individual das duas versões atuais', () => {
     expect(legalReadiness(required, published, []).accepted).toBe(false);
     expect(legalReadiness(required, published, required.slice(0, 1)).accepted).toBe(false);
-    expect(legalReadiness(required, published, required.slice(0, 1)).pending).toEqual([required[1]]);
-    expect(legalReadiness(required, published, required).accepted).toBe(true);
-    expect(legalReadiness(required, published, [
-      {kind: 'terms', version: 'old'},
+    expect(legalReadiness(required, published, required.slice(0, 1)).pending).toEqual([
       required[1],
-    ]).accepted).toBe(false);
+    ]);
+    expect(legalReadiness(required, published, required).accepted).toBe(true);
+    expect(
+      legalReadiness(required, published, [{ kind: 'terms', version: 'old' }, required[1]])
+        .accepted,
+    ).toBe(false);
   });
 });

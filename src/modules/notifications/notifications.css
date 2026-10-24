@@ -1,0 +1,101 @@
+.notification-bell {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border: 1px solid var(--line);
+  background: white;
+  border-radius: 9px;
+  color: var(--ink);
+}
+.notification-count {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: #a67516;
+  color: white;
+  min-width: 19px;
+  height: 19px;
+  padding-inline: 4px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 750;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid white;
+}
+.notification-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.notification-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 12px;
+}
+.notification-list li {
+  padding: 17px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fafbfc;
+}
+.notification-list li.is-unread {
+  background: white;
+  border-left: 3px solid var(--primary);
+}
+.notification-list li.subscription-notice {
+  background: #fcf8ed;
+  border-color: #e4ce94;
+  border-left: 3px solid #a67516;
+}
+.notification-list li > div:first-child {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 9px;
+}
+.notification-list li p {
+  margin: 8px 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+.notification-list li small {
+  color: var(--muted);
+}
+.notification-new {
+  font-size: 10px;
+  color: #8a641c;
+  background: #f6e9c4;
+  border-radius: 4px;
+  padding: 3px 6px;
+}
+.notification-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 10px;
+}
+.notification-actions a {
+  color: var(--primary);
+  font-weight: 650;
+  font-size: 12px;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.notification-empty {
+  color: var(--muted);
+  padding: 25px 0;
+  line-height: 1.7;
+}

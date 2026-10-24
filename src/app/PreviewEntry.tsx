@@ -24,8 +24,8 @@ export function PreviewEntry() {
           <p>Escolha uma empresa e um perfil de exemplo para explorar o CRM.</p>
           <div className="access-note">
             <p>
-              Este acesso é simulado. Não informe senhas ou dados pessoais reais. A criação de
-              contas será feita pelo administrador e pelos gestores na versão com autenticação.
+              A demonstração usa dados fictícios para apresentar o produto. Não informe senhas ou
+              dados pessoais reais. Para usar sua conta, selecione Acessar.
             </p>
           </div>
           <Link className="home-text-link" to="/recursos">
@@ -39,7 +39,7 @@ export function PreviewEntry() {
             onSubmit={(e) => {
               e.preventDefault();
               enterPreview();
-              navigate('/painel');
+              navigate('/demo/painel');
             }}
           >
             <label className="form-row">

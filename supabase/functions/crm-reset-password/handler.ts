@@ -1,8 +1,15 @@
+import { reportSafely } from '../_shared/telemetry.ts';
 import type { CommandContext } from '../_shared/contracts.ts';
 import { HttpError } from '../_shared/errors.ts';
 import { keys, password, uuid } from '../_shared/validation.ts';
 
-export async function resetPassword({ actorId, requestId, body, backend }: CommandContext) {
+export async function resetPassword({
+  actorId,
+  requestId,
+  traceId,
+  body,
+  backend,
+}: CommandContext) {
   keys(body, ['company_id', 'user_id', 'password']);
   const companyId = uuid(body.company_id, 'empresa');
   const targetUser = uuid(body.user_id, 'usuário');
@@ -19,7 +26,10 @@ export async function resetPassword({ actorId, requestId, body, backend }: Comma
     try {
       await backend.rpc('crm_edge_end_password_reset', { ...args, p_succeeded: false });
     } catch {
-      backend.report('PASSWORD_RESET_AUDIT_PENDING', requestId);
+      await reportSafely(backend, 'PASSWORD_RESET_AUDIT_PENDING', traceId || requestId, {
+        actorId,
+        operationId: requestId,
+      });
     }
     // Não repetir automaticamente: o Auth pode ter recebido a alteração antes da queda de rede.
     throw new HttpError(
@@ -31,7 +41,10 @@ export async function resetPassword({ actorId, requestId, body, backend }: Comma
   try {
     await backend.rpc('crm_edge_end_password_reset', { ...args, p_succeeded: true });
   } catch {
-    backend.report('PASSWORD_RESET_AUDIT_PENDING', requestId);
+    await reportSafely(backend, 'PASSWORD_RESET_AUDIT_PENDING', traceId || requestId, {
+      actorId,
+      operationId: requestId,
+    });
   }
   return { status: 200, data: { password_changed: true } };
 }

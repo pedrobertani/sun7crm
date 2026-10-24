@@ -24,11 +24,11 @@ import type { Role } from '../domain/types';
 import { initials } from '../lib/format';
 import { Button } from '../components/ui/button';
 const businessLinks = [
-  { to: '/painel', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/funil/leads', label: 'Funil de leads', icon: KanbanSquare },
-  { to: '/funil/clients', label: 'Funil de clientes', icon: KanbanSquare },
-  { to: '/contatos', label: 'Contatos', icon: Users },
-  { to: '/tarefas', label: 'Tarefas', icon: ListTodo },
+  { to: '/demo/painel', label: 'Dashboard', icon: LayoutDashboard },
+  { to: '/demo/funil/leads', label: 'Funil de leads', icon: KanbanSquare },
+  { to: '/demo/funil/clients', label: 'Funil de clientes', icon: KanbanSquare },
+  { to: '/demo/contatos', label: 'Contatos', icon: Users },
+  { to: '/demo/tarefas', label: 'Tarefas', icon: ListTodo },
 ];
 export function AppShell() {
   const { data, session, setSession, logout } = useCrm();
@@ -45,16 +45,16 @@ export function AppShell() {
   }, [workspaceName]);
   const links = admin
     ? [
-        { to: '/painel', label: 'Visão geral', icon: LayoutDashboard },
-        { to: '/empresas', label: 'Empresas', icon: Building2 },
+        { to: '/demo/painel', label: 'Visão geral', icon: LayoutDashboard },
+        { to: '/demo/empresas', label: 'Empresas', icon: Building2 },
       ]
     : businessLinks;
   const allLinks = [
     ...links,
     ...(!admin && session.role === 'manager'
-      ? [{ to: '/equipe', label: 'Equipe', icon: UsersRound }]
+      ? [{ to: '/demo/equipe', label: 'Equipe', icon: UsersRound }]
       : []),
-    { to: '/configuracoes', label: 'Configurações', icon: Settings },
+    { to: '/demo/configuracoes', label: 'Configurações', icon: Settings },
   ];
   const current = allLinks.find((l) => l.to === location.pathname)?.label || 'Área de trabalho';
   function switchView(role: Role, companyId = session.companyId) {
@@ -62,7 +62,7 @@ export function AppShell() {
       (m) => m.companyId === companyId && m.role === role && m.active,
     );
     setSession({ role, companyId, memberId: member?.id || '' });
-    navigate('/painel');
+    navigate('/demo/painel');
     setMobile(false);
   }
   const colors = themeStyle(admin ? 'sun7' : company?.theme, company?.template);
@@ -86,7 +86,7 @@ export function AppShell() {
         <aside className={'sidebar ' + (mobile ? 'is-open' : '')}>
           <div className="sidebar-head">
             <NavLink
-              to="/painel"
+              to="/demo/painel"
               className={'logo ' + (!admin ? 'workspace-logo' : '')}
               aria-label={workspaceName + ' início'}
               title={workspaceName}
@@ -129,7 +129,7 @@ export function AppShell() {
                 <NavLink
                   key={to}
                   to={to}
-                  end={to === '/painel'}
+                  end={to === '/demo/painel'}
                   title={collapsed ? label : undefined}
                   onClick={() => setMobile(false)}
                 >
@@ -160,7 +160,7 @@ export function AppShell() {
               </button>
             </div>
             <div className="sidebar-note hide-collapsed">
-              <FlaskConical size={12} /> Ambiente de validação
+              <FlaskConical size={12} /> Demonstração
             </div>
           </div>
         </aside>
@@ -222,20 +222,12 @@ export function AppShell() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => navigate('/configuracoes?aba=previa')}
+                  onClick={() => navigate('/demo/configuracoes?aba=previa')}
                 >
-                  Sobre a prévia <ChevronRight size={13} />
+                  Sobre a demo <ChevronRight size={13} />
                 </Button>
               </div>
               <Outlet />
-              <nav className="workspace-legal" aria-label="Documentos do sistema">
-                <Link to="/privacidade" target="_blank" rel="noopener noreferrer">
-                  Privacidade
-                </Link>
-                <Link to="/termos" target="_blank" rel="noopener noreferrer">
-                  Termos de Uso
-                </Link>
-              </nav>
             </div>
           </main>
         </div>

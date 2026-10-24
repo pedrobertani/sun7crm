@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { createHttpHandler, DEFAULT_ORIGIN } from '../functions/_shared/http.ts';
+import { safeException } from '../functions/_shared/telemetry.ts';
+import { updateCompany } from '../functions/crm-update-company/handler.ts';
 import { databaseError, HttpError } from '../functions/_shared/errors.ts';
 import { createCompany } from '../functions/crm-create-company/handler.ts';
 import { createUser } from '../functions/crm-create-user/handler.ts';
@@ -72,7 +74,7 @@ function fixture(command, overrides = {}) {
 }
 
 test('cada endpoint recusa sessão ausente, inválida e chave de API no lugar do JWT', async () => {
-  for (const command of [createCompany, createUser, resetPassword]) {
+  for (const command of [createCompany, createUser, resetPassword, updateCompany]) {
     for (const authorization of [
       '',
       'Bearer invalid',
@@ -304,4 +306,81 @@ test('erros de banco são mapeados sem devolver detalhes da consulta', () => {
     assert.equal(safe.status, status);
     assert.ok(!safe.message.includes('private details'));
   }
+});
+
+test('erros carregam trace e correlação sem expor mensagem original, senha ou token', async () => {
+  const reports = [];
+  const exception = new TypeError('Conteúdo sensível: credencial-local-nunca-logar');
+  exception.stack =
+    'TypeError: credencial-local-nunca-logar\n    at command (/runtime/handler.ts:42:8)\n    at route (https://example.invalid/http.ts:15:2?token=segredo)';
+  const f = fixture(
+    async () => {
+      throw exception;
+    },
+    { report: async (code, request, context) => reports.push({ code, request, context }) },
+  );
+  const response = await f.request({ password: 'credencial-local-nunca-logar' });
+  const body = await response.json();
+  assert.equal(response.status, 500);
+  assert.equal(reports[0].request, body.request_id);
+  assert.equal(reports[0].context.operationId, id(500));
+  assert.equal(reports[0].context.actorId, id(1));
+  assert.equal(reports[0].context.exceptionType, 'TypeError');
+  assert.equal(reports[0].context.trace, 'handler.ts:42:8\nhttp.ts:15:2');
+  assert.ok(!JSON.stringify(reports).includes('credencial-local-nunca-logar'));
+  assert.ok(!JSON.stringify(reports).includes('token='));
+  assert.ok(!JSON.stringify(body).includes('credencial-local-nunca-logar'));
+});
+
+test('falha ao registrar erro preserva a resposta original da função', async () => {
+  const f = fixture(
+    async () => {
+      throw new Error('Falha local');
+    },
+    {
+      report: async () => {
+        throw new Error('Log indisponível');
+      },
+    },
+  );
+  const response = await f.request({});
+  assert.equal(response.status, 500);
+  assert.equal((await response.json()).error.code, 'INTERNAL_ERROR');
+});
+
+test('sanitização elimina a primeira linha e limita os frames de trace', () => {
+  assert.equal(safeException(new HttpError(503,'DATABASE_UNAVAILABLE','Mensagem segura')).exceptionType,'HttpError');
+  const error = new Error('Não registrar esta mensagem');
+  error.stack =
+    'Error: Não registrar esta mensagem\n' +
+    Array.from({ length: 30 }, (_, i) => `    at helper (/app/modulo.ts:${i + 1}:2)`).join('\n');
+  const safe = safeException(error);
+  assert.equal(safe.trace.split('\n').length, 12);
+  assert.ok(!safe.trace.includes('Não registrar'));
+  assert.deepEqual(safeException('erro não estruturado'), { exceptionType: 'Error', trace: '' });
+});
+
+test('alteração da empresa usa endpoint próprio, valida campos e não aceita papel forjado', async () => {
+  const values = {
+    ...company,
+    template: 'aesthetic',
+    theme: 'sun7',
+    company_id: id(10),
+    enabled: true,
+  };
+  const f = fixture(updateCompany);
+  const response = await f.request(values);
+  assert.equal(response.status, 200);
+  const call = f.calls.find(([name]) => name === 'crm_edge_update_company');
+  assert.equal(call[1].p_actor, id(1));
+  assert.equal(call[1].p_company, id(10));
+  assert.equal(call[1].p_values.enabled, true);
+  assert.equal(call[1].p_values.monthly_amount_cents, company.monthly_amount_cents);
+  for (const body of [
+    { ...values, enabled: 'true' },
+    { ...values, due_date: '2026-02-30' },
+    { ...values, role: 'admin' },
+    { ...values, monthly_amount_cents: -1 },
+  ])
+    assert.equal((await fixture(updateCompany).request(body)).status, 400);
 });

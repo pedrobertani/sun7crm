@@ -1,3 +1,4 @@
+import { reportSafely } from '../_shared/telemetry.ts';
 import type { CommandContext } from '../_shared/contracts.ts';
 import { HttpError } from '../_shared/errors.ts';
 import { fingerprint, invalid, keys, password, text, uuid } from '../_shared/validation.ts';
@@ -8,7 +9,7 @@ interface Provisioning {
   membership_id: string | null;
 }
 
-export async function createUser({ actorId, requestId, body, backend }: CommandContext) {
+export async function createUser({ actorId, requestId, traceId, body, backend }: CommandContext) {
   keys(body, ['company_id', 'role', 'display_name', 'email', 'password']);
   const companyId = uuid(body.company_id, 'empresa');
   const role = body.role;
@@ -51,7 +52,10 @@ export async function createUser({ actorId, requestId, body, backend }: CommandC
       // A trava no banco resolve se o commit aconteceu antes de uma falha de rede.
       state = await backend.rpc<Provisioning>('crm_edge_cancel_user', args);
     } catch {
-      backend.report('PROVISIONING_REVIEW_REQUIRED', requestId);
+      await reportSafely(backend, 'PROVISIONING_REVIEW_REQUIRED', traceId || requestId, {
+        actorId,
+        operationId: requestId,
+      });
       throw new HttpError(
         503,
         'PROVISIONING_REVIEW_REQUIRED',
@@ -65,7 +69,10 @@ export async function createUser({ actorId, requestId, body, backend }: CommandC
       try {
         await backend.deleteUser(createdUser.id);
       } catch {
-        backend.report('PROVISIONING_REVIEW_REQUIRED', requestId);
+        await reportSafely(backend, 'PROVISIONING_REVIEW_REQUIRED', traceId || requestId, {
+          actorId,
+          operationId: requestId,
+        });
         throw new HttpError(
           503,
           'PROVISIONING_REVIEW_REQUIRED',
@@ -75,7 +82,11 @@ export async function createUser({ actorId, requestId, body, backend }: CommandC
     }
     // Uma falha de transporte no Auth pode ter criado a conta sem devolver seu ID.
     // O marcador administrativo crm_provisioning_id permite a conciliação pelo operador.
-    if (!createdUser) backend.report('AUTH_CREATE_REVIEW_IF_AMBIGUOUS', requestId);
+    if (!createdUser)
+      await reportSafely(backend, 'AUTH_CREATE_REVIEW_IF_AMBIGUOUS', traceId || requestId, {
+        actorId,
+        operationId: requestId,
+      });
     throw error;
   }
 }

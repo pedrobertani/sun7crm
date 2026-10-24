@@ -27,13 +27,23 @@ export function LoginPage() {
         password,
       });
       if (authError || !data.user || !data.session || data.user.is_anonymous) {
-        setError('Não foi possível entrar. Verifique o e-mail e a senha.');
+        setError(
+          authError?.status === 429
+            ? 'Muitas tentativas. Aguarde alguns minutos e tente novamente.'
+            : authError &&
+                ((authError.status && authError.status >= 500) ||
+                  authError.name === 'AuthRetryableFetchError')
+              ? 'O serviço de acesso está indisponível no momento. Tente novamente em instantes.'
+              : 'Não foi possível entrar. Verifique o e-mail e a senha.',
+        );
         return;
       }
       setPassword('');
       navigate('/conta', { replace: true, state: null });
     } catch {
-      setError('Não foi possível conectar ao acesso seguro. Verifique a configuração do Supabase.');
+      setError(
+        'Não foi possível conectar ao serviço de acesso. Confira sua conexão e tente novamente.',
+      );
     } finally {
       setLoading(false);
     }
@@ -63,11 +73,21 @@ export function LoginPage() {
 
         <section className="login-card" aria-labelledby="login-title">
           <h2 id="login-title">Acesse sua conta</h2>
-          <p>Use seu e-mail e a senha inicial fornecida pelo responsável pelo cadastro.
-            Na primeira entrada você definirá uma senha pessoal.</p>
+          <p>
+            Use seu e-mail e a senha inicial fornecida pelo responsável pelo cadastro. Na primeira
+            entrada você definirá uma senha pessoal.
+          </p>
 
-          {confirmation && <div className="login-status" role="status"><p>{confirmation}</p></div>}
-          {error && <p role="alert" className="secure-access-error">{error}</p>}
+          {confirmation && (
+            <div className="login-status" role="status">
+              <p>{confirmation}</p>
+            </div>
+          )}
+          {error && (
+            <p role="alert" className="secure-access-error">
+              {error}
+            </p>
+          )}
 
           <form aria-label="Acessar sua conta" onSubmit={(event) => void signIn(event)}>
             <fieldset disabled={loading}>
@@ -104,8 +124,8 @@ export function LoginPage() {
           </form>
 
           <p className="login-provisioning">
-            Não existe autocadastro nesta etapa. Caio cria o gestor e cada gestor cadastra sua equipe.
-            Os documentos são confirmados individualmente após a troca da senha inicial.
+            O cadastro é feito pelo responsável pelo seu acesso. Cada pessoa define sua senha e
+            confirma os documentos individualmente.
           </p>
           <div className="access-legal-links">
             <Link to="/termos">Termos de Uso (prévia)</Link>

@@ -148,7 +148,7 @@ export function Kanban() {
           </Button>
         )}
         <Button asChild>
-          <Link to="/contatos">
+          <Link to="/demo/contatos">
             <Plus size={16} />
             Novo contato
           </Link>
@@ -164,14 +164,14 @@ export function Kanban() {
         <div className="segmented">
           <Link
             className={boardKind === 'leads' ? 'active' : ''}
-            to={'/funil/leads' + (params.toString() ? '?' + params.toString() : '')}
+            to={'/demo/funil/leads' + (params.toString() ? '?' + params.toString() : '')}
           >
             <LayoutGrid size={15} />
             Leads
           </Link>
           <Link
             className={boardKind === 'clients' ? 'active' : ''}
-            to={'/funil/clients' + (params.toString() ? '?' + params.toString() : '')}
+            to={'/demo/funil/clients' + (params.toString() ? '?' + params.toString() : '')}
           >
             <Users size={15} />
             Clientes
@@ -425,7 +425,7 @@ export function Kanban() {
                 </div>
                 <p className="small-note">{c.notes || 'Sem observações adicionais.'}</p>
                 <Button asChild variant="outline">
-                  <Link to="/contatos">Abrir contatos</Link>
+                  <Link to="/demo/contatos">Abrir contatos</Link>
                 </Button>
               </>
             ) : (

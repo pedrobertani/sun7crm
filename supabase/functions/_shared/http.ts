@@ -1,6 +1,7 @@
 import type { Backend, Command, JsonObject } from './contracts.ts';
 import { HttpError } from './errors.ts';
 import { uuid } from './validation.ts';
+import { reportSafely, safeException } from './telemetry.ts';
 
 export const DEFAULT_ORIGIN = 'https://sun7crm-base.dreamygull10.chatgpt.site';
 const MAX_BODY_BYTES = 16_384;
@@ -46,6 +47,8 @@ async function readBody(request: Request): Promise<JsonObject> {
 export function createHttpHandler(backend: Backend, command: Command, origins = [DEFAULT_ORIGIN]) {
   return async (request: Request): Promise<Response> => {
     const requestId = crypto.randomUUID();
+    let actorId: string | null = null;
+    let operationId: string | null = null;
     const origin = request.headers.get('origin');
     const headers = new Headers({
       'Content-Type': 'application/json; charset=utf-8',
@@ -75,12 +78,18 @@ export function createHttpHandler(backend: Backend, command: Command, origins = 
       if (!token || token.length > 8192 || token.startsWith('sb_')) {
         throw new HttpError(401, 'UNAUTHENTICATED', 'Entre na sua conta para continuar.');
       }
-      const actorId = await backend.authenticate(token);
+      actorId = await backend.authenticate(token);
       if (!actorId)
         throw new HttpError(401, 'UNAUTHENTICATED', 'Sua sessão não é válida. Entre novamente.');
-      const operationId = uuid(request.headers.get('idempotency-key'), 'solicitação');
+      operationId = uuid(request.headers.get('idempotency-key'), 'solicitação');
       const body = await readBody(request);
-      const result = await command({ actorId, requestId: operationId, body, backend });
+      const result = await command({
+        actorId,
+        requestId: operationId,
+        traceId: requestId,
+        body,
+        backend,
+      });
       return Response.json(
         { data: result.data, request_id: requestId },
         { status: result.status, headers },
@@ -90,7 +99,13 @@ export function createHttpHandler(backend: Backend, command: Command, origins = 
         error instanceof HttpError
           ? error
           : new HttpError(500, 'INTERNAL_ERROR', 'Não foi possível concluir a solicitação.');
-      if (safe.status >= 500) backend.report(safe.code, requestId);
+      await reportSafely(backend, safe.code, requestId, {
+        actorId,
+        operationId,
+        status: safe.status,
+        message: safe.message,
+        ...safeException(error),
+      });
       return Response.json(
         { error: { code: safe.code, message: safe.message }, request_id: requestId },
         { status: safe.status, headers },

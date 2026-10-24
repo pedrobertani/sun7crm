@@ -1,10 +1,17 @@
+import { reportSafely } from '../_shared/telemetry.ts';
 import type { CommandContext } from '../_shared/contracts.ts';
 import { HttpError } from '../_shared/errors.ts';
 import { keys, password, uuid } from '../_shared/validation.ts';
 
 // Apenas o proprio usuario autenticado pode substituir a senha temporaria.
 // A identitidade vem de Auth.getUser(token), nunca do JSON enviado.
-export async function completeFirstAccess({ actorId, requestId, body, backend }: CommandContext) {
+export async function completeFirstAccess({
+  actorId,
+  requestId,
+  traceId,
+  body,
+  backend,
+}: CommandContext) {
   keys(body, ['password']);
   const nextPassword = password(body.password);
   const nonce = uuid(
@@ -26,7 +33,10 @@ export async function completeFirstAccess({ actorId, requestId, body, backend }:
       p_nonce: nonce,
     });
   } catch {
-    backend.report('FIRST_ACCESS_REVIEW_REQUIRED', requestId);
+    await reportSafely(backend, 'FIRST_ACCESS_REVIEW_REQUIRED', traceId || requestId, {
+      actorId,
+      operationId: requestId,
+    });
     throw new HttpError(
       503,
       'FIRST_ACCESS_REVIEW_REQUIRED',

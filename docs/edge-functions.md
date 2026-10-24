@@ -16,11 +16,11 @@ Login e troca da própria senha pertencem ao Supabase Auth e terão integração
 
 ## Estado da entrega
 
-Código e migração adicional preparados e testados localmente. A aplicação da fundação e o bootstrap do administrador no Supabase foram informados pelo usuário; não houve inspeção remota dessa execução. A migração administrativa, as migrações de primeiro acesso e a função `crm-first-access` foram aplicadas/publicadas no Supabase em 23/10/2026. O frontend ainda depende de integração.
+Login, primeiro acesso e páginas administrativas oficiais estão integrados ao frontend. A demonstração permanece em `/demo`, com persistência exclusivamente local. A administração usa `crm-create-company`, `crm-create-user` e `crm-update-company`; a edição permite definir valor e vencimento e habilitar a empresa após cadastrar um gestor ativo.
 
-O frontend publicado continua como demo local; o login real permanece indisponível. Os formulários ainda não chamam estas funções. O próximo passo de interface é integrar sessão real, leitura/publicação dos documentos, confirmação individual e os formulários administrativos.
+Todos os comandos continuam exigindo senha pessoal e os dois documentos vigentes aceitos individualmente. Nenhum rascunho jurídico ou aceite é criado pela implantação. Sem documentos oficiais, o acesso operacional permanece bloqueado e as funções recusam a operação.
 
-Todos os comandos exigem os dois documentos vigentes e o aceite do solicitante. Nenhum rascunho jurídico ou aceite é criado por estas funções. Enquanto Termos e Política não tiverem versões exigidas publicadas e aceitas pela conta real, os comandos retornam `LEGAL_REQUIRED`. A demo continua sem essa exigência.
+Os cinco endpoints compartilham tratamento HTTP e logging técnico seguro em `crm_private.function_errors`. Sininho, permissões, estrutura dos registros e limites de validação estão em `docs/painel-oficial-notificacoes-e-erros.md`.
 
 ## Segredos e identidade
 
@@ -63,7 +63,7 @@ A mesma chave de idempotência e os mesmos dados devolvem a empresa existente. D
 
 ### Criar usuário
 
-Contas criadas sem envio de e-mail. A senha preenchida pelo responsável é **temporária**: `crm_profiles.password_change_required=true`. Antes da troca, o banco impede acesso operacional e aceite individual. O frontend de troca obrigatória ainda será integrado.
+Contas criadas sem envio de e-mail. A senha preenchida pelo responsável é **temporária**: `crm_profiles.password_change_required=true`. Antes da troca, o banco impede acesso operacional e aceite individual. O frontend de troca obrigatória está integrado.
 
 ```json
 {
@@ -139,4 +139,4 @@ Documentação oficial consultada em 23/10/2026:
 
 Endpoint `crm-first-access` (POST) exige JWT de sessão validado pelo Auth, `Idempotency-Key` e JSON `{ "password": "NOVA_SENHA_PESSOAL" }`. Altera a senha de **quem está autenticado**, nunca de identificador fornecido no body. Um nonce de versão impede que uma conclusão antiga ignore reset administrativo concorrente. O SQL disponibiliza `crm_first_access_status()` para ler o próprio estado sem privilégio de escrita.
 
-Backend publicado, mas interface real e testes ponta a ponta ainda pendentes. Sem envio de e-mail. A demonstração permanece separada.
+Backend e interface estão integrados. O teste integral com documentos oficiais e conta real permanece pendente. Sem envio de e-mail; a demonstração permanece separada.

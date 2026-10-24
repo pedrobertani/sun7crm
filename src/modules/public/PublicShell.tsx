@@ -54,7 +54,11 @@ export function PublicShell({
           <div>
             <Brand />
             <p>Organização para cuidar de cada oportunidade.</p>
-            <small>Prévia em desenvolvimento · use apenas dados fictícios.</small>
+            <small>
+              {location.pathname.startsWith('/demo')
+                ? 'Demonstração com dados fictícios.'
+                : 'Seu relacionamento, em movimento.'}
+            </small>
           </div>
           <nav aria-label="Informações institucionais">
             <Link to="/">Início</Link>
