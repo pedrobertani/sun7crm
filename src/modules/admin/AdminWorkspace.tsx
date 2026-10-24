@@ -196,6 +196,7 @@ export function AdminWorkspace({
               </Link>
             </div>
           </header>
+          <div className="crm-homologation-banner" role="note">HOMOLOGAÇÃO INTERNA — As operações deste painel utilizam o banco de dados real. Use apenas informações de teste; não cadastre dados pessoais de clientes reais.</div>
           <main className="workspace" id="main">
             <div className="page">
               <div className="admin-data-bar">
