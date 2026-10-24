@@ -226,9 +226,10 @@ export function RealAccess({
               </p>
               <p>
                 O acesso operacional está bloqueado até a publicação dos Termos e da Política de
-                Privacidade definitivos. As minutas públicas não serão consideradas aceites reais.
+                Privacidade definitivos. As minutas públicas não serão consideradas aceites reais. Você pode experimentar as telas de confirmação em um ambiente simulado sem desbloquear a conta.
               </p>
               <p className="small-note">{UNSAFE_DATA_MESSAGE}</p>
+              <Link to="/teste/primeiro-acesso" className="legal-test-access-link">Testar tela de troca e aceite das minutas →</Link>
               <Button
                 type="button"
                 onClick={() => setRefresh((value) => value + 1)}
