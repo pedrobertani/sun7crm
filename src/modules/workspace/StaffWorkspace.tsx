@@ -1,3 +1,5 @@
+import { ContactTransfer } from '../contacts/ContactTransfer';
+import { loadTransferContacts, importRealContacts } from '../contacts/real-transfer';
 import { useEffect, useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { LayoutDashboard, ListTodo, LogOut, Menu, Users, X } from 'lucide-react';
@@ -316,7 +318,10 @@ export function StaffWorkspace({
               </Link>
             </div>
           </header>
-          <div className="crm-homologation-banner" role="note">HOMOLOGAÇÃO INTERNA — As operações deste painel utilizam o banco de dados real. Use apenas informações de teste; não cadastre dados pessoais de clientes reais.</div>
+          <div className="crm-homologation-banner" role="note">
+            HOMOLOGAÇÃO INTERNA — As operações deste painel utilizam o banco de dados real. Use
+            apenas informações de teste; não cadastre dados pessoais de clientes reais.
+          </div>
           <main className="workspace" id="main">
             <div className="page">
               <Heading
@@ -328,6 +333,29 @@ export function StaffWorkspace({
                     : 'Registros disponíveis para o seu perfil na empresa.'
                 }
               >
+                {section === 'contacts' && (
+                  <ContactTransfer
+                    key={company.id + company.membershipId}
+                    canImport={company.role === 'manager' || company.role === 'seller'}
+                    scopeLabel="permitidos para mim"
+                    loadContacts={() => loadTransferContacts(getSupabaseClient(), company.id)}
+                    filtered={
+                      selected
+                        ? () => loadTransferContacts(getSupabaseClient(), company.id, selected)
+                        : undefined
+                    }
+                    filteredLabel="Contato selecionado"
+                    onImport={(items) =>
+                      importRealContacts(
+                        getSupabaseClient(),
+                        company.id,
+                        company.membershipId,
+                        items,
+                      )
+                    }
+                    onImported={() => setRefresh((n) => n + 1)}
+                  />
+                )}
                 <Button variant="outline" onClick={() => setRefresh((n) => n + 1)}>
                   Atualizar
                 </Button>

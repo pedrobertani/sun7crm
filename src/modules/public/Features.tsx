@@ -386,6 +386,10 @@ const catalog = [
     'Cadastro, indicações e simulação de pontos e comissão por mês, trimestre ou semestre.',
   ],
   ['Contatos', 'Dados de contato, interesses, observações, responsável e busca.'],
+  [
+    'Contatos por Excel',
+    'Importação com prévia e validação de DDD e duplicados; exportação em Nome e Contato.',
+  ],
   ['Temperatura comercial', 'Quente, morno, frio ou ainda sem classificação.'],
   [
     'Quadros de atendimento',

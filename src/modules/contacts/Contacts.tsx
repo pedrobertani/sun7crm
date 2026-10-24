@@ -1,3 +1,5 @@
+import { ContactTransfer } from './ContactTransfer';
+import { normalizeContactPhone } from '../../domain/contact-transfer';
 import { useSearchParams } from 'react-router-dom';
 import { readPeriod, inPeriod } from '../../domain/filters';
 import { dateLabel } from '../../lib/format';
@@ -67,15 +69,18 @@ export function Contacts() {
       setError('Informe o nome do contato.');
       return;
     }
-    const phone = form.phone.replace(/\D/g, '');
-    if (phone && (phone.length < 10 || phone.length > 13)) {
+    const phone = form.phone.trim() ? normalizeContactPhone(form.phone) : '';
+    if (phone === null) {
       setError('Informe um telefone com DDD válido.');
       return;
     }
     if (
       data.contacts.some(
         (c) =>
-          c.companyId === session.companyId && c.id !== editing?.id && phone && c.phone === phone,
+          c.companyId === session.companyId &&
+          c.id !== editing?.id &&
+          phone &&
+          normalizeContactPhone(c.phone) === phone,
       )
     ) {
       setError('Já existe um contato com este telefone nesta empresa. Confira antes de duplicar.');
@@ -125,6 +130,49 @@ export function Contacts() {
         title="Contatos"
         description="Conheça cada pessoa, seus interesses e o próximo passo da conversa."
       >
+        <ContactTransfer
+          key={session.companyId + session.memberId}
+          demo
+          canImport={canEdit}
+          scopeLabel={session.role === 'seller' ? 'permitidos para mim' : 'da empresa'}
+          loadContacts={async () => visibleContacts(data, session)}
+          loadExisting={async () => data.contacts.filter((c) => c.companyId === session.companyId)}
+          filtered={async () => contacts}
+          onImport={async (items) => {
+            const board = data.boards.find(
+              (b) => b.companyId === session.companyId && b.kind === 'leads',
+            );
+            if (!board?.stages[0])
+              throw Error('Configure a primeira etapa do funil de leads antes de importar.');
+            const created: Contact[] = items.map((item) => ({
+              ...blank,
+              ...item,
+              id: uid(),
+              companyId: session.companyId,
+              ownerId: session.memberId,
+              createdAt: today(),
+            }));
+            const saved = update((d) => ({
+              ...d,
+              contacts: [...created, ...d.contacts],
+              opportunities: [
+                ...d.opportunities,
+                ...created.map((c) => ({
+                  id: uid(),
+                  companyId: session.companyId,
+                  contactId: c.id,
+                  boardId: board.id,
+                  stageId: board.stages[0].id,
+                  value: 0,
+                  source: 'Importação Excel',
+                  createdAt: today(),
+                })),
+              ],
+            }));
+            if (!saved) throw Error('Não foi possível salvar a importação neste navegador.');
+            return created.length;
+          }}
+        />
         {canEdit && (
           <Button onClick={() => open(null)}>
             <Plus size={16} />
