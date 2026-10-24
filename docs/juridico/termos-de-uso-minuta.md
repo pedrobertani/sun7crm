@@ -2,7 +2,7 @@
 
 Versão 2026-10-23-r3 · 23 de outubro de 2026 · minuta para validação
 
-> **MINUTA — NÃO VIGENTE.** Estes textos estão em preparação e não são os documentos vigentes de uma contratação. O endereço da fornecedora e o WhatsApp de privacidade já foram informados, mas os prazos concretos de conservação, exclusão e retenção de backups, além dos testes de restauração, ainda precisam ser confirmados antes da ativação. A consulta não registra aceite nem libera o acesso operacional.
+> **MINUTA — NÃO VIGENTE.** A fornecedora está identificada e a estratégia para o lançamento prevê Supabase Pro com backups diários e janela de sete dias. O projeto atual ainda opera no plano Free. A ativação do Pro, a verificação dos backups, o teste de recuperação, a definição dos demais prazos de conservação e a revisão jurídica devem ser concluídos antes da operação com clientes reais. Esta minuta não é vigente, sua consulta não registra aceite e o acesso operacional permanece bloqueado.
 
 ## 1. Fornecedor e aplicação dos Termos
 
@@ -77,6 +77,12 @@ O fornecedor deve atuar na correção de falhas e na proteção do serviço. Pod
 A empresa deve comunicar suspeitas de acesso indevido e cooperar na contenção. Os procedimentos de suporte, exportação, cópias de segurança e recuperação devem ser estabelecidos antes do uso operacional, sem depender exclusivamente de cópias feitas pela empresa nem prometer recursos ainda não implementados.
 
 Cópias de segurança de infraestrutura são destinadas à continuidade e à recuperação do serviço, não constituindo, por si, funcionalidade contratada de restauração individual de registros ou garantia de recuperação ilimitada. A fornecedora definirá e informará a periodicidade, a retenção e os procedimentos efetivamente disponíveis antes do uso operacional; a contratante deve realizar e proteger as exportações que o serviço disponibilizar, quando necessárias às suas rotinas, sem que isso elimine as obrigações técnicas e legais da fornecedora sobre dados sob sua guarda.
+
+Para o lançamento comercial do SUN7CRM, a fornecedora prevê manter o banco de dados em projeto Supabase sob o plano Pro, que disponibiliza backups automáticos diários do PostgreSQL com acesso aos últimos sete dias de cópias, conforme as condições do prestador. Essa política será confirmada no painel de infraestrutura antes da operação real. O projeto utilizado durante o desenvolvimento permanece no plano gratuito, de modo que não se declara ativo o serviço Pro neste momento. A janela de sete dias refere-se às cópias disponíveis do banco e não estabelece, por si só, prazo de conservação de todos os dados operacionais.
+
+Em caso de necessidade de recuperação, a SUN7CRM avaliará a restauração de uma cópia do banco em projeto temporário independente, usando os recursos disponibilizados pelo provedor e sujeitos à elegibilidade e custos correspondentes. O projeto temporário reproduz o banco integral, inclusive contas e dados de outras empresas; seu acesso será restrito a pessoas autorizadas, evitando utilização como sistema operacional. Quando possível, registros da empresa afetada serão selecionados e reintegrados de modo controlado, preservando chaves e relacionamentos, evitando sobrescrever informações posteriores, conflitos e reintrodução de dados legitimamente eliminados. Nenhuma extração ou importação será realizada automaticamente sem validação e registro do procedimento.
+
+Os backups diários são cópias do banco completo, não cópias individualizadas por clínica, nem garantia de reversão de alterações de minutos ou horas anteriores: a restauração poderá implicar perda de alterações realizadas desde o ponto de recuperação escolhido. Objetos e arquivos do Supabase Storage não são incluídos na cópia PostgreSQL, exigindo eventual proteção separada. A estratégia não garante restauração individual, imediata, integral ou sem indisponibilidade, não isentando a fornecedora das obrigações legais de segurança e reparação cabíveis.
 
 ## 12. Limites de responsabilidade e alocação de riscos
 
