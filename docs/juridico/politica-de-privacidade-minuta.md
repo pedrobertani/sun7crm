@@ -16,6 +16,8 @@ Em regra, a empresa que cadastra seus contatos e clientes decide a finalidade, a
 
 O fornecedor atua como controlador dos dados que utiliza para administrar suas contas, a relação contratual, o suporte, a segurança e o cumprimento de suas obrigações. Gestores, vendedores e recepcionistas que agem pela empresa não assumem, por esse motivo, o papel de operador independente. A distribuição de tarefas não afasta obrigações legais de qualquer das partes.
 
+A empresa contratante mantém a responsabilidade pelas decisões sobre obtenção dos leads, campanhas, escolhas de destinatários, conteúdo de mensagens, uso de bases legais e permanência dos dados que cadastrar. O SUN7CRM não substitui o dever de informação e de atendimento aos titulares por parte da empresa controladora. Por sua vez, a SUN7 NEUROMARKETING LTDA - ME mantém os deveres legais correspondentes ao tratamento que realizar como operadora ou controladora, inclusive proteção da infraestrutura e cooperação necessária.
+
 ## 3. Dados tratados e suas origens
 
 Conta e equipe: nome de exibição, e-mail, identificador da conta, credenciais processadas pelo provedor de autenticação, vínculo com a empresa, perfil e estado de acesso. Empresa e contratação: nome, segmento, identidade visual, configurações, valor contratado e vencimento. Esses dados são fornecidos pela administração, pelo gestor ou pelo próprio usuário conforme as permissões.
@@ -73,6 +75,8 @@ Os dados operacionais são necessários enquanto o serviço estiver ativo e enqu
 Antes da ativação, serão fixados e divulgados os prazos concretos para solicitação de cópia, exportação assistida, exclusão após encerramento, retenção de logs e rotação de backups, com procedimento de execução e recuperação testado. A LGPD não fixa um período único de armazenamento de backups: ele deve ser compatível com as finalidades, necessidades de segurança, riscos e exceções legais. Esta minuta não afirma que exportação automática, limpeza periódica ou um prazo específico de backup já estejam implementados. As cópias de segurança devem ser usadas somente para recuperação e continuidade, com acesso restrito, proteção adequada, retenção limitada ao ciclo efetivo do provedor e controles para reaplicar exclusões legítimas caso um backup antigo seja restaurado.
 
 Obrigações legais, ordem de preservação e exercício regular de direitos podem exigir conservação restrita e justificada por período próprio. A obrigação de guarda de registros de acesso do art. 15 do Marco Civil da Internet deve ser atendida quando aplicável; o logger de erros não substitui esses registros. Cópias de segurança também precisam de ciclo definido e medidas para impedir que uma restauração reintroduza dados eliminados indevidamente.
+
+A contratante deverá manter suas próprias rotinas de gestão, revisão e, quando disponibilizada a função, exportação dos dados de sua operação, especialmente antes do encerramento. A gestão das cópias de infraestrutura efetivamente mantidas pelo fornecedor continua sujeita às medidas de segurança, finalidade restrita à recuperação, retenção proporcional e procedimentos de eliminação compatíveis com a legislação. Sem comprovação da configuração do plano e testes, não há promessa de restauro individual, periodicidade fixa ou prazo definido para expiração de backups.
 
 ## 11. Direitos e atendimento aos titulares
 
