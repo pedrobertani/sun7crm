@@ -6,6 +6,11 @@ export const roleLabels = {
   seller: 'Vendedor / Consultora',
   reception: 'Recepção',
 };
+export const previewRoleLabels = {
+  manager: roleLabels.manager,
+  seller: roleLabels.seller,
+  reception: roleLabels.reception,
+};
 export const temperatureLabels = {
   unclassified: 'Sem classificação',
   cold: 'Frio',

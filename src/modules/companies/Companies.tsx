@@ -99,6 +99,7 @@ export function Companies() {
       name: form.name.trim(),
       monthlyAmount: amount,
       createdAt: editing?.createdAt || today(),
+      displayName: editing?.displayName,
       logo: editing?.logo,
       theme: editing?.theme,
     };
@@ -284,7 +285,7 @@ export function Companies() {
               />
             </label>
             <label className="form-row">
-              Template
+              Template do segmento
               <select
                 value={form.template}
                 onChange={(e) => setForm({ ...form, template: e.target.value as Template })}
@@ -321,6 +322,10 @@ export function Companies() {
               />
             </label>
           </div>
+          <p className="small-note">
+            Somente Caio altera o segmento e seu template. A troca preserva contatos, tarefas,
+            histórico e etapas personalizadas dos funis.
+          </p>
           <FormError message={error} />
           <FormActions onCancel={() => setEditing(undefined)} />
         </form>

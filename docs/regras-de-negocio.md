@@ -49,3 +49,33 @@ Os ícones dos cards do dashboard são atalhos acessíveis. O restante do card �
 ## Kanban de tarefas
 
 Tarefas podem ser visualizadas em Lista ou Quadro Kanban. As etapas iniciais são A fazer, Em andamento e Concluídas. Arrastar ou selecionar uma etapa altera o mesmo cadastro; não duplica a tarefa. Em andamento continua contando como pendente no dashboard. Concluir e reabrir mantêm prazo, contato e responsável. Os filtros são preservados ao trocar de visualização. Dados antigos sem etapa aparecem em A fazer ou Concluídas conforme a conclusão já registrada. O gestor acompanha as tarefas da empresa; os outros perfis veem e movimentam as próprias.
+
+## Identidade própria e controle de segmento
+
+O gestor personaliza o nome exibido, logo e cores da empresa. O nome exibido é independente do nome cadastral e aparece no topo da área de trabalho e no título da aba; sem personalização, usa o nome cadastral. Sem logo, são exibidas as iniciais. A identidade é compartilhada pelos perfis da mesma empresa; o painel do Caio mantém SUN7CRM.
+
+Somente Caio define e altera segmento e template no cadastro administrativo. Segmento e template não aparecem na área da empresa, nem em configurações, menus ou textos de orientação. Alterar segmento/template preserva os dados existentes, tarefas e nomes, ordem e posições dos funis personalizados. A referência ao Monday orienta apenas a organização simples do trabalho, sem ampliar o escopo funcional.
+
+## Movimentação dos cartões no celular
+
+Nos funis e nas tarefas, arrastar começa pela alça de pontinhos. O gesto usa eventos de ponteiro e uma prévia limitada ao cartão, evitando o arraste nativo do navegador. Fora da alça, o quadro continua rolável. Aproximar o cartão das bordas laterais rola somente o quadro. Soltar fora do quadro, cancelar o toque ou pressionar Escape cancela a movimentação. A seleção de etapa continua disponível para toque e teclado.
+
+## Site e primeiro acesso
+
+Site público, recursos, Termos de Uso e Política de Privacidade ficam disponíveis antes da entrada. A demo abre direto no painel, sem etapa de aceite e sem nova confirmação ao trocar de empresa ou perfil. Os documentos ficam disponíveis para consulta opcional. No acesso real, está previsto que cada pessoa confirme os Termos e a leitura da Política no primeiro acesso e quando houver alteração relevante que exija nova confirmação, com registro no servidor. O gestor não confirma pela equipe. Detalhes e pendências de produção: `privacidade-e-primeiro-acesso.md`.
+
+O botão Acessar do cabeçalho abre o login da conta. Explorar a demo abre a demonstração com empresas e perfis fictícios, sem senha. A tela de login está preparada visualmente, com campos indisponíveis enquanto não houver autenticação. O administrador da plataforma cadastra o gestor, que cadastra a equipe. Não há cadastro público ou recuperação automática por e-mail. Recuperação de senha fica oculta na tela de login por enquanto. A regra prevista de redefinição mantém a hierarquia equipe → gestor → administrador da plataforma.
+
+A demo pública oferece somente gestor, vendedor/consultora e recepção. A administração de Caio não faz parte dessa demonstração; o painel e o cadastro de empresas ficam preservados no projeto para o acesso administrativo real.
+
+## Comandos administrativos preparados
+
+As primeiras Edge Functions mantêm a hierarquia já combinada: Caio cria gestores e redefine suas senhas; gestor ativo cria vendedores/recepção e redefine as senhas desses integrantes da própria empresa habilitada. Troca da própria senha será feita pelo Auth nas configurações, sem obrigação no primeiro login. Publicação e conexão com a interface permanecem pendentes.
+
+A criação da empresa é independente da criação do gestor. Empresa, cobrança e os dois quadros iniciais são criados juntos, com a empresa desabilitada até ativação administrativa posterior. Todos os solicitantes precisam do aceite vigente da conta real; as funções não publicam nem aceitam documentos em nome da pessoa.
+
+Contas existentes por e-mail não são automaticamente reutilizadas. Redefinição administrativa fica bloqueada para alvo com vínculo em outra empresa, pois a senha do Auth afeta a identidade inteira. Gestão de contas compartilhadas, substituição de gestor e limite definitivo de gestores continuam pendentes; a migração não impõe um único gestor por empresa. Os limites operacionais de requisição e a conciliação de falhas estão descritos em `edge-functions.md`.
+
+## Identidade institucional SUN7CRM
+
+O site público e a página de acesso usam a identidade preta e dourada inspirada na marca fornecida pelo cliente. O símbolo original está em `public/brand/sun7-symbol.jpg`; o enquadramento de exibição é feito por CSS, sem redesenhar o arquivo recebido. A assinatura do produto usa SUN7CRM. As cores institucionais são limitadas à apresentação pública, incluindo funcionalidades e documentos. O ambiente de cada empresa continua utilizando sua própria identidade configurável.

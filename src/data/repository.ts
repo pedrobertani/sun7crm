@@ -6,7 +6,7 @@ export interface CrmRepository {
   reset(): Snapshot;
 }
 const KEY = 'sun7crm:prototype:v1';
-// Adaptador exclusivo da prévia. A implementação Supabase será adicionada depois.
+// Adaptador exclusivo de /demo. Páginas oficiais usam seus próprios repositórios Supabase.
 export class BrowserRepository implements CrmRepository {
   constructor(private storage: Storage) {}
   read(): Snapshot {

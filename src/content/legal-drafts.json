@@ -1,0 +1,205 @@
+{
+  "status": "draft",
+  "version": "2026-10-23-r3",
+  "label": "23 de outubro de 2026 · minuta para validação",
+  "notice": "A fornecedora está identificada e a estratégia para o lançamento prevê Supabase Pro com backups diários e janela de sete dias. O projeto atual ainda opera no plano Free. A ativação do Pro, a verificação dos backups, o teste de recuperação, a definição dos demais prazos de conservação e a revisão jurídica devem ser concluídos antes da operação com clientes reais. Esta minuta não é vigente, sua consulta não registra aceite e o acesso operacional permanece bloqueado.",
+  "terms": [
+    {
+      "heading": "Fornecedor e aplicação dos Termos",
+      "paragraphs": [
+        "O SUN7CRM é fornecido por SUN7 NEUROMARKETING LTDA - ME, inscrita no CNPJ sob o número 62.325.920/0001-37, com endereço na Rua Paraná, nº 1098, Centro, CEP 19900-021, Ourinhos/SP, Brasil. O canal indicado pela fornecedora para solicitações relativas à privacidade é o WhatsApp +55 (14) 99673-2848, que deverá ser efetivamente monitorado. A identidade visual personalizada de uma clínica ou empresa não altera a identidade da fornecedora.",
+        "Estes Termos se destinam à empresa contratante e às pessoas autorizadas a usar sua conta. A confirmação individual das regras de uso não substitui o contrato comercial da empresa nem autoriza alguém a assumir obrigações financeiras em seu nome sem poderes para isso."
+      ]
+    },
+    {
+      "heading": "Serviço, demonstração e funcionalidades",
+      "paragraphs": [
+        "O SUN7CRM é uma ferramenta de organização comercial e relacionamento com clientes. Os recursos contratados e efetivamente liberados serão descritos na contratação. No estágio atual, existem autenticação, primeiro acesso, administração de empresas e gestores, consulta inicial de contatos e tarefas e notificações por perfil. As demais funcionalidades demonstradas estão sendo integradas por etapas.",
+        "A demonstração é independente das contas reais e utiliza dados fictícios no navegador. Explorar a demo não celebra uma contratação, não cria assinatura e não comprova disponibilidade operacional de todos os exemplos. Não insira dados pessoais reais na demonstração."
+      ]
+    },
+    {
+      "heading": "Contas, equipe e proteção das credenciais",
+      "paragraphs": [
+        "O administrador da plataforma cadastra empresas e gestores. O gestor administra a equipe conforme suas permissões. Cada pessoa utiliza uma conta individual e protege sua senha, seus dispositivos e as sessões abertas. Contas criadas ou redefinidas pelo responsável exigem a substituição da senha temporária antes do uso operacional.",
+        "Nesta etapa, a recuperação de acesso é feita pela hierarquia autorizada: o gestor atende sua equipe e a administração atende os gestores. Não existe recuperação automática por e-mail. O responsável deve conferir a identidade de quem solicita a redefinição. A empresa deve informar desligamentos e revisar os acessos de sua equipe. A proteção das contas também depende dos controles e obrigações da plataforma."
+      ]
+    },
+    {
+      "heading": "Responsabilidades da empresa contratante",
+      "paragraphs": [
+        "A empresa decide quais contatos cadastrar, a finalidade do uso, a base legal adequada, quem da equipe precisa ter acesso e por quanto tempo os dados são necessários. Cabe a ela informar os titulares, manter dados pertinentes e corretos, respeitar pedidos de oposição e descadastramento e obter consentimento específico quando essa for a hipótese legal aplicável.",
+        "A empresa responde pela origem lícita das listas, pelo conteúdo das observações, campanhas e comunicações e pelas instruções que fornecer. Não pode importar listas obtidas ilicitamente, fazer comunicações abusivas, usar dados para discriminação ou cadastrar informações excessivas. Cada integrante da equipe deve agir dentro de suas atribuições; ser usuário não o transforma automaticamente no controlador dos dados de toda a empresa.",
+        "A contratante declara ter legitimidade para cadastrar os dados e materiais que inserir, mantém sob seu controle as finalidades e instruções do tratamento e responde pelas ações praticadas por seus usuários autorizados, inclusive seleção de destinatários, envio de campanhas, respostas, concessão e revogação de acessos e segurança dos dispositivos sob sua administração. Deve documentar a origem dos contatos e atender às solicitações dos titulares referentes a essas atividades. A SUN7CRM não escolhe destinatários nem aprova previamente cada mensagem ou campanha, sem prejuízo de seus deveres legais e de providências quando tomar conhecimento de irregularidade."
+      ]
+    },
+    {
+      "heading": "Responsabilidades da SUN7CRM",
+      "paragraphs": [
+        "No tratamento realizado por conta da empresa, o fornecedor deve cumprir as instruções lícitas documentadas, restringir o acesso às pessoas autorizadas e adotar medidas técnicas e administrativas compatíveis com os riscos. Deve apoiar o atendimento a direitos, a apuração de incidentes e a eliminação ou devolução dos dados conforme o contrato e a lei. Uma instrução que viole a legislação deve ser apontada e não legitima o tratamento.",
+        "A empresa responde por suas próprias decisões e condutas, e o fornecedor responde por suas obrigações e pelos fatos que lhe forem imputáveis, nos limites da legislação. Nenhuma disposição afasta direitos dos titulares, deveres de segurança, responsabilidade legal ou direitos do consumidor quando aplicáveis. Não há transferência integral de responsabilidade ao usuário, nem cobrança automática de indenização sem apuração da responsabilidade.",
+        "A SUN7CRM não assume obrigação de auditar a licitude de cada cadastro, mensagem, campanha, precificação ou negociação decidida pela contratante; seus controles técnicos e seus deveres próprios de segurança, confidencialidade, cooperação e cumprimento da legislação permanecem exigíveis. Se uma instrução for manifestamente ilícita, poderá recusar seu cumprimento e adotar medidas proporcionais de proteção e contenção, respeitados o contrato e a lei."
+      ]
+    },
+    {
+      "heading": "Dados sensíveis, saúde e menores de idade",
+      "paragraphs": [
+        "Esta etapa é comercial e não funciona como prontuário. Não cadastre diagnósticos, anamneses, resultados de exames, fotografias clínicas, biometria, documentos médicos ou outros dados pessoais sensíveis. Mesmo uma observação sobre procedimento ou interesse pode revelar informação de saúde; registre somente o mínimo necessário e evite detalhes clínicos nos campos livres.",
+        "O serviço se destina a usuários profissionais adultos. O cadastro de dados de crianças e adolescentes e qualquer módulo clínico exigem avaliação própria de finalidade, base legal, melhor interesse e controles antes de sua disponibilização. A confirmação destes Termos não autoriza esse uso nem substitui a manifestação do titular ou responsável quando exigida."
+      ]
+    },
+    {
+      "heading": "Informações comerciais, indicadores e notificações",
+      "paragraphs": [
+        "A classificação quente, morno ou frio e a posição em um quadro representam informações comerciais definidas pela equipe. A empresa deve revisar destinatários, valores, prazos e conteúdo antes de agir. Valores estimados e indicadores não comprovam pagamento, faturamento ou resultado; não substituem contabilidade, documentos fiscais ou orientação profissional.",
+        "As notificações são apoio à organização. O gestor deve acompanhar o vencimento contratual mesmo que não consulte o sininho. Na versão atual os avisos são atualizados enquanto o sistema está aberto; não há promessa de entrega com o aplicativo fechado. O serviço não garante aumento de vendas, conversão ou resultado comercial específico."
+      ]
+    },
+    {
+      "heading": "Preço, vencimento, suspensão e encerramento",
+      "paragraphs": [
+        "Não há tabela de planos nesta versão. Valor, vencimento, duração, forma de pagamento, recursos, regras de renovação e eventual suspensão são definidos na proposta ou no contrato de cada empresa, antes da contratação. Usar a demo ou confirmar documentos individualmente não inicia cobrança. Alterações comerciais não serão aplicadas retroativamente sem fundamento contratual e comunicação adequada.",
+        "Suspensão por inadimplência ou uso irregular deve observar a contratação, comunicação cabível e a lei. Contenção imediata pode ser necessária diante de risco de segurança ou obrigação legal. Suspender o acesso não autoriza reter dados como forma de coagir pagamento nem elimina os direitos dos titulares. O procedimento e os prazos de solicitação de cópia, encerramento e eliminação precisam estar definidos antes da ativação operacional."
+      ]
+    },
+    {
+      "heading": "Integrações e serviços externos",
+      "paragraphs": [
+        "Links externos, incluindo o contato pelo WhatsApp, levam a serviços com condições próprias. A pessoa decide o que compartilhar e deve conferir o destinatário. A SUN7CRM limita o compartilhamento necessário ao serviço e mantém suas próprias obrigações na escolha e gestão de fornecedores.",
+        "WhatsApp Business por API, caixa unificada de redes sociais, Meta Ads, inteligência artificial, Google Calendar e módulos financeiros adicionais não estão incluídos como integrações ativas nesta etapa. Ativações futuras dependem de definição de escopo, permissões, custos e informações de privacidade. A confirmação geral destes Termos não autoriza integrações futuras nem publicidade opcional.",
+        "Serviços externos de mensagens, telecomunicações, infraestrutura e autenticação podem estar sujeitos a indisponibilidades, limites, mudanças técnicas e políticas próprias. Falhas exclusivamente atribuíveis a terceiros ou eventos inevitáveis fora do controle razoável da fornecedora serão examinadas conforme a legislação e a distribuição comprovada de responsabilidades; permanecem os deveres da SUN7CRM relacionados à seleção, configuração, segurança e gestão dos prestadores utilizados para fornecer o serviço."
+      ]
+    },
+    {
+      "heading": "Uso permitido, conteúdo e propriedade intelectual",
+      "paragraphs": [
+        "É proibido usar o serviço para fraude, atividade ilícita, violação de direitos, envio abusivo, inserção de código malicioso ou tentativa de acesso a outra empresa ou conta sem autorização. A licença de uso é limitada ao serviço contratado; não transfere a titularidade do software, da marca ou de materiais protegidos.",
+        "A empresa mantém os direitos que possui sobre seus dados, sua marca e seus conteúdos. Permite o processamento necessário para a execução do serviço e declara possuir autorização para utilizar os materiais que cadastrar. Essa permissão não autoriza comercializar a base de clientes nem utilizá-la para finalidades independentes incompatíveis."
+      ]
+    },
+    {
+      "heading": "Disponibilidade, suporte e proteção dos dados",
+      "paragraphs": [
+        "O fornecedor deve atuar na correção de falhas e na proteção do serviço. Podem ocorrer manutenções, indisponibilidades e limitações de infraestrutura, que serão tratadas conforme a contratação e as circunstâncias. Não há garantia de disponibilidade ininterrupta ou de ausência absoluta de riscos. Essa informação não exclui o dever de prevenir danos e responder por falhas pelas quais o fornecedor seja legalmente responsável.",
+        "A empresa deve comunicar suspeitas de acesso indevido e cooperar na contenção. Os procedimentos de suporte, exportação, cópias de segurança e recuperação devem ser estabelecidos antes do uso operacional, sem depender exclusivamente de cópias feitas pela empresa nem prometer recursos ainda não implementados.",
+        "Cópias de segurança de infraestrutura são destinadas à continuidade e à recuperação do serviço, não constituindo, por si, funcionalidade contratada de restauração individual de registros ou garantia de recuperação ilimitada. A fornecedora definirá e informará a periodicidade, a retenção e os procedimentos efetivamente disponíveis antes do uso operacional; a contratante deve realizar e proteger as exportações que o serviço disponibilizar, quando necessárias às suas rotinas, sem que isso elimine as obrigações técnicas e legais da fornecedora sobre dados sob sua guarda.",
+        "Para o lançamento comercial do SUN7CRM, a fornecedora prevê manter o banco de dados em projeto Supabase sob o plano Pro, que disponibiliza backups automáticos diários do PostgreSQL com acesso aos últimos sete dias de cópias, conforme as condições do prestador. Essa política será confirmada no painel de infraestrutura antes da operação real. O projeto utilizado durante o desenvolvimento permanece no plano gratuito, de modo que não se declara ativo o serviço Pro neste momento. A janela de sete dias refere-se às cópias disponíveis do banco e não estabelece, por si só, prazo de conservação de todos os dados operacionais.",
+        "Em caso de necessidade de recuperação, a SUN7CRM avaliará a restauração de uma cópia do banco em projeto temporário independente, usando os recursos disponibilizados pelo provedor e sujeitos à elegibilidade e custos correspondentes. O projeto temporário reproduz o banco integral, inclusive contas e dados de outras empresas; seu acesso será restrito a pessoas autorizadas, evitando utilização como sistema operacional. Quando possível, registros da empresa afetada serão selecionados e reintegrados de modo controlado, preservando chaves e relacionamentos, evitando sobrescrever informações posteriores, conflitos e reintrodução de dados legitimamente eliminados. Nenhuma extração ou importação será realizada automaticamente sem validação e registro do procedimento.",
+        "Os backups diários são cópias do banco completo, não cópias individualizadas por clínica, nem garantia de reversão de alterações de minutos ou horas anteriores: a restauração poderá implicar perda de alterações realizadas desde o ponto de recuperação escolhido. Objetos e arquivos do Supabase Storage não são incluídos na cópia PostgreSQL, exigindo eventual proteção separada. A estratégia não garante restauração individual, imediata, integral ou sem indisponibilidade, não isentando a fornecedora das obrigações legais de segurança e reparação cabíveis."
+      ]
+    },
+    {
+      "heading": "Limites de responsabilidade e alocação de riscos",
+      "paragraphs": [
+        "A contratante assume os riscos próprios de suas decisões comerciais, campanhas, conteúdos, concessões de acesso, uso de equipamentos e obrigações perante seus clientes. O serviço é ferramenta de apoio, não assessoria jurídica, clínica, contábil ou financeira, nem promessa de faturamento. A fornecedora não assume prejuízos atribuíveis exclusivamente a tais decisões ou a atos de terceiros sem participação ou falha imputável à SUN7CRM. A atribuição de qualquer responsabilidade exige avaliação dos fatos, do nexo causal e da legislação aplicável.",
+        "Quando demonstrado que a ocorrência decorreu exclusivamente de comando, alteração, exclusão, envio, compartilhamento de credenciais ou outra conduta da contratante ou de seus usuários autorizados, sem defeito do serviço, falha de segurança imputável à fornecedora ou descumprimento de obrigação própria, a SUN7CRM não assume os prejuízos daí resultantes. Cabe à contratante revisar operações sensíveis, conceder e revogar permissões de seus colaboradores e comunicar incidentes sem demora injustificada. Esta previsão não exclui a apuração de eventual contribuição ou responsabilidade legal da fornecedora.",
+        "Nas relações estritamente empresariais, e somente quando expressamente pactuado em contrato específico e permitido pela legislação aplicável, propõe-se limitar a responsabilidade contratual total da fornecedora por danos patrimoniais diretos comprovados decorrentes do descumprimento de obrigações contratuais ao total efetivamente pago pela contratante pelo serviço nos 12 meses anteriores ao evento que originou a reclamação, ou desde o início da contratação, se inferior. A validade e a extensão desse limite dependem do caso concreto e de revisão jurídica, especialmente se houver relação de consumo.",
+        "Esse limite e eventuais exclusões de lucros cessantes hipotéticos, perda de oportunidades ou danos indiretos não afastam deveres de reparação inderrogáveis, direitos de titulares de dados, obrigações legais de segurança, hipóteses de dolo ou culpa grave, nem garantias e responsabilidades que não possam ser limitadas por lei. Reclamações decorrentes de tratamento ilícito determinado exclusivamente pela contratante poderão fundamentar seu dever de ressarcimento na medida de sua responsabilidade efetivamente demonstrada, com preservação do direito de regresso e sem indenização automática."
+      ]
+    },
+    {
+      "heading": "Confirmação individual, alterações e legislação",
+      "paragraphs": [
+        "No acesso real, cada pessoa deve aceitar os Termos e confirmar que recebeu e leu a Política de Privacidade vigente. A confirmação é vinculada à identidade autenticada, à versão e ao horário registrados no servidor. O gestor não confirma pela equipe. Sem os documentos oficiais ou sem a confirmação exigida, o acesso operacional permanece bloqueado; consultar os textos e sair continua permitido.",
+        "Mudanças relevantes serão informadas e poderão exigir nova confirmação. A ciência da Política não é consentimento genérico para tratar dados de clientes, fazer publicidade ou usar dados sensíveis. Aplicam-se as leis brasileiras, com preservação do foro competente e das regras de proteção do consumidor quando cabíveis. O endereço da fornecedora e o canal de privacidade estão indicados na seção 1; os procedimentos de suporte e prazos operacionais ainda dependem de validação antes da versão definitiva."
+      ]
+    }
+  ],
+  "privacy": [
+    {
+      "heading": "Escopo e identificação do responsável",
+      "paragraphs": [
+        "Esta Política descreve o tratamento de dados no site, na demonstração e no ambiente autenticado do SUN7CRM, fornecido por SUN7 NEUROMARKETING LTDA - ME, CNPJ 62.325.920/0001-37, com endereço na Rua Paraná, nº 1098, Centro, CEP 19900-021, Ourinhos/SP, Brasil. O canal indicado para solicitações relacionadas à privacidade é o WhatsApp +55 (14) 99673-2848, sujeito a atendimento e monitoramento efetivos. A personalização com o nome ou logo de uma clínica não altera os papéis de proteção de dados.",
+        "O login real e os controles de primeiro acesso já existem, mas a operação com dados reais permanece bloqueada até a conclusão e publicação dos documentos oficiais. Os textos desta página são uma minuta para validação; lê-los não registra aceite."
+      ]
+    },
+    {
+      "heading": "Empresa controladora e fornecedor operador",
+      "paragraphs": [
+        "Em regra, a empresa que cadastra seus contatos e clientes decide a finalidade, a base legal, os acessos e a necessidade de conservação, atuando como controladora. O fornecedor do SUN7CRM processa esses dados como operador para prestar o serviço e conforme instruções lícitas documentadas. A função de cada parte depende de sua atuação concreta, não apenas do nome dado no contrato.",
+        "O fornecedor atua como controlador dos dados que utiliza para administrar suas contas, a relação contratual, o suporte, a segurança e o cumprimento de suas obrigações. Gestores, vendedores e recepcionistas que agem pela empresa não assumem, por esse motivo, o papel de operador independente. A distribuição de tarefas não afasta obrigações legais de qualquer das partes.",
+        "A empresa contratante mantém a responsabilidade pelas decisões sobre obtenção dos leads, campanhas, escolhas de destinatários, conteúdo de mensagens, uso de bases legais e permanência dos dados que cadastrar. O SUN7CRM não substitui o dever de informação e de atendimento aos titulares por parte da empresa controladora. Por sua vez, a SUN7 NEUROMARKETING LTDA - ME mantém os deveres legais correspondentes ao tratamento que realizar como operadora ou controladora, inclusive proteção da infraestrutura e cooperação necessária."
+      ]
+    },
+    {
+      "heading": "Dados tratados e suas origens",
+      "paragraphs": [
+        "Conta e equipe: nome de exibição, e-mail, identificador da conta, credenciais processadas pelo provedor de autenticação, vínculo com a empresa, perfil e estado de acesso. Empresa e contratação: nome, segmento, identidade visual, configurações, valor contratado e vencimento. Esses dados são fornecidos pela administração, pelo gestor ou pelo próprio usuário conforme as permissões.",
+        "Relacionamento comercial: nome e contatos do lead ou cliente, interesses necessários, responsável, temperatura comercial, observações, etapas, oportunidades, valores estimados e tarefas, conforme os módulos efetivamente disponibilizados. A empresa é a origem desses cadastros e deve documentar como os obteve. Notificações registram destinatário, referência, tipo, prioridade e leitura.",
+        "Segurança e suporte: identidade validada quando disponível, eventos administrativos, horários, versão de documento confirmada e identificadores técnicos. Erros das funções podem registrar código, mensagem controlada, status, tipo da exceção e trace técnico reduzido. O logger da aplicação não persiste senhas, tokens, chaves secretas, corpo dos formulários ou a mensagem bruta de exceções inesperadas. A infraestrutura também pode gerar registros técnicos de acesso, como IP e horário, conforme seus próprios componentes."
+      ]
+    },
+    {
+      "heading": "Finalidades e bases legais",
+      "paragraphs": [
+        "Autenticar contas, permitir o uso contratado e atender suporte envolve execução de contrato ou procedimentos relacionados quando aplicáveis. Dados de integrantes de uma equipe também podem ser necessários à prestação do serviço à organização e à segurança, com avaliação da hipótese legal apropriada; não se presume que todos sejam partes do contrato comercial.",
+        "Obrigações legais e regulatórias fundamentam os registros que a legislação exigir. Prevenção de fraude, controle de acesso, investigação de falhas e proteção de direitos podem usar legítimo interesse, com análise de necessidade, expectativa do titular e salvaguardas, ou exercício regular de direitos, conforme a operação. Essa base não é autorização para tratar dados de saúde.",
+        "Para os dados de leads e clientes, a empresa define e documenta a base de cada finalidade e presta as informações ao titular. Consentimento, quando necessário, deve ser específico, demonstrável e revogável. A confirmação desta Política é ciência das informações e não autorização genérica para marketing ou para tratamento de dados de terceiros."
+      ]
+    },
+    {
+      "heading": "Dados sensíveis e crianças e adolescentes",
+      "paragraphs": [
+        "A versão comercial atual não é um prontuário e não se destina a armazenar dados pessoais sensíveis, como anamneses, diagnósticos, exames, fotografias clínicas ou biometria. Interesses e campos livres também podem revelar saúde ou outra informação sensível. A empresa deve reduzir o cadastro ao mínimo necessário e evitar conteúdo clínico. Qualquer ampliação exige avaliação própria das hipóteses do art. 11 da LGPD e dos controles correspondentes.",
+        "O acesso profissional se destina a adultos. O tratamento de dados de crianças e adolescentes não integra o escopo operacional liberado nesta etapa e exige análise do melhor interesse, da base legal e das medidas adequadas antes da disponibilização. Dados inseridos de forma indevida devem ser reportados para contenção e tratamento adequado, sem afastar os direitos de seus titulares."
+      ]
+    },
+    {
+      "heading": "Banco no Brasil e infraestrutura utilizada",
+      "paragraphs": [
+        "O banco principal do projeto está configurado no Supabase na região de São Paulo, Brasil. O Supabase fornece banco e autenticação. O site atual é publicado por Sites, com infraestrutura de entrega da Cloudflare. A localização do banco principal não significa que toda operação de suporte, distribuição do site, segurança, processamento de funções ou serviço de um fornecedor ocorra exclusivamente no Brasil.",
+        "Antes da ativação, serão concluídos o inventário dos suboperadores, a verificação das regiões e dos fluxos reais e as garantias contratuais aplicáveis. Se houver transferência internacional, serão informados finalidade, duração, países ou destinos pertinentes, destinatários e mecanismo legal utilizado, com acesso às informações e salvaguardas cabíveis. Não se presume que cláusulas estrangeiras ou a escolha da região do banco, isoladamente, atendam às exigências brasileiras.",
+        "O lançamento comercial está planejado para o plano Supabase Pro, com backups do banco disponibilizados diariamente e acesso às cópias dos últimos sete dias, de acordo com a documentação e o contrato com o prestador. A organização do projeto está atualmente no plano Free; a confirmação do Pro, da realização efetiva dos backups e das restrições técnicas ocorrerá antes de receber dados operacionais reais. Esse compromisso de lançamento não significa que o serviço de backup Pro esteja em vigor durante os testes."
+      ]
+    },
+    {
+      "heading": "Compartilhamento, acesso e serviços externos",
+      "paragraphs": [
+        "Os dados ficam acessíveis à equipe autorizada da própria empresa conforme seu perfil e aos prestadores necessários à execução, manutenção e proteção do serviço, com limitação de acesso e obrigações compatíveis. Acesso técnico deve ser justificado e limitado à necessidade. Pode haver atendimento a ordem ou obrigação legal e defesa de direitos, com divulgação restrita ao necessário.",
+        "A base de contatos não é oferecida para venda nem para publicidade independente da SUN7CRM. Não há nesta etapa integração ativa com IA, Meta Ads, Google Calendar ou uma caixa unificada de mensagens. Novas integrações terão informações próprias antes de serem ativadas.",
+        "O botão de contato pelo WhatsApp abre um serviço externo, e as informações que a pessoa enviar passam a ser tratadas também nesse canal. Não envie senha, documento de saúde ou outros dados excessivos por mensagens de atendimento. O WhatsApp +55 (14) 99673-2848 é indicado como canal de privacidade da fornecedora, para pedidos relacionados ao tratamento de dados sob sua responsabilidade; solicitações sobre clientes cadastrados por cada empresa são encaminhadas ao respectivo controlador, com apoio técnico do SUN7CRM quando cabível."
+      ]
+    },
+    {
+      "heading": "Navegador, sessão e demonstração",
+      "paragraphs": [
+        "O ambiente autenticado utiliza armazenamento no navegador para manter a sessão do Supabase e sua renovação. Tokens de sessão são credenciais e exigem proteção do dispositivo; sair do sistema é recomendado em equipamentos compartilhados. Bloquear esse armazenamento pode impedir o login ou a continuidade da sessão.",
+        "A demonstração utiliza localStorage para dados fictícios e preferências e sessionStorage para estado de navegação. Esses dados não são a base de uma conta real e podem ser removidos nas configurações de dados do site no navegador. Não são usados para comprovar aceite individual.",
+        "O código atual do SUN7CRM não instala pixels de publicidade ou ferramentas opcionais de análise. A hospedagem pode tratar dados técnicos essenciais à entrega e à segurança. Se tecnologias opcionais forem adicionadas, suas finalidades e escolhas serão apresentadas antes da ativação quando exigido, sem associar publicidade opcional à entrada no CRM."
+      ]
+    },
+    {
+      "heading": "Segurança e resposta a incidentes",
+      "paragraphs": [
+        "O sistema utiliza HTTPS, autenticação individual, troca da senha temporária, verificação de permissões no servidor e políticas no banco para restringir o acesso entre empresas. Os documentos exigidos e suas confirmações são verificados antes das operações. As funções mantêm registros técnicos reduzidos para investigação. Esses controles reduzem riscos, mas não equivalem a garantia de segurança absoluta.",
+        "A empresa deve proteger dispositivos e credenciais, revisar acessos e comunicar suspeitas. O fornecedor mantém suas obrigações de proteção, apuração e cooperação. A resposta deve conter o incidente, preservar evidências necessárias e avaliar os efeitos sobre os titulares. O operador deve informar o controlador sem demora injustificada; cabe ao controlador realizar as comunicações obrigatórias à ANPD e aos titulares nos casos e prazos aplicáveis. O procedimento e os responsáveis de atendimento precisam estar definidos antes da ativação."
+      ]
+    },
+    {
+      "heading": "Conservação, encerramento e eliminação",
+      "paragraphs": [
+        "Os dados operacionais são necessários enquanto o serviço estiver ativo e enquanto houver finalidade legítima definida pela empresa. Contas desativadas não autorizam conservação irrestrita. A empresa deve revisar os cadastros e solicitar correção ou eliminação do que deixar de ser necessário, respeitando as hipóteses legais de conservação.",
+        "Antes da ativação, serão fixados e divulgados os prazos concretos para solicitação de cópia, exportação assistida, exclusão após encerramento, retenção de logs e rotação de backups, com procedimento de execução e recuperação testado. A LGPD não fixa um período único de armazenamento de backups: ele deve ser compatível com as finalidades, necessidades de segurança, riscos e exceções legais. Esta minuta não afirma que exportação automática, limpeza periódica ou um prazo específico de backup já estejam implementados. As cópias de segurança devem ser usadas somente para recuperação e continuidade, com acesso restrito, proteção adequada, retenção limitada ao ciclo efetivo do provedor e controles para reaplicar exclusões legítimas caso um backup antigo seja restaurado.",
+        "Obrigações legais, ordem de preservação e exercício regular de direitos podem exigir conservação restrita e justificada por período próprio. A obrigação de guarda de registros de acesso do art. 15 do Marco Civil da Internet deve ser atendida quando aplicável; o logger de erros não substitui esses registros. Cópias de segurança também precisam de ciclo definido e medidas para impedir que uma restauração reintroduza dados eliminados indevidamente.",
+        "A contratante deverá manter suas próprias rotinas de gestão, revisão e, quando disponibilizada a função, exportação dos dados de sua operação, especialmente antes do encerramento. A gestão das cópias de infraestrutura efetivamente mantidas pelo fornecedor continua sujeita às medidas de segurança, finalidade restrita à recuperação, retenção proporcional e procedimentos de eliminação compatíveis com a legislação. Sem comprovação da configuração do plano e testes, não há promessa de restauro individual, periodicidade fixa ou prazo definido para expiração de backups.",
+        "Na configuração prevista para produção com Supabase Pro, as cópias diárias do banco PostgreSQL ficam disponíveis dentro de janela de sete dias, sujeita às condições do provedor. A janela de backup não substitui os prazos específicos, ainda a definir, de conservação de cadastros, logs, auditoria ou dados contratuais. Uma exclusão operacional pode continuar refletida temporariamente em cópia anterior e deverá ser considerada nos controles de restauração e de expiração das cópias, observadas as obrigações legais.",
+        "Quando viável e autorizado, a recuperação poderá utilizar um projeto Supabase temporário gerado a partir de backup físico, separado da produção. Como a cópia contém o banco completo e registros de todas as empresas, o acesso e a exportação serão limitados a pessoal habilitado, com seleção e conferência dos registros vinculados à empresa afetada, das chaves estrangeiras, das exclusões anteriores e das operações posteriores ao backup. O projeto auxiliar será desativado e eliminado ao final do procedimento, respeitados os requisitos legais e de segurança. O recurso de restauração para projeto novo é oferecido em beta pelo Supabase e sua disponibilidade, preço e limites dependem do fornecedor; não se promete que sempre estará acessível.",
+        "O backup do PostgreSQL não inclui os próprios arquivos mantidos no Supabase Storage, somente os metadados do banco; logotipos e outros anexos exigem política específica de preservação. A SUN7CRM não assegura recuperação integral ou instantânea nem restauração sem perdas ou interrupções; deve empregar as medidas de segurança compatíveis com o serviço contratado e tratar incidentes segundo a lei."
+      ]
+    },
+    {
+      "heading": "Direitos e atendimento aos titulares",
+      "paragraphs": [
+        "Conforme a situação, o titular pode solicitar confirmação e acesso, correção, informação sobre compartilhamento, anonimização, bloqueio ou eliminação, portabilidade nos termos da regulamentação, oposição e revisão de decisões unicamente automatizadas que afetem seus interesses. Também pode obter informações sobre consentimento e suas consequências e revogá-lo por procedimento facilitado, quando essa for a base utilizada.",
+        "Solicitações sobre clientes de uma empresa devem ser encaminhadas à empresa controladora, com apoio do fornecedor quando necessário. Pedidos relativos à conta e aos tratamentos próprios do fornecedor serão atendidos pelo canal de privacidade que constará da versão definitiva. A identidade será verificada de forma proporcional, sem exigir dados excessivos. A ausência de vínculo ativo não elimina o direito de apresentar um pedido. Os prazos e as exceções legais serão respeitados, com justificativa quando um pedido não puder ser integralmente atendido."
+      ]
+    },
+    {
+      "heading": "Versões, ciência individual e canais oficiais",
+      "paragraphs": [
+        "Os documentos oficiais terão versão identificável, conteúdo preservado e registro individual de ciência vinculado à conta autenticada e ao horário do servidor. O acesso operacional exige os documentos vigentes, mas a leitura pública e a saída não dependem de confirmação. Mudanças relevantes serão informadas e poderão exigir nova ciência.",
+        "O endereço e o WhatsApp de contato da SUN7 NEUROMARKETING LTDA - ME constam da seção 1. O contato deverá ser efetivamente monitorado, com fluxo para autenticar solicitações, encaminhá-las ao controlador competente e responder no prazo aplicável. A identificação do encarregado, quando exigida, deverá ser divulgada conforme a legislação. Nenhum aceite de minuta, da demo ou realizado por outra pessoa substitui a confirmação individual dos documentos oficiais."
+      ]
+    }
+  ]
+}

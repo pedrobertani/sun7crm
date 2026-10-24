@@ -1,0 +1,17 @@
+project_id = "sun7crm"
+
+# Chaves modernas: o gateway não valida sb_publishable, mas cada função exige JWT de sessão e usa Auth.getUser + autorização no banco.
+[functions.crm-create-company]
+verify_jwt = false
+
+[functions.crm-create-user]
+verify_jwt = false
+
+[functions.crm-reset-password]
+verify_jwt = false
+
+[functions.crm-first-access]
+verify_jwt = false
+
+[functions.crm-update-company]
+verify_jwt = false

@@ -1,7 +1,7 @@
 import { ThemeProvider } from '../components/theme-provider';
 import { themeStyle } from '../lib/themes';
-import { useState } from 'react';
-import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
   KanbanSquare,
@@ -19,16 +19,16 @@ import {
   FlaskConical,
 } from 'lucide-react';
 import { useCrm } from './context';
-import { roleLabels } from '../domain/config';
+import { previewRoleLabels, roleLabels } from '../domain/config';
 import type { Role } from '../domain/types';
 import { initials } from '../lib/format';
 import { Button } from '../components/ui/button';
 const businessLinks = [
-  { to: '/', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/funil/leads', label: 'Funil de leads', icon: KanbanSquare },
-  { to: '/funil/clients', label: 'Funil de clientes', icon: KanbanSquare },
-  { to: '/contatos', label: 'Contatos', icon: Users },
-  { to: '/tarefas', label: 'Tarefas', icon: ListTodo },
+  { to: '/demo/painel', label: 'Dashboard', icon: LayoutDashboard },
+  { to: '/demo/funil/leads', label: 'Funil de leads', icon: KanbanSquare },
+  { to: '/demo/funil/clients', label: 'Funil de clientes', icon: KanbanSquare },
+  { to: '/demo/contatos', label: 'Contatos', icon: Users },
+  { to: '/demo/tarefas', label: 'Tarefas', icon: ListTodo },
 ];
 export function AppShell() {
   const { data, session, setSession, logout } = useCrm();
@@ -39,18 +39,22 @@ export function AppShell() {
   const company = data.companies.find((c) => c.id === session.companyId)!;
   const member = data.members.find((m) => m.id === session.memberId);
   const admin = session.role === 'admin';
+  const workspaceName = admin ? 'SUN7CRM' : company.displayName || company.name;
+  useEffect(() => {
+    document.title = workspaceName;
+  }, [workspaceName]);
   const links = admin
     ? [
-        { to: '/', label: 'Visão geral', icon: LayoutDashboard },
-        { to: '/empresas', label: 'Empresas', icon: Building2 },
+        { to: '/demo/painel', label: 'Visão geral', icon: LayoutDashboard },
+        { to: '/demo/empresas', label: 'Empresas', icon: Building2 },
       ]
     : businessLinks;
   const allLinks = [
     ...links,
     ...(!admin && session.role === 'manager'
-      ? [{ to: '/equipe', label: 'Equipe', icon: UsersRound }]
+      ? [{ to: '/demo/equipe', label: 'Equipe', icon: UsersRound }]
       : []),
-    { to: '/configuracoes', label: 'Configurações', icon: Settings },
+    { to: '/demo/configuracoes', label: 'Configurações', icon: Settings },
   ];
   const current = allLinks.find((l) => l.to === location.pathname)?.label || 'Área de trabalho';
   function switchView(role: Role, companyId = session.companyId) {
@@ -58,7 +62,7 @@ export function AppShell() {
       (m) => m.companyId === companyId && m.role === role && m.active,
     );
     setSession({ role, companyId, memberId: member?.id || '' });
-    navigate('/');
+    navigate('/demo/painel');
     setMobile(false);
   }
   const colors = themeStyle(admin ? 'sun7' : company?.theme, company?.template);
@@ -81,11 +85,24 @@ export function AppShell() {
         )}
         <aside className={'sidebar ' + (mobile ? 'is-open' : '')}>
           <div className="sidebar-head">
-            <NavLink to="/" className="logo" aria-label="SUN7CRM início">
-              <span className="mark">7</span>
+            <NavLink
+              to="/demo/painel"
+              className={'logo ' + (!admin ? 'workspace-logo' : '')}
+              aria-label={workspaceName + ' início'}
+              title={workspaceName}
+            >
+              <span className="mark">
+                {!admin && company.logo ? (
+                  <img src={company.logo} alt={'Logo ' + workspaceName} />
+                ) : admin ? (
+                  '7'
+                ) : (
+                  initials(workspaceName)
+                )}
+              </span>
               <span className="brand">
-                <strong>SUN7CRM</strong>
-                <small>GESTÃO COMERCIAL</small>
+                <strong>{workspaceName}</strong>
+                {admin && <small>GESTÃO COMERCIAL</small>}
               </span>
             </NavLink>
             <button
@@ -103,21 +120,6 @@ export function AppShell() {
               <X size={20} />
             </button>
           </div>
-          <div className="company-identity">
-            <span className="company-avatar">
-              {!admin && company?.logo ? (
-                <img src={company.logo} alt="" />
-              ) : admin ? (
-                'S7'
-              ) : (
-                initials(company?.name || 'Empresa')
-              )}
-            </span>
-            <div className="hide-collapsed">
-              <strong>{admin ? 'SUN7CRM' : company?.name}</strong>
-              <small>{admin ? 'Painel da plataforma' : company?.segment}</small>
-            </div>
-          </div>
           <div className="sidebar-workspace">
             <p className="sbar-label hide-collapsed">
               {admin ? 'ADMINISTRAÇÃO' : 'ÁREA DE TRABALHO'}
@@ -127,7 +129,7 @@ export function AppShell() {
                 <NavLink
                   key={to}
                   to={to}
-                  end={to === '/'}
+                  end={to === '/demo/painel'}
                   title={collapsed ? label : undefined}
                   onClick={() => setMobile(false)}
                 >
@@ -151,14 +153,14 @@ export function AppShell() {
                 title="Sair"
                 onClick={() => {
                   logout();
-                  navigate('/entrar', { replace: true });
+                  navigate('/demo', { replace: true });
                 }}
               >
                 <LogOut size={18} />
               </button>
             </div>
             <div className="sidebar-note hide-collapsed">
-              <FlaskConical size={12} /> Ambiente de validação
+              <FlaskConical size={12} /> Demonstração
             </div>
           </div>
         </aside>
@@ -177,10 +179,9 @@ export function AppShell() {
               <strong>{current}</strong>
             </div>
             <div className="top-controls">
-              <span className="preview-tag">
-                <span />
-                PRÉVIA
-              </span>
+              <Link to="/" className="demo-site-link">
+                Voltar ao site
+              </Link>
               <label>
                 <span className="sr-only">Empresa da prévia</span>
                 <select
@@ -202,7 +203,7 @@ export function AppShell() {
                   value={session.role}
                   onChange={(e) => switchView(e.target.value as Role)}
                 >
-                  {Object.entries(roleLabels).map(([v, l]) => (
+                  {Object.entries(previewRoleLabels).map(([v, l]) => (
                     <option key={v} value={v}>
                       {l}
                     </option>
@@ -221,9 +222,9 @@ export function AppShell() {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => navigate('/configuracoes?aba=previa')}
+                  onClick={() => navigate('/demo/configuracoes?aba=previa')}
                 >
-                  Sobre a prévia <ChevronRight size={13} />
+                  Sobre a demo <ChevronRight size={13} />
                 </Button>
               </div>
               <Outlet />

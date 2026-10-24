@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useMemo, type ReactNode } from 'react';
 import type { CrmRepository } from '../data/repository';
 import type { Snapshot, Session } from '../domain/types';
+import { previewRoleLabels } from '../domain/config';
 interface Context {
   data: Snapshot;
   session: Session;
@@ -42,7 +43,9 @@ export function CrmProvider({
     () => ({
       data,
       session,
-      setSession,
+      setSession: (next: Session) => {
+        if (Object.keys(previewRoleLabels).includes(next.role)) setSession(next);
+      },
       signedOut,
       logout: () => {
         setSignedOut(true);

@@ -1,3 +1,4 @@
+import { useCardDrag } from '../../hooks/useCardDrag';
 import { useSearchParams } from 'react-router-dom';
 import { Input } from '../../components/ui/input';
 import { useState, type FormEvent } from 'react';
@@ -39,7 +40,6 @@ export function Tasks() {
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
   const [error, setError] = useState('');
-  const [over, setOver] = useState('');
   const [form, setForm] = useState({
     title: '',
     dueDate: today(),
@@ -69,7 +69,6 @@ export function Tasks() {
   function move(id: string, status: TaskStatus) {
     if (update((d) => moveTask(d, session, id, status)))
       notice(status === 'done' ? 'Tarefa concluída.' : 'Tarefa atualizada.');
-    setOver('');
   }
   function save(e: FormEvent) {
     e.preventDefault();
@@ -97,6 +96,7 @@ export function Tasks() {
       notice('Tarefa criada.');
     }
   }
+  const startDrag = useCardDrag((id, stage) => move(id, stage as TaskStatus));
   return (
     <>
       <Heading
@@ -159,17 +159,9 @@ export function Tasks() {
                   return (
                     <section
                       key={stage.id}
-                      className={'kanban-column ' + (over === stage.id ? 'dragover' : '')}
+                      className="kanban-column"
                       aria-label={'Tarefas: ' + stage.label}
-                      onDragOver={(e) => {
-                        e.preventDefault();
-                        setOver(stage.id);
-                      }}
-                      onDragLeave={() => setOver('')}
-                      onDrop={(e) => {
-                        e.preventDefault();
-                        move(e.dataTransfer.getData('text/plain'), stage.id);
-                      }}
+                      data-drop-stage={stage.id}
                     >
                       <div className="column-head">
                         <div>
@@ -189,12 +181,20 @@ export function Tasks() {
                                 'opportunity-card task-kanban-card ' +
                                 (t.done ? 'task-complete' : '')
                               }
-                              draggable
-                              onDragStart={(e) => e.dataTransfer.setData('text/plain', t.id)}
+                              draggable={false}
                             >
                               <div className="task-card-heading">
                                 <strong>{t.title}</strong>
-                                <GripVertical size={15} className="muted" />
+                                <button
+                                  type="button"
+                                  className="card-drag-handle"
+                                  aria-label={'Arrastar tarefa ' + t.title}
+                                  title="Arrastar para outra etapa"
+                                  onPointerDown={(e) => startDrag(e, t.id, stage.id)}
+                                  onContextMenu={(e) => e.preventDefault()}
+                                >
+                                  <GripVertical size={18} />
+                                </button>
                               </div>
                               <p className="task-card-contact">
                                 {contact?.name || 'Tarefa interna'}

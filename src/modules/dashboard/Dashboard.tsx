@@ -30,6 +30,7 @@ import {
   Clock3,
 } from 'lucide-react';
 import { useCrm } from '../../app/context';
+import type { Company } from '../../domain/types';
 import { visibleContacts } from '../../domain/operations';
 import { today, shiftDate, currency, dateLabel } from '../../lib/format';
 import { Heading, Kpi, Panel, Empty } from '../../components/shared';
@@ -93,7 +94,9 @@ export function CompanyDashboard() {
           (data.members.find((m) => m.id === session.memberId)?.name.split(' ')[0] || 'equipe') +
           ' 👋'
         }
-        description={'Acompanhe o movimento comercial da ' + company.name + '.'}
+        description={
+          'Acompanhe o movimento comercial da ' + (company.displayName || company.name) + '.'
+        }
       >
         <select
           aria-label="Período do dashboard"
@@ -108,14 +111,14 @@ export function CompanyDashboard() {
       <div className="kpis">
         <Kpi
           label="Novos contatos"
-          to={`/contatos?de=${from}&ate=${date}`}
+          to={`/demo/contatos?de=${from}&ate=${date}`}
           value={contacts.length}
           foot="Cadastrados no período"
           icon={<Users size={19} />}
         />
         <Kpi
           label="Oportunidades quentes"
-          to={`/contatos?temperatura=hot&de=${from}&ate=${date}`}
+          to={`/demo/contatos?temperatura=hot&de=${from}&ate=${date}`}
           value={contacts.filter((c) => c.temperature === 'hot').length}
           foot="Temperatura definida pela equipe"
           icon={<Flame size={19} />}
@@ -123,7 +126,7 @@ export function CompanyDashboard() {
         />
         <Kpi
           label="Valor no funil de leads"
-          to={`/funil/leads?de=${from}&ate=${date}`}
+          to={`/demo/funil/leads?de=${from}&ate=${date}`}
           value={currency(
             opps.filter((o) => o.boardId === leadBoard.id).reduce((s, o) => s + o.value, 0),
           )}
@@ -133,7 +136,7 @@ export function CompanyDashboard() {
         />
         <Kpi
           label="Tarefas pendentes"
-          to="/tarefas?status=pending"
+          to="/demo/tarefas?status=pending"
           value={pending.length}
           foot={overdue + ' atrasadas · todos os períodos'}
           icon={<ListTodo size={19} />}
@@ -232,7 +235,7 @@ export function CompanyDashboard() {
           description="Posição atual das oportunidades criadas no período."
           action={
             <Button asChild variant="ghost" size="sm">
-              <Link to="/funil/leads">
+              <Link to="/demo/funil/leads">
                 Abrir funil
                 <ArrowUpRight size={14} />
               </Link>
@@ -264,7 +267,7 @@ export function CompanyDashboard() {
           description="Sua rotina organizada, começando pelas mais urgentes."
           action={
             <Button asChild variant="ghost" size="sm">
-              <Link to="/tarefas">
+              <Link to="/demo/tarefas">
                 Ver tarefas
                 <ArrowUpRight size={14} />
               </Link>
@@ -277,7 +280,7 @@ export function CompanyDashboard() {
                 .sort((a, b) => a.dueDate.localeCompare(b.dueDate))
                 .slice(0, 4)
                 .map((t) => (
-                  <Link to="/tarefas" key={t.id}>
+                  <Link to="/demo/tarefas" key={t.id}>
                     <span className={'task-mini-icon ' + (t.dueDate < date ? 'late' : '')}>
                       <Clock3 size={16} />
                     </span>
@@ -305,7 +308,7 @@ export function CompanyDashboard() {
           <span>Use o funil e as tarefas para organizar o atendimento da sua equipe.</span>
         </p>
         <Button asChild variant="outline" size="sm">
-          <Link to="/funil/leads">
+          <Link to="/demo/funil/leads">
             Organizar oportunidades
             <ArrowUpRight size={14} />
           </Link>
@@ -316,12 +319,24 @@ export function CompanyDashboard() {
 }
 export function AdminDashboard() {
   const { data } = useCrm();
+  return <AdminDashboardView companies={data.companies} basePath="/demo" live={false} />;
+}
+
+export function AdminDashboardView({
+  companies: portfolio,
+  basePath = '/admin',
+  live = true,
+}: {
+  companies: Company[];
+  basePath?: string;
+  live?: boolean;
+}) {
   const palette = adminPalette;
   const [filter, setFilter] = useState('all');
   const [days, setDays] = useState('30');
   const date = today();
   const from = shiftDate(date, -Number(days) + 1);
-  const companies = filterCompanies(data.companies, filter, from, date);
+  const companies = filterCompanies(portfolio, filter, from, date);
   const active = companies.filter((c) => c.enabled);
   const upcoming = active.filter((c) => c.dueDate >= date && c.dueDate <= shiftDate(date, 7));
   const news = companies.filter((c) => c.createdAt >= from && c.createdAt <= date);
@@ -371,14 +386,14 @@ export function AdminDashboard() {
       <div className="kpis">
         <Kpi
           label="Empresas ativas"
-          to={`/empresas?carteira=${filter}&periodo=${days}&situacao=active`}
+          to={`${basePath}/empresas?carteira=${filter}&periodo=${days}&situacao=active`}
           value={active.length}
-          foot="Habilitadas para uso na prévia"
+          foot={live ? 'Empresas habilitadas na plataforma' : 'Habilitadas para uso na prévia'}
           icon={<Building2 size={19} />}
         />
         <Kpi
           label="Próximas a vencer"
-          to={`/empresas?carteira=${filter}&periodo=${days}&situacao=upcoming`}
+          to={`${basePath}/empresas?carteira=${filter}&periodo=${days}&situacao=upcoming`}
           value={upcoming.length}
           foot="Entre hoje e os próximos 7 dias"
           icon={<CalendarClock size={19} />}
@@ -386,7 +401,7 @@ export function AdminDashboard() {
         />
         <Kpi
           label="Novas empresas"
-          to={`/empresas?carteira=${filter}&periodo=${days}&situacao=new`}
+          to={`${basePath}/empresas?carteira=${filter}&periodo=${days}&situacao=new`}
           value={news.length}
           foot="Cadastradas no período selecionado"
           icon={<UserPlus size={19} />}
@@ -394,7 +409,7 @@ export function AdminDashboard() {
         />
         <Kpi
           label="Mensalidade da carteira"
-          to={`/empresas?carteira=${filter}&periodo=${days}&situacao=active`}
+          to={`${basePath}/empresas?carteira=${filter}&periodo=${days}&situacao=active`}
           value={currency(active.reduce((s, c) => s + c.monthlyAmount, 0))}
           foot="Soma contratada · não recebimentos"
           icon={<Wallet size={19} />}
@@ -468,7 +483,7 @@ export function AdminDashboard() {
         description="Vencimentos em ordem crescente. Todos os indicadores seguem o filtro de empresas."
         action={
           <Button asChild variant="ghost" size="sm">
-            <Link to="/empresas">
+            <Link to={`${basePath}/empresas`}>
               Gerenciar empresas
               <ArrowUpRight size={14} />
             </Link>
@@ -525,7 +540,9 @@ export function AdminDashboard() {
         )}
       </Panel>
       <p className="small-note">
-        Cobrança e bloqueio automáticos ainda não estão ativos nesta base.
+        {live
+          ? 'Valores contratuais informados no cadastro. Recebimentos e cobrança automática não fazem parte desta etapa.'
+          : 'Cobrança e bloqueio automáticos ainda não estão ativos nesta base.'}
       </p>
     </>
   );
