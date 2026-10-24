@@ -5275,26 +5275,3 @@ body,
   .secure-access-card { padding: 21px; }
   .secure-access-foot { align-items: stretch; }
 }
-
-
-/* Simulação de documentos, sem persistir aceites reais. */
-.legal-test-warning {
-  background: #f7f3e9;
-  border: 1px solid #e6d9b7;
-  border-radius: 8px;
-  padding: 14px 16px;
-  color: #51442e;
-  line-height: 1.6;
-}
-.legal-test-warning strong { font-size: 12px; letter-spacing: .03em; }
-.legal-test-warning p { margin-top: 6px; font-size: 12px; }
-.legal-test-document { max-height: 260px; }
-.legal-test-section + .legal-test-section { margin-top: 18px; }
-.legal-test-section strong { display: block; margin-bottom: 7px; }
-.legal-test-section p { margin: 8px 0; }
-.legal-test-access-link, .login-test-access a {
-  color: var(--primary, #236d62);
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-.login-test-access { margin-top: 12px; font-size: 12px; line-height: 1.7; }
