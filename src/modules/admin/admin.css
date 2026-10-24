@@ -124,3 +124,14 @@
     grid-template-columns: 1fr;
   }
 }
+
+/* Alerta discreto de homologação, presente apenas nos painéis autenticados. */
+.crm-homologation-banner {
+  padding: 9px 20px;
+  color: #6b4a15;
+  background: #faf3df;
+  border-bottom: 1px solid #ecd8aa;
+  font-size: 12px;
+  font-weight: 550;
+  line-height: 1.5;
+}
