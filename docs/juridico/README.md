@@ -6,7 +6,7 @@ Revisão: 23/10/2026, horário de Brasília, com complementos para planejamento 
 
 As minutas estão em `termos-de-uso-minuta.md` e `politica-de-privacidade-minuta.md`. A fonte compartilhada com as páginas públicas é `src/content/legal-drafts.json`; `node scripts/export-legal-drafts.mjs` atualiza as cópias em Markdown. A versão `2026-10-23-r3` identifica apenas a revisão da minuta. Não é uma versão oficial cadastrada no banco.
 
-Nenhuma migração desta revisão publica documentos em `crm_legal_documents`, altera `crm_legal_requirements` ou insere `crm_legal_acceptances`. O bloqueio operacional de contas reais permanece. A demonstração continua sem aceite.
+Atualização de homologação: a migração `crm_legal_homologation` publicou no banco **duas versões internas** (`homologacao-2026-10-23-r3`) e ativou suas exigências. O aceite individual em `crm_legal_acceptances` é registrado apenas pela própria pessoa autenticada, após eventual troca obrigatória de senha. Os painéis autorizados estão disponíveis para testes **somente com informações fictícias**. A versão comercial definitiva ainda exige validação e novo aceite. A demonstração permanece separada.
 
 ## Adaptação do StudioPro
 
@@ -49,6 +49,15 @@ O pedido de atribuir toda a responsabilidade ao usuário não foi convertido em 
 - **Limitações:** o backup diário pode não conter alterações posteriores; não prometer perda zero, restauro de registro único sob demanda, tempo garantido de recuperação ou ausência de indisponibilidade.
 - **Storage:** tratar arquivos e logotipos separadamente, pois backups PostgreSQL guardam apenas seus metadados.
 - **Checklist antes de clientes reais:** confirmar Pro ativo e backups visíveis; verificar elegibilidade e custos de clone; testar recuperação em ambiente isolado com dados fictícios; validar extração por empresa, chaves estrangeiras e reaplicação de exclusões; controlar credenciais do clone; documentar auditoria e destruição do projeto temporário; determinar prazos distintos de exportação, conservação e exclusão dos demais dados; validar juridicamente as versões finais.
+
+## Homologação interna com autenticação real
+
+- As duas versões `homologacao-2026-10-23-r3` dos Termos e da Política estão ativas no banco. O conteúdo é imutável e possui SHA-256 calculado pelo servidor.
+- Cada usuário cadastrado entra em `/#/acessar`, define sua senha pessoal quando necessário e confirma separadamente os dois documentos. A confirmação individual gera registros reais no banco, não simulados.
+- Após aceite e autorização por papel/tenant, o painel é liberado para procedimentos internos. **Usar somente registros fictícios**: o projeto ainda utiliza o plano Free e não concluiu a auditoria de produção.
+- A rota `/#/teste/primeiro-acesso` e a página de aceite simulado foram eliminadas do código. A vitrine `/#/demo` continua separada como apresentação do produto.
+- Antes da comercialização: contratar Pro, validar backups e procedimento de recuperação, fechar prazos de retenção e exclusão, concluir revisão jurídica e auditoria de segurança e publicar **novas versões definitivas** dos documentos, gerando uma nova exigência de aceite por usuário.
+- O código da branch precisa ser publicado separadamente no ChatGPT Sites; escrever no GitHub não atualiza automaticamente o site.
 
 ## Publicação definitiva
 
