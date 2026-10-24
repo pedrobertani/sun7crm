@@ -2,11 +2,11 @@
 
 Versão 2026-10-23-r3 · 23 de outubro de 2026 · minuta para validação
 
-> **MINUTA — NÃO VIGENTE.** Estes textos estão em preparação e não são os documentos vigentes de uma contratação. O endereço de contato do fornecedor, o canal de privacidade e os procedimentos de retenção e infraestrutura precisam ser concluídos antes da ativação. A consulta não registra aceite nem libera o acesso operacional.
+> **MINUTA — NÃO VIGENTE.** Estes textos estão em preparação e não são os documentos vigentes de uma contratação. O endereço da fornecedora e o WhatsApp de privacidade já foram informados, mas os prazos concretos de conservação, exclusão e retenção de backups, além dos testes de restauração, ainda precisam ser confirmados antes da ativação. A consulta não registra aceite nem libera o acesso operacional.
 
 ## 1. Fornecedor e aplicação dos Termos
 
-O SUN7CRM é fornecido por SUN7 NEUROMARKETING LTDA - ME, inscrita no CNPJ sob o número 62.325.920/0001-37, com sede em Ourinhos, São Paulo, Brasil. O endereço de contato completo e os canais oficiais de atendimento e privacidade serão informados na versão definitiva e na contratação. A identidade visual personalizada de uma clínica ou empresa não altera a identidade da fornecedora.
+O SUN7CRM é fornecido por SUN7 NEUROMARKETING LTDA - ME, inscrita no CNPJ sob o número 62.325.920/0001-37, com endereço na Rua Paraná, nº 1098, Centro, CEP 19900-021, Ourinhos/SP, Brasil. O canal indicado pela fornecedora para solicitações relativas à privacidade é o WhatsApp +55 (14) 99673-2848, que deverá ser efetivamente monitorado. A identidade visual personalizada de uma clínica ou empresa não altera a identidade da fornecedora.
 
 Estes Termos se destinam à empresa contratante e às pessoas autorizadas a usar sua conta. A confirmação individual das regras de uso não substitui o contrato comercial da empresa nem autoriza alguém a assumir obrigações financeiras em seu nome sem poderes para isso.
 
@@ -74,4 +74,4 @@ A empresa deve comunicar suspeitas de acesso indevido e cooperar na contenção.
 
 No acesso real, cada pessoa deve aceitar os Termos e confirmar que recebeu e leu a Política de Privacidade vigente. A confirmação é vinculada à identidade autenticada, à versão e ao horário registrados no servidor. O gestor não confirma pela equipe. Sem os documentos oficiais ou sem a confirmação exigida, o acesso operacional permanece bloqueado; consultar os textos e sair continua permitido.
 
-Mudanças relevantes serão informadas e poderão exigir nova confirmação. A ciência da Política não é consentimento genérico para tratar dados de clientes, fazer publicidade ou usar dados sensíveis. Aplicam-se as leis brasileiras, com preservação do foro competente e das regras de proteção do consumidor quando cabíveis. O endereço de contato completo e os canais oficiais da fornecedora serão informados na versão definitiva.
+Mudanças relevantes serão informadas e poderão exigir nova confirmação. A ciência da Política não é consentimento genérico para tratar dados de clientes, fazer publicidade ou usar dados sensíveis. Aplicam-se as leis brasileiras, com preservação do foro competente e das regras de proteção do consumidor quando cabíveis. O endereço da fornecedora e o canal de privacidade estão indicados na seção 1; os procedimentos de suporte e prazos operacionais ainda dependem de validação antes da versão definitiva.
