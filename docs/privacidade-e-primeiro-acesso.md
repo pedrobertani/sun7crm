@@ -1,6 +1,6 @@
 # Privacidade e primeiro acesso — SUN7CRM
 
-Revisão de 23/10/2026. Base de implementação, ainda sem autenticação ou banco. Os textos públicos são rascunhos para validação e não certificam adequação à LGPD.
+Revisão de 23/10/2026. Este arquivo preserva abaixo o histórico da análise inicial da demo; as seções que dizem que autenticação e banco são futuros descrevem aquele momento. O estado atual possui login e banco reais, primeiro acesso e bloqueio jurídico. Consulte `painel-oficial-notificacoes-e-erros.md` para a implementação atual e `juridico/README.md` para as minutas revisadas, a região brasileira confirmada e as pendências antes da publicação definitiva. Os textos públicos continuam preliminares e não certificam adequação à LGPD.
 
 ## Referência analisada: StudioPro
 
@@ -13,14 +13,14 @@ Leitura do código da branch principal de `pedrobertani/nail-studio-saas`, em 23
 
 ### Pontos úteis e ajustes necessários
 
-| Observação no código consultado | Direção para SUN7CRM |
-| --- | --- |
-| Documentos públicos com responsabilidades distintas para fornecedor e estabelecimento | Preservar a separação, adaptando ao CRM e à identidade personalizada |
-| Versão da Política exibida no StudioPro: 21/09/2026; cadastro registra 16/09/2026 | Uma constante compartilhada pela página e pelo registro; versão não pode divergir do texto |
-| Falha no INSERT de confirmação gera console.error e o cadastro segue | Falha de gravação deve impedir liberação no fluxo real e permitir nova tentativa |
-| Confirmação encontrada no cadastro | SUN7CRM também precisa conferir ao entrar; contas serão criadas por administrador/gestor, sem cadastro autônomo |
-| RLS e registros individuais são uma boa base | A produção deve acrescentar validação de versões no servidor, documento imutável e vínculo verificável à identidade autenticada |
-| StudioPro descreve Google e outras integrações operacionais | Não copiar para a demo do SUN7CRM integrações ou controles inexistentes |
+| Observação no código consultado                                                       | Direção para SUN7CRM                                                                                                            |
+| ------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Documentos públicos com responsabilidades distintas para fornecedor e estabelecimento | Preservar a separação, adaptando ao CRM e à identidade personalizada                                                            |
+| Versão da Política exibida no StudioPro: 21/09/2026; cadastro registra 16/09/2026     | Uma constante compartilhada pela página e pelo registro; versão não pode divergir do texto                                      |
+| Falha no INSERT de confirmação gera console.error e o cadastro segue                  | Falha de gravação deve impedir liberação no fluxo real e permitir nova tentativa                                                |
+| Confirmação encontrada no cadastro                                                    | SUN7CRM também precisa conferir ao entrar; contas serão criadas por administrador/gestor, sem cadastro autônomo                 |
+| RLS e registros individuais são uma boa base                                          | A produção deve acrescentar validação de versões no servidor, documento imutável e vínculo verificável à identidade autenticada |
+| StudioPro descreve Google e outras integrações operacionais                           | Não copiar para a demo do SUN7CRM integrações ou controles inexistentes                                                         |
 
 Essa revisão se limita aos arquivos acima. Não constitui auditoria completa do StudioPro, do login, de suas políticas de acesso ou da infraestrutura. Não foram feitas alterações no StudioPro.
 
@@ -53,19 +53,19 @@ Versões anteriores simulavam uma confirmação no localStorage. Registros antig
 
 ## Decisões que faltam antes dos dados reais
 
-| Tema | Definição necessária |
-| --- | --- |
-| Fornecedor/controlador da conta | Identificação jurídica, nome, endereço aplicável e contato público |
-| Atendimento de privacidade | Canal oficial monitorado, verificação de identidade e encaminhamento de solicitações |
-| Dados de cada empresa | Responsabilidades contratuais de controlador/operador e instruções de tratamento |
-| Inventário | Categorias, finalidade e base legal por operação; minimização de campos livres |
-| Dados de saúde | Fora da demo; qualquer necessidade real exige avaliação específica das hipóteses do art. 11 e controles adequados |
-| Infraestrutura | Provedores efetivamente contratados, suboperadores, regiões e transferências internacionais |
-| Retenção | Prazos por finalidade, encerramento, exportação, eliminação e ciclo de backups |
-| Segurança | Autenticação, RLS/isolamento, autorização no backend, logs mínimos, backups e recuperação |
-| Incidentes | Procedimento de detecção, resposta e avaliação de comunicação aplicável |
-| Cookies/analytics | Inventário real; se houver tecnologias opcionais, escolhas granulares antes da ativação |
-| Documentos finais | Revisão jurídica e publicação dos dados e compromissos efetivos antes da operação |
+| Tema                            | Definição necessária                                                                                              |
+| ------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Fornecedor/controlador da conta | Identificação jurídica, nome, endereço aplicável e contato público                                                |
+| Atendimento de privacidade      | Canal oficial monitorado, verificação de identidade e encaminhamento de solicitações                              |
+| Dados de cada empresa           | Responsabilidades contratuais de controlador/operador e instruções de tratamento                                  |
+| Inventário                      | Categorias, finalidade e base legal por operação; minimização de campos livres                                    |
+| Dados de saúde                  | Fora da demo; qualquer necessidade real exige avaliação específica das hipóteses do art. 11 e controles adequados |
+| Infraestrutura                  | Provedores efetivamente contratados, suboperadores, regiões e transferências internacionais                       |
+| Retenção                        | Prazos por finalidade, encerramento, exportação, eliminação e ciclo de backups                                    |
+| Segurança                       | Autenticação, RLS/isolamento, autorização no backend, logs mínimos, backups e recuperação                         |
+| Incidentes                      | Procedimento de detecção, resposta e avaliação de comunicação aplicável                                           |
+| Cookies/analytics               | Inventário real; se houver tecnologias opcionais, escolhas granulares antes da ativação                           |
+| Documentos finais               | Revisão jurídica e publicação dos dados e compromissos efetivos antes da operação                                 |
 
 A identidade visual da empresa não muda a identidade do fornecedor. Não afirmar “100% LGPD”, “dados garantidos no Brasil”, criptografia em repouso ou políticas de segurança sem verificar a implementação e os contratos.
 

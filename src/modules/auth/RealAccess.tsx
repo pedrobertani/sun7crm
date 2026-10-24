@@ -226,7 +226,7 @@ export function RealAccess({
               </p>
               <p>
                 O acesso operacional está bloqueado até a publicação dos Termos e da Política de
-                Privacidade definitivos. Os textos da demo não serão considerados aceites reais.
+                Privacidade definitivos. As minutas públicas não serão consideradas aceites reais.
               </p>
               <p className="small-note">{UNSAFE_DATA_MESSAGE}</p>
               <Button

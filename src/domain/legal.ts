@@ -1,10 +1,11 @@
 import type { Session } from './types';
+import legalDrafts from '../content/legal-drafts.json';
 
 // A interface e o registro usam exatamente as mesmas versões.
 export const LEGAL = {
-  terms: '2026-10-23-r2',
-  privacy: '2026-10-23-r2',
-  label: '23 de outubro de 2026 · rascunho 2',
+  terms: legalDrafts.version,
+  privacy: legalDrafts.version,
+  label: legalDrafts.label,
 } as const;
 export const LEGAL_KEY = 'sun7crm:preview:legal:v1';
 export interface LegalAcceptance {
