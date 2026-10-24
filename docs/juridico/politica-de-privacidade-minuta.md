@@ -2,11 +2,11 @@
 
 Versão 2026-10-23-r3 · 23 de outubro de 2026 · minuta para validação
 
-> **MINUTA — NÃO VIGENTE.** Estes textos estão em preparação e não são os documentos vigentes de uma contratação. O endereço de contato do fornecedor, o canal de privacidade e os procedimentos de retenção e infraestrutura precisam ser concluídos antes da ativação. A consulta não registra aceite nem libera o acesso operacional.
+> **MINUTA — NÃO VIGENTE.** Estes textos estão em preparação e não são os documentos vigentes de uma contratação. O endereço da fornecedora e o WhatsApp de privacidade já foram informados, mas os prazos concretos de conservação, exclusão e retenção de backups, além dos testes de restauração, ainda precisam ser confirmados antes da ativação. A consulta não registra aceite nem libera o acesso operacional.
 
 ## 1. Escopo e identificação do responsável
 
-Esta Política descreve o tratamento de dados no site, na demonstração e no ambiente autenticado do SUN7CRM, fornecido por SUN7 NEUROMARKETING LTDA - ME, CNPJ 62.325.920/0001-37, com sede em Ourinhos, São Paulo, Brasil. O endereço de contato completo e o canal de privacidade serão informados na versão definitiva. A personalização com o nome ou logo de uma clínica não altera os papéis de proteção de dados.
+Esta Política descreve o tratamento de dados no site, na demonstração e no ambiente autenticado do SUN7CRM, fornecido por SUN7 NEUROMARKETING LTDA - ME, CNPJ 62.325.920/0001-37, com endereço na Rua Paraná, nº 1098, Centro, CEP 19900-021, Ourinhos/SP, Brasil. O canal indicado para solicitações relacionadas à privacidade é o WhatsApp +55 (14) 99673-2848, sujeito a atendimento e monitoramento efetivos. A personalização com o nome ou logo de uma clínica não altera os papéis de proteção de dados.
 
 O login real e os controles de primeiro acesso já existem, mas a operação com dados reais permanece bloqueada até a conclusão e publicação dos documentos oficiais. Os textos desta página são uma minuta para validação; lê-los não registra aceite.
 
@@ -50,7 +50,7 @@ Os dados ficam acessíveis à equipe autorizada da própria empresa conforme seu
 
 A base de contatos não é oferecida para venda nem para publicidade independente da SUN7CRM. Não há nesta etapa integração ativa com IA, Meta Ads, Google Calendar ou uma caixa unificada de mensagens. Novas integrações terão informações próprias antes de serem ativadas.
 
-O botão de contato pelo WhatsApp abre um serviço externo, e as informações que a pessoa enviar passam a ser tratadas também nesse canal. Não envie senha, documento de saúde ou outros dados excessivos por mensagens de atendimento. O contato geral disponível no site ainda não foi designado como canal específico de privacidade.
+O botão de contato pelo WhatsApp abre um serviço externo, e as informações que a pessoa enviar passam a ser tratadas também nesse canal. Não envie senha, documento de saúde ou outros dados excessivos por mensagens de atendimento. O WhatsApp +55 (14) 99673-2848 é indicado como canal de privacidade da fornecedora, para pedidos relacionados ao tratamento de dados sob sua responsabilidade; solicitações sobre clientes cadastrados por cada empresa são encaminhadas ao respectivo controlador, com apoio técnico do SUN7CRM quando cabível.
 
 ## 8. Navegador, sessão e demonstração
 
@@ -70,7 +70,7 @@ A empresa deve proteger dispositivos e credenciais, revisar acessos e comunicar 
 
 Os dados operacionais são necessários enquanto o serviço estiver ativo e enquanto houver finalidade legítima definida pela empresa. Contas desativadas não autorizam conservação irrestrita. A empresa deve revisar os cadastros e solicitar correção ou eliminação do que deixar de ser necessário, respeitando as hipóteses legais de conservação.
 
-Antes da ativação, serão fixados e divulgados os prazos concretos para solicitação de cópia, exportação assistida, exclusão após encerramento, retenção de logs e rotação de backups, com procedimento de execução e recuperação testado. Esta minuta não afirma que exportação automática, limpeza periódica ou um prazo específico de backup já estejam implementados.
+Antes da ativação, serão fixados e divulgados os prazos concretos para solicitação de cópia, exportação assistida, exclusão após encerramento, retenção de logs e rotação de backups, com procedimento de execução e recuperação testado. A LGPD não fixa um período único de armazenamento de backups: ele deve ser compatível com as finalidades, necessidades de segurança, riscos e exceções legais. Esta minuta não afirma que exportação automática, limpeza periódica ou um prazo específico de backup já estejam implementados. As cópias de segurança devem ser usadas somente para recuperação e continuidade, com acesso restrito, proteção adequada, retenção limitada ao ciclo efetivo do provedor e controles para reaplicar exclusões legítimas caso um backup antigo seja restaurado.
 
 Obrigações legais, ordem de preservação e exercício regular de direitos podem exigir conservação restrita e justificada por período próprio. A obrigação de guarda de registros de acesso do art. 15 do Marco Civil da Internet deve ser atendida quando aplicável; o logger de erros não substitui esses registros. Cópias de segurança também precisam de ciclo definido e medidas para impedir que uma restauração reintroduza dados eliminados indevidamente.
 
@@ -84,4 +84,4 @@ Solicitações sobre clientes de uma empresa devem ser encaminhadas à empresa c
 
 Os documentos oficiais terão versão identificável, conteúdo preservado e registro individual de ciência vinculado à conta autenticada e ao horário do servidor. O acesso operacional exige os documentos vigentes, mas a leitura pública e a saída não dependem de confirmação. Mudanças relevantes serão informadas e poderão exigir nova ciência.
 
-O endereço de contato completo e o canal de privacidade da SUN7 NEUROMARKETING LTDA - ME, incluindo a identificação do encarregado quando exigida, são pendências para a versão definitiva. A indicação de um canal deve corresponder a atendimento efetivamente monitorado. Nenhum aceite de minuta, da demo ou realizado por outra pessoa substitui a confirmação individual dos documentos oficiais.
+O endereço e o WhatsApp de contato da SUN7 NEUROMARKETING LTDA - ME constam da seção 1. O contato deverá ser efetivamente monitorado, com fluxo para autenticar solicitações, encaminhá-las ao controlador competente e responder no prazo aplicável. A identificação do encarregado, quando exigida, deverá ser divulgada conforme a legislação. Nenhum aceite de minuta, da demo ou realizado por outra pessoa substitui a confirmação individual dos documentos oficiais.
