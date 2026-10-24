@@ -28,11 +28,15 @@ A empresa decide quais contatos cadastrar, a finalidade do uso, a base legal ade
 
 A empresa responde pela origem lícita das listas, pelo conteúdo das observações, campanhas e comunicações e pelas instruções que fornecer. Não pode importar listas obtidas ilicitamente, fazer comunicações abusivas, usar dados para discriminação ou cadastrar informações excessivas. Cada integrante da equipe deve agir dentro de suas atribuições; ser usuário não o transforma automaticamente no controlador dos dados de toda a empresa.
 
+A contratante declara ter legitimidade para cadastrar os dados e materiais que inserir, mantém sob seu controle as finalidades e instruções do tratamento e responde pelas ações praticadas por seus usuários autorizados, inclusive seleção de destinatários, envio de campanhas, respostas, concessão e revogação de acessos e segurança dos dispositivos sob sua administração. Deve documentar a origem dos contatos e atender às solicitações dos titulares referentes a essas atividades. A SUN7CRM não escolhe destinatários nem aprova previamente cada mensagem ou campanha, sem prejuízo de seus deveres legais e de providências quando tomar conhecimento de irregularidade.
+
 ## 5. Responsabilidades da SUN7CRM
 
 No tratamento realizado por conta da empresa, o fornecedor deve cumprir as instruções lícitas documentadas, restringir o acesso às pessoas autorizadas e adotar medidas técnicas e administrativas compatíveis com os riscos. Deve apoiar o atendimento a direitos, a apuração de incidentes e a eliminação ou devolução dos dados conforme o contrato e a lei. Uma instrução que viole a legislação deve ser apontada e não legitima o tratamento.
 
 A empresa responde por suas próprias decisões e condutas, e o fornecedor responde por suas obrigações e pelos fatos que lhe forem imputáveis, nos limites da legislação. Nenhuma disposição afasta direitos dos titulares, deveres de segurança, responsabilidade legal ou direitos do consumidor quando aplicáveis. Não há transferência integral de responsabilidade ao usuário, nem cobrança automática de indenização sem apuração da responsabilidade.
+
+A SUN7CRM não assume obrigação de auditar a licitude de cada cadastro, mensagem, campanha, precificação ou negociação decidida pela contratante; seus controles técnicos e seus deveres próprios de segurança, confidencialidade, cooperação e cumprimento da legislação permanecem exigíveis. Se uma instrução for manifestamente ilícita, poderá recusar seu cumprimento e adotar medidas proporcionais de proteção e contenção, respeitados o contrato e a lei.
 
 ## 6. Dados sensíveis, saúde e menores de idade
 
@@ -58,6 +62,8 @@ Links externos, incluindo o contato pelo WhatsApp, levam a serviços com condiç
 
 WhatsApp Business por API, caixa unificada de redes sociais, Meta Ads, inteligência artificial, Google Calendar e módulos financeiros adicionais não estão incluídos como integrações ativas nesta etapa. Ativações futuras dependem de definição de escopo, permissões, custos e informações de privacidade. A confirmação geral destes Termos não autoriza integrações futuras nem publicidade opcional.
 
+Serviços externos de mensagens, telecomunicações, infraestrutura e autenticação podem estar sujeitos a indisponibilidades, limites, mudanças técnicas e políticas próprias. Falhas exclusivamente atribuíveis a terceiros ou eventos inevitáveis fora do controle razoável da fornecedora serão examinadas conforme a legislação e a distribuição comprovada de responsabilidades; permanecem os deveres da SUN7CRM relacionados à seleção, configuração, segurança e gestão dos prestadores utilizados para fornecer o serviço.
+
 ## 10. Uso permitido, conteúdo e propriedade intelectual
 
 É proibido usar o serviço para fraude, atividade ilícita, violação de direitos, envio abusivo, inserção de código malicioso ou tentativa de acesso a outra empresa ou conta sem autorização. A licença de uso é limitada ao serviço contratado; não transfere a titularidade do software, da marca ou de materiais protegidos.
@@ -70,7 +76,17 @@ O fornecedor deve atuar na correção de falhas e na proteção do serviço. Pod
 
 A empresa deve comunicar suspeitas de acesso indevido e cooperar na contenção. Os procedimentos de suporte, exportação, cópias de segurança e recuperação devem ser estabelecidos antes do uso operacional, sem depender exclusivamente de cópias feitas pela empresa nem prometer recursos ainda não implementados.
 
-## 12. Confirmação individual, alterações e legislação
+Cópias de segurança de infraestrutura são destinadas à continuidade e à recuperação do serviço, não constituindo, por si, funcionalidade contratada de restauração individual de registros ou garantia de recuperação ilimitada. A fornecedora definirá e informará a periodicidade, a retenção e os procedimentos efetivamente disponíveis antes do uso operacional; a contratante deve realizar e proteger as exportações que o serviço disponibilizar, quando necessárias às suas rotinas, sem que isso elimine as obrigações técnicas e legais da fornecedora sobre dados sob sua guarda.
+
+## 12. Limites de responsabilidade e alocação de riscos
+
+A contratante assume os riscos próprios de suas decisões comerciais, campanhas, conteúdos, concessões de acesso, uso de equipamentos e obrigações perante seus clientes. O serviço é ferramenta de apoio, não assessoria jurídica, clínica, contábil ou financeira, nem promessa de faturamento. A fornecedora não assume prejuízos atribuíveis exclusivamente a tais decisões ou a atos de terceiros sem participação ou falha imputável à SUN7CRM. A atribuição de qualquer responsabilidade exige avaliação dos fatos, do nexo causal e da legislação aplicável.
+
+Nas relações estritamente empresariais, e somente quando expressamente pactuado em contrato específico e permitido pela legislação aplicável, propõe-se limitar a responsabilidade contratual total da fornecedora por danos patrimoniais diretos comprovados decorrentes do descumprimento de obrigações contratuais ao total efetivamente pago pela contratante pelo serviço nos 12 meses anteriores ao evento que originou a reclamação, ou desde o início da contratação, se inferior. A validade e a extensão desse limite dependem do caso concreto e de revisão jurídica, especialmente se houver relação de consumo.
+
+Esse limite e eventuais exclusões de lucros cessantes hipotéticos, perda de oportunidades ou danos indiretos não afastam deveres de reparação inderrogáveis, direitos de titulares de dados, obrigações legais de segurança, hipóteses de dolo ou culpa grave, nem garantias e responsabilidades que não possam ser limitadas por lei. Reclamações decorrentes de tratamento ilícito determinado exclusivamente pela contratante poderão fundamentar seu dever de ressarcimento na medida de sua responsabilidade efetivamente demonstrada, com preservação do direito de regresso e sem indenização automática.
+
+## 13. Confirmação individual, alterações e legislação
 
 No acesso real, cada pessoa deve aceitar os Termos e confirmar que recebeu e leu a Política de Privacidade vigente. A confirmação é vinculada à identidade autenticada, à versão e ao horário registrados no servidor. O gestor não confirma pela equipe. Sem os documentos oficiais ou sem a confirmação exigida, o acesso operacional permanece bloqueado; consultar os textos e sair continua permitido.
 
