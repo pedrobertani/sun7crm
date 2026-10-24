@@ -2,11 +2,11 @@
 
 Versão 2026-10-23-r3 · 23 de outubro de 2026 · minuta para validação
 
-> **MINUTA — NÃO VIGENTE.** Estes textos estão em preparação e não são os documentos vigentes de uma contratação. A identificação do fornecedor, o canal de privacidade e os procedimentos de retenção e infraestrutura precisam ser concluídos antes da ativação. A consulta não registra aceite nem libera o acesso operacional.
+> **MINUTA — NÃO VIGENTE.** Estes textos estão em preparação e não são os documentos vigentes de uma contratação. O endereço de contato do fornecedor, o canal de privacidade e os procedimentos de retenção e infraestrutura precisam ser concluídos antes da ativação. A consulta não registra aceite nem libera o acesso operacional.
 
 ## 1. Escopo e identificação do responsável
 
-Esta Política descreve o tratamento de dados no site, na demonstração e no ambiente autenticado do SUN7CRM. A versão definitiva identificará a empresa ou pessoa fornecedora, sua identificação cadastral aplicável, endereço de contato e canal de privacidade. SUN7CRM é a marca do produto; a personalização com o nome ou logo de uma clínica não altera os papéis de proteção de dados.
+Esta Política descreve o tratamento de dados no site, na demonstração e no ambiente autenticado do SUN7CRM, fornecido por SUN7 NEUROMARKETING LTDA - ME, CNPJ 62.325.920/0001-37, com sede em Ourinhos, São Paulo, Brasil. O endereço de contato completo e o canal de privacidade serão informados na versão definitiva. A personalização com o nome ou logo de uma clínica não altera os papéis de proteção de dados.
 
 O login real e os controles de primeiro acesso já existem, mas a operação com dados reais permanece bloqueada até a conclusão e publicação dos documentos oficiais. Os textos desta página são uma minuta para validação; lê-los não registra aceite.
 
@@ -84,4 +84,4 @@ Solicitações sobre clientes de uma empresa devem ser encaminhadas à empresa c
 
 Os documentos oficiais terão versão identificável, conteúdo preservado e registro individual de ciência vinculado à conta autenticada e ao horário do servidor. O acesso operacional exige os documentos vigentes, mas a leitura pública e a saída não dependem de confirmação. Mudanças relevantes serão informadas e poderão exigir nova ciência.
 
-A razão social ou nome legal, a identificação cadastral aplicável, o endereço de contato e o canal de privacidade, incluindo a identificação do encarregado quando exigida, são pendências para a versão definitiva. A indicação de um canal deve corresponder a atendimento efetivamente monitorado. Nenhum aceite de minuta, da demo ou realizado por outra pessoa substitui a confirmação individual dos documentos oficiais.
+O endereço de contato completo e o canal de privacidade da SUN7 NEUROMARKETING LTDA - ME, incluindo a identificação do encarregado quando exigida, são pendências para a versão definitiva. A indicação de um canal deve corresponder a atendimento efetivamente monitorado. Nenhum aceite de minuta, da demo ou realizado por outra pessoa substitui a confirmação individual dos documentos oficiais.
