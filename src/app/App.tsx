@@ -5,7 +5,6 @@ import { LoginPage } from '../modules/public/Login';
 import { LegalPage } from '../modules/public/LegalPages';
 import { PreviewEntry } from './PreviewEntry';
 import { RealAccess } from '../modules/auth/RealAccess';
-import { FirstAccessTest } from '../modules/auth/FirstAccessTest';
 import { Component, useState, type ReactNode } from 'react';
 import { Navigate, Outlet, Route, Routes } from 'react-router-dom';
 import { CrmProvider, useCrm } from './context';
@@ -94,7 +93,6 @@ export function App() {
         <Route path="/recursos" element={<FeaturesPage />} />
         <Route path="/contato" element={<ContactPage />} />
         <Route path="/acessar" element={<LoginPage />} />
-        <Route path="/teste/primeiro-acesso" element={<FirstAccessTest />} />
         <Route path="/conta/*" element={<RealAccess />} />
         <Route path="/login" element={<Navigate to="/acessar" replace />} />
         <Route path="/admin/*" element={<RealAccess adminPage />} />
