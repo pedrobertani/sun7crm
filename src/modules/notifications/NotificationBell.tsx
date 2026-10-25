@@ -9,16 +9,32 @@ import './notifications.css';
 export interface Notification {
   id: string;
   company_id: string;
-  kind: 'subscription_due' | 'task_assigned' | 'task_due' | 'contact_assigned' | 'new_contact';
+  kind:
+    | 'subscription_due'
+    | 'task_assigned'
+    | 'task_due'
+    | 'contact_assigned'
+    | 'new_contact'
+    | 'card_first_response'
+    | 'card_idle'
+    | 'card_escalation';
   entity_id: string;
+  contact_id?: string | null;
   title: string;
   body: string;
   created_at: string;
   read_at: string | null;
   priority: number;
 }
-export function notificationTarget(notification: Pick<Notification, 'kind' | 'entity_id'>) {
-  if (notification.kind === 'subscription_due') return '/app';
+export function notificationTarget(
+  notification: Pick<Notification, 'kind' | 'entity_id' | 'contact_id'>,
+) {
+  if (notification.kind === 'subscription_due') return '/app/plano';
+  if (['card_first_response', 'card_idle', 'card_escalation'].includes(notification.kind)) {
+    return notification.contact_id
+      ? `/app/funil?card=${encodeURIComponent(notification.entity_id)}`
+      : '/app/contatos';
+  }
   const page =
     notification.kind === 'task_due' || notification.kind === 'task_assigned'
       ? 'tarefas'
@@ -59,7 +75,7 @@ export function NotificationBell({
       }
       let list = client
         .from('crm_notifications')
-        .select('id,company_id,kind,entity_id,title,body,created_at,read_at,priority')
+        .select('id,company_id,kind,entity_id,contact_id,title,body,created_at,read_at,priority')
         .eq('recipient_user_id', userId)
         .eq('active', true)
         .order('priority', { ascending: false })

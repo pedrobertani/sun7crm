@@ -10,6 +10,13 @@ export class HttpError extends Error {
 }
 
 export function databaseError(error: { code?: string; message?: string }): HttpError {
+  if (error.message?.includes('CRM_BILLING_CHANGED')) {
+    return new HttpError(
+      409,
+      'BILLING_CHANGED',
+      'O plano mudou. Atualize os dados e gerencie o vencimento na aba Planos.',
+    );
+  }
   if (error.message?.includes('CRM_MANAGER_REQUIRED')) {
     return new HttpError(
       400,

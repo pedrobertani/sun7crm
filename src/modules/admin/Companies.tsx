@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import { AppliedFilter, Empty, FormError, Heading, SearchInput } from '../../components/shared';
 import { Button } from '../../components/ui/button';
@@ -12,6 +13,7 @@ import { currency, dateLabel, shiftDate, today, uid } from '../../lib/format';
 import { CRM_THEMES, type CrmTheme } from '../../lib/themes';
 import { getSupabaseClient } from '../../lib/supabase';
 import { AccessChangedError } from '../auth/access';
+import { stateLabels, subscriptionState } from '../billing/subscription';
 import {
   AdminCommandError,
   companyInput,
@@ -31,8 +33,8 @@ function initialCompany() {
     segment: '',
     template: 'aesthetic' as Template,
     theme: 'sun7' as CrmTheme,
-    amount: '',
-    dueDate: shiftDate(today(), 30),
+    amount: '189.90',
+    dueDate: today(),
     enabled: false,
   };
 }
@@ -326,17 +328,24 @@ export function AdminCompanies({
                     <td>{dateLabel(company.dueDate)}</td>
                     <td>
                       <span
-                        className={`badge ${!company.enabled ? 'gray' : company.dueDate < date ? 'warn' : 'good'}`}
+                        className={`badge ${!company.enabled ? 'gray' : ['active', 'complimentary'].includes(subscriptionState(company.dueDate, company.cycleKind || 'monthly', date)) ? 'good' : 'warn'}`}
                       >
                         {!company.enabled
                           ? 'Desativada'
-                          : company.dueDate < date
-                            ? 'Vencimento passado'
-                            : 'Ativa'}
+                          : stateLabels[
+                              subscriptionState(
+                                company.dueDate,
+                                company.cycleKind || 'monthly',
+                                date,
+                              )
+                            ]}
                       </span>
                     </td>
                     <td>
                       <div className="admin-row-actions">
+                        <Link className="home-text-link" to={`/admin/planos?empresa=${company.id}`}>
+                          Plano
+                        </Link>
                         <Button
                           size="sm"
                           variant="ghost"
@@ -378,7 +387,7 @@ export function AdminCompanies({
         open={newCompanyOpen}
         onOpenChange={closeCompany}
         title={editingCompany ? 'Editar empresa' : 'Nova empresa'}
-        description="Defina o valor e o vencimento individualmente, sem planos."
+        description="Plano mensal SUN7CRM. Pagamentos e dias gratuitos são gerenciados na aba Planos."
       >
         <form onSubmit={(event) => void saveCompany(event)}>
           <fieldset disabled={companyLocked}>
@@ -437,6 +446,7 @@ export function AdminCompanies({
               <label className="form-row">
                 Valor mensal (R$)
                 <CurrencyInput
+                  readOnly
                   required
                   value={companyForm.amount}
                   onValueChange={(amount) => setCompanyForm({ ...companyForm, amount })}
@@ -447,6 +457,7 @@ export function AdminCompanies({
                 <Input
                   required
                   type="date"
+                  readOnly
                   value={companyForm.dueDate}
                   onInput={(e) =>
                     setCompanyForm({ ...companyForm, dueDate: e.currentTarget.value })

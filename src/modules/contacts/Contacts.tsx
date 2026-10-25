@@ -1,9 +1,16 @@
+import { recordWhatsappOpen } from '../../domain/contact-history';
+import { WhatsAppButton } from '../../components/WhatsAppButton';
+import { DemoContactHistory } from './ContactHistory';
+import { History } from 'lucide-react';
+import { CatalogPicker } from '../catalog/CatalogPicker';
+import { ContactTransfer } from './ContactTransfer';
+import { normalizeContactPhone } from '../../domain/contact-transfer';
 import { useSearchParams } from 'react-router-dom';
 import { readPeriod, inPeriod } from '../../domain/filters';
 import { dateLabel } from '../../lib/format';
 import { Input } from '../../components/ui/input';
 import { useState, type FormEvent } from 'react';
-import { Plus, Pencil, Phone, ArrowUpRight, Users } from 'lucide-react';
+import { Plus, Pencil, ArrowUpRight, Users } from 'lucide-react';
 import { useCrm } from '../../app/context';
 import type { Contact, Temperature } from '../../domain/types';
 import { temperatureLabels } from '../../domain/config';
@@ -27,11 +34,13 @@ const blank = {
   temperature: 'unclassified' as Temperature,
   ownerId: '',
   interests: '',
+  catalogIds: [] as string[],
   notes: '',
 };
 export function Contacts() {
   const { data, session, update, notice } = useCrm();
   const [query, setQuery] = useState('');
+  const [historyId, setHistoryId] = useState('');
   const [params, setParams] = useSearchParams();
   const temperature = Object.keys(temperatureLabels).includes(params.get('temperatura') || '')
     ? params.get('temperatura')!
@@ -59,7 +68,11 @@ export function Contacts() {
   function open(contact: Contact | null) {
     setEditing(contact);
     setError('');
-    setForm(contact ? { ...contact } : { ...blank, ownerId: session.memberId });
+    setForm(
+      contact
+        ? { ...contact, catalogIds: contact.catalogIds || [] }
+        : { ...blank, ownerId: session.memberId },
+    );
   }
   function save(e: FormEvent) {
     e.preventDefault();
@@ -67,15 +80,18 @@ export function Contacts() {
       setError('Informe o nome do contato.');
       return;
     }
-    const phone = form.phone.replace(/\D/g, '');
-    if (phone && (phone.length < 10 || phone.length > 13)) {
+    const phone = form.phone.trim() ? normalizeContactPhone(form.phone) : '';
+    if (phone === null) {
       setError('Informe um telefone com DDD válido.');
       return;
     }
     if (
       data.contacts.some(
         (c) =>
-          c.companyId === session.companyId && c.id !== editing?.id && phone && c.phone === phone,
+          c.companyId === session.companyId &&
+          c.id !== editing?.id &&
+          phone &&
+          normalizeContactPhone(c.phone) === phone,
       )
     ) {
       setError('Já existe um contato com este telefone nesta empresa. Confira antes de duplicar.');
@@ -83,6 +99,12 @@ export function Contacts() {
     }
     const contact: Contact = {
       ...form,
+      interests: form.catalogIds.length
+        ? (data.catalog || [])
+            .filter((i) => form.catalogIds.includes(i.id) && i.companyId === session.companyId)
+            .map((i) => i.name)
+            .join(', ')
+        : form.interests,
       name: form.name.trim(),
       phone,
       id: editing?.id || uid(),
@@ -90,32 +112,20 @@ export function Contacts() {
       createdAt: editing?.createdAt || today(),
       ownerId: session.role === 'seller' ? session.memberId : form.ownerId,
     };
-    const board = data.boards.find((b) => b.companyId === session.companyId && b.kind === 'leads')!;
     if (
       update((d) => ({
         ...d,
         contacts: editing
           ? d.contacts.map((c) => (c.id === editing.id ? contact : c))
           : [contact, ...d.contacts],
-        opportunities: editing
-          ? d.opportunities
-          : [
-              ...d.opportunities,
-              {
-                id: uid(),
-                companyId: session.companyId,
-                contactId: contact.id,
-                boardId: board.id,
-                stageId: board.stages[0].id,
-                value: 0,
-                source: 'Cadastro manual',
-                createdAt: today(),
-              },
-            ],
       }))
     ) {
       setEditing(undefined);
-      notice(editing ? 'Contato atualizado.' : 'Contato criado e incluído no funil de leads.');
+      notice(
+        editing
+          ? 'Contato atualizado.'
+          : 'Contato criado. Crie um card no funil quando houver uma oportunidade.',
+      );
     }
   }
   return (
@@ -125,6 +135,31 @@ export function Contacts() {
         title="Contatos"
         description="Conheça cada pessoa, seus interesses e o próximo passo da conversa."
       >
+        <ContactTransfer
+          key={session.companyId + session.memberId}
+          demo
+          canImport={canEdit}
+          scopeLabel={session.role === 'seller' ? 'permitidos para mim' : 'da empresa'}
+          loadContacts={async () => visibleContacts(data, session)}
+          loadExisting={async () => data.contacts.filter((c) => c.companyId === session.companyId)}
+          filtered={async () => contacts}
+          onImport={async (items) => {
+            const created: Contact[] = items.map((item) => ({
+              ...blank,
+              ...item,
+              id: uid(),
+              companyId: session.companyId,
+              ownerId: session.memberId,
+              createdAt: today(),
+            }));
+            const saved = update((d) => ({
+              ...d,
+              contacts: [...created, ...d.contacts],
+            }));
+            if (!saved) throw Error('Não foi possível salvar a importação neste navegador.');
+            return created.length;
+          }}
+        />
         {canEdit && (
           <Button onClick={() => open(null)}>
             <Plus size={16} />
@@ -193,16 +228,21 @@ export function Contacts() {
                     <td>{members.find((m) => m.id === c.ownerId)?.name || 'Sem responsável'}</td>
                     <td>
                       <div className="actions">
-                        {c.phone && (
-                          <Button asChild variant="outline" size="sm">
-                            <a
-                              href={'tel:+' + (c.phone.length <= 11 ? '55' : '') + c.phone}
-                              aria-label={'Ligar para ' + c.name}
-                            >
-                              <Phone size={14} />
-                            </a>
-                          </Button>
-                        )}
+                        <WhatsAppButton
+                          phone={c.phone}
+                          name={c.name}
+                          onOpen={() => update((d) => recordWhatsappOpen(d, session, c.id))}
+                          compact
+                        />
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          aria-label={'Histórico de ' + c.name}
+                          onClick={() => setHistoryId(c.id)}
+                        >
+                          <History size={15} />
+                          Histórico
+                        </Button>
                         {canEdit ? (
                           <Button
                             variant="ghost"
@@ -233,6 +273,7 @@ export function Contacts() {
           />
         )}
       </div>
+      {historyId && <DemoContactHistory contactId={historyId} onClose={() => setHistoryId('')} />}
       <Modal
         open={editing !== undefined}
         onOpenChange={(v) => !v && setEditing(undefined)}
@@ -295,14 +336,21 @@ export function Contacts() {
                   ))}
                 </select>
               </label>
-              <label className="form-row span2">
-                Serviços e produtos de interesse
-                <Input
-                  maxLength={200}
-                  value={form.interests}
-                  onChange={(e) => setForm({ ...form, interests: e.target.value })}
+              <div className="span2">
+                <CatalogPicker
+                  value={form.catalogIds}
+                  onChange={(ids) =>
+                    setForm({
+                      ...form,
+                      catalogIds: ids,
+                      interests: ids.length ? form.interests : '',
+                    })
+                  }
                 />
-              </label>
+                {form.interests && !form.catalogIds.length && (
+                  <p className="small-note">Interesse registrado anteriormente: {form.interests}</p>
+                )}
+              </div>
               <label className="form-row span2">
                 Observações
                 <textarea

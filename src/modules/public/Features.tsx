@@ -377,7 +377,19 @@ export function FeatureExplorer() {
   );
 }
 const catalog = [
+  [
+    'Estratégias',
+    'Ações do mês, canais, responsáveis, orçamento e situação, com cadastro e edição na demo.',
+  ],
+  [
+    'Embaixadores',
+    'Cadastro, indicações e simulação de pontos e comissão por mês, trimestre ou semestre.',
+  ],
   ['Contatos', 'Dados de contato, interesses, observações, responsável e busca.'],
+  [
+    'Contatos por Excel',
+    'Importação com prévia e validação de DDD e duplicados; exportação em Nome e Contato.',
+  ],
   ['Temperatura comercial', 'Quente, morno, frio ou ainda sem classificação.'],
   [
     'Quadros de atendimento',
@@ -417,10 +429,6 @@ function PlannedFeatures() {
             'Sequência após a consulta sem fechamento: 24 horas, 3, 7, 15, 21 e 29 dias; depois, acompanhamento mensal. Gatilhos, pausas e encerramento ainda serão definidos.',
           ],
           [
-            'Estratégias do mês',
-            'Organização de ações como tráfego pago, indicação, parcerias e campanhas sazonais.',
-          ],
-          [
             'Serviços e produtos',
             'Evolução do campo de interesse atual para um cadastro estruturado do que cada empresa oferece.',
           ],
@@ -431,10 +439,6 @@ function PlannedFeatures() {
           [
             'Indicações de clientes',
             'Relacionamento com quem já é cliente e acompanhamento das oportunidades que chegam por indicação.',
-          ],
-          [
-            'Embaixadores e campanhas',
-            'Cadastro, pontuação, comissões e premiações. Períodos, estornos e regras de cálculo ainda precisam ser definidos.',
           ],
         ].map(([title, text]) => (
           <article key={title}>

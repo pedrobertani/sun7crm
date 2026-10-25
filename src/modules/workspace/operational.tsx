@@ -1,0 +1,296 @@
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+  type DependencyList,
+} from 'react';
+import { OperationalBackend, BackendError, type TeamRow } from '../../data/backend';
+import { getSupabaseClient } from '../../lib/supabase';
+import { Button } from '../../components/ui/button';
+import { FormError } from '../../components/shared';
+import type { AccountUser } from '../auth/access';
+
+export interface OperationalCompany {
+  id: string;
+  membershipId: string;
+  name: string;
+  role: 'manager' | 'seller' | 'reception';
+}
+interface Context {
+  api: OperationalBackend;
+  company: OperationalCompany;
+  user: AccountUser;
+  revision: number;
+  refresh: () => void;
+  notice: (message: string) => void;
+  recheck: () => void;
+}
+const OperationalContext = createContext<Context | null>(null);
+export function OperationalProvider({
+  company,
+  user,
+  onRecheck,
+  children,
+  backend,
+}: {
+  company: OperationalCompany;
+  user: AccountUser;
+  onRecheck: () => void;
+  children: ReactNode;
+  backend?: OperationalBackend;
+}) {
+  const api = useMemo(
+    () => backend || new OperationalBackend(getSupabaseClient(), company.id),
+    [company.id, backend],
+  );
+  const [revision, setRevision] = useState(0),
+    [message, setMessage] = useState('');
+  useEffect(() => {
+    if (!message) return;
+    const timer = window.setTimeout(() => setMessage(''), 7000);
+    return () => window.clearTimeout(timer);
+  }, [message]);
+  return (
+    <OperationalContext.Provider
+      value={{
+        api,
+        company,
+        user,
+        revision,
+        refresh: () => setRevision((n) => n + 1),
+        notice: setMessage,
+        recheck: onRecheck,
+      }}
+    >
+      {message && (
+        <div className="operational-notice" role="status">
+          {message}
+          <button type="button" aria-label="Fechar aviso" onClick={() => setMessage('')}>
+            ×
+          </button>
+        </div>
+      )}
+      {children}
+    </OperationalContext.Provider>
+  );
+}
+export function useOperational() {
+  const value = useContext(OperationalContext);
+  if (!value) throw Error('Área operacional indisponível.');
+  return value;
+}
+export function useQuery<T>(load: () => Promise<T>, deps: DependencyList = []) {
+  const { revision, recheck } = useOperational();
+  const factory = useRef(load);
+  factory.current = load;
+  const recheckRef = useRef(recheck);
+  recheckRef.current = recheck;
+  const [data, setData] = useState<T | null>(null),
+    [loading, setLoading] = useState(true),
+    [error, setError] = useState(''),
+    [retry, setRetry] = useState(0);
+  useEffect(() => {
+    let active = true;
+    setLoading(true);
+    setError('');
+    setData(null);
+    void factory
+      .current()
+      .then((result) => {
+        if (active) setData(result);
+      })
+      .catch((e) => {
+        if (active) {
+          setError(errorMessage(e));
+          if (e instanceof BackendError && e.kind === 'access') recheckRef.current();
+        }
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [revision, retry, ...deps]);
+  return { data, loading, error, retry: () => setRetry((n) => n + 1) };
+}
+export function errorMessage(e: unknown) {
+  return e instanceof BackendError
+    ? e.message
+    : e instanceof Error
+      ? e.message
+      : 'Não foi possível concluir. Atualize os dados e tente novamente.';
+}
+export function useSave() {
+  const { recheck } = useOperational();
+  const pending = useRef(false);
+  const [busy, setBusy] = useState(false),
+    [error, setError] = useState(''),
+    [uncertain, setUncertain] = useState(false);
+  async function run(action: () => Promise<void>, idempotent = false) {
+    if (pending.current || (!idempotent && uncertain)) return;
+    pending.current = true;
+    setBusy(true);
+    setError('');
+    try {
+      await action();
+    } catch (e) {
+      setError(errorMessage(e));
+      if (e instanceof BackendError) {
+        if (e.kind === 'access') recheck();
+        if (e.resultUncertain && !idempotent) setUncertain(true);
+      }
+    } finally {
+      pending.current = false;
+      setBusy(false);
+    }
+  }
+  return {
+    busy,
+    error,
+    uncertain,
+    run,
+    setError,
+    reset: () => {
+      setError('');
+      setUncertain(false);
+    },
+  };
+}
+export function QueryState({
+  query,
+}: {
+  query: { loading: boolean; error: string; retry: () => void };
+}) {
+  return query.error ? (
+    <div className="card panel">
+      <FormError message={query.error} />
+      <Button variant="outline" onClick={query.retry}>
+        Tentar novamente
+      </Button>
+    </div>
+  ) : query.loading ? (
+    <p role="status" className="operational-loading">
+      Carregando registros...
+    </p>
+  ) : null;
+}
+export function SaveActions({
+  save,
+  onClose,
+  label = 'Salvar',
+}: {
+  save: ReturnType<typeof useSave>;
+  onClose: () => void;
+  label?: string;
+}) {
+  return (
+    <>
+      <FormError message={save.error} />
+      {save.uncertain && (
+        <p className="small-note">
+          Confira a lista atualizada antes de iniciar outra gravação. Seus dados preenchidos
+          continuam neste formulário.
+        </p>
+      )}
+      <div className="form-actions">
+        <Button type="button" variant="outline" disabled={save.busy} onClick={onClose}>
+          Cancelar
+        </Button>
+        <Button type="submit" disabled={save.busy || save.uncertain}>
+          {save.busy ? 'Salvando...' : label}
+        </Button>
+      </div>
+    </>
+  );
+}
+export function Pager({
+  page,
+  total,
+  size = 50,
+  onChange,
+  loading = false,
+}: {
+  page: number;
+  total: number;
+  size?: number;
+  onChange: (page: number) => void;
+  loading?: boolean;
+}) {
+  return (
+    <div className="operational-pager">
+      <span>
+        {total
+          ? `${page * size + 1}–${Math.min((page + 1) * size, total)} de ${total}`
+          : 'Nenhum registro'}
+      </span>
+      <Button
+        variant="outline"
+        size="sm"
+        disabled={!page || loading}
+        onClick={() => onChange(page - 1)}
+      >
+        Anterior
+      </Button>
+      <Button
+        variant="outline"
+        size="sm"
+        disabled={(page + 1) * size >= total || loading}
+        onClick={() => onChange(page + 1)}
+      >
+        Próxima
+      </Button>
+    </div>
+  );
+}
+export function useTeam() {
+  const { api, company, user } = useOperational();
+  return useQuery(
+    async () =>
+      company.role === 'manager'
+        ? api.team()
+        : ([
+            {
+              id: company.membershipId,
+              user_id: user.id,
+              display_name: user.displayName,
+              email: '',
+              role: company.role,
+              active: true,
+              row_version: 1,
+            },
+          ] as TeamRow[]),
+    [api, company.role, company.membershipId, user.id],
+  );
+}
+export function cents(value: string) {
+  if (!/^\d+(\.\d{1,2})?$/.test(value)) throw Error('Informe um valor válido.');
+  const n = Math.round(Number(value) * 100);
+  if (!Number.isSafeInteger(n) || n < 0 || n > 2147483647)
+    throw Error('O valor está fora do limite permitido.');
+  return n;
+}
+export function datetimeLocal(value: string | null) {
+  if (!value) return '';
+  const d = new Date(value);
+  return new Intl.DateTimeFormat('sv-SE', {
+    timeZone: 'America/Sao_Paulo',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+    .format(d)
+    .replace(' ', 'T');
+}
+export function fromLocal(value: string) {
+  if (!value) return null;
+  const d = new Date(value + '-03:00');
+  if (Number.isNaN(d.valueOf())) throw Error('Informe data e hora válidas.');
+  return d.toISOString();
+}

@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "typecheck": "tsc -b",
     "test": "vitest run",
-    "test:db": "node --test supabase/tests/foundation.node.mjs supabase/tests/edge-commands.node.mjs supabase/tests/first-access-db.node.mjs supabase/tests/notifications-errors.node.mjs",
+    "test:db": "node --test supabase/tests/foundation.node.mjs supabase/tests/edge-commands.node.mjs supabase/tests/first-access-db.node.mjs supabase/tests/notifications-errors.node.mjs supabase/tests/contact-import.node.mjs supabase/tests/contact-history.node.mjs supabase/tests/subscription.node.mjs supabase/tests/operational-core.node.mjs supabase/tests/ambassador-backend.node.mjs supabase/tests/card-alerts.node.mjs supabase/tests/workspace-backend.node.mjs supabase/tests/security.node.mjs",
     "test:functions": "node --test supabase/tests/functions.node.mjs supabase/tests/first-access.node.mjs",
     "typecheck:functions": "tsc -p supabase/tsconfig.json"
   },
@@ -18,6 +18,7 @@
     "@supabase/supabase-js": "2.118.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
+    "exceljs": "4.4.0",
     "lucide-react": "^0.468.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
@@ -36,5 +37,10 @@
     "typescript": "^5.9.3",
     "vite": "^7.1.9",
     "vitest": "^3.2.4"
+  },
+  "overrides": {
+    "exceljs": {
+      "uuid": "11.1.1"
+    }
   }
 }

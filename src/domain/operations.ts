@@ -20,8 +20,7 @@ export function stageNameError(stages: Stage[], name: string, ignoreId?: string)
   return '';
 }
 export function addStage(board: Board, stage: Stage): Board {
-  if (board.stages.length >= PROVISIONAL_MAX_STAGES)
-    throw Error('Limite provisório de 10 etapas atingido.');
+  if (board.stages.length >= PROVISIONAL_MAX_STAGES) throw Error('Limite de 10 etapas atingido.');
   const error = stageNameError(board.stages, stage.name);
   if (error) throw Error(error);
   return { ...board, stages: [...board.stages, { ...stage, name: stage.name.trim() }] };
@@ -58,5 +57,54 @@ export function moveOpportunity(
   return {
     ...data,
     opportunities: data.opportunities.map((o) => (o.id === id ? { ...o, stageId } : o)),
+  };
+}
+
+export function saveCard(data: Snapshot, session: Session, card: Opportunity): Snapshot {
+  if (!['manager', 'seller'].includes(session.role)) throw Error('Este perfil não edita cards.');
+  if (
+    card.companyId !== session.companyId ||
+    !visibleContacts(data, session).some((c) => c.id === card.contactId)
+  )
+    throw Error('Contato indisponível.');
+  const previous = data.opportunities.find((o) => o.id === card.id);
+  if (
+    previous &&
+    (previous.companyId !== session.companyId ||
+      !visibleContacts(data, session).some((c) => c.id === previous.contactId))
+  )
+    throw Error('Card indisponível.');
+  const board = data.boards.find((b) => b.id === card.boardId && b.companyId === session.companyId);
+  if (!board?.stages.some((s) => s.id === card.stageId)) throw Error('Etapa inválida.');
+  if (!Number.isSafeInteger(card.value) || card.value < 0) throw Error('Valor inválido.');
+  if (new Set(card.labelIds || []).size > 3) throw Error('Use no máximo 3 etiquetas por card.');
+  if (
+    (card.labelIds || []).some(
+      (id) => !(data.labels || []).some((l) => l.id === id && l.companyId === session.companyId),
+    )
+  )
+    throw Error('Etiqueta inválida.');
+  if (
+    card.strategyId &&
+    !data.strategies.some((s) => s.id === card.strategyId && s.companyId === session.companyId)
+  )
+    throw Error('Estratégia inválida.');
+  if (
+    (card.catalogIds || []).some(
+      (id) =>
+        !(data.catalog || []).some(
+          (i) =>
+            i.id === id &&
+            i.companyId === session.companyId &&
+            (i.active || previous?.catalogIds?.includes(id)),
+        ),
+    )
+  )
+    throw Error('Item de catálogo indisponível.');
+  return {
+    ...data,
+    opportunities: previous
+      ? data.opportunities.map((o) => (o.id === card.id ? card : o))
+      : [...data.opportunities, card],
   };
 }

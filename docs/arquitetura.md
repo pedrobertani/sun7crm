@@ -1,56 +1,53 @@
-# Arquitetura inicial
+# Arquitetura atual do SUN7CRM
 
-## Etapa atual
+Atualizada em 25/10/2026. Detalhes e contratos: `backend-operacional.md`. Acompanhamento: `tarefas-backend.md`.
 
-Aplicação cliente estática em React + Vite + TypeScript. Tailwind CSS e componentes shadcn/Radix compõem a interface; Recharts produz gráficos a partir dos registros fictícios. A aparência segue a demo SUN7CRM: menu claro, verde discreto, cartões e área de trabalho com rolagem independente. O template genérico inicia em azul; o gestor pode escolher outra paleta sem alterar o segmento ou o template. A seleção é compartilhada pela equipe da empresa nesta prévia local.
+## Aplicação e ambientes
 
-`CrmRepository` delimita a persistência; `BrowserRepository` guarda um snapshot versionado no navegador. Contato, oportunidade, quadro, etapa e tarefa têm identidades próprias. As movimentações usam IDs estáveis, nunca o nome de uma coluna como evento de negócio.
+O frontend usa React, Vite e TypeScript, com Tailwind, componentes shadcn/Radix e Recharts. O site atual é estático, com rotas internas por hash. A publicação na conta própria do Cloudflare está pausada enquanto a conexão do plugin é reautorizada; o site existente no Sites permanece separado dessa implantação.
 
-`src/domain/operations.ts` concentra as operações de Kanban e os filtros de visualização. Os formulários ainda fazem validação local e a atualização do snapshot. Não se trata de uma camada de autorização segura: o usuário pode alterar qualquer dado local pelos instrumentos do navegador.
+`/demo` inicializa `BrowserRepository`, dados fictícios e papéis simulados. Não abre sessão Supabase, não cadastra empresas e não registra aceites. Contatos representam pessoas; oportunidades representam cards independentes, podendo existir várias por pessoa.
 
-Valores monetários do domínio são inteiros em centavos. O campo de moeda trabalha com representação decimal em reais e converte na fronteira do formulário. Datas de vencimento são datas civis; `today()` usa America/Sao_Paulo. Horários e fusos por empresa serão tratados ao implementar agenda/cadências.
+`/acessar` usa Supabase Auth. `/conta` verifica senha pessoal e aceites individuais. `/admin` usa o perfil administrativo mantido no banco. `/app` usa os vínculos ativos da conta. A demonstração não serve de autorização ou de persistência para esses ambientes.
 
-## Integração futura
+## Backend e integrações
 
-- Supabase Auth para sessão e senhas; cadastro público desabilitado.
-- Postgres com `company_id`, RLS e vínculos ativos validados no servidor.
-- Edge Functions para criação de acessos, redefinição administrativa e comandos críticos.
-- Funções SQL/transações para movimentações ou substituições que precisam ser atômicas.
-- Migrações versionadas, ambientes separados, segredos fora do frontend.
-- Hospedagem estática na Cloudflare. Região do banco e eventual migração/reivindicação do Bolt Database precisam ser verificadas antes do provisionamento.
+Supabase/PostgreSQL é a fonte do ambiente autenticado. As tabelas operacionais incluem `company_id`, referências compostas e RLS. O acesso consulta vínculo, habilitação, primeiro acesso, documentos vigentes e situação do plano no servidor. Alterações de papel ou carteira não dependem da atualização de metadata editável do token.
 
-A troca do adaptador local por Supabase exigirá chamadas assíncronas, carregamento, tratamento de falhas, concorrência, autenticação e testes de RLS. A preparação das migrações foi autorizada; o frontend continua local até a conexão explícita com o projeto Supabase escolhido.
+As funções administrativas de criar empresa, criar usuário, redefinir senha, concluir primeiro acesso e editar empresa continuam em endpoints próprios. Segredos administrativos ficam exclusivamente no backend. O navegador usa chave publicável e JWT da sessão. Senhas não são duplicadas em tabelas do CRM, fingerprints ou logs.
 
-## Segurança nesta fase
+`OperationalBackend`, em `src/data/backend.ts`, oferece o contrato assíncrono dos novos módulos: paginação, CRUD de cadastros, comandos de funis/cards/tarefas/equipe e operações de campanhas. A interface deve aguardar os resultados e tratar conflitos/resultado incerto. Ele não implementa a interface síncrona da demo nem grava snapshots reais no navegador.
 
-A interface da demo não usa tokens, senhas, login real ou serviço de envio de mensagens. Os botões de senha apresentam o fluxo previsto e não coletam credenciais. Os exemplos usam e-mails reservados `.example`/`example.com` e nomes fictícios. Migrações e endpoints administrativos estão preparados separadamente para a futura integração.
+## Regras transacionais
 
-Antes do piloto real, implementar e testar autorização no servidor, isolamento entre empresas, limites de requisição, revogação de sessões, política de senhas, recuperação excepcional de Caio, auditoria sem segredos e backup/restauração.
+Funis usam IDs estáveis, etapas ordenadas e versão. Uma configuração mantém de uma a dez etapas; remoção transfere cards antes de excluir. A posição ou o nome de uma etapa não cria venda, recebimento ou comparecimento.
 
-## Saída da prévia
+Cards, contatos e tarefas têm versão de edição. Cards vinculam estratégia, catálogo e no máximo três etiquetas. Deixar um item inativo preserva vínculos anteriores. Responsabilidade pertence ao contato; trocar carteira preserva a autoria do histórico e acompanha tarefas pendentes daquele responsável.
 
-O rodapé mostra o usuário e um botão Sair; Configurações aparece apenas na navegação da área de trabalho. Sair encerra a visualização simulada, limpa o perfil em memória e abre `/demo`. Um marcador em sessionStorage mantém essa tela após recarregar a mesma aba. Entrar na prévia retorna ao perfil inicial sem apagar cadastros locais. Isso é apenas navegação da demonstração: a versão com Supabase deverá encerrar e revogar a sessão real pelo provedor.
+As campanhas têm regras explícitas de comissão. A apuração soma somente valores elegíveis e gera pontos inteiros a cada R$ 1.000. Fechar campanha congela elegibilidade; registrar quitação é outra operação. Chaves de idempotência, bloqueio da campanha e conferência do total impedem repetição ou pagamento sobre cálculo desatualizado. Estornos mantêm quitações anteriores e apresentam ajustes pendentes.
 
-## Acesso às contas separado da demonstração
+Os indicadores usam consultas reais com RLS. Valor de oportunidade é estimativa. Recebimentos das indicações são declarações administrativas, sem conciliação bancária ou API de pagamento nesta fase.
 
-O cabeçalho público direciona Acessar para `/acessar`. A página de login não usa o seletor de perfis para autenticar: apresenta e-mail e senha indisponíveis até a conexão com o provedor de identidade. O envio é prevenido mesmo nesta fase de interface. Não há criação pública de contas nem autenticação local por senha. `/login` é um alias de `/acessar`.
+## Histórico e notificações
 
-Explorar a demo direciona para `/demo`; `/entrar` continua compatível com os links anteriores. O seletor de empresa e perfil, os dados fictícios e a área de trabalho são exclusivos do fluxo de demonstração. A demo abre direto no painel, sem verificar ou registrar aceite de documentos. Uma futura sessão autenticada não poderá usar a sessão simulada como autorização, reaproveitar registros antigos da demo como evidência de aceite ou liberar dados reais a partir dela.
+Eventos de cadastro/movimentação são gerados dentro da transação da alteração. Notas e cliques recebem autor e horário do servidor. Histórico do contato é compartilhado por seus cards, mas notas gerais não reiniciam a inatividade de todas as oportunidades. Uma atividade precisa indicar um card válido para afetar os avisos daquele card.
 
-A próxima etapa da autenticação deverá conectar cadastro administrativo, sessão real, autorização por vínculo ativo e registro dos aceites no servidor. A tela inicial não implementa esses controles por conta própria.
+Os prazos de alerta são fixos: 24 horas sem primeiro acompanhamento, três dias para o responsável e sete dias para o gestor. Não há configuração ou desativação por funil/etapa. Encerramento explícito e retorno futuro são respeitados. O gestor consulta o histórico dos clientes da própria empresa, com autoria e horário; consultores continuam limitados à própria carteira. Acionar WhatsApp significa somente clique no atalho.
 
-## Fundação de banco preparada
+O sininho atualiza avisos ao entrar, voltar à janela, abrir o painel e a cada 60 segundos enquanto visível. Não existe envio com o aplicativo fechado, push ou importação de mensagens. O bloqueio do plano é consultado em cada operação do banco e independe dessa atualização visual.
 
-`supabase/migrations/20261023190000_crm_foundation.sql` cria a estrutura inicial e as políticas RLS, sem provisionamento de usuários ou dados fictícios. O roteiro e os limites estão em `supabase/README.md`. O usuário informou aplicação da fundação e do bootstrap administrativo no Supabase; não houve verificação remota. Os testes de banco usam PostgreSQL em memória com um stub local de Auth. Nenhuma chave secreta faz parte dos arquivos do projeto.
+## Plano e arquivos
 
-## Edge Functions por responsabilidade
+O plano padrão é SUN7CRM Mensal, R$ 189,90. O ADM confirma recebimentos e concede 7, 15 ou 30 dias gratuitos. Há sete dias de carência no ciclo mensal; D+8 bloqueia. A renovação desconta somente os dias de carência usados, até sete, sem consumir os dias bloqueados. Detalhes: `plano-cobranca-e-carencia.md`.
 
-Três endpoints independentes em `supabase/functions`: criar empresa, criar usuário e redefinir senha de outra pessoa. Cada diretório mantém seu caso de uso; `_shared` reúne apenas infraestrutura. Login e troca da própria senha usam Supabase Auth diretamente na integração futura.
+Logos usam bucket privado e prefixo pelo UUID da empresa. A equipe autorizada lê; somente o gestor grava. O cadastro da identidade não altera segmento, papéis, cobrança ou habilitação.
 
-A migração `20261023203000_crm_edge_commands.sql` oferece transações SQL exclusivas do backend, com autorização própria e grants limitados a `service_role`. Usuários da plataforma não invocam esses comandos diretamente. Auth e banco são serviços separados: a provisão de conta tem reserva, confirmação e cancelamento serializados para tratar falhas parciais. Não há roteador único com `action`.
+## Estado de integração visual
 
-O runtime usa os dicionários de chaves padrão injetados pelo Supabase, sem credenciais no código. Mantém verificação de JWT na plataforma e valida o usuário pelo Auth antes da autorização. A publicação dessas funções e sua ligação aos formulários ainda estão pendentes. Contratos e restrições estão em `edge-functions.md`.
+Já conectados: login/primeiro acesso, administração e plano, contatos/importação, tarefas, funis/cards, catálogo, etiquetas, estratégias, embaixadores/campanhas, equipe, identidade da empresa, notificações, histórico, WhatsApp, dashboard e relatórios. O painel autenticado usa `OperationalBackend` com a sessão Supabase e não inicializa dados da demo. A área operacional carrega em um chunk próprio após o acesso.
 
-## Administração fora da demo pública
+As buscas e listagens são paginadas. Cards vinculam seletores de contatos e interesses, com cadastro inline permitido pelo perfil. As operações aguardam confirmação do servidor; falhas de rede ou conflitos preservam o formulário. Operações financeiras mantêm a mesma chave e o mesmo conteúdo em novas tentativas. Editar campanha compara a versão para evitar sobrescrever outra edição.
 
-A demonstração permite somente gestor, vendedor/consultora e recepção. O provider rejeita seleção do perfil administrativo, e as rotas públicas da demonstração não montam AdminDashboard nem Companies. `/admin/*` e `/empresas` direcionam à página de acesso, que permanece indisponível até a integração de autenticação. As telas de gerenciamento do Caio são preservadas no código para o ambiente real. Essa separação de navegação não substitui autorização no backend; não há dados reais na demo.
+Detalhes de rotas e QA: `integracao-operacional.md`. A integração com a API de pagamentos permanece como última etapa, conforme a decisão de Pedro.
+
+O ambiente continua em homologação. Os testes automatizados usam PostgreSQL/PGlite e Auth simulado. Migrações remotas não inserem pessoas, vendas, pagamentos fictícios ou aceites pelos usuários. A conferência de ponta a ponta com contas reais e documentos definitivos continua necessária antes do uso comercial.

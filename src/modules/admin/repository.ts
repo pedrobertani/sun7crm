@@ -6,6 +6,7 @@ import { passwordValidation } from '../auth/flow';
 
 export interface AdminCompany extends Company {
   managers: { id: string; userId: string; name: string }[];
+  cycleKind?: import('../billing/subscription').CycleKind;
 }
 export interface CompanyInput {
   name: string;
@@ -40,6 +41,7 @@ interface BillingRow {
   company_id: string;
   monthly_amount_cents: number;
   due_date: string;
+  cycle_kind?: import('../billing/subscription').CycleKind;
 }
 interface ManagerRow {
   id: string;
@@ -95,6 +97,7 @@ export function mapPortfolio(
       createdAt,
       monthlyAmount: bill.monthly_amount_cents,
       dueDate: bill.due_date,
+      cycleKind: bill.cycle_kind || 'monthly',
       managers: managers
         .filter((member) => member.company_id === row.id)
         .map((member) => {
@@ -125,7 +128,7 @@ export async function loadAdminPortfolio(
     readAllPages<BillingRow>((from, to) => {
       const q = client
         .from('crm_company_billing')
-        .select('company_id,monthly_amount_cents,due_date')
+        .select('company_id,monthly_amount_cents,due_date,cycle_kind')
         .order('company_id')
         .range(from, to);
       return signal ? q.abortSignal(signal) : q;
@@ -227,6 +230,11 @@ export class AdminCommandError extends Error {
 }
 
 function commandFailure(code: string, status?: number) {
+  if (code === 'BILLING_CHANGED')
+    return new AdminCommandError(
+      'O plano foi atualizado. Atualize a lista e gerencie o vencimento na aba Planos.',
+      'edit',
+    );
   if (
     ['UNAUTHENTICATED', 'LEGAL_REQUIRED', 'FORBIDDEN'].includes(code) ||
     status === 401 ||

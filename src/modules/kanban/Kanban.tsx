@@ -1,3 +1,13 @@
+import { useStageDrag } from '../../hooks/useStageDrag';
+import { recordWhatsappOpen } from '../../domain/contact-history';
+import { WhatsAppButton } from '../../components/WhatsAppButton';
+import { DemoContactHistory } from '../contacts/ContactHistory';
+import { History } from 'lucide-react';
+import { LabelsPicker } from '../catalog/LabelsPicker';
+import { CatalogPicker } from '../catalog/CatalogPicker';
+import { ContactPicker } from '../contacts/ContactPicker';
+import { saveCard } from '../../domain/operations';
+import { useNavigate } from 'react-router-dom';
 import { useCardDrag } from '../../hooks/useCardDrag';
 import { readPeriod, inPeriod } from '../../domain/filters';
 import { dateLabel } from '../../lib/format';
@@ -13,7 +23,6 @@ import {
   Trash2,
   Pencil,
   LayoutGrid,
-  Users,
 } from 'lucide-react';
 import { useCrm } from '../../app/context';
 import {
@@ -29,7 +38,6 @@ import {
   Heading,
   AppliedFilter,
   SearchInput,
-  TemperatureBadge,
   Empty,
   FormError,
   FormActions,
@@ -40,10 +48,22 @@ export function Kanban() {
   const { kind } = useParams();
   const [params, setParams] = useSearchParams();
   const period = readPeriod(params);
-  const boardKind: BoardKind = kind === 'clients' ? 'clients' : 'leads';
+  const navigate = useNavigate();
+  const boardKind: BoardKind =
+    kind === 'clients' ? 'clients' : kind === 'leads' ? 'leads' : 'custom';
   const { data, session, update, notice } = useCrm();
-  const board = data.boards.find((b) => b.companyId === session.companyId && b.kind === boardKind)!;
+  const boards = data.boards.filter((b) => b.companyId === session.companyId);
+  const board =
+    boards.find((b) => b.id === kind || (b.kind !== 'custom' && b.kind === boardKind)) || boards[0];
+  const [boardOpen, setBoardOpen] = useState(false);
+  const [boardEditing, setBoardEditing] = useState(false);
+  const [boardName, setBoardName] = useState('');
+  const [draggedStage, setDraggedStage] = useState<number | null>(null);
+  const [card, setCard] = useState<Opportunity | null>(null);
+  const labels = (data.labels || []).filter((l) => l.companyId === session.companyId);
+  const strategies = data.strategies.filter((s) => s.companyId === session.companyId);
   const [query, setQuery] = useState('');
+  const [historyId, setHistoryId] = useState('');
   const [managing, setManaging] = useState(false);
   const [stageName, setStageName] = useState('');
   const [renaming, setRenaming] = useState('');
@@ -104,6 +124,15 @@ export function Kanban() {
       boards: d.boards.map((b) => (b.id === board.id ? { ...b, stages } : b)),
     }));
   }
+  const startStageDrag = useStageDrag((from, to) => {
+    const stages = [...board.stages];
+    const [moved] = stages.splice(from, 1);
+    stages.splice(to, 0, moved);
+    update((d) => ({
+      ...d,
+      boards: d.boards.map((b) => (b.id === board.id ? { ...b, stages } : b)),
+    }));
+  });
   function deleteStage(e: FormEvent) {
     e.preventDefault();
     try {
@@ -126,7 +155,7 @@ export function Kanban() {
     <>
       <Heading
         eyebrow="ÁREA COMERCIAL"
-        title={boardKind === 'leads' ? 'Funil de leads' : 'Funil de clientes'}
+        title="Funil"
         description={
           boardKind === 'leads'
             ? 'Cada conversa no lugar certo. Acompanhe as oportunidades da sua equipe.'
@@ -147,12 +176,41 @@ export function Kanban() {
             Editar etapas
           </Button>
         )}
-        <Button asChild>
-          <Link to="/demo/contatos">
+        {manager && (
+          <Button
+            variant="outline"
+            onClick={() => {
+              setBoardEditing(true);
+              setBoardName(board.name || (board.kind === 'clients' ? 'Clientes' : 'Leads'));
+              setBoardOpen(true);
+            }}
+          >
+            Renomear funil
+          </Button>
+        )}
+        {movable && (
+          <Button
+            onClick={() => {
+              setError('');
+              setCard({
+                id: uid(),
+                companyId: session.companyId,
+                contactId: '',
+                boardId: board.id,
+                stageId: board.stages[0].id,
+                value: 0,
+                source: '',
+                title: '',
+                createdAt: new Date().toISOString(),
+                labelIds: [],
+                catalogIds: [],
+              });
+            }}
+          >
             <Plus size={16} />
-            Novo contato
-          </Link>
-        </Button>
+            Novo card
+          </Button>
+        )}
       </Heading>
       {(period.from || period.to) && (
         <AppliedFilter
@@ -162,20 +220,29 @@ export function Kanban() {
       )}
       <div className="kanban-toolbar">
         <div className="segmented">
-          <Link
-            className={boardKind === 'leads' ? 'active' : ''}
-            to={'/demo/funil/leads' + (params.toString() ? '?' + params.toString() : '')}
-          >
-            <LayoutGrid size={15} />
-            Leads
-          </Link>
-          <Link
-            className={boardKind === 'clients' ? 'active' : ''}
-            to={'/demo/funil/clients' + (params.toString() ? '?' + params.toString() : '')}
-          >
-            <Users size={15} />
-            Clientes
-          </Link>
+          {boards.map((b) => (
+            <Link
+              key={b.id}
+              className={b.id === board.id ? 'active' : ''}
+              to={'/demo/funil/' + (b.kind === 'custom' ? b.id : b.kind)}
+            >
+              <LayoutGrid size={15} />
+              {b.name || (b.kind === 'clients' ? 'Clientes' : 'Leads')}
+            </Link>
+          ))}
+          {manager && (
+            <Button
+              variant="ghost"
+              aria-label="Adicionar funil"
+              onClick={() => {
+                setBoardEditing(false);
+                setBoardName('');
+                setBoardOpen(true);
+              }}
+            >
+              <Plus size={16} />
+            </Button>
+          )}
         </div>
         <SearchInput value={query} onChange={setQuery} placeholder="Buscar no quadro" />
         <span className="muted result-count">
@@ -207,7 +274,20 @@ export function Kanban() {
                     return (
                       <article key={o.id} className="opportunity-card" draggable={false}>
                         <div className="opportunity-top">
-                          <TemperatureBadge value={c.temperature} />
+                          <div className="card-labels">
+                            {(o.labelIds || [])
+                              .map((id) => labels.find((l) => l.id === id))
+                              .filter((l) => !!l)
+                              .map((l) => (
+                                <span
+                                  key={l.id}
+                                  className="badge"
+                                  style={{ border: '1px solid ' + l.color, color: l.color }}
+                                >
+                                  {l.name}
+                                </span>
+                              ))}
+                          </div>
                           {movable && (
                             <button
                               type="button"
@@ -224,10 +304,30 @@ export function Kanban() {
                         <button className="contact-link" onClick={() => setSelected(o)}>
                           {c.name}
                         </button>
-                        <p>{c.interests || 'Interesse a definir'}</p>
+                        <p>{o.title || c.interests || 'Oportunidade'}</p>
                         <strong className="opportunity-value">{currency(o.value)}</strong>
+                        <div className="opportunity-quick-actions">
+                          <button
+                            type="button"
+                            aria-label={'Histórico de ' + c.name}
+                            title="Histórico do cliente"
+                            onClick={() => setHistoryId(c.id)}
+                          >
+                            <History size={17} />
+                          </button>
+                          <WhatsAppButton
+                            phone={c.phone}
+                            name={c.name}
+                            onOpen={() => update((d) => recordWhatsappOpen(d, session, c.id))}
+                            compact
+                          />
+                        </div>
                         <div className="opportunity-footer">
-                          <span className="badge gray">{o.source}</span>
+                          <span className="badge gray">
+                            {strategies.find((s) => s.id === o.strategyId)?.name ||
+                              o.source ||
+                              'Sem estratégia'}
+                          </span>
                           <span
                             className="mini-avatar"
                             title={data.members.find((m) => m.id === c.ownerId)?.name}
@@ -273,15 +373,45 @@ export function Kanban() {
       <p className="small-note">
         Etapas e movimentações desta prévia não disparam mensagens, vendas ou automações.
       </p>
+      {historyId && <DemoContactHistory contactId={historyId} onClose={() => setHistoryId('')} />}
       <Modal
         open={managing}
         onOpenChange={setManaging}
         title="Personalizar etapas"
-        description="Nomes e ordem editáveis. Limite provisório: 10 etapas por quadro."
+        description="Arraste para ordenar ou use as setas. Até 10 etapas por funil."
       >
         <div className="stage-list">
           {board.stages.map((s, i) => (
-            <div key={s.id} className="stage-row">
+            <div
+              key={s.id}
+              className="stage-row"
+              data-stage-index={i}
+              draggable
+              onDragStart={() => setDraggedStage(i)}
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={(e) => {
+                e.preventDefault();
+                if (draggedStage === null || draggedStage === i) return;
+                const stages = [...board.stages];
+                const [moved] = stages.splice(draggedStage, 1);
+                stages.splice(i, 0, moved);
+                update((d) => ({
+                  ...d,
+                  boards: d.boards.map((b) => (b.id === board.id ? { ...b, stages } : b)),
+                }));
+                setDraggedStage(null);
+              }}
+              onDragEnd={() => setDraggedStage(null)}
+            >
+              <button
+                type="button"
+                className="stage-drag-handle"
+                aria-label={'Arrastar etapa ' + s.name}
+                onPointerDown={(e) => startStageDrag(e, i)}
+              >
+                <GripVertical size={16} />
+              </button>
+
               <span className="stage-position">{i + 1}</span>
               <strong>{s.name}</strong>
               <div className="actions">
@@ -322,7 +452,7 @@ export function Kanban() {
                   aria-label={'Excluir ' + s.name}
                   onClick={() => {
                     setDeleteId(s.id);
-                    setTargetId(board.stages.find((t) => t.id !== s.id)?.id || '');
+                    setTargetId(board.stages[i > 0 ? i - 1 : 1]?.id || '');
                     setError('');
                   }}
                 >
@@ -367,21 +497,13 @@ export function Kanban() {
         open={!!deleteId}
         onOpenChange={(v) => !v && setDeleteId('')}
         title="Remover etapa"
-        description="Escolha para onde transferir os cartões desta etapa."
+        description="Os cards voltam uma etapa. Ao excluir a primeira, vão para a próxima. Deseja continuar?"
       >
         <form onSubmit={deleteStage}>
-          <label className="form-row">
-            Etapa de destino
-            <select value={targetId} onChange={(e) => setTargetId(e.target.value)}>
-              {board.stages
-                .filter((s) => s.id !== deleteId)
-                .map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name}
-                  </option>
-                ))}
-            </select>
-          </label>
+          <p>
+            Os cards serão transferidos para{' '}
+            <strong>{board.stages.find((s) => s.id === targetId)?.name}</strong>.
+          </p>
           <FormError message={error} />
           <FormActions onCancel={() => setDeleteId('')} label="Transferir e remover" />
         </form>
@@ -413,8 +535,11 @@ export function Kanban() {
                     <strong>{selected.source}</strong>
                   </div>
                   <div>
-                    <small>Temperatura</small>
-                    <TemperatureBadge value={c.temperature} />
+                    <small>Estratégia</small>
+                    <strong>
+                      {strategies.find((s) => s.id === selected.strategyId)?.name ||
+                        'Não informada'}
+                    </strong>
                   </div>
                   <div>
                     <small>Responsável</small>
@@ -424,6 +549,34 @@ export function Kanban() {
                   </div>
                 </div>
                 <p className="small-note">{c.notes || 'Sem observações adicionais.'}</p>
+                <div className="history-detail-actions">
+                  <WhatsAppButton
+                    phone={c.phone}
+                    name={c.name}
+                    onOpen={() => update((d) => recordWhatsappOpen(d, session, c.id))}
+                  />
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setHistoryId(c.id);
+                      setSelected(null);
+                    }}
+                  >
+                    <History size={16} />
+                    Histórico do cliente
+                  </Button>
+                </div>
+                {movable && (
+                  <Button
+                    onClick={() => {
+                      setCard({ ...selected });
+                      setSelected(null);
+                      setError('');
+                    }}
+                  >
+                    Editar card
+                  </Button>
+                )}
                 <Button asChild variant="outline">
                   <Link to="/demo/contatos">Abrir contatos</Link>
                 </Button>
@@ -432,6 +585,132 @@ export function Kanban() {
               <Empty title="Contato indisponível" description="Confira a empresa selecionada." />
             );
           })()}
+      </Modal>
+      <Modal
+        open={boardOpen}
+        onOpenChange={setBoardOpen}
+        title={boardEditing ? 'Renomear funil' : 'Novo funil'}
+      >
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (!manager || !boardName.trim()) return;
+            const id = uid();
+            if (
+              update((d) => ({
+                ...d,
+                boards: boardEditing
+                  ? d.boards.map((b) => (b.id === board.id ? { ...b, name: boardName.trim() } : b))
+                  : [
+                      ...d.boards,
+                      {
+                        id,
+                        companyId: session.companyId,
+                        kind: 'custom',
+                        name: boardName.trim(),
+                        stages: [{ id: uid(), name: 'Entrada' }],
+                      },
+                    ],
+              }))
+            ) {
+              setBoardOpen(false);
+              if (!boardEditing) navigate('/demo/funil/' + id);
+            }
+          }}
+        >
+          <label className="form-row">
+            Nome do funil
+            <Input
+              required
+              maxLength={50}
+              value={boardName}
+              onChange={(e) => setBoardName(e.target.value)}
+            />
+          </label>
+          <FormActions onCancel={() => setBoardOpen(false)} />
+        </form>
+      </Modal>
+      <Modal
+        open={!!card}
+        onOpenChange={(v) => !v && setCard(null)}
+        title={data.opportunities.some((o) => o.id === card?.id) ? 'Editar card' : 'Novo card'}
+        description="Uma pessoa pode ter vários cards, cada um com seu próprio andamento."
+      >
+        {card && (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (update((d) => saveCard(d, session, card))) {
+                setCard(null);
+                notice('Card salvo.');
+              }
+            }}
+          >
+            <ContactPicker
+              value={card.contactId}
+              onChange={(id) => setCard({ ...card, contactId: id })}
+            />
+            <label className="form-row">
+              Título da oportunidade
+              <Input
+                required
+                maxLength={120}
+                value={card.title || ''}
+                onChange={(e) => setCard({ ...card, title: e.target.value })}
+              />
+            </label>
+            <label className="form-row">
+              Etapa
+              <select
+                value={card.stageId}
+                onChange={(e) => setCard({ ...card, stageId: e.target.value })}
+              >
+                {board.stages.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="form-row">
+              Valor estimado (R$)
+              <Input
+                required
+                type="number"
+                min="0"
+                step="0.01"
+                value={card.value / 100}
+                onChange={(e) =>
+                  setCard({ ...card, value: Math.round(Number(e.target.value) * 100) })
+                }
+              />
+            </label>
+            <label className="form-row">
+              Estratégia de origem
+              <select
+                value={card.strategyId || ''}
+                onChange={(e) => setCard({ ...card, strategyId: e.target.value })}
+              >
+                <option value="">Sem estratégia</option>
+                {strategies.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <LabelsPicker
+              value={card.labelIds || []}
+              onChange={(ids) => setCard({ ...card, labelIds: ids })}
+            />
+            <CatalogPicker
+              value={card.catalogIds || []}
+              onChange={(ids) => setCard({ ...card, catalogIds: ids })}
+            />
+            <FormError message={error} />
+            <FormActions onCancel={() => setCard(null)} label="Salvar card" />
+          </form>
+        )}
       </Modal>
     </>
   );

@@ -1,36 +1,83 @@
 import { useEffect, useState } from 'react';
-import { Link, NavLink, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import { LayoutDashboard, ListTodo, LogOut, Menu, Users, X } from 'lucide-react';
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
+import {
+  LayoutDashboard,
+  ListTodo,
+  LogOut,
+  Menu,
+  Users,
+  X,
+  KanbanSquare,
+  Tags,
+  Package,
+  Megaphone,
+  Handshake,
+  ChartNoAxesCombined,
+  UsersRound,
+  Settings,
+  CreditCard,
+  RefreshCw,
+} from 'lucide-react';
 import { Button } from '../../components/ui/button';
-import { Empty, Heading, Kpi } from '../../components/shared';
+import { Heading, Empty } from '../../components/shared';
 import { ThemeProvider } from '../../components/theme-provider';
 import { getSupabaseClient } from '../../lib/supabase';
-import { dateLabel, initials } from '../../lib/format';
+import { initials } from '../../lib/format';
 import { themeStyle, type CrmTheme } from '../../lib/themes';
-import { roleLabels, temperatureLabels } from '../../domain/config';
-import type { Role, Temperature } from '../../domain/types';
+import { roleLabels } from '../../domain/config';
 import { loadAccountAccess, type AccountUser } from '../auth/access';
 import { PublicShell } from '../public/PublicShell';
 import { NotificationBell } from '../notifications/NotificationBell';
+import { RealPlan } from '../billing/Plan';
+import {
+  OperationalProvider,
+  useOperational,
+  useQuery,
+  type OperationalCompany,
+} from './operational';
+import { RealKanban } from './RealKanban';
+import { RealCatalog, RealContacts, RealStrategies, RealTasks } from './RealRecords';
+import { RealDashboard, RealReports, RealSettings, RealTeam } from './RealManagement';
+import { RealAmbassadors } from './RealAmbassadors';
 import '../admin/admin.css';
+import './operational.css';
 
-interface Workspace {
-  id: string;
-  membershipId: string;
-  name: string;
-  role: Exclude<Role, 'admin'>;
+interface Workspace extends OperationalCompany {
   theme: CrmTheme;
+  logoPath: string | null;
 }
-type RecordRow = {
-  id: string;
-  title?: string;
-  due_date?: string;
-  status?: string;
-  name?: string;
-  phone?: string;
-  temperature?: Temperature;
-};
-
+export const operationalNavigation = [
+  { to: '/app/funil', label: 'Funil', icon: KanbanSquare, group: 'Dia a dia' },
+  { to: '/app/contatos', label: 'Contatos', icon: Users, group: 'Dia a dia' },
+  { to: '/app/tarefas', label: 'Tarefas', icon: ListTodo, group: 'Dia a dia' },
+  { to: '/app', label: 'Dashboard', icon: LayoutDashboard, group: 'Dia a dia' },
+  { to: '/app/estrategias', label: 'Estratégias', icon: Megaphone, group: 'Crescimento' },
+  {
+    to: '/app/embaixadores',
+    label: 'Embaixadores',
+    icon: Handshake,
+    group: 'Crescimento',
+    manager: true,
+  },
+  { to: '/app/catalogo', label: 'Serviços e produtos', icon: Package, group: 'Cadastros' },
+  { to: '/app/etiquetas', label: 'Etiquetas', icon: Tags, group: 'Cadastros' },
+  {
+    to: '/app/relatorios',
+    label: 'Relatórios',
+    icon: ChartNoAxesCombined,
+    group: 'Gestão',
+    manager: true,
+  },
+  { to: '/app/equipe', label: 'Equipe', icon: UsersRound, group: 'Gestão', manager: true },
+  {
+    to: '/app/configuracoes',
+    label: 'Configurações',
+    icon: Settings,
+    group: 'Preferências',
+    manager: true,
+  },
+  { to: '/app/plano', label: 'Plano', icon: CreditCard, group: 'Preferências', manager: true },
+];
 export function StaffWorkspace({
   user,
   onLogout,
@@ -40,36 +87,43 @@ export function StaffWorkspace({
   onLogout: () => Promise<void>;
   onRecheck: () => void;
 }) {
-  const [workspaces, setWorkspaces] = useState<Workspace[] | null>(null);
-  const [companyId, setCompanyId] = useState('');
-  const [error, setError] = useState('');
-  const [refresh, setRefresh] = useState(0);
-  const [mobile, setMobile] = useState(false);
-  const [busy, setBusy] = useState(false);
-  const [rows, setRows] = useState<RecordRow[] | null>(null);
-  const [total, setTotal] = useState(0);
-  const [counts, setCounts] = useState<{ contacts: number; tasks: number } | null>(null);
+  const [workspaces, setWorkspaces] = useState<Workspace[] | null>(null),
+    [companyId, setCompanyId] = useState(''),
+    [error, setError] = useState(''),
+    [tick, setTick] = useState(0),
+    [mobile, setMobile] = useState(false),
+    [busy, setBusy] = useState(false),
+    [access, setAccess] = useState<{ companyId: string; access_allowed: boolean } | null>(null);
   const location = useLocation(),
-    navigate = useNavigate();
-  const [params, setParams] = useSearchParams();
-  const selected = params.get('registro') || '';
-  const rawPage = Number(params.get('pagina') || '0');
-  const page = Number.isInteger(rawPage) && rawPage >= 0 && rawPage <= 100_000 ? rawPage : 0;
-  const section = location.pathname.startsWith('/app/tarefas')
-    ? 'tasks'
-    : location.pathname.startsWith('/app/contatos')
-      ? 'contacts'
-      : 'home';
-  const company = workspaces?.find((item) => item.id === companyId);
-
+    navigate = useNavigate(),
+    company = workspaces?.find((c) => c.id === companyId),
+    section =
+      operationalNavigation.find((n) => n.to !== '/app' && location.pathname.startsWith(n.to)) ||
+      operationalNavigation.find((n) => n.to === '/app')!;
+  useEffect(() => {
+    const update = () => {
+      if (document.visibilityState === 'visible') setTick((n) => n + 1);
+    };
+    const timer = window.setInterval(update, 60000);
+    window.addEventListener('focus', update);
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener('focus', update);
+    };
+  }, []);
   useEffect(() => {
     let active = true;
-    async function load() {
+    void (async () => {
       try {
-        const client = getSupabaseClient();
+        const client = getSupabaseClient(),
+          account = await loadAccountAccess(client);
+        if (account.stage !== 'ready' || account.user.id !== user.id || account.isAdmin) {
+          if (active) onRecheck();
+          return;
+        }
         const result = await client
           .from('crm_memberships')
-          .select('id,role,company_id,crm_companies(id,name,display_name,theme)')
+          .select('id,role,company_id,crm_companies(id,name,display_name,theme,logo_path)')
           .eq('user_id', user.id)
           .eq('active', true)
           .order('id');
@@ -86,95 +140,49 @@ export function StaffWorkspace({
               name: data.display_name || data.name,
               role: member.role,
               theme: data.theme,
+              logoPath: data.logo_path,
             });
         }
         if (active) {
           setWorkspaces(items);
-          setCompanyId(items[0]?.id || '');
+          setCompanyId((old) => (items.some((c) => c.id === old) ? old : items[0]?.id || ''));
+          setError('');
         }
       } catch {
         if (active)
-          setError('Não foi possível consultar a empresa vinculada à sua conta. Tente novamente.');
+          setError('Não foi possível atualizar a empresa e as permissões. Tente novamente.');
       }
-    }
-    void load();
+    })();
     return () => {
       active = false;
     };
-  }, [user.id]);
+  }, [user.id, onRecheck, tick]);
+  useEffect(() => {
+    if (!companyId) return;
+    let active = true;
+    void (async () => {
+      try {
+        const r = await getSupabaseClient().rpc('crm_company_access_status', {
+          p_company: companyId,
+        });
+        if (r.error || typeof r.data?.access_allowed !== 'boolean')
+          throw Error('Acesso indisponível');
+        if (active) {
+          setAccess({ companyId, access_allowed: r.data.access_allowed });
+          setError('');
+        }
+      } catch {
+        if (active) setError('Não foi possível verificar o período de acesso. Tente atualizar.');
+      }
+    })();
+    return () => {
+      active = false;
+    };
+  }, [companyId, tick]);
   useEffect(() => {
     document.title = `${company?.name || 'Minha conta'} · SUN7CRM`;
     setMobile(false);
   }, [company?.name, location.pathname]);
-  useEffect(() => {
-    if (!companyId) return;
-    let active = true;
-    setRows(null);
-    setCounts(null);
-    setError('');
-    async function load() {
-      try {
-        const client = getSupabaseClient(),
-          access = await loadAccountAccess(client);
-        if (access.stage !== 'ready' || access.user.id !== user.id || access.isAdmin) {
-          if (active) onRecheck();
-          return;
-        }
-        if (section === 'home') {
-          const [contacts, tasks] = await Promise.all([
-            client
-              .from('crm_contacts')
-              .select('id', { count: 'exact', head: true })
-              .eq('company_id', companyId),
-            client
-              .from('crm_tasks')
-              .select('id', { count: 'exact', head: true })
-              .eq('company_id', companyId)
-              .neq('status', 'done'),
-          ]);
-          if (contacts.error || tasks.error || contacts.count === null || tasks.count === null)
-            throw Error('Consulta indisponível');
-          if (active) setCounts({ contacts: contacts.count, tasks: tasks.count });
-        } else {
-          if (
-            selected &&
-            !/^[a-f\d]{8}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{4}-[a-f\d]{12}$/i.test(selected)
-          )
-            throw Error('Identificador inválido');
-          let query =
-            section === 'tasks'
-              ? client
-                  .from('crm_tasks')
-                  .select('id,title,due_date,status', { count: 'exact' })
-                  .eq('company_id', companyId)
-                  .order('due_date')
-                  .order('id')
-              : client
-                  .from('crm_contacts')
-                  .select('id,name,phone,temperature', { count: 'exact' })
-                  .eq('company_id', companyId)
-                  .order('name')
-                  .order('id');
-          if (selected) query = query.eq('id', selected);
-          const result = await query.range(page * 50, page * 50 + 49);
-          if (result.error || result.count === null)
-            throw result.error || Error('Contagem indisponível');
-          if (active) {
-            setRows(result.data as RecordRow[]);
-            setTotal(result.count);
-          }
-        }
-      } catch {
-        if (active)
-          setError('Não foi possível carregar os dados. Atualize a página para tentar novamente.');
-      }
-    }
-    void load();
-    return () => {
-      active = false;
-    };
-  }, [companyId, user.id, section, selected, page, refresh, onRecheck]);
-
   async function logout() {
     if (busy) return;
     setBusy(true);
@@ -196,8 +204,8 @@ export function StaffWorkspace({
             </h1>
             <p>
               {workspaces === null
-                ? 'Estamos verificando a empresa vinculada à sua conta.'
-                : 'Ainda não existe uma empresa habilitada vinculada a esta conta. O responsável pelo cadastro precisa concluir a habilitação.'}
+                ? 'Verificando a empresa vinculada à sua conta.'
+                : 'O responsável pelo cadastro precisa concluir a habilitação da sua empresa.'}
             </p>
             {error && (
               <p className="secure-access-error" role="alert">
@@ -215,248 +223,237 @@ export function StaffWorkspace({
       </PublicShell>
     );
   const colors = themeStyle(company.theme),
-    current = section === 'tasks' ? 'Tarefas' : section === 'contacts' ? 'Contatos' : 'Visão geral';
-  const links = [
-    { to: '/app', label: 'Visão geral', icon: LayoutDashboard },
-    { to: '/app/contatos', label: 'Contatos', icon: Users },
-    { to: '/app/tarefas', label: 'Tarefas', icon: ListTodo },
-  ];
+    links = operationalNavigation.filter((n) => !n.manager || company.role === 'manager'),
+    allowed = access?.companyId === company.id ? access.access_allowed : null;
   return (
     <ThemeProvider style={colors}>
-      <div className="layout admin-live official-member" style={colors}>
-        {mobile && (
-          <button
-            className="sidebar-scrim"
-            aria-label="Fechar menu"
-            onClick={() => setMobile(false)}
-          />
-        )}
-        <aside className={`sidebar ${mobile ? 'is-open' : ''}`}>
-          <div className="sidebar-head">
-            <Link className="logo workspace-logo" to="/app">
-              <span className="mark">{initials(company.name)}</span>
-              <span className="brand">
-                <strong>{company.name}</strong>
-              </span>
-            </Link>
+      <OperationalProvider
+        key={company.id + ':' + company.role}
+        company={company}
+        user={user}
+        onRecheck={onRecheck}
+      >
+        <div className="layout admin-live official-member" style={colors}>
+          {mobile && (
             <button
-              className="icon-button mobile-close"
+              className="sidebar-scrim"
               aria-label="Fechar menu"
               onClick={() => setMobile(false)}
-            >
-              <X size={20} />
-            </button>
-          </div>
-          <div className="sidebar-workspace">
-            <nav aria-label="Navegação da empresa">
-              {links.map(({ to, label, icon: Icon }) => (
-                <NavLink key={to} to={to} end={to === '/app'} onClick={() => setMobile(false)}>
-                  <Icon size={19} />
-                  <span>{label}</span>
-                </NavLink>
-              ))}
-            </nav>
-          </div>
-          <div className="sidebar-bottom">
-            <div className="user-block">
-              <span className="avatar">{initials(user.displayName)}</span>
-              <span>
-                <strong>{user.displayName}</strong>
-                <small>{roleLabels[company.role]}</small>
-              </span>
-              <button
-                className="logout-button"
-                aria-label="Sair da conta"
-                disabled={busy}
-                onClick={() => void logout()}
-              >
-                <LogOut size={18} />
-              </button>
-            </div>
-          </div>
-        </aside>
-        <div className="work">
-          <header className="topbar">
-            <div className="breadcrumb">
-              <button
-                className="icon-button mobile-menu"
-                aria-label="Abrir menu"
-                aria-expanded={mobile}
-                onClick={() => setMobile(true)}
-              >
-                <Menu size={21} />
-              </button>
-              <strong>{current}</strong>
-            </div>
-            <div className="top-controls">
-              {workspaces!.length > 1 && (
-                <select
-                  aria-label="Empresa vinculada"
-                  value={company.id}
-                  onChange={(event) => {
-                    setCompanyId(event.target.value);
-                    navigate('/app');
-                  }}
-                >
-                  {workspaces!.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.name}
-                    </option>
-                  ))}
-                </select>
-              )}
-              <NotificationBell
-                key={`${user.id}:${company.id}`}
-                userId={user.id}
-                companyId={company.id}
-                onRecheck={onRecheck}
-              />
-              <Link className="demo-site-link" to="/">
-                Voltar ao site
+            />
+          )}
+          <aside className={'sidebar ' + (mobile ? 'is-open' : '')}>
+            <div className="sidebar-head">
+              <Link className="logo workspace-logo" to="/app">
+                <WorkspaceLogo path={allowed ? company.logoPath : null} name={company.name} />
+                <span className="brand">
+                  <strong>{company.name}</strong>
+                </span>
               </Link>
-            </div>
-          </header>
-          <div className="crm-homologation-banner" role="note">HOMOLOGAÇÃO INTERNA — As operações deste painel utilizam o banco de dados real. Use apenas informações de teste; não cadastre dados pessoais de clientes reais.</div>
-          <main className="workspace" id="main">
-            <div className="page">
-              <Heading
-                eyebrow={roleLabels[company.role].toLocaleUpperCase('pt-BR')}
-                title={section === 'home' ? `Olá, ${user.displayName.split(' ')[0]}` : current}
-                description={
-                  section === 'home'
-                    ? 'Acompanhe sua rotina e os avisos no sininho.'
-                    : 'Registros disponíveis para o seu perfil na empresa.'
-                }
+              <button
+                className="icon-button mobile-close"
+                aria-label="Fechar menu"
+                onClick={() => setMobile(false)}
               >
-                <Button variant="outline" onClick={() => setRefresh((n) => n + 1)}>
-                  Atualizar
-                </Button>
-              </Heading>
-              {error && (
-                <p className="secure-access-error" role="alert">
-                  {error}
-                </p>
-              )}
-              {section === 'home' ? (
-                counts ? (
-                  <div className="kpis">
-                    <Kpi
-                      label="Contatos disponíveis"
-                      value={counts.contacts}
-                      foot="Conforme as permissões do seu perfil"
-                      icon={<Users size={19} />}
-                      to="/app/contatos"
-                    />
-                    <Kpi
-                      label="Tarefas pendentes"
-                      value={counts.tasks}
-                      foot={
-                        company.role === 'manager'
-                          ? 'Pendências da equipe'
-                          : 'Sob sua responsabilidade'
-                      }
-                      icon={<ListTodo size={19} />}
-                      to="/app/tarefas"
-                    />
-                  </div>
-                ) : (
-                  !error && <p role="status">Carregando sua rotina...</p>
-                )
-              ) : (
-                <>
-                  {selected && (
-                    <Button variant="ghost" onClick={() => setParams({})}>
-                      Mostrar todos os registros
-                    </Button>
-                  )}
-                  <div className="card panel">
-                    {rows === null ? (
-                      !error && <p role="status">Carregando registros...</p>
-                    ) : !rows.length ? (
-                      <Empty
-                        title="Nenhum registro disponível"
-                        description={
-                          selected
-                            ? 'O registro pode ter sido alterado ou estar fora das suas permissões.'
-                            : 'Os registros da empresa aparecerão aqui conforme forem cadastrados.'
-                        }
-                      />
-                    ) : (
-                      <div className="table-wrap">
-                        <table>
-                          <thead>
-                            <tr>
-                              <th>{section === 'tasks' ? 'Tarefa' : 'Contato'}</th>
-                              <th>{section === 'tasks' ? 'Vencimento' : 'Telefone'}</th>
-                              <th>{section === 'tasks' ? 'Situação' : 'Temperatura'}</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {rows.map((row) => (
-                              <tr key={row.id}>
-                                <td>
-                                  <strong>{row.title || row.name}</strong>
-                                </td>
-                                <td>
-                                  {section === 'tasks'
-                                    ? dateLabel(row.due_date!)
-                                    : row.phone || 'Não informado'}
-                                </td>
-                                <td>
-                                  {section === 'tasks'
-                                    ? {
-                                        todo: 'Pendente',
-                                        in_progress: 'Em andamento',
-                                        done: 'Concluída',
-                                      }[row.status!] || row.status
-                                    : temperatureLabels[row.temperature!] || 'Não classificada'}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
-                  </div>
-                  {!!total && (
-                    <div className="admin-data-bar">
-                      <span>
-                        {total} registros · página {page + 1}
-                      </span>
-                      <div className="actions">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={page === 0}
-                          onClick={() => {
-                            const next = new URLSearchParams(params);
-                            next.set('pagina', String(page - 1));
-                            setParams(next);
-                          }}
-                        >
-                          Anterior
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          disabled={(page + 1) * 50 >= total}
-                          onClick={() => {
-                            const next = new URLSearchParams(params);
-                            next.set('pagina', String(page + 1));
-                            setParams(next);
-                          }}
-                        >
-                          Próxima
-                        </Button>
-                      </div>
-                    </div>
-                  )}
-                </>
-              )}
+                <X size={20} />
+              </button>
             </div>
-          </main>
+            <div className="sidebar-workspace">
+              <nav aria-label="Navegação da empresa">
+                {links.map((n, index) => (
+                  <div key={n.to}>
+                    {links[index - 1]?.group !== n.group && (
+                      <p className="nav-group-label">{n.group}</p>
+                    )}
+                    <NavLink to={n.to} end={n.to === '/app'} onClick={() => setMobile(false)}>
+                      <n.icon size={19} />
+                      <span>{n.label}</span>
+                    </NavLink>
+                  </div>
+                ))}
+              </nav>
+            </div>
+            <div className="sidebar-bottom">
+              <div className="user-block">
+                <span className="avatar">{initials(user.displayName)}</span>
+                <span>
+                  <strong>{user.displayName}</strong>
+                  <small>{roleLabels[company.role]}</small>
+                </span>
+                <button
+                  className="logout-button"
+                  aria-label="Sair da conta"
+                  disabled={busy}
+                  onClick={() => void logout()}
+                >
+                  <LogOut size={18} />
+                </button>
+              </div>
+            </div>
+          </aside>
+          <div className="work">
+            <header className="topbar">
+              <div className="breadcrumb">
+                <button
+                  className="icon-button mobile-menu"
+                  aria-label="Abrir menu"
+                  aria-expanded={mobile}
+                  onClick={() => setMobile(true)}
+                >
+                  <Menu size={21} />
+                </button>
+                <strong>{section.label}</strong>
+              </div>
+              <div className="top-controls">
+                {workspaces!.length > 1 && (
+                  <select
+                    aria-label="Empresa vinculada"
+                    value={company.id}
+                    onChange={(e) => {
+                      setCompanyId(e.target.value);
+                      navigate('/app/funil');
+                    }}
+                  >
+                    {workspaces!.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name}
+                      </option>
+                    ))}
+                  </select>
+                )}
+                <NotificationBell
+                  key={user.id + company.id}
+                  userId={user.id}
+                  companyId={company.id}
+                  onRecheck={onRecheck}
+                />
+                <Link className="demo-site-link" to="/">
+                  Voltar ao site
+                </Link>
+              </div>
+            </header>
+            <div className="crm-homologation-banner" role="note">
+              HOMOLOGAÇÃO INTERNA — As operações deste painel utilizam o banco de dados real. Use
+              apenas informações de teste; não cadastre dados pessoais de clientes reais.
+            </div>
+            <main className="workspace" id="main">
+              <div className="page">
+                <Heading
+                  eyebrow={roleLabels[company.role].toLocaleUpperCase('pt-BR')}
+                  title={
+                    section.to === '/app' ? `Olá, ${user.displayName.split(' ')[0]}` : section.label
+                  }
+                  description={
+                    section.to === '/app/funil'
+                      ? 'Organize os atendimentos e acompanhe o próximo passo de cada oportunidade.'
+                      : 'Sua rotina e os registros disponíveis para o seu perfil.'
+                  }
+                >
+                  <WorkspaceRefresh onAccessRefresh={() => setTick((n) => n + 1)} />
+                </Heading>
+                {error && (
+                  <p className="secure-access-error" role="alert">
+                    {error}
+                  </p>
+                )}
+                {allowed === null ? (
+                  <p role="status">Verificando o período de acesso...</p>
+                ) : !allowed ? (
+                  company.role === 'manager' ? (
+                    <RealPlan key={company.id + tick} companyId={company.id} />
+                  ) : (
+                    <div className="card panel">
+                      <Empty
+                        title="Acesso da empresa suspenso"
+                        description="Fale com o gestor para regularizar o acesso."
+                      />
+                    </div>
+                  )
+                ) : section.manager && company.role !== 'manager' ? (
+                  <p>Esta área é exclusiva do gestor.</p>
+                ) : (
+                  <OperationalContent
+                    path={section.to}
+                    onCompanyChanged={() => setTick((n) => n + 1)}
+                  />
+                )}
+              </div>
+            </main>
+          </div>
         </div>
-      </div>
+      </OperationalProvider>
     </ThemeProvider>
   );
+}
+function WorkspaceRefresh({ onAccessRefresh }: { onAccessRefresh: () => void }) {
+  const { refresh } = useOperational();
+  return (
+    <Button
+      variant="outline"
+      onClick={() => {
+        refresh();
+        onAccessRefresh();
+      }}
+    >
+      <RefreshCw size={15} />
+      Atualizar
+    </Button>
+  );
+}
+function WorkspaceLogo({ path, name }: { path: string | null; name: string }) {
+  const { api } = useOperational(),
+    image = useQuery(() => (path ? api.downloadLogo(path) : Promise.resolve(null)), [api, path]),
+    [url, setUrl] = useState('');
+  useEffect(() => {
+    if (!image.data) {
+      setUrl('');
+      return;
+    }
+    const next = URL.createObjectURL(image.data);
+    setUrl(next);
+    return () => URL.revokeObjectURL(next);
+  }, [image.data]);
+  return (
+    <span className="mark">
+      {url ? (
+        <img className="operational-sidebar-logo" src={url} alt={'Logo de ' + name} />
+      ) : (
+        initials(name)
+      )}
+    </span>
+  );
+}
+function OperationalContent({
+  path,
+  onCompanyChanged,
+}: {
+  path: string;
+  onCompanyChanged: () => void;
+}) {
+  const { company, revision } = useOperational();
+  switch (path) {
+    case '/app/funil':
+      return <RealKanban />;
+    case '/app/contatos':
+      return <RealContacts />;
+    case '/app/tarefas':
+      return <RealTasks />;
+    case '/app/catalogo':
+      return <RealCatalog />;
+    case '/app/etiquetas':
+      return <RealCatalog key="labels" labels />;
+    case '/app/estrategias':
+      return <RealStrategies />;
+    case '/app/embaixadores':
+      return <RealAmbassadors />;
+    case '/app/equipe':
+      return <RealTeam />;
+    case '/app/configuracoes':
+      return <RealSettings onCompanyChanged={onCompanyChanged} />;
+    case '/app/relatorios':
+      return <RealReports />;
+    case '/app/plano':
+      return <RealPlan key={company.id + revision} companyId={company.id} />;
+    default:
+      return <RealDashboard />;
+  }
 }

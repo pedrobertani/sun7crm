@@ -17,6 +17,11 @@ import {
   X,
   ChevronRight,
   FlaskConical,
+  Megaphone,
+  Award,
+  Tags,
+  ChartNoAxesCombined,
+  CreditCard,
 } from 'lucide-react';
 import { useCrm } from './context';
 import { previewRoleLabels, roleLabels } from '../domain/config';
@@ -24,11 +29,14 @@ import type { Role } from '../domain/types';
 import { initials } from '../lib/format';
 import { Button } from '../components/ui/button';
 const businessLinks = [
-  { to: '/demo/painel', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/demo/funil/leads', label: 'Funil de leads', icon: KanbanSquare },
-  { to: '/demo/funil/clients', label: 'Funil de clientes', icon: KanbanSquare },
-  { to: '/demo/contatos', label: 'Contatos', icon: Users },
-  { to: '/demo/tarefas', label: 'Tarefas', icon: ListTodo },
+  { to: '/demo/funil/leads', label: 'Funil', icon: KanbanSquare, group: 'Dia a dia' },
+  { to: '/demo/contatos', label: 'Contatos', icon: Users, group: 'Dia a dia' },
+  { to: '/demo/tarefas', label: 'Tarefas', icon: ListTodo, group: 'Dia a dia' },
+  { to: '/demo/painel', label: 'Dashboard', icon: LayoutDashboard, group: 'Dia a dia' },
+  { to: '/demo/estrategias', label: 'Estratégias', icon: Megaphone, group: 'Crescimento' },
+  { to: '/demo/embaixadores', label: 'Embaixadores', icon: Award, group: 'Crescimento' },
+  { to: '/demo/catalogo', label: 'Serviços e produtos', icon: ListTodo, group: 'Cadastros' },
+  { to: '/demo/etiquetas', label: 'Etiquetas', icon: Tags, group: 'Cadastros' },
 ];
 export function AppShell() {
   const { data, session, setSession, logout } = useCrm();
@@ -45,16 +53,27 @@ export function AppShell() {
   }, [workspaceName]);
   const links = admin
     ? [
-        { to: '/demo/painel', label: 'Visão geral', icon: LayoutDashboard },
-        { to: '/demo/empresas', label: 'Empresas', icon: Building2 },
+        { to: '/demo/painel', label: 'Visão geral', icon: LayoutDashboard, group: 'Administração' },
+        { to: '/demo/empresas', label: 'Empresas', icon: Building2, group: 'Administração' },
       ]
     : businessLinks;
   const allLinks = [
     ...links,
     ...(!admin && session.role === 'manager'
-      ? [{ to: '/demo/equipe', label: 'Equipe', icon: UsersRound }]
+      ? [
+          {
+            to: '/demo/relatorios',
+            label: 'Relatórios',
+            icon: ChartNoAxesCombined,
+            group: 'Gestão',
+          },
+          { to: '/demo/equipe', label: 'Equipe', icon: UsersRound, group: 'Gestão' },
+        ]
       : []),
-    { to: '/demo/configuracoes', label: 'Configurações', icon: Settings },
+    { to: '/demo/configuracoes', label: 'Configurações', icon: Settings, group: 'Preferências' },
+    ...(!admin && session.role === 'manager'
+      ? [{ to: '/demo/plano', label: 'Plano', icon: CreditCard, group: 'Preferências' }]
+      : []),
   ];
   const current = allLinks.find((l) => l.to === location.pathname)?.label || 'Área de trabalho';
   function switchView(role: Role, companyId = session.companyId) {
@@ -125,18 +144,29 @@ export function AppShell() {
               {admin ? 'ADMINISTRAÇÃO' : 'ÁREA DE TRABALHO'}
             </p>
             <nav aria-label="Navegação principal">
-              {allLinks.map(({ to, label, icon: Icon }) => (
-                <NavLink
-                  key={to}
-                  to={to}
-                  end={to === '/demo/painel'}
-                  title={collapsed ? label : undefined}
-                  onClick={() => setMobile(false)}
-                >
-                  <Icon size={19} />
-                  <span className="hide-collapsed">{label}</span>
-                </NavLink>
-              ))}
+              {(admin
+                ? ['Administração', 'Preferências']
+                : ['Dia a dia', 'Crescimento', 'Gestão', 'Cadastros', 'Preferências']
+              ).map((group) => {
+                const items = allLinks.filter((l) => l.group === group);
+                return items.length ? (
+                  <div key={group} className="nav-section">
+                    <p className="nav-section-label hide-collapsed">{group}</p>
+                    {items.map(({ to, label, icon: Icon }) => (
+                      <NavLink
+                        key={to}
+                        to={to}
+                        end={to === '/demo/painel'}
+                        title={collapsed ? label : undefined}
+                        onClick={() => setMobile(false)}
+                      >
+                        <Icon size={19} />
+                        <span className="hide-collapsed">{label}</span>
+                      </NavLink>
+                    ))}
+                  </div>
+                ) : null;
+              })}
             </nav>
           </div>
           <div className="sidebar-bottom">

@@ -75,9 +75,10 @@ test('notificações por perfil, vencimento e erros técnicos: isolamento no ban
     );
     // A migração de homologação já configura a versão exigida. A fixture local
     // ativa uma versão própria sem alterar documentos imutáveis de homologação.
-    await q("insert into public.crm_legal_requirements(kind,version) values($1,'local-fixture') on conflict (kind) do update set version=excluded.version", [
-      kind,
-    ]);
+    await q(
+      "insert into public.crm_legal_requirements(kind,version) values($1,'local-fixture') on conflict (kind) do update set version=excluded.version",
+      [kind],
+    );
     for (const n of [1, 2, 3, 4, 5, 7])
       await user(n, () =>
         q("insert into public.crm_legal_acceptances(kind,version) values($1,'local-fixture')", [
@@ -260,7 +261,7 @@ test('notificações por perfil, vencimento e erros técnicos: isolamento no ban
     await q('update public.crm_companies set enabled=true where id=$1', [id(100)]);
   });
   await t.test(
-    'somente o administrador altera vencimento e habilita com gestor, sem recriar quadros',
+    'administrador edita e habilita sem recriar quadros nem alterar o plano silenciosamente',
     async () => {
       const values = {
         name: 'Empresa editada',
@@ -295,6 +296,17 @@ test('notificações por perfil, vencimento e erros técnicos: isolamento no ban
         "insert into public.crm_boards(id,company_id,kind,name,position) values($1,$2,'leads','Quadro personalizado',0)",
         [id(800), id(200)],
       );
+      await as('service_role', null, () =>
+        assert.rejects(update(7, 949), (error) => error.code === '40001'),
+      );
+      const currentBill = (
+        await q(
+          'select monthly_amount_cents,due_date::text as due_date from public.crm_company_billing where company_id=$1',
+          [id(200)],
+        )
+      ).rows[0];
+      values.monthly_amount_cents = currentBill.monthly_amount_cents;
+      values.due_date = currentBill.due_date;
       await as('service_role', null, () => update(7, 953));
       const row = (
         await q('select name,template,enabled from public.crm_companies where id=$1', [id(200)])
@@ -309,7 +321,7 @@ test('notificações por perfil, vencimento e erros técnicos: isolamento no ban
             [id(200)],
           )
         ).rows[0].d,
-        '2026-12-31',
+        values.due_date,
       );
       assert.equal(
         (await q('select name from public.crm_boards where id=$1', [id(800)])).rows[0].name,
