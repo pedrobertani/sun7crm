@@ -2,13 +2,13 @@
 
 ## Rotas e dados
 
-| Área            | Rota                                          | Dados e autorização                                                                         |
-| --------------- | --------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| Demonstração    | `/#/demo` e subrotas                          | Dados fictícios do navegador; apresentação do produto; nenhum cadastro no Supabase          |
-| Login           | `/#/acessar`                                  | Supabase Auth, e-mail e senha                                                               |
-| Primeiro acesso | `/#/conta`                                    | Senha pessoal, documentos vigentes e aceite individual                                      |
-| Administração   | `/#/admin` e `/#/admin/empresas`              | Perfil administrativo consultado no banco, carteira real e comandos autorizados no servidor |
-| Empresa         | `/#/app`, `/#/app/contatos`, `/#/app/tarefas` | Empresa habilitada, vínculo ativo e RLS por gestor, vendedor ou recepção                    |
+| Área            | Rota                                    | Dados e autorização                                                                         |
+| --------------- | --------------------------------------- | ------------------------------------------------------------------------------------------- |
+| Demonstração    | `/demo` e subrotas                      | Dados fictícios do navegador; apresentação do produto; nenhum cadastro no Supabase          |
+| Login           | `/acessar`                              | Supabase Auth, e-mail e senha                                                               |
+| Primeiro acesso | `/conta`                                | Senha pessoal, documentos vigentes e aceite individual                                      |
+| Administração   | `/admin` e `/admin/empresas`            | Perfil administrativo consultado no banco, carteira real e comandos autorizados no servidor |
+| Empresa         | `/app`, `/app/contatos`, `/app/tarefas` | Empresa habilitada, vínculo ativo e RLS por gestor, vendedor ou recepção                    |
 
 O repositório local da demonstração é inicializado somente em `/demo`. As antigas rotas sem prefixo não abrem mais telas fictícias. A página administrativa não permite selecionar um papel simulado. O perfil não vem de metadados editáveis pelo usuário.
 
@@ -72,7 +72,6 @@ O armazenamento do erro tem timeout de 1,5 segundo e seu próprio tratamento. Um
 Testes de frontend, handlers e PostgreSQL local com Auth simulado cobrem bloqueio jurídico, hierarquia, RLS, troca de papel, outra empresa, atribuição, leitura individual, renovação, prazos, idempotência e sanitização de traces. Typechecks e build são obrigatórios antes da publicação.
 
 QA de navegador usa dados fictícios isolados e não grava empresas, gestores, aceites ou documentos no projeto real. O harness temporário é removido antes do pacote. O teste integral com uma conta real, documentos oficiais e criação de empresas deverá ser feito pelo titular depois da liberação jurídica. As verificações remotas desta entrega devem registrar o estado de migrações e a recusa de chamadas sem sessão, incluindo a persistência do erro técnico.
-
 
 ## Conferência desta publicação
 

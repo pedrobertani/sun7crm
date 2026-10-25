@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Plus, Handshake, Wallet, CircleDollarSign, CheckCircle2 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -472,12 +473,12 @@ export function RealAmbassadors() {
                                 )?.name || 'Embaixador'}
                                 <small className="operational-cell-note">
                                   {r.cancelled ? 'Indicação cancelada' : 'Card vinculado'} ·{' '}
-                                  <a
+                                  <Link
                                     className="operational-text-link"
-                                    href={'#/app/funil?card=' + r.opportunity_id}
+                                    to={'/app/funil?card=' + encodeURIComponent(r.opportunity_id)}
                                   >
                                     Abrir card
-                                  </a>
+                                  </Link>
                                 </small>
                               </td>
                               <td>
