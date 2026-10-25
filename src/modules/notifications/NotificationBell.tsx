@@ -65,14 +65,6 @@ export function NotificationBell({
     if (alive.current) setLoading(true);
     try {
       const client = getSupabaseClient();
-      const sync = await client.rpc('crm_refresh_notifications');
-      if (sync.error) {
-        if (['42501', 'PGRST301', 'PGRST302'].includes(sync.error.code)) {
-          onRecheck();
-          return;
-        }
-        throw sync.error;
-      }
       let list = client
         .from('crm_notifications')
         .select('id,company_id,kind,entity_id,contact_id,title,body,created_at,read_at,priority')
@@ -93,6 +85,11 @@ export function NotificationBell({
         unread = unread.eq('company_id', companyId);
       }
       const [rows, total] = await Promise.all([list, unread]);
+      const failure = rows.error || total.error;
+      if (failure && ['42501', 'PGRST301', 'PGRST302'].includes(failure.code)) {
+        onRecheck();
+        return;
+      }
       if (rows.error || total.error || total.count === null)
         throw rows.error || total.error || Error('Contagem indisponível');
       if (alive.current) {
@@ -101,7 +98,8 @@ export function NotificationBell({
         setError('');
       }
     } catch {
-      if (alive.current) setError('Não foi possível atualizar os avisos. Tente novamente.');
+      if (alive.current)
+        setError('Não foi possível consultar os avisos. Tentaremos novamente automaticamente.');
     } finally {
       inFlight.current = false;
       if (alive.current) setLoading(false);
@@ -168,9 +166,9 @@ export function NotificationBell({
         description="Avisos do seu acesso, contatos e tarefas."
       >
         <div className="notification-toolbar">
-          <Button size="sm" variant="outline" disabled={loading} onClick={() => void refresh()}>
-            {loading ? 'Atualizando...' : 'Atualizar'}
-          </Button>
+          <p className="small-note" role="status" aria-live="polite">
+            {loading ? 'Consultando avisos…' : 'Atualização automática a cada minuto.'}
+          </p>
           {!!unreadShown.length && (
             <Button
               size="sm"

@@ -81,25 +81,23 @@ client.rpc = async (name: string, args: Record<string, string> = {}) => {
   const data =
     name === 'crm_first_access_status'
       ? { password_change_required: false }
-      : name === 'crm_refresh_notifications'
-        ? 0
-        : name === 'crm_is_platform_admin'
-          ? true
-          : name === 'crm_subscription_summary'
-            ? {
-                company_id: args.p_company,
-                plan_name: 'Mensal',
-                monthly_amount_cents: 18990,
-                due_date: today,
-                cycle_kind: 'monthly',
-                status: 'active',
-                server_date: today,
-                access_allowed: true,
-                grace_days_used: 0,
-                grace_ends_on: null,
-                events: [],
-              }
-            : undefined;
+      : name === 'crm_is_platform_admin'
+        ? true
+        : name === 'crm_subscription_summary'
+          ? {
+              company_id: args.p_company,
+              plan_name: 'Mensal',
+              monthly_amount_cents: 18990,
+              due_date: today,
+              cycle_kind: 'monthly',
+              status: 'active',
+              server_date: today,
+              access_allowed: true,
+              grace_days_used: 0,
+              grace_ends_on: null,
+              events: [],
+            }
+          : undefined;
   if (data === undefined) throw new Error('QA local: comando não permitido.');
   return { data, error: null };
 };

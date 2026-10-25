@@ -34,9 +34,9 @@ Tabela `public.crm_notifications`, com destinatário individual, empresa, tipo, 
 
 O vencimento tem prioridade visual e aparece somente para gestores ativos daquela empresa. A consulta privilegiada projeta apenas o aviso da própria identidade; não recebe destinatário ou mensagem do navegador e não concede leitura da cobrança aos vendedores ou à recepção.
 
-Os avisos são conferidos ao entrar, abrir o sininho, voltar à janela e a cada 60 segundos enquanto a página está visível. Não há envio em segundo plano com o aplicativo fechado nesta entrega. Estados de vencimento são deduplicados por data e fase; atualizar a página não recria avisos lidos. Renovação, conclusão de tarefa e mudanças de atribuição resolvem ou ocultam avisos que não se aplicam mais.
+Os avisos são gerados no banco pelo job `sun7crm-notifications-minute` a cada minuto, inclusive com o site fechado. O sininho consulta os registros ao entrar, abrir, voltar à janela e a cada 60 segundos enquanto a página está visível, sem botão Atualizar. Não há envio de push ou e-mail em segundo plano nesta entrega. Estados de vencimento são deduplicados por data e fase; atualizar a página não recria avisos lidos. Renovação, conclusão de tarefa e mudanças de atribuição resolvem ou ocultam avisos que não se aplicam mais.
 
-`crm_refresh_notifications()` atualiza os avisos do próprio usuário. `crm_mark_notifications_read(uuid[])` marca somente notificações visíveis do próprio usuário, com horário do servidor e até 100 identificadores por chamada. RLS e grants impedem fabricar notificações, trocar o destinatário ou consultar outra empresa.
+`crm_refresh_notifications()` permanece como compatibilidade para abas antigas, limitado ao próprio usuário. A versão atual consulta diretamente a tabela. `crm_mark_notifications_read(uuid[])` marca somente notificações visíveis do próprio usuário, com horário do servidor e até 100 identificadores por chamada. RLS e grants impedem fabricar notificações, trocar o destinatário ou consultar outra empresa. Implantação, execução e limites do job: `notificacoes-cron.md`.
 
 ## Tabela técnica de erros
 
