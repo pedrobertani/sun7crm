@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import {
   Building2,
+  CreditCard,
   ChevronRight,
   LayoutDashboard,
   LogOut,
@@ -23,6 +24,7 @@ import { AdminCompanies } from './Companies';
 import { loadAdminPortfolio, type AdminCompany } from './repository';
 import './admin.css';
 import { NotificationBell } from '../notifications/NotificationBell';
+import { AdminPlans } from '../billing/AdminPlans';
 
 export function AdminWorkspace({
   user,
@@ -43,7 +45,8 @@ export function AdminWorkspace({
   const [signingOut, setSigningOut] = useState(false);
   const location = useLocation();
   const isCompanies = location.pathname.startsWith('/admin/empresas');
-  const current = isCompanies ? 'Empresas' : 'Visão geral';
+  const isPlans = location.pathname.startsWith('/admin/planos');
+  const current = isCompanies ? 'Empresas' : isPlans ? 'Planos' : 'Visão geral';
   const colors = themeStyle('sun7');
 
   useEffect(() => {
@@ -100,6 +103,7 @@ export function AdminWorkspace({
   const links = [
     { to: '/admin', label: 'Visão geral', icon: LayoutDashboard },
     { to: '/admin/empresas', label: 'Empresas', icon: Building2 },
+    { to: '/admin/planos', label: 'Planos', icon: CreditCard },
   ];
   return (
     <ThemeProvider style={colors}>
@@ -196,7 +200,10 @@ export function AdminWorkspace({
               </Link>
             </div>
           </header>
-          <div className="crm-homologation-banner" role="note">HOMOLOGAÇÃO INTERNA — As operações deste painel utilizam o banco de dados real. Use apenas informações de teste; não cadastre dados pessoais de clientes reais.</div>
+          <div className="crm-homologation-banner" role="note">
+            HOMOLOGAÇÃO INTERNA — As operações deste painel utilizam o banco de dados real. Use
+            apenas informações de teste; não cadastre dados pessoais de clientes reais.
+          </div>
           <main className="workspace" id="main">
             <div className="page">
               <div className="admin-data-bar">
@@ -237,6 +244,18 @@ export function AdminWorkspace({
                 </div>
               ) : (
                 <Routes>
+                  <Route
+                    path="planos"
+                    element={
+                      <AdminPlans
+                        companies={companies}
+                        userId={user.id}
+                        onRecheck={onRecheck}
+                        onReload={() => setRefresh((n) => n + 1)}
+                        onNotice={setNotice}
+                      />
+                    }
+                  />
                   <Route index element={<AdminDashboardView companies={companies} />} />
                   <Route
                     path="empresas"

@@ -1,3 +1,5 @@
+import { DemoActivityReport } from '../modules/reports/ActivityReport';
+import { DemoPlan } from '../modules/billing/Plan';
 import { ContactPage } from '../modules/public/Contact';
 import { FeaturesPage } from '../modules/public/Features';
 import { Home } from '../modules/public/Home';
@@ -16,6 +18,9 @@ import { Kanban } from '../modules/kanban/Kanban';
 import { Tasks } from '../modules/tasks/Tasks';
 import { Team } from '../modules/team/Team';
 import { Settings } from '../modules/settings/Settings';
+import { Strategies } from '../modules/growth/Strategies';
+import { Catalog, Labels } from '../modules/catalog/Catalog';
+import { Ambassadors } from '../modules/growth/Ambassadors';
 import { Button } from '../components/ui/button';
 function DemoGuard() {
   const { session, signedOut } = useCrm();
@@ -33,8 +38,16 @@ function Demo() {
             <Route element={<AppShell />}>
               <Route path="painel" element={<CompanyDashboard />} />
               <Route path="contatos" element={<Contacts />} />
+              <Route path="catalogo" element={<Catalog />} />
+              <Route path="etiquetas" element={<Labels />} />
               <Route path="funil/:kind" element={<Kanban />} />
               <Route path="tarefas" element={<Tasks />} />
+              <Route path="relatorios" element={<DemoActivityReport />} />
+              <Route path="plano" element={<DemoPlan />} />
+              <Route path="estrategias" element={<Strategies />} />
+              <Route path="campanhas" element={<Navigate to="/demo/estrategias" replace />} />
+              <Route path="embaixadores" element={<Ambassadors />} />
+              <Route path="embaixador" element={<Navigate to="/demo/embaixadores" replace />} />
               <Route path="equipe" element={<DemoTeam />} />
               <Route path="configuracoes" element={<DemoSettings />} />
             </Route>

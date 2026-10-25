@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useState, type FormEvent } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
 import { ArrowRight, LockKeyhole, ShieldCheck } from 'lucide-react';
 import { getSupabaseClient } from '../../lib/supabase';
@@ -9,7 +9,9 @@ import { PublicShell } from '../public/PublicShell';
 import { passwordValidation } from './flow';
 import { loadAccountAccess, type AccountAccess } from './access';
 import { AdminWorkspace } from '../admin/AdminWorkspace';
-import { StaffWorkspace } from '../workspace/StaffWorkspace';
+const StaffWorkspace = lazy(() =>
+  import('../workspace/StaffWorkspace').then((module) => ({ default: module.StaffWorkspace })),
+);
 
 type Gate =
   | Exclude<AccountAccess, { stage: 'signed-out' }>
@@ -155,7 +157,9 @@ export function RealAccess({
   if (gate.stage === 'ready' && !adminPage) {
     if (!staffPage) return <Navigate to="/app" replace />;
     return (
-      <StaffWorkspace key={gate.user.id} user={gate.user} onLogout={logout} onRecheck={recheck} />
+      <Suspense fallback={<p role="status">Carregando sua área de trabalho...</p>}>
+        <StaffWorkspace key={gate.user.id} user={gate.user} onLogout={logout} onRecheck={recheck} />
+      </Suspense>
     );
   }
 
@@ -226,7 +230,8 @@ export function RealAccess({
               </p>
               <p>
                 O acesso operacional está bloqueado até a publicação dos Termos e da Política de
-                Privacidade definitivos. Os documentos de homologação devem ser confirmados por você, individualmente, antes de utilizar o ambiente autenticado.
+                Privacidade definitivos. Os documentos de homologação devem ser confirmados por
+                você, individualmente, antes de utilizar o ambiente autenticado.
               </p>
               <p className="small-note">{UNSAFE_DATA_MESSAGE}</p>
               <Button
@@ -242,8 +247,10 @@ export function RealAccess({
             <>
               <h1>Confirmação individual</h1>
               <p>
-                Leia os documentos de homologação vinculados à sua conta, <strong>{gate.email}</strong>. A
-                confirmação ficará registrada individualmente no Supabase. Esta versão é para testes internos e uma nova confirmação será solicitada após aprovação dos documentos definitivos.
+                Leia os documentos de homologação vinculados à sua conta,{' '}
+                <strong>{gate.email}</strong>. A confirmação ficará registrada individualmente no
+                Supabase. Esta versão é para testes internos e uma nova confirmação será solicitada
+                após aprovação dos documentos definitivos.
               </p>
               <form onSubmit={acceptDocuments}>
                 {gate.documents.map((doc) => (

@@ -35,3 +35,13 @@ Verificar se a pessoa identifica a ação principal, entende os rótulos, reconh
 - [W3C — tamanho de alvo aprimorado, SC 2.5.5, nível AAA](https://www.w3.org/WAI/WCAG22/Understanding/target-size-enhanced): referência de 44 × 44 px, com exceções descritas no critério. Esse alvo não representa uma declaração de conformidade de toda a aplicação.
 - [Nielsen Norman Group — heurísticas de usabilidade](https://www.nngroup.com/articles/ten-usability-heuristics/): consistência, reconhecimento, estado do sistema e foco no essencial.
 - [Nielsen Norman Group — memória de curto prazo e usabilidade](https://www.nngroup.com/articles/short-term-memory-and-web-usability/): o uso de menus não depende de memorizar todos os seus itens.
+
+## Seletores e modais — revisão de 24/10/2026
+
+- Contatos usam seletor com busca por nome/telefone e ação “Cadastrar novo contato” dentro da lista. O cadastro valida DDD e duplicidade e seleciona o contato salvo.
+- Serviços/produtos usam seleção múltipla com busca e itens escolhidos visíveis como etiquetas removíveis. O gestor cadastra dentro da lista; consultores selecionam itens existentes. O componente é compartilhado entre Contatos e cards.
+- Etiquetas usam seleção múltipla com limite de três por card, busca, cores e indicação do limite. O gestor pode cadastrar nome/cor sem sair do card.
+- Modais mantêm o cabeçalho estável, rolagem no conteúdo, espaçamento entre campos e ações no rodapé do formulário. Escape em uma lista fecha somente a lista e devolve o foco ao seletor.
+- Checkboxes e radios não recebem altura mínima, padding ou sombra dos campos de texto; mantêm foco visível para teclado e cor do tema.
+- A navegação de Etiquetas usa o ícone de etiquetas; a medalha permanece em Embaixadores.
+- Essas interações estão na demo. A persistência dos vínculos de catálogo no ambiente autenticado deve ser implementada com o schema correspondente, sem reutilizar o storage fictício.

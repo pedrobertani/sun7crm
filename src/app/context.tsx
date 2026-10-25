@@ -1,3 +1,4 @@
+import { recordContactChanges } from '../domain/contact-history';
 import { createContext, useContext, useState, useMemo, type ReactNode } from 'react';
 import type { CrmRepository } from '../data/repository';
 import type { Snapshot, Session } from '../domain/types';
@@ -68,7 +69,7 @@ export function CrmProvider({
       notice,
       update: (f: (d: Snapshot) => Snapshot) => {
         try {
-          const next = f(data);
+          const next = recordContactChanges(data, f(data), session);
           repository.write(next);
           setData(next);
           return true;

@@ -1,0 +1,23 @@
+.contact-transfer-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.contact-transfer-preview {
+  max-height: 300px;
+  overflow: auto;
+  margin-top: 16px;
+}
+.contact-transfer-preview th {
+  position: sticky;
+  top: 0;
+  background: var(--card, #fff);
+}
+.contact-transfer-preview td {
+  white-space: normal;
+  min-width: 90px;
+}
+.contact-transfer-preview td:last-child {
+  min-width: 200px;
+}

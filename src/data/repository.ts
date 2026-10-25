@@ -1,5 +1,6 @@
 import type { Snapshot } from '../domain/types';
 import { createSeed } from './seed';
+import { marketingSeed } from './marketingSeed';
 export interface CrmRepository {
   read(): Snapshot;
   write(data: Snapshot): void;
@@ -15,7 +16,40 @@ export class BrowserRepository implements CrmRepository {
     try {
       const data: unknown = JSON.parse(raw);
       if (!isSnapshot(data)) throw Error('Formato incompatível');
-      return data;
+      const examples = marketingSeed(data.companies);
+      // Migração aditiva: preserva os cadastros locais de versões anteriores.
+      return {
+        ...data,
+        labels:
+          data.labels ||
+          data.companies.flatMap((c) => [
+            { id: c.id + '-cold', companyId: c.id, name: 'Frio', color: '#3b82f6' },
+            { id: c.id + '-warm', companyId: c.id, name: 'Morno', color: '#eab308' },
+            { id: c.id + '-hot', companyId: c.id, name: 'Quente', color: '#ef4444' },
+          ]),
+        opportunities: data.opportunities.map((o) =>
+          o.labelIds
+            ? o
+            : {
+                ...o,
+                labelIds: (() => {
+                  const t = data.contacts.find((c) => c.id === o.contactId)?.temperature;
+                  return ['cold', 'warm', 'hot'].includes(t || '') && !data.labels
+                    ? [o.companyId + '-' + t]
+                    : [];
+                })(),
+              },
+        ),
+        contactHistory: Array.isArray(data.contactHistory) ? data.contactHistory : [],
+        catalog: data.catalog || [],
+        ambassadorCampaigns: data.ambassadorCampaigns || [],
+        ambassadorPayments: data.ambassadorPayments || [],
+        strategies: Array.isArray(data.strategies) ? data.strategies : examples.strategies,
+        ambassadors: Array.isArray(data.ambassadors) ? data.ambassadors : examples.ambassadors,
+        ambassadorSales: Array.isArray(data.ambassadorSales)
+          ? data.ambassadorSales
+          : examples.ambassadorSales,
+      };
     } catch {
       this.storage.removeItem(KEY);
       return createSeed();

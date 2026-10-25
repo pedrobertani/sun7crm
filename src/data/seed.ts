@@ -1,6 +1,7 @@
 import type { Snapshot } from '../domain/types';
 import { today, shiftDate } from '../lib/format';
 import { defaultStages } from '../domain/config';
+import { marketingSeed } from './marketingSeed';
 export function createSeed(): Snapshot {
   const date = today();
   const companies: Snapshot['companies'] = [
@@ -191,5 +192,27 @@ export function createSeed(): Snapshot {
       done: true,
     },
   ]);
-  return { version: 1, companies, members, boards, contacts, opportunities, tasks };
+  return {
+    version: 1,
+    companies,
+    members,
+    boards,
+    contacts,
+    opportunities: opportunities.map((o) => ({
+      ...o,
+      labelIds: [
+        o.companyId + '-' + contacts.find((c) => c.id === o.contactId)!.temperature,
+      ].filter((id) => !id.endsWith('unclassified')),
+    })),
+    tasks,
+    labels: companies.flatMap((c) => [
+      { id: c.id + '-cold', companyId: c.id, name: 'Frio', color: '#3b82f6' },
+      { id: c.id + '-warm', companyId: c.id, name: 'Morno', color: '#eab308' },
+      { id: c.id + '-hot', companyId: c.id, name: 'Quente', color: '#ef4444' },
+    ]),
+    catalog: [],
+    ambassadorCampaigns: [],
+    ambassadorPayments: [],
+    ...marketingSeed(companies),
+  };
 }
