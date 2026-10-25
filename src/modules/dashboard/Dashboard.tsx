@@ -35,6 +35,7 @@ import { visibleContacts } from '../../domain/operations';
 import { today, shiftDate, currency, dateLabel } from '../../lib/format';
 import { Heading, Kpi, Panel, Empty } from '../../components/shared';
 import { Button } from '../../components/ui/button';
+import { ADMIN_CHART_COLORS } from '../admin/theme';
 const adminPalette = themePalette('sun7').chart;
 function ChartEmpty() {
   return (
@@ -326,12 +327,17 @@ export function AdminDashboardView({
   companies: portfolio,
   basePath = '/admin',
   live = true,
+  dark = false,
 }: {
   companies: Company[];
   basePath?: string;
   live?: boolean;
+  dark?: boolean;
 }) {
-  const palette = adminPalette;
+  const palette = dark ? ADMIN_CHART_COLORS : adminPalette;
+  const tooltipStyle = dark
+    ? { background: '#1e201a', color: '#f2f0e8', border: '1px solid #414438', borderRadius: 10 }
+    : undefined;
   const [filter, setFilter] = useState('all');
   const [days, setDays] = useState('30');
   const date = today();
@@ -424,7 +430,11 @@ export function AdminDashboardView({
           <div className="chart">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chart} margin={{ left: -20, right: 12, top: 10 }}>
-                <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#eaf0ee" />
+                <CartesianGrid
+                  vertical={false}
+                  strokeDasharray="3 3"
+                  stroke={dark ? '#30322c' : '#eaf0ee'}
+                />
                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
                 <YAxis
                   allowDecimals={false}
@@ -432,7 +442,11 @@ export function AdminDashboardView({
                   tickLine={false}
                   tick={{ fontSize: 11 }}
                 />
-                <Tooltip cursor={{ fill: '#f0f6f4' }} />
+                <Tooltip
+                  cursor={{ fill: dark ? '#282b22' : '#f0f6f4' }}
+                  contentStyle={tooltipStyle}
+                  itemStyle={dark ? { color: '#f2f0e8' } : undefined}
+                />
                 <Bar
                   name="Novas empresas"
                   dataKey="empresas"
@@ -464,7 +478,10 @@ export function AdminDashboardView({
                     <Cell key={s.name} fill={palette[i]} />
                   ))}
                 </Pie>
-                <Tooltip />
+                <Tooltip
+                  contentStyle={tooltipStyle}
+                  itemStyle={dark ? { color: '#f2f0e8' } : undefined}
+                />
               </PieChart>
             </ResponsiveContainer>
           </div>
