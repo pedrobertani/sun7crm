@@ -24,7 +24,7 @@ import {
   CreditCard,
 } from 'lucide-react';
 import { useCrm } from './context';
-import { previewRoleLabels, roleLabels } from '../domain/config';
+import { roleLabels } from '../domain/config';
 import type { Role } from '../domain/types';
 import { initials } from '../lib/format';
 import { Button } from '../components/ui/button';
@@ -217,25 +217,11 @@ export function AppShell() {
                 <select
                   aria-label="Empresa da prévia"
                   value={session.companyId}
-                  onChange={(e) => switchView(session.role, e.target.value)}
+                  onChange={(e) => switchView('manager', e.target.value)}
                 >
                   {data.companies.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                <span className="sr-only">Perfil da prévia</span>
-                <select
-                  aria-label="Perfil da prévia"
-                  value={session.role}
-                  onChange={(e) => switchView(e.target.value as Role)}
-                >
-                  {Object.entries(previewRoleLabels).map(([v, l]) => (
-                    <option key={v} value={v}>
-                      {l}
                     </option>
                   ))}
                 </select>
@@ -246,9 +232,7 @@ export function AppShell() {
             <div className="page">
               <div className="prototype-note">
                 <FlaskConical size={14} />
-                <span>
-                  Dados fictícios salvos neste navegador. Perfis simulados para validação.
-                </span>
+                <span>Dados fictícios salvos neste navegador. Explore todas as funcionalidades.</span>
                 <Button
                   variant="ghost"
                   size="sm"

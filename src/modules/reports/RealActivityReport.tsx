@@ -1,3 +1,4 @@
+import { useOperational } from '../workspace/operational';
 import { useEffect, useState } from 'react';
 import { getSupabaseClient } from '../../lib/supabase';
 import { Button } from '../../components/ui/button';
@@ -7,6 +8,7 @@ import { recordRealWhatsapp } from '../contacts/real-history';
 import type { ActivityRow, ActorActivity } from './activity';
 
 export function RealActivityReport({ companyId }: { companyId: string }) {
+  const { can } = useOperational();
   const [rows, setRows] = useState<ActivityRow[] | null>(null),
     [actors, setActors] = useState<ActorActivity[]>([]),
     [error, setError] = useState(''),
@@ -93,6 +95,7 @@ export function RealActivityReport({ companyId }: { companyId: string }) {
         </div>
       ) : rows ? (
         <ActivityReportView
+          canWhatsapp={can('history.whatsapp')}
           rows={rows}
           actors={actors}
           onHistory={setSelected}
@@ -110,7 +113,8 @@ export function RealActivityReport({ companyId }: { companyId: string }) {
           key={companyId + selected.contactId}
           companyId={companyId}
           contact={{ id: selected.contactId, name: selected.name, phone: selected.phone }}
-          canAdd
+          canAdd={can('history.create')}
+          canWhatsapp={can('history.whatsapp')}
           onClose={() => {
             setSelected(null);
             setRefresh((n) => n + 1);

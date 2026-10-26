@@ -243,7 +243,7 @@ function ContactFields({
   onClose: () => void;
   onSaved: (row: ContactRow) => void;
 }) {
-  const { api, company } = useOperational(),
+  const { api, company, can, companyScope } = useOperational(),
     c = data.contact;
   const [form, setForm] = useState({
       name: c?.name || name,
@@ -314,7 +314,7 @@ function ContactFields({
               <select
                 required
                 value={form.owner_membership_id}
-                disabled={company.role !== 'manager'}
+                disabled={!companyScope}
                 onChange={(e) => setForm({ ...form, owner_membership_id: e.target.value })}
               >
                 {team
@@ -339,7 +339,7 @@ function ContactFields({
             }))}
             value={form.catalog_ids}
             onChange={(catalog_ids) => setForm({ ...form, catalog_ids })}
-            onCreate={company.role === 'manager' ? setAdding : undefined}
+            onCreate={can('catalog.create') ? setAdding : undefined}
             createLabel="Cadastrar serviço ou produto"
           />
           <label className="form-row">

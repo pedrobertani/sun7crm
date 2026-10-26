@@ -57,9 +57,10 @@ export function removedStageTarget(
   return next.find((n) => n.id === (prior || fallback)?.id) || next[0];
 }
 export function RealKanban() {
-  const { api, company, refresh, notice } = useOperational(),
-    manager = company.role === 'manager',
-    writable = company.role !== 'reception';
+  const { api, company, can, refresh, notice } = useOperational(),
+    manager =
+      can('boards.edit') || ['create', 'edit', 'delete', 'reorder'].some((a) => can('stages.' + a)),
+    writable = can('cards.edit');
   const [params, setParams] = useSearchParams(),
     boardId = params.get('funil') || '',
     contactId = params.get('contato') || '',
@@ -67,6 +68,7 @@ export function RealKanban() {
   const [page, setPage] = useState(0),
     [search, setSearch] = useState(''),
     [editing, setEditing] = useState<CardRow | 'new' | null>(null),
+    [deleting, setDeleting] = useState<CardRow | null>(null),
     [newBoard, setNewBoard] = useState(false),
     [stagesOpen, setStagesOpen] = useState(false),
     [history, setHistory] = useState<{ contact: ContactRow; cardId: string } | null>(null);
@@ -187,7 +189,7 @@ export function RealKanban() {
                   {b.name}
                 </button>
               ))}
-              {manager && (
+              {can('boards.create') && (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -205,7 +207,7 @@ export function RealKanban() {
                   Personalizar etapas
                 </Button>
               )}
-              {writable && board && (
+              {can('cards.create') && board && (
                 <Button onClick={() => setEditing('new')}>
                   <Plus size={16} />
                   Novo card
@@ -285,6 +287,18 @@ export function RealKanban() {
                                       </button>
                                     )}
                                     <strong>{card.title || contact?.name || 'Oportunidade'}</strong>
+                                    {can('cards.delete') && (
+                                      <button
+                                        type="button"
+                                        className="icon-button"
+                                        aria-label={
+                                          'Excluir ' + (card.title || contact?.name || 'card')
+                                        }
+                                        onClick={() => setDeleting(card)}
+                                      >
+                                        <Trash2 size={15} />
+                                      </button>
+                                    )}
                                     {writable && (
                                       <button
                                         className="icon-button"
@@ -331,6 +345,7 @@ export function RealKanban() {
                                   {contact && (
                                     <div className="operational-card-actions">
                                       <WhatsAppButton
+                                        disabled={!can('history.whatsapp')}
                                         compact
                                         name={contact.name}
                                         phone={contact.phone}
@@ -347,6 +362,7 @@ export function RealKanban() {
                                       <Button
                                         variant="ghost"
                                         size="sm"
+                                        disabled={!can('history.view')}
                                         onClick={() => setHistory({ contact, cardId: card.id })}
                                       >
                                         <History size={15} />
@@ -437,13 +453,25 @@ export function RealKanban() {
           }}
         />
       )}
+      {deleting && (
+        <DeleteCardDialog
+          card={deleting}
+          onClose={() => setDeleting(null)}
+          onSaved={() => {
+            setDeleting(null);
+            refresh();
+            notice('Card excluído. O histórico foi preservado.');
+          }}
+        />
+      )}
       {history && (
         <RealContactHistory
           key={history.cardId}
           companyId={company.id}
           contact={history.contact}
           cardId={history.cardId}
-          canAdd={writable}
+          canAdd={can('history.create')}
+          canWhatsapp={can('history.whatsapp')}
           onClose={() => setHistory(null)}
         />
       )}
@@ -489,13 +517,13 @@ function StageEditor({
   onClose: () => void;
   onSaved: () => void;
 }) {
-  const { api } = useOperational(),
+  const { api, can } = useOperational(),
     save = useSave(),
     [name, setName] = useState(board.name),
     [items, setItems] = useState(stages.map((s) => ({ id: s.id, name: s.name }))),
     [remove, setRemove] = useState('');
   function reorder(from: number, to: number) {
-    if (from === to || to < 0 || to >= items.length) return;
+    if (!can('stages.reorder') || from === to || to < 0 || to >= items.length) return;
     setItems((old) => {
       const next = [...old];
       next.splice(to, 0, next.splice(from, 1)[0]);
@@ -533,6 +561,7 @@ function StageEditor({
             <Input
               required
               maxLength={100}
+              disabled={!can('boards.edit')}
               value={name}
               onChange={(e) => setName(e.target.value)}
             />
@@ -552,6 +581,7 @@ function StageEditor({
                   required
                   maxLength={50}
                   aria-label={'Nome da etapa ' + (index + 1)}
+                  disabled={!can('stages.edit') && stages.some((old) => old.id === s.id)}
                   value={s.name}
                   onChange={(e) =>
                     setItems((old) =>
@@ -563,7 +593,7 @@ function StageEditor({
                   type="button"
                   className="icon-button"
                   aria-label={'Subir ' + s.name}
-                  disabled={!index}
+                  disabled={!can('stages.reorder') || !index}
                   onClick={() => reorder(index, index - 1)}
                 >
                   <ArrowUp size={15} />
@@ -572,7 +602,7 @@ function StageEditor({
                   type="button"
                   className="icon-button"
                   aria-label={'Descer ' + s.name}
-                  disabled={index === items.length - 1}
+                  disabled={!can('stages.reorder') || index === items.length - 1}
                   onClick={() => reorder(index, index + 1)}
                 >
                   <ArrowDown size={15} />
@@ -581,7 +611,7 @@ function StageEditor({
                   type="button"
                   className="icon-button"
                   aria-label={'Excluir etapa ' + s.name}
-                  disabled={items.length === 1}
+                  disabled={!can('stages.delete') || items.length === 1}
                   onClick={() => setRemove(s.id)}
                 >
                   <Trash2 size={15} />
@@ -592,7 +622,7 @@ function StageEditor({
           <Button
             type="button"
             variant="outline"
-            disabled={items.length >= 10}
+            disabled={!can('stages.create') || items.length >= 10}
             onClick={() => setItems([...items, { id: uid(), name: '' }])}
           >
             <Plus size={16} />
@@ -705,9 +735,9 @@ function CardFields({
   onSaved: () => void;
   save: ReturnType<typeof useSave>;
 }) {
-  const { api, company } = useOperational(),
-    readOnly = company.role === 'reception',
+  const { api, can } = useOperational(),
     c = data.card,
+    readOnly = !can(c ? 'cards.edit' : 'cards.create'),
     initialBoard = c?.board_id || boardId;
   const [form, setForm] = useState({
       contact_id: c?.contact_id || '',
@@ -776,7 +806,9 @@ function CardFields({
                 rows: r.rows.map((c) => ({ id: c.id, label: c.name, detail: c.phone })),
               };
             }}
-            onCreate={(name) => setAdding({ kind: 'contact', name })}
+            onCreate={
+              can('contacts.create') ? (name) => setAdding({ kind: 'contact', name }) : undefined
+            }
             createLabel="Cadastrar novo contato"
           />
           <label className="form-row">
@@ -863,7 +895,7 @@ function CardFields({
             value={form.label_ids}
             onChange={(label_ids) => setForm({ ...form, label_ids })}
             onCreate={
-              company.role === 'manager' ? (name) => setAdding({ kind: 'label', name }) : undefined
+              can('labels.create') ? (name) => setAdding({ kind: 'label', name }) : undefined
             }
             createLabel="Cadastrar nova etiqueta"
           />
@@ -879,9 +911,7 @@ function CardFields({
             value={form.catalog_ids}
             onChange={(catalog_ids) => setForm({ ...form, catalog_ids })}
             onCreate={
-              company.role === 'manager'
-                ? (name) => setAdding({ kind: 'catalog', name })
-                : undefined
+              can('catalog.create') ? (name) => setAdding({ kind: 'catalog', name }) : undefined
             }
             createLabel="Cadastrar serviço ou produto"
           />
@@ -958,5 +988,39 @@ function CardFields({
         />
       )}
     </>
+  );
+}
+
+function DeleteCardDialog({
+  card,
+  onClose,
+  onSaved,
+}: {
+  card: CardRow;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const { api } = useOperational(),
+    save = useSave();
+  return (
+    <Modal
+      open
+      title="Excluir card?"
+      description="O card sairá do funil e o histórico de atendimento será preservado."
+      onOpenChange={(v) => !v && !save.busy && onClose()}
+    >
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          void save.run(async () => {
+            await api.deleteCard(card.id, card.row_version);
+            onSaved();
+          });
+        }}
+      >
+        <p>{card.title || 'Card selecionado'}</p>
+        <SaveActions save={save} onClose={onClose} label="Confirmar exclusão" />
+      </form>
+    </Modal>
   );
 }

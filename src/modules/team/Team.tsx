@@ -1,9 +1,10 @@
+import { PermissionTree } from '../permissions/PermissionTree';
+import { legacyPermissions, type EmployeePermissions } from '../permissions/model';
 import { Input } from '../../components/ui/input';
 import { useState, type FormEvent } from 'react';
 import { Plus, Pencil, UserRound, ShieldCheck } from 'lucide-react';
 import { useCrm } from '../../app/context';
 import type { Member } from '../../domain/types';
-import { roleLabels } from '../../domain/config';
 import { initials, uid } from '../../lib/format';
 import { Heading, SearchInput, FormActions, FormError } from '../../components/shared';
 import { Button } from '../../components/ui/button';
@@ -14,6 +15,11 @@ export function Team() {
   const [query, setQuery] = useState('');
   const [editing, setEditing] = useState<Member | null | undefined>();
   const [form, setForm] = useState(initial);
+  const [permissions, setPermissions] = useState<EmployeePermissions>({
+    keys: [],
+    scope: 'own',
+    version: 0,
+  });
   const [error, setError] = useState('');
   const [resetMember, setResetMember] = useState<Member | null>(null);
   const members = data.members.filter(
@@ -24,6 +30,9 @@ export function Team() {
   function open(m: Member | null) {
     setEditing(m);
     setForm(m ? { ...m } : initial);
+    setPermissions(
+      m?.permissions || (m ? legacyPermissions(m.role) : { keys: [], scope: 'own', version: 0 }),
+    );
     setError('');
   }
   function save(e: FormEvent) {
@@ -63,6 +72,7 @@ export function Team() {
     }
     const member: Member = {
       ...form,
+      permissions,
       name: form.name.trim(),
       email: form.email.trim(),
       id: editing?.id || uid(),
@@ -85,7 +95,7 @@ export function Team() {
       <Heading
         eyebrow="GESTÃO DA EMPRESA"
         title="Equipe"
-        description="Organize os responsáveis e os perfis de atuação na sua empresa."
+        description="Cadastre funcionários e explore as permissões por funcionalidade."
       >
         <Button onClick={() => open(null)}>
           <Plus size={16} />
@@ -105,7 +115,7 @@ export function Team() {
             <thead>
               <tr>
                 <th>Integrante</th>
-                <th>Perfil</th>
+                <th>Acesso</th>
                 <th>Situação</th>
                 <th>Ações</th>
               </tr>
@@ -122,7 +132,13 @@ export function Team() {
                       </div>
                     </div>
                   </td>
-                  <td>{roleLabels[m.role]}</td>
+                  <td>
+                    {m.role === 'manager'
+                      ? 'Gestor'
+                      : m.permissions?.keys.includes('team.manage')
+                        ? 'Administrador da empresa'
+                        : 'Permissões individuais'}
+                  </td>
                   <td>
                     <span className={'badge ' + (m.active ? 'good' : 'gray')}>
                       {m.active ? 'Ativo' : 'Inativo'}
@@ -154,8 +170,8 @@ export function Team() {
         </div>
       </div>
       <p className="small-note">
-        A desativação preserva os contatos e a autoria dos cadastros. Acesso real e senhas serão
-        conectados ao Supabase em outra etapa.
+        A desativação preserva os contatos e a autoria dos cadastros. Na demo, as alterações ficam
+        apenas neste navegador.
       </p>
       <Modal
         open={editing !== undefined}
@@ -183,18 +199,7 @@ export function Team() {
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
               />
             </label>
-            <label className="form-row">
-              Perfil
-              <select
-                disabled={editing?.role === 'manager'}
-                value={form.role}
-                onChange={(e) => setForm({ ...form, role: e.target.value as Member['role'] })}
-              >
-                {editing?.role === 'manager' && <option value="manager">Gestor</option>}
-                <option value="seller">Vendedor / Consultora</option>
-                <option value="reception">Recepção</option>
-              </select>
-            </label>
+
             <label className="form-row">
               Situação
               <select
@@ -207,6 +212,15 @@ export function Team() {
               </select>
             </label>
           </div>
+          <PermissionTree
+            value={permissions}
+            onChange={setPermissions}
+            disabled={editing?.role === 'manager'}
+          />
+          <p className="small-note">
+            Esta tela demonstra a configuração de acessos. A demo mantém todas as funcionalidades
+            disponíveis para exploração.
+          </p>
           <FormError message={error} />
           <FormActions onCancel={() => setEditing(undefined)} />
         </form>

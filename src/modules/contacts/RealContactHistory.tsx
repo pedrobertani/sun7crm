@@ -7,12 +7,14 @@ export function RealContactHistory({
   contact,
   companyId,
   canAdd,
+  canWhatsapp = true,
   onClose,
   cardId,
 }: {
   contact: { id: string; name: string; phone: string };
   companyId: string;
   canAdd: boolean;
+  canWhatsapp?: boolean;
   onClose: () => void;
   cardId?: string;
 }) {
@@ -92,6 +94,7 @@ export function RealContactHistory({
           .catch((e) => setError(e.message));
       }}
       canAdd={canAdd}
+      canWhatsapp={canWhatsapp}
       onAdd={async (body) => {
         if (!body.trim() || body.trim().length > 2000)
           throw Error('Escreva uma anotação de até 2.000 caracteres.');

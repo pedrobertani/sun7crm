@@ -1,7 +1,6 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { useCrm } from './context';
-import { previewRoleLabels } from '../domain/config';
 import type { Role } from '../domain/types';
 import { Button } from '../components/ui/button';
 import { PublicShell, BrandSymbol } from '../modules/public/PublicShell';
@@ -21,7 +20,7 @@ export function PreviewEntry() {
           <BrandSymbol className="access-symbol" />
           <span className="home-eyebrow">DEMONSTRAÇÃO DO SUN7CRM</span>
           <h1>Sua próxima boa conversa começa aqui.</h1>
-          <p>Escolha uma empresa e um perfil de exemplo para explorar o CRM.</p>
+          <p>Escolha uma empresa de exemplo e explore todas as funcionalidades do CRM.</p>
           <div className="access-note">
             <p>
               A demonstração usa dados fictícios para apresentar o produto. Não informe senhas ou
@@ -38,16 +37,14 @@ export function PreviewEntry() {
           <form
             onSubmit={(e) => {
               e.preventDefault();
+              choose('manager');
               enterPreview();
               navigate('/demo/painel');
             }}
           >
             <label className="form-row">
               Empresa de exemplo
-              <select
-                value={session.companyId}
-                onChange={(e) => choose(session.role, e.target.value)}
-              >
+              <select value={session.companyId} onChange={(e) => choose('manager', e.target.value)}>
                 {data.companies.map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.displayName || c.name}
@@ -55,16 +52,7 @@ export function PreviewEntry() {
                 ))}
               </select>
             </label>
-            <label className="form-row">
-              Perfil de exemplo
-              <select value={session.role} onChange={(e) => choose(e.target.value as Role)}>
-                {Object.entries(previewRoleLabels).map(([v, l]) => (
-                  <option key={v} value={v}>
-                    {l}
-                  </option>
-                ))}
-              </select>
-            </label>
+
             <Button>
               Continuar <ArrowRight size={17} />
             </Button>

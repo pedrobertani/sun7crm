@@ -5,15 +5,17 @@ export function WhatsAppButton({
   name,
   compact = false,
   onOpen,
+  disabled = false,
 }: {
   phone: string;
   name: string;
   compact?: boolean;
   onOpen?: () => void;
+  disabled?: boolean;
 }) {
   const href = whatsappLink(phone),
     label = 'Abrir WhatsApp de ' + name;
-  return href ? (
+  return href && !disabled ? (
     <a
       className={'whatsapp-button ' + (compact ? 'whatsapp-compact' : '')}
       href={href}
@@ -35,7 +37,11 @@ export function WhatsAppButton({
       type="button"
       disabled
       aria-label={label + ' — telefone com DDD não informado'}
-      title="Cadastre um telefone válido com DDD"
+      title={
+        disabled
+          ? 'Você não tem permissão para abrir o WhatsApp pelo CRM'
+          : 'Cadastre um telefone válido com DDD'
+      }
     >
       <MessageCircle size={17} aria-hidden="true" />
       {!compact && <span>WhatsApp</span>}

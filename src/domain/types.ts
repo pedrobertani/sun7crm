@@ -17,6 +17,7 @@ export interface Company {
   theme?: CrmTheme;
 }
 export interface Member {
+  permissions?: import('../modules/permissions/model').EmployeePermissions;
   id: string;
   companyId: string;
   name: string;

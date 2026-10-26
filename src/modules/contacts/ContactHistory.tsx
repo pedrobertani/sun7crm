@@ -19,6 +19,7 @@ export function ContactHistoryDialog({
   onClose,
   items,
   canAdd,
+  canWhatsapp = true,
   onAdd,
   loading = false,
   error = '',
@@ -31,6 +32,7 @@ export function ContactHistoryDialog({
   onClose: () => void;
   items: ContactHistoryEvent[];
   canAdd: boolean;
+  canWhatsapp?: boolean;
   onAdd: (body: string) => Promise<void>;
   loading?: boolean;
   error?: string;
@@ -73,7 +75,12 @@ export function ContactHistoryDialog({
               <strong>{contact.name}</strong>
               <small>{formatContactPhone(contact.phone) || 'Telefone não informado'}</small>
             </div>
-            <WhatsAppButton name={contact.name} phone={contact.phone} onOpen={onWhatsApp} />
+            <WhatsAppButton
+              disabled={!canWhatsapp}
+              name={contact.name}
+              phone={contact.phone}
+              onOpen={onWhatsApp}
+            />
           </div>
           {canAdd && (
             <form

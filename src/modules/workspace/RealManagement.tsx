@@ -1,3 +1,5 @@
+import { PermissionTree } from '../permissions/PermissionTree';
+import { type EmployeePermissions } from '../permissions/model';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, Users, ListTodo, KanbanSquare, Wallet, History, Clock3 } from 'lucide-react';
@@ -9,7 +11,6 @@ import { Empty, Kpi, Panel } from '../../components/shared';
 import type { TeamRow, CardActivity } from '../../data/backend';
 import { currency, dateLabel, today, uid } from '../../lib/format';
 import { CRM_THEMES } from '../../lib/themes';
-import { roleLabels } from '../../domain/config';
 import { RealContactHistory } from '../contacts/RealContactHistory';
 import { RealActivityReport } from '../reports/RealActivityReport';
 import { Pager, QueryState, SaveActions, useOperational, useQuery, useSave } from './operational';
@@ -171,7 +172,7 @@ export function RealDashboard() {
   );
 }
 export function RealReports() {
-  const { api, company, revision } = useOperational(),
+  const { api, company, can, revision } = useOperational(),
     [tab, setTab] = useState<'cards' | 'contacts'>('cards'),
     [page, setPage] = useState(0),
     [history, setHistory] = useState<CardActivity | null>(null);
@@ -294,7 +295,8 @@ export function RealReports() {
           companyId={company.id}
           contact={{ id: history.contact_id, name: history.contact_name, phone: history.phone }}
           cardId={history.opportunity_id}
-          canAdd
+          canAdd={can('history.create')}
+          canWhatsapp={can('history.whatsapp')}
           onClose={() => {
             setHistory(null);
             query.retry();
@@ -305,8 +307,9 @@ export function RealReports() {
   );
 }
 export function RealTeam() {
-  const { api, user, refresh, notice } = useOperational(),
+  const { api, user, can, refresh, notice } = useOperational(),
     query = useQuery(() => api.team(), [api]),
+    [permissionsFor, setPermissionsFor] = useState<TeamRow | null>(null),
     [editing, setEditing] = useState<TeamRow | null>(null),
     [creating, setCreating] = useState(false),
     [resetting, setResetting] = useState<TeamRow | null>(null);
@@ -314,9 +317,10 @@ export function RealTeam() {
     <>
       <div className="operational-toolbar">
         <p className="small-note">
-          Gerencie a equipe da empresa e redistribua a carteira ao desativar um integrante.
+          Cadastre funcionários, defina as permissões e redistribua a carteira ao desativar um
+          integrante.
         </p>
-        <Button onClick={() => setCreating(true)}>
+        <Button disabled={!can('team.manage')} onClick={() => setCreating(true)}>
           <Plus size={16} />
           Adicionar integrante
         </Button>
@@ -328,7 +332,7 @@ export function RealTeam() {
             <thead>
               <tr>
                 <th>Integrante</th>
-                <th>Perfil</th>
+                <th>Acesso</th>
                 <th>Situação</th>
                 <th>Ações</th>
               </tr>
@@ -340,11 +344,14 @@ export function RealTeam() {
                     <strong>{row.display_name}</strong>
                     <small className="operational-cell-note">{row.email}</small>
                   </td>
-                  <td>{roleLabels[row.role]}</td>
+                  <td>{row.role === 'manager' ? 'Gestor' : 'Permissões individuais'}</td>
                   <td>{row.active ? 'Ativo' : 'Inativo'}</td>
                   <td>
-                    {row.role !== 'manager' && row.user_id !== user.id ? (
+                    {can('team.manage') && row.role !== 'manager' && row.user_id !== user.id ? (
                       <div className="actions">
+                        <Button variant="outline" size="sm" onClick={() => setPermissionsFor(row)}>
+                          Permissões
+                        </Button>
                         <Button variant="outline" size="sm" onClick={() => setEditing(row)}>
                           Editar
                         </Button>
@@ -361,6 +368,17 @@ export function RealTeam() {
             </tbody>
           </table>
         </div>
+      )}
+      {permissionsFor && (
+        <EmployeePermissionsDialog
+          row={permissionsFor}
+          onClose={() => setPermissionsFor(null)}
+          onSaved={() => {
+            setPermissionsFor(null);
+            refresh();
+            notice('Permissões atualizadas. As regras já estão valendo no banco.');
+          }}
+        />
       )}
       {editing && query.data && (
         <MemberDialog
@@ -439,16 +457,7 @@ function MemberDialog({
               onChange={(e) => setForm({ ...form, display_name: e.target.value })}
             />
           </label>
-          <label className="form-row">
-            Perfil
-            <select
-              value={form.role}
-              onChange={(e) => setForm({ ...form, role: e.target.value as 'seller' | 'reception' })}
-            >
-              <option value="seller">Consultor(a)</option>
-              <option value="reception">Recepção</option>
-            </select>
-          </label>
+
           <label className="operational-check">
             <input
               type="checkbox"
@@ -463,7 +472,7 @@ function MemberDialog({
               <select required value={target} onChange={(e) => setTarget(e.target.value)}>
                 <option value="">Selecione o novo responsável</option>
                 {members
-                  .filter((m) => m.active && m.id !== row.id && m.role !== 'reception')
+                  .filter((m) => m.active && m.id !== row.id)
                   .map((m) => (
                     <option key={m.id} value={m.id}>
                       {m.display_name}
@@ -487,9 +496,15 @@ function validPassword(value: string) {
     throw Error('Use uma senha inicial com pelo menos 12 caracteres e no máximo 72 bytes.');
 }
 function CreateMember({ onClose, onSaved }: { onClose: () => void; onSaved: () => void }) {
-  const { api } = useOperational(),
+  const { api, company, companyScope } = useOperational(),
     save = useSave(),
     [requestId] = useState(uid),
+    [permissions, setPermissions] = useState<EmployeePermissions>({
+      keys: [],
+      scope: 'own',
+      version: 0,
+    }),
+    [provisioned, setProvisioned] = useState<string | null>(null),
     [form, setForm] = useState({
       display_name: '',
       email: '',
@@ -508,14 +523,22 @@ function CreateMember({ onClose, onSaved }: { onClose: () => void; onSaved: () =
           e.preventDefault();
           void save.run(async () => {
             validPassword(form.password);
-            await api.createMember(
-              {
-                ...form,
-                display_name: form.display_name.trim(),
-                email: form.email.trim().toLocaleLowerCase(),
-              },
-              requestId,
-            );
+            const result = provisioned
+              ? { membership_id: provisioned }
+              : await api.createMember(
+                  {
+                    ...form,
+                    display_name: form.display_name.trim(),
+                    email: form.email.trim().toLocaleLowerCase(),
+                  },
+                  requestId,
+                );
+            setProvisioned(result.membership_id);
+            const current = await api.employeePermissions(result.membership_id);
+            await api.saveEmployeePermissions(result.membership_id, {
+              ...permissions,
+              version: current.version,
+            });
             setForm({ ...form, password: '' });
             onSaved();
           });
@@ -542,16 +565,14 @@ function CreateMember({ onClose, onSaved }: { onClose: () => void; onSaved: () =
               onChange={(e) => setForm({ ...form, email: e.target.value })}
             />
           </label>
-          <label className="form-row">
-            Perfil
-            <select
-              value={form.role}
-              onChange={(e) => setForm({ ...form, role: e.target.value as 'seller' | 'reception' })}
-            >
-              <option value="seller">Consultor(a)</option>
-              <option value="reception">Recepção</option>
-            </select>
-          </label>
+
+          <PermissionTree
+            value={permissions}
+            availableKeys={company.permissions?.keys}
+            allowCompanyScope={companyScope}
+            onChange={setPermissions}
+            disabled={save.busy || save.uncertain}
+          />
           <label className="form-row">
             Senha inicial
             <Input
@@ -564,7 +585,17 @@ function CreateMember({ onClose, onSaved }: { onClose: () => void; onSaved: () =
             />
           </label>
         </fieldset>
-        <SaveActions save={save} onClose={onClose} label="Cadastrar integrante" />
+        {provisioned && (
+          <p role="status">
+            A conta foi criada sem acesso às funcionalidades. Conclua o salvamento das permissões;
+            não será criada uma segunda conta.
+          </p>
+        )}
+        <SaveActions
+          save={save}
+          onClose={onClose}
+          label={provisioned ? 'Salvar permissões' : 'Cadastrar funcionário'}
+        />
       </form>
     </Modal>
   );
@@ -642,7 +673,7 @@ function BrandForm({
   };
   onSaved: () => void;
 }) {
-  const { api, notice, refresh } = useOperational(),
+  const { api, can, notice, refresh } = useOperational(),
     save = useSave(),
     [name, setName] = useState(row.display_name || row.name),
     [theme, setTheme] = useState(row.theme),
@@ -680,7 +711,10 @@ function BrandForm({
           });
         }}
       >
-        <fieldset className="operational-fields" disabled={save.busy || save.uncertain}>
+        <fieldset
+          className="operational-fields"
+          disabled={!can('settings.edit') || save.busy || save.uncertain}
+        >
           <label className="form-row">
             Nome exibido
             <Input
@@ -729,17 +763,87 @@ function BrandForm({
             </label>
           )}
         </fieldset>
-        <SaveActions
-          save={save}
-          onClose={() => {
-            setName(row.display_name || row.name);
-            setTheme(row.theme);
-            setFile(null);
-            setRemove(false);
-          }}
-          label="Salvar identidade"
-        />
+        {can('settings.edit') && (
+          <SaveActions
+            save={save}
+            onClose={() => {
+              setName(row.display_name || row.name);
+              setTheme(row.theme);
+              setFile(null);
+              setRemove(false);
+            }}
+            label="Salvar identidade"
+          />
+        )}
       </form>
     </Panel>
+  );
+}
+
+function EmployeePermissionsDialog({
+  row,
+  onClose,
+  onSaved,
+}: {
+  row: TeamRow;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const { api } = useOperational(),
+    query = useQuery(() => api.employeePermissions(row.id), [api, row.id]);
+  return (
+    <Modal
+      open
+      title={'Permissões · ' + row.display_name}
+      description="Expanda os grupos e escolha as ações que este funcionário poderá realizar."
+      onOpenChange={(v) => !v && onClose()}
+    >
+      <QueryState query={query} />
+      {query.data && (
+        <EmployeePermissionsForm
+          key={row.id + ':' + query.data.version}
+          memberId={row.id}
+          initial={query.data}
+          onClose={onClose}
+          onSaved={onSaved}
+        />
+      )}
+    </Modal>
+  );
+}
+function EmployeePermissionsForm({
+  memberId,
+  initial,
+  onClose,
+  onSaved,
+}: {
+  memberId: string;
+  initial: EmployeePermissions;
+  onClose: () => void;
+  onSaved: () => void;
+}) {
+  const { api, company, companyScope } = useOperational(),
+    save = useSave(),
+    [value, setValue] = useState(initial);
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        void save.run(async () => {
+          await api.saveEmployeePermissions(memberId, value);
+          onSaved();
+        });
+      }}
+    >
+      <fieldset disabled={save.busy || save.uncertain}>
+        <PermissionTree
+          value={value}
+          availableKeys={company.permissions?.keys}
+          allowCompanyScope={companyScope}
+          onChange={setValue}
+        />
+      </fieldset>
+      <SaveActions save={save} onClose={onClose} label="Salvar permissões" />
+    </form>
   );
 }

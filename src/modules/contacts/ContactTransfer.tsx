@@ -12,6 +12,7 @@ import { prepareContactsDownload, readContactsExcel } from './excel';
 import './transfer.css';
 export function ContactTransfer({
   canImport,
+  canExport = true,
   loadContacts,
   loadExisting,
   onImport,
@@ -22,6 +23,7 @@ export function ContactTransfer({
   demo = false,
 }: {
   canImport: boolean;
+  canExport?: boolean;
   loadContacts: () => Promise<TransferContact[]>;
   loadExisting?: () => Promise<TransferContact[]>;
   onImport: (contacts: TransferContact[]) => Promise<number>;
@@ -103,7 +105,7 @@ export function ContactTransfer({
             Importar Excel
           </Button>
         )}
-        <Button variant="outline" onClick={() => open('export')}>
+        <Button disabled={!canExport} variant="outline" onClick={() => open('export')}>
           Exportar Excel
         </Button>
       </div>

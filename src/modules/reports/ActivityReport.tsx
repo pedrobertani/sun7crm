@@ -24,11 +24,13 @@ export function ActivityReportView({
   actors,
   onHistory,
   onWhatsapp,
+  canWhatsapp = true,
 }: {
   rows: ActivityRow[];
   actors: ActorActivity[];
   onHistory: (row: ActivityRow) => void;
   onWhatsapp: (row: ActivityRow) => void;
+  canWhatsapp?: boolean;
 }) {
   const [query, setQuery] = useState(''),
     [owner, setOwner] = useState(''),
@@ -133,6 +135,7 @@ export function ActivityReportView({
                   <td>
                     <div className="actions">
                       <WhatsAppButton
+                        disabled={!canWhatsapp}
                         phone={r.phone}
                         name={r.name}
                         compact
