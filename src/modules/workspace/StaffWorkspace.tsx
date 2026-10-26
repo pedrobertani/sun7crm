@@ -24,7 +24,7 @@ import { ThemeProvider } from '../../components/theme-provider';
 import { getSupabaseClient } from '../../lib/supabase';
 import { initials } from '../../lib/format';
 import { themeStyle, type CrmTheme } from '../../lib/themes';
-import { roleLabels } from '../../domain/config';
+import { legacyPermissions } from '../permissions/model';
 import { loadAccountAccess, type AccountUser } from '../auth/access';
 import { PublicShell } from '../public/PublicShell';
 import { NotificationBell } from '../notifications/NotificationBell';
@@ -133,8 +133,16 @@ export function StaffWorkspace({
           const data = Array.isArray(member.crm_companies)
             ? member.crm_companies[0]
             : member.crm_companies;
-          if (data && ['manager', 'seller', 'reception'].includes(member.role))
+          if (data && ['manager', 'seller', 'reception'].includes(member.role)) {
+            const grants = await client.rpc('crm_employee_permissions', { p_company: data.id });
+            if (
+              grants.error ||
+              !Array.isArray(grants.data?.keys) ||
+              !['own', 'company'].includes(grants.data?.scope)
+            )
+              throw Error('Permissões indisponíveis');
             items.push({
+              permissions: grants.data,
               id: data.id,
               membershipId: member.id,
               name: data.display_name || data.name,
@@ -142,6 +150,7 @@ export function StaffWorkspace({
               theme: data.theme,
               logoPath: data.logo_path,
             });
+          }
         }
         if (active) {
           setWorkspaces(items);
@@ -223,12 +232,28 @@ export function StaffWorkspace({
       </PublicShell>
     );
   const colors = themeStyle(company.theme),
-    links = operationalNavigation.filter((n) => !n.manager || company.role === 'manager'),
+    granted = (key: string) =>
+      (company.permissions || legacyPermissions(company.role)).keys.includes(key),
+    sectionPermission: Record<string, string> = {
+      '/app/funil': 'cards.view',
+      '/app/contatos': 'contacts.view',
+      '/app/tarefas': 'tasks.view',
+      '/app': 'dashboard.view',
+      '/app/estrategias': 'strategies.view',
+      '/app/embaixadores': 'ambassadors.view',
+      '/app/catalogo': 'catalog.view',
+      '/app/etiquetas': 'labels.view',
+      '/app/relatorios': 'reports.view',
+      '/app/equipe': 'team.view',
+      '/app/configuracoes': 'settings.view',
+      '/app/plano': 'plan.view',
+    },
+    links = operationalNavigation.filter((n) => granted(sectionPermission[n.to])),
     allowed = access?.companyId === company.id ? access.access_allowed : null;
   return (
     <ThemeProvider style={colors}>
       <OperationalProvider
-        key={company.id + ':' + company.role}
+        key={company.id + ':' + JSON.stringify(company.permissions)}
         company={company}
         user={user}
         onRecheck={onRecheck}
@@ -277,7 +302,13 @@ export function StaffWorkspace({
                 <span className="avatar">{initials(user.displayName)}</span>
                 <span>
                   <strong>{user.displayName}</strong>
-                  <small>{roleLabels[company.role]}</small>
+                  <small>
+                    {company.role === 'manager'
+                      ? 'Gestor'
+                      : granted('team.manage')
+                        ? 'Administrador da empresa'
+                        : 'Funcionário'}
+                  </small>
                 </span>
                 <button
                   className="logout-button"
@@ -338,7 +369,7 @@ export function StaffWorkspace({
             <main className="workspace" id="main">
               <div className="page">
                 <Heading
-                  eyebrow={roleLabels[company.role].toLocaleUpperCase('pt-BR')}
+                  eyebrow="ÁREA DE TRABALHO"
                   title={
                     section.to === '/app' ? `Olá, ${user.displayName.split(' ')[0]}` : section.label
                   }
@@ -358,7 +389,7 @@ export function StaffWorkspace({
                 {allowed === null ? (
                   <p role="status">Verificando o período de acesso...</p>
                 ) : !allowed ? (
-                  company.role === 'manager' ? (
+                  granted('plan.view') ? (
                     <RealPlan key={company.id + tick} companyId={company.id} />
                   ) : (
                     <div className="card panel">
@@ -368,8 +399,14 @@ export function StaffWorkspace({
                       />
                     </div>
                   )
-                ) : section.manager && company.role !== 'manager' ? (
-                  <p>Esta área é exclusiva do gestor.</p>
+                ) : !granted(sectionPermission[section.to]) ? (
+                  <div className="card panel">
+                    <Empty
+                      title="Funcionalidade sem acesso"
+                      description="Peça ao administrador da empresa para liberar esta funcionalidade nas suas permissões."
+                    />
+                    {links[0] && <Link to={links[0].to}>Abrir {links[0].label}</Link>}
+                  </div>
                 ) : (
                   <OperationalContent
                     path={section.to}

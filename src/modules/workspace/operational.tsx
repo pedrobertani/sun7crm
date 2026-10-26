@@ -12,6 +12,7 @@ import { OperationalBackend, BackendError, type TeamRow } from '../../data/backe
 import { getSupabaseClient } from '../../lib/supabase';
 import { Button } from '../../components/ui/button';
 import { FormError } from '../../components/shared';
+import { legacyPermissions, type EmployeePermissions } from '../permissions/model';
 import type { AccountUser } from '../auth/access';
 
 export interface OperationalCompany {
@@ -19,8 +20,11 @@ export interface OperationalCompany {
   membershipId: string;
   name: string;
   role: 'manager' | 'seller' | 'reception';
+  permissions?: EmployeePermissions;
 }
 interface Context {
+  can: (key: string) => boolean;
+  companyScope: boolean;
   api: OperationalBackend;
   company: OperationalCompany;
   user: AccountUser;
@@ -57,6 +61,8 @@ export function OperationalProvider({
   return (
     <OperationalContext.Provider
       value={{
+        can: (key) => (company.permissions || legacyPermissions(company.role)).keys.includes(key),
+        companyScope: (company.permissions || legacyPermissions(company.role)).scope === 'company',
         api,
         company,
         user,
@@ -248,10 +254,10 @@ export function Pager({
   );
 }
 export function useTeam() {
-  const { api, company, user } = useOperational();
+  const { api, company, user, can } = useOperational();
   return useQuery(
     async () =>
-      company.role === 'manager'
+      can('team.view')
         ? api.team()
         : ([
             {

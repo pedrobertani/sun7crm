@@ -29,7 +29,7 @@ import {
 } from './operational';
 
 export function RealContacts() {
-  const { api, company, refresh, notice } = useOperational(),
+  const { api, can, company, refresh, notice } = useOperational(),
     [params, setParams] = useSearchParams(),
     selected = params.get('registro') || '';
   const [page, setPage] = useState(0),
@@ -54,7 +54,8 @@ export function RealContacts() {
         <div className="actions">
           <ContactTransfer
             key={company.id + company.membershipId}
-            canImport={company.role !== 'reception'}
+            canImport={can('contacts.import')}
+            canExport={can('contacts.export')}
             scopeLabel="permitidos para mim"
             loadContacts={() => loadTransferContacts(getSupabaseClient(), company.id)}
             filtered={
@@ -68,7 +69,7 @@ export function RealContacts() {
             }
             onImported={refresh}
           />
-          {company.role !== 'reception' && (
+          {can('contacts.create') && (
             <Button onClick={() => setEditing('new')}>
               <Plus size={16} />
               Novo contato
@@ -116,6 +117,7 @@ export function RealContacts() {
                     <td>
                       <div className="actions">
                         <WhatsAppButton
+                          disabled={!can('history.whatsapp')}
                           name={c.name}
                           phone={c.phone}
                           compact
@@ -125,11 +127,16 @@ export function RealContacts() {
                             )
                           }
                         />
-                        <Button variant="ghost" size="sm" onClick={() => setHistory(c)}>
+                        <Button
+                          disabled={!can('history.view')}
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setHistory(c)}
+                        >
                           <History size={15} />
                           Histórico
                         </Button>
-                        {company.role !== 'reception' && (
+                        {can('contacts.edit') && (
                           <Button variant="outline" size="sm" onClick={() => setEditing(c)}>
                             <Pencil size={14} />
                             Editar
@@ -170,7 +177,8 @@ export function RealContacts() {
           key={history.id}
           companyId={company.id}
           contact={history}
-          canAdd={company.role !== 'reception'}
+          canAdd={can('history.create')}
+          canWhatsapp={can('history.whatsapp')}
           onClose={() => setHistory(null)}
         />
       )}
@@ -178,7 +186,7 @@ export function RealContacts() {
   );
 }
 export function RealCatalog({ labels = false }: { labels?: boolean }) {
-  const { api, company, refresh, notice } = useOperational(),
+  const { api, can, refresh, notice } = useOperational(),
     [page, setPage] = useState(0),
     [search, setSearch] = useState(''),
     [editing, setEditing] = useState<CatalogRow | LabelRow | 'new' | null>(null);
@@ -203,7 +211,7 @@ export function RealCatalog({ labels = false }: { labels?: boolean }) {
           }}
           placeholder={labels ? 'Buscar etiqueta...' : 'Buscar serviço ou produto...'}
         />
-        {company.role === 'manager' && (
+        {can(labels ? 'labels.create' : 'catalog.create') && (
           <Button onClick={() => setEditing('new')}>
             <Plus size={16} />
             {labels ? 'Nova etiqueta' : 'Novo serviço ou produto'}
@@ -221,7 +229,7 @@ export function RealCatalog({ labels = false }: { labels?: boolean }) {
                   <th>{labels ? 'Cor' : 'Tipo'}</th>
                   {!labels && <th>Valor</th>}
                   <th>Situação</th>
-                  {company.role === 'manager' && <th>Ações</th>}
+                  {can(labels ? 'labels.edit' : 'catalog.edit') && <th>Ações</th>}
                 </tr>
               </thead>
               <tbody>
@@ -249,7 +257,7 @@ export function RealCatalog({ labels = false }: { labels?: boolean }) {
                     <td>
                       <span className="badge">{row.active ? 'Ativo' : 'Inativo'}</span>
                     </td>
-                    {company.role === 'manager' && (
+                    {can(labels ? 'labels.edit' : 'catalog.edit') && (
                       <td>
                         <Button variant="outline" size="sm" onClick={() => setEditing(row)}>
                           Editar
@@ -271,7 +279,15 @@ export function RealCatalog({ labels = false }: { labels?: boolean }) {
         </>
       )}
       {editing &&
-        company.role === 'manager' &&
+        can(
+          editing === 'new'
+            ? labels
+              ? 'labels.create'
+              : 'catalog.create'
+            : labels
+              ? 'labels.edit'
+              : 'catalog.edit',
+        ) &&
         (labels ? (
           <LabelDialog
             item={editing === 'new' ? undefined : (editing as LabelRow)}
@@ -289,7 +305,7 @@ export function RealCatalog({ labels = false }: { labels?: boolean }) {
   );
 }
 export function RealStrategies() {
-  const { api, company, refresh, notice } = useOperational(),
+  const { api, can, refresh, notice } = useOperational(),
     [page, setPage] = useState(0),
     [search, setSearch] = useState(''),
     [editing, setEditing] = useState<StrategyRow | 'new' | null>(null);
@@ -305,7 +321,7 @@ export function RealStrategies() {
           }}
           placeholder="Buscar estratégia..."
         />
-        {company.role === 'manager' && (
+        {can('strategies.create') && (
           <Button onClick={() => setEditing('new')}>
             <Plus size={16} />
             Nova estratégia
@@ -324,7 +340,7 @@ export function RealStrategies() {
                   <th>Canal</th>
                   <th>Orçamento</th>
                   <th>Situação</th>
-                  {company.role === 'manager' && <th>Ações</th>}
+                  {can('strategies.edit') && <th>Ações</th>}
                 </tr>
               </thead>
               <tbody>
@@ -345,7 +361,7 @@ export function RealStrategies() {
                           : 'Planejada'}
                       {!row.active ? ' · Inativa' : ''}
                     </td>
-                    {company.role === 'manager' && (
+                    {can('strategies.edit') && (
                       <td>
                         <Button variant="outline" size="sm" onClick={() => setEditing(row)}>
                           Editar
@@ -514,7 +530,7 @@ function StrategyDialog({
   );
 }
 export function RealTasks() {
-  const { api, refresh, notice } = useOperational(),
+  const { api, can, refresh, notice } = useOperational(),
     [params, setParams] = useSearchParams(),
     selected = params.get('registro') || '',
     [page, setPage] = useState(0),
@@ -535,7 +551,7 @@ export function RealTasks() {
           }}
           placeholder="Buscar tarefa..."
         />
-        <Button onClick={() => setEditing('new')}>
+        <Button disabled={!can('tasks.create')} onClick={() => setEditing('new')}>
           <Plus size={16} />
           Nova tarefa
         </Button>
@@ -595,7 +611,12 @@ export function RealTasks() {
                           : 'A fazer'}
                     </td>
                     <td>
-                      <Button variant="outline" size="sm" onClick={() => setEditing(row)}>
+                      <Button
+                        disabled={!can('tasks.edit')}
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setEditing(row)}
+                      >
                         Editar tarefa
                       </Button>
                     </td>
@@ -636,7 +657,7 @@ function TaskDialog({
   onClose: () => void;
   onSaved: () => void;
 }) {
-  const { api, company } = useOperational(),
+  const { api, can, companyScope, company } = useOperational(),
     team = useTeam(),
     save = useSave(),
     initial = useQuery(
@@ -729,7 +750,7 @@ function TaskDialog({
                   contact_id: ids[0] || '',
                   opportunity_id: '',
                   owner_membership_id:
-                    company.role === 'manager' && contact && ids[0]
+                    can('contacts.edit') && contact && ids[0]
                       ? contact.owner_membership_id
                       : form.owner_membership_id,
                 });
@@ -785,7 +806,7 @@ function TaskDialog({
               Responsável
               <select
                 required
-                disabled={company.role !== 'manager'}
+                disabled={!companyScope}
                 value={form.owner_membership_id}
                 onChange={(e) => setForm({ ...form, owner_membership_id: e.target.value })}
               >

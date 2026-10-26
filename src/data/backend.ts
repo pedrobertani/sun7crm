@@ -1,4 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
+import type { EmployeePermissions } from '../modules/permissions/model';
 import { uid } from '../lib/format';
 
 export interface VersionedRow {
@@ -298,6 +299,18 @@ function failure(
   const code = /^CRM_[A-Z_]+$/.test(error?.message || '')
     ? error!.message!
     : raw || 'TRANSPORT_ERROR';
+  if (code === 'CRM_CARD_HAS_REFERRALS')
+    return new BackendError(
+      'Este card possui uma venda indicada vinculada. Encerre o card para preservar o registro financeiro.',
+      code,
+      'validation',
+    );
+  if (code === 'CRM_PERMISSION_REQUIRES_VIEW')
+    return new BackendError(
+      'Ative também as permissões de visualização necessárias para estas ações.',
+      code,
+      'validation',
+    );
   if (['42501', 'PGRST301', 'PGRST302'].includes(raw))
     return new BackendError('Seu acesso precisa ser verificado novamente.', code, 'access');
   if (raw === '40001')
@@ -904,6 +917,30 @@ export class OperationalBackend {
     }
     if (!result.data?.data) throw failure(null, true);
     return result.data.data as T;
+  }
+  employeePermissions(id?: string) {
+    return this.rpc<EmployeePermissions>('crm_employee_permissions', {
+      p_membership: id ? uuid(id) : null,
+    });
+  }
+  saveEmployeePermissions(id: string, value: EmployeePermissions) {
+    return this.rpc<EmployeePermissions>(
+      'crm_set_employee_permissions',
+      {
+        p_membership: uuid(id),
+        p_keys: value.keys,
+        p_scope: value.scope,
+        p_expected_version: value.version,
+      },
+      true,
+    );
+  }
+  deleteCard(id: string, expectedVersion: number) {
+    return this.rpc<void>(
+      'crm_delete_card',
+      { p_card: uuid(id), p_expected_version: version(expectedVersion) },
+      true,
+    );
   }
   createMember(
     input: { display_name: string; email: string; password: string; role: 'seller' | 'reception' },

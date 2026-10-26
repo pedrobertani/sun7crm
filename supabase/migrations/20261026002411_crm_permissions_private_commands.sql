@@ -1,0 +1,10 @@
+begin;
+alter function public.crm_employee_permissions(uuid,uuid) set schema crm_private;
+alter function public.crm_set_employee_permissions(uuid,uuid,text[],text,bigint) set schema crm_private;
+alter function public.crm_delete_card(uuid,uuid,bigint) set schema crm_private;
+create function public.crm_employee_permissions(p_company uuid,p_membership uuid default null) returns jsonb language sql stable security invoker set search_path='' as $$select crm_private.crm_employee_permissions(p_company,p_membership);$$;
+create function public.crm_set_employee_permissions(p_company uuid,p_membership uuid,p_keys text[],p_scope text,p_expected_version bigint) returns jsonb language sql security invoker set search_path='' as $$select crm_private.crm_set_employee_permissions(p_company,p_membership,p_keys,p_scope,p_expected_version);$$;
+create function public.crm_delete_card(p_company uuid,p_card uuid,p_expected_version bigint) returns void language sql security invoker set search_path='' as $$select crm_private.crm_delete_card(p_company,p_card,p_expected_version);$$;
+revoke all on function public.crm_employee_permissions(uuid,uuid),public.crm_set_employee_permissions(uuid,uuid,text[],text,bigint),public.crm_delete_card(uuid,uuid,bigint) from public,anon,authenticated,service_role;
+grant execute on function public.crm_employee_permissions(uuid,uuid),public.crm_set_employee_permissions(uuid,uuid,text[],text,bigint),public.crm_delete_card(uuid,uuid,bigint) to authenticated;
+commit;

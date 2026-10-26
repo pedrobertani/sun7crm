@@ -44,7 +44,7 @@ function useIntent<T>() {
   };
 }
 export function RealAmbassadors() {
-  const { api, refresh, notice } = useOperational(),
+  const { api, can, refresh, notice } = useOperational(),
     [tab, setTab] = useState<'campaigns' | 'people' | 'metrics'>('campaigns'),
     [selected, setSelected] = useState(''),
     [ambassador, setAmbassador] = useState<AmbassadorRow | 'new' | null>(null),
@@ -133,11 +133,15 @@ export function RealAmbassadors() {
           </button>
         </div>
         <div className="actions">
-          <Button variant="outline" onClick={() => setAmbassador('new')}>
+          <Button
+            variant="outline"
+            disabled={!can('ambassadors.create')}
+            onClick={() => setAmbassador('new')}
+          >
             <Plus size={16} />
             Novo embaixador
           </Button>
-          <Button onClick={() => setCampaign('new')}>
+          <Button disabled={!can('campaigns.create')} onClick={() => setCampaign('new')}>
             <Plus size={16} />
             Nova campanha
           </Button>
@@ -174,7 +178,12 @@ export function RealAmbassadors() {
                       <td>{a.referral_code}</td>
                       <td>{a.commission_enabled ? 'Habilitada' : 'Não habilitada'}</td>
                       <td>
-                        <Button variant="outline" size="sm" onClick={() => setAmbassador(a)}>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled={!can('ambassadors.edit')}
+                          onClick={() => setAmbassador(a)}
+                        >
                           Editar
                         </Button>
                       </td>
@@ -195,7 +204,11 @@ export function RealAmbassadors() {
                 <p className="small-note">
                   Registros declarados pelo gestor, sem importação de redes sociais.
                 </p>
-                <Button variant="outline" onClick={() => setMetric('new')}>
+                <Button
+                  variant="outline"
+                  disabled={!can('ambassadors.create')}
+                  onClick={() => setMetric('new')}
+                >
                   Registrar métrica
                 </Button>
               </div>
@@ -230,7 +243,12 @@ export function RealAmbassadors() {
                             </td>
                             <td>{dateLabel(m.measured_on)}</td>
                             <td>
-                              <Button size="sm" variant="outline" onClick={() => setMetric(m)}>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                disabled={!can('ambassadors.edit')}
+                                onClick={() => setMetric(m)}
+                              >
                                 Editar
                               </Button>
                             </td>
@@ -254,7 +272,11 @@ export function RealAmbassadors() {
               <Empty
                 title="Crie sua primeira campanha"
                 description="Defina o período e a comissão. Cada R$ 1.000 completos em indicações elegíveis vale 1 ponto."
-                action={<Button onClick={() => setCampaign('new')}>Criar campanha</Button>}
+                action={
+                  <Button disabled={!can('campaigns.create')} onClick={() => setCampaign('new')}>
+                    Criar campanha
+                  </Button>
+                }
               />
             </div>
           ) : (
@@ -291,13 +313,26 @@ export function RealAmbassadors() {
                 <div className="actions">
                   {current.status === 'active' && (
                     <>
-                      <Button variant="outline" onClick={() => setCampaign(current)}>
+                      <Button
+                        variant="outline"
+                        disabled={!can('campaigns.edit')}
+                        onClick={() => setCampaign(current)}
+                      >
                         Editar campanha
                       </Button>
-                      <Button variant="outline" onClick={() => setClosing(true)}>
+                      <Button
+                        variant="outline"
+                        disabled={!can('campaigns.close')}
+                        onClick={() => setClosing(true)}
+                      >
                         Encerrar campanha
                       </Button>
-                      <Button onClick={() => setReferral('new')}>Nova indicação</Button>
+                      <Button
+                        disabled={!can('referrals.create')}
+                        onClick={() => setReferral('new')}
+                      >
+                        Nova indicação
+                      </Button>
                     </>
                   )}
                 </div>
@@ -389,6 +424,7 @@ export function RealAmbassadors() {
                                     <Button
                                       size="sm"
                                       variant="outline"
+                                      disabled={!can('campaigns.pay')}
                                       onClick={() => setPayout(r)}
                                     >
                                       Registrar quitação
@@ -500,12 +536,18 @@ export function RealAmbassadors() {
                                     <Button
                                       variant="outline"
                                       size="sm"
+                                      disabled={!can('referrals.edit')}
                                       onClick={() => setReferral(r)}
                                     >
                                       Editar
                                     </Button>
                                   )}
-                                  <Button variant="ghost" size="sm" onClick={() => setAdjust(r)}>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    disabled={!can('referrals.adjust')}
+                                    onClick={() => setAdjust(r)}
+                                  >
                                     Estorno / cancelamento
                                   </Button>
                                 </div>
