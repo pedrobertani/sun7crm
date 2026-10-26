@@ -51,4 +51,17 @@ describe('Contatos por Excel', () => {
       ).map((r) => r.status),
     ).toEqual(['invalid', 'valid']);
   });
+  it('aceita telefone vazio e evita reimportar o mesmo nome sem telefone', () => {
+    const result = previewContacts(
+      [
+        { line: 2, name: 'Sem telefone', phone: '' },
+        { line: 3, name: ' sem telefone ', phone: '  ' },
+        { line: 4, name: 'Já existe', phone: '' },
+        { line: 5, name: 'Inválido', phone: '123' },
+      ],
+      [{ name: 'Já existe', phone: '' }],
+    );
+    expect(result.map((r) => r.status)).toEqual(['valid', 'duplicate', 'duplicate', 'invalid']);
+    expect(result[0].phone).toBe('');
+  });
 });

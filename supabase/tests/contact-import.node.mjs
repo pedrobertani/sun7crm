@@ -152,4 +152,46 @@ test('importação Excel: duplicados e autorização no banco', async (t) => {
       0,
     );
   });
+  await t.test(
+    'telefone opcional: importa nome uma vez e mantém validação de telefone preenchido',
+    async () => {
+      const blank = [
+        { name: 'QA Sem telefone', phone: '' },
+        { name: 'qa sem telefone', phone: '' },
+      ];
+      assert.equal((await user(1, () => run(100, 11, blank))).rows[0].count, 1);
+      assert.equal((await user(1, () => run(100, 11, blank))).rows[0].count, 0);
+      await assert.rejects(
+        user(1, () => run(100, 11, [{ name: 'Inválido', phone: '123' }])),
+        (e) => e.code === '22023',
+      );
+      await user(3, () => denied(run(100, 13, [{ name: 'Sem acesso', phone: '' }])));
+    },
+  );
+
+  await t.test(
+    'plano é exclusivo do gestor mesmo com permissão antiga concedida ao funcionário',
+    async () => {
+      await q(
+        "insert into crm_private.employee_access(membership_id,keys,scope) values($1,array['plan.view'],'own')",
+        [id(12)],
+      );
+      assert.equal(
+        (
+          await user(2, () =>
+            q("select crm_private.has_permission($1,'plan.view') as allowed", [id(100)]),
+          )
+        ).rows[0].allowed,
+        false,
+      );
+      assert.equal(
+        (
+          await user(1, () =>
+            q("select crm_private.has_permission($1,'plan.view') as allowed", [id(100)]),
+          )
+        ).rows[0].allowed,
+        true,
+      );
+    },
+  );
 });

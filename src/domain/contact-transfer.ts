@@ -32,6 +32,10 @@ export function previewContacts(
   existing: TransferContact[],
 ): ImportRow[] {
   const saved = new Set(existing.map((c) => normalizeContactPhone(c.phone)).filter(Boolean));
+  const savedWithoutPhone = new Set(
+    existing.filter((c) => !c.phone.trim()).map((c) => c.name.trim().toLocaleLowerCase('pt-BR')),
+  );
+  const seenWithoutPhone = new Set<string>();
   const seen = new Set<string>();
   return rows.map((row) => {
     const name = row.name.trim(),
@@ -39,6 +43,23 @@ export function previewContacts(
     const base = { ...row, name, phone: phone || row.phone };
     if (!name || name.length > 100)
       return { ...base, status: 'invalid', message: 'Informe um nome com até 100 caracteres.' };
+    if (!row.phone.trim()) {
+      const key = name.toLocaleLowerCase('pt-BR');
+      if (savedWithoutPhone.has(key) || seenWithoutPhone.has(key))
+        return {
+          ...base,
+          phone: '',
+          status: 'duplicate',
+          message: 'Contato sem telefone com este nome já existe. Não será substituído.',
+        };
+      seenWithoutPhone.add(key);
+      return {
+        ...base,
+        phone: '',
+        status: 'valid',
+        message: 'Pronto para importar (sem telefone)',
+      };
+    }
     if (!phone)
       return {
         ...base,

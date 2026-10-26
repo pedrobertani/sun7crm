@@ -1,14 +1,14 @@
+import { AccountMenu } from '../components/AccountMenu';
 import { ThemeProvider } from '../components/theme-provider';
 import { themeStyle } from '../lib/themes';
 import { useEffect, useState } from 'react';
-import { Link, NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
+import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
   KanbanSquare,
   Users,
   ListTodo,
   Settings,
-  LogOut,
   Building2,
   UsersRound,
   PanelLeftClose,
@@ -29,10 +29,10 @@ import type { Role } from '../domain/types';
 import { initials } from '../lib/format';
 import { Button } from '../components/ui/button';
 const businessLinks = [
+  { to: '/demo/painel', label: 'Dashboard', icon: LayoutDashboard, group: 'Dia a dia' },
   { to: '/demo/funil/leads', label: 'Funil', icon: KanbanSquare, group: 'Dia a dia' },
   { to: '/demo/contatos', label: 'Contatos', icon: Users, group: 'Dia a dia' },
   { to: '/demo/tarefas', label: 'Tarefas', icon: ListTodo, group: 'Dia a dia' },
-  { to: '/demo/painel', label: 'Dashboard', icon: LayoutDashboard, group: 'Dia a dia' },
   { to: '/demo/estrategias', label: 'Estratégias', icon: Megaphone, group: 'Crescimento' },
   { to: '/demo/embaixadores', label: 'Embaixadores', icon: Award, group: 'Crescimento' },
   { to: '/demo/catalogo', label: 'Serviços e produtos', icon: ListTodo, group: 'Cadastros' },
@@ -148,7 +148,9 @@ export function AppShell() {
                 ? ['Administração', 'Preferências']
                 : ['Dia a dia', 'Crescimento', 'Gestão', 'Cadastros', 'Preferências']
               ).map((group) => {
-                const items = allLinks.filter((l) => l.group === group);
+                const items = allLinks.filter(
+                  (l) => l.group === group && l.group !== 'Preferências',
+                );
                 return items.length ? (
                   <div key={group} className="nav-section">
                     <p className="nav-section-label hide-collapsed">{group}</p>
@@ -169,30 +171,6 @@ export function AppShell() {
               })}
             </nav>
           </div>
-          <div className="sidebar-bottom">
-            <div className="user-block">
-              <span className="avatar">{initials(admin ? 'Caio' : member?.name || 'Usuário')}</span>
-              <span className="hide-collapsed">
-                <strong>{admin ? 'Caio' : member?.name || 'Usuário'}</strong>
-                <small>{roleLabels[session.role]}</small>
-              </span>
-              <button
-                type="button"
-                className="logout-button"
-                aria-label="Sair"
-                title="Sair"
-                onClick={() => {
-                  logout();
-                  navigate('/demo', { replace: true });
-                }}
-              >
-                <LogOut size={18} />
-              </button>
-            </div>
-            <div className="sidebar-note hide-collapsed">
-              <FlaskConical size={12} /> Demonstração
-            </div>
-          </div>
         </aside>
         <div className="work">
           <header className="topbar">
@@ -209,9 +187,16 @@ export function AppShell() {
               <strong>{current}</strong>
             </div>
             <div className="top-controls">
-              <Link to="/" className="demo-site-link">
-                Voltar ao site
-              </Link>
+              <AccountMenu
+                name={admin ? 'Caio' : member?.name || 'Usuário'}
+                role={roleLabels[session.role]}
+                settings="/demo/configuracoes"
+                plan={!admin && session.role === 'manager' ? '/demo/plano' : undefined}
+                onLogout={() => {
+                  logout();
+                  navigate('/demo', { replace: true });
+                }}
+              />
               <label>
                 <span className="sr-only">Empresa da prévia</span>
                 <select
@@ -232,7 +217,9 @@ export function AppShell() {
             <div className="page">
               <div className="prototype-note">
                 <FlaskConical size={14} />
-                <span>Dados fictícios salvos neste navegador. Explore todas as funcionalidades.</span>
+                <span>
+                  Dados fictícios salvos neste navegador. Explore todas as funcionalidades.
+                </span>
                 <Button
                   variant="ghost"
                   size="sm"

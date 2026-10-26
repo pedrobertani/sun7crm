@@ -1,3 +1,4 @@
+import { AccountMenu } from '../../components/AccountMenu';
 import { useEffect, useState } from 'react';
 import { Link, NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import {
@@ -5,7 +6,6 @@ import {
   CreditCard,
   ChevronRight,
   LayoutDashboard,
-  LogOut,
   Menu,
   PanelLeftClose,
   PanelLeftOpen,
@@ -14,7 +14,6 @@ import {
 import { ThemeProvider } from '../../components/theme-provider';
 import { Button } from '../../components/ui/button';
 import { Empty } from '../../components/shared';
-import { initials } from '../../lib/format';
 import { getSupabaseClient } from '../../lib/supabase';
 import { AccessChangedError, type AccountUser } from '../auth/access';
 import { BrandSymbol } from '../public/PublicShell';
@@ -159,25 +158,6 @@ export function AdminWorkspace({
                 ))}
               </nav>
             </div>
-            <div className="sidebar-bottom">
-              <div className="user-block">
-                <span className="avatar">{initials(user.displayName)}</span>
-                <span className="hide-collapsed">
-                  <strong>{user.displayName}</strong>
-                  <small>Administrador</small>
-                </span>
-                <button
-                  className="logout-button"
-                  aria-label="Sair da conta"
-                  title="Sair"
-                  disabled={signingOut}
-                  onClick={() => void logout()}
-                >
-                  <LogOut size={18} />
-                </button>
-              </div>
-              <p className="sidebar-note hide-collapsed admin-account-email">{user.email}</p>
-            </div>
           </aside>
           <div className="work">
             <header className="topbar">
@@ -198,9 +178,13 @@ export function AdminWorkspace({
               <div className="top-controls">
                 <NotificationBell userId={user.id} onRecheck={onRecheck} />
                 <span className="badge good admin-real-badge">Conta real</span>
-                <Link to="/" className="demo-site-link">
-                  Voltar ao site
-                </Link>
+                <AccountMenu
+                  name={user.displayName}
+                  email={user.email}
+                  role="Administrador"
+                  busy={signingOut}
+                  onLogout={() => void logout()}
+                />
               </div>
             </header>
             <div className="crm-homologation-banner" role="note">
