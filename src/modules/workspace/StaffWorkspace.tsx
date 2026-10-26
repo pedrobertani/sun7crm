@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { Link, Navigate, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
   ListTodo,
@@ -250,6 +250,10 @@ export function StaffWorkspace({
     },
     links = operationalNavigation.filter((n) => granted(sectionPermission[n.to])),
     allowed = access?.companyId === company.id ? access.access_allowed : null;
+  // Only redirect the workspace entry point; explicit forbidden routes keep their access message.
+  if (location.pathname === '/app' && allowed && !granted('dashboard.view') && links[0]) {
+    return <Navigate to={links[0].to} replace />;
+  }
   return (
     <ThemeProvider style={colors}>
       <OperationalProvider
