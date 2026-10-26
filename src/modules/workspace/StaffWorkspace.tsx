@@ -19,11 +19,10 @@ import {
 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Heading, Empty } from '../../components/shared';
-import { ThemeProvider } from '../../components/theme-provider';
+import { WorkspaceTheme } from '../../components/WorkspaceTheme';
 import { getSupabaseClient } from '../../lib/supabase';
 import { initials } from '../../lib/format';
 import type { CrmTheme } from '../../lib/themes';
-import { ADMIN_THEME } from '../admin/theme';
 import { AccountMenu } from '../../components/AccountMenu';
 import { legacyPermissions } from '../permissions/model';
 import { loadAccountAccess, type AccountUser } from '../auth/access';
@@ -232,8 +231,7 @@ export function StaffWorkspace({
         </main>
       </PublicShell>
     );
-  const colors = ADMIN_THEME,
-    granted = (key: string) =>
+  const granted = (key: string) =>
       (company.permissions || legacyPermissions(company.role)).keys.includes(key),
     sectionPermission: Record<string, string> = {
       '/app/funil': 'cards.view',
@@ -260,166 +258,162 @@ export function StaffWorkspace({
     return <Navigate to={links[0].to} replace />;
   }
   return (
-    <ThemeProvider style={colors}>
+    <WorkspaceTheme theme={company.theme} className="admin-live official-member">
       <OperationalProvider
         key={company.id + ':' + JSON.stringify(company.permissions)}
         company={company}
         user={user}
         onRecheck={onRecheck}
       >
-        <div className="layout admin-live official-member" style={colors}>
-          {mobile && (
+        {mobile && (
+          <button
+            className="sidebar-scrim"
+            aria-label="Fechar menu"
+            onClick={() => setMobile(false)}
+          />
+        )}
+        <aside className={'sidebar ' + (mobile ? 'is-open' : '')}>
+          <div className="sidebar-head">
+            <Link className="logo workspace-logo" to="/app">
+              <WorkspaceLogo path={allowed ? company.logoPath : null} name={company.name} />
+              <span className="brand">
+                <strong>{company.name}</strong>
+              </span>
+            </Link>
             <button
-              className="sidebar-scrim"
+              className="icon-button mobile-close"
               aria-label="Fechar menu"
               onClick={() => setMobile(false)}
-            />
-          )}
-          <aside className={'sidebar ' + (mobile ? 'is-open' : '')}>
-            <div className="sidebar-head">
-              <Link className="logo workspace-logo" to="/app">
-                <WorkspaceLogo path={allowed ? company.logoPath : null} name={company.name} />
-                <span className="brand">
-                  <strong>{company.name}</strong>
-                </span>
-              </Link>
+            >
+              <X size={20} />
+            </button>
+          </div>
+          <div className="sidebar-workspace">
+            <nav aria-label="Navegação da empresa">
+              {sidebarLinks.map((n, index) => (
+                <div key={n.to}>
+                  {sidebarLinks[index - 1]?.group !== n.group && (
+                    <p className="nav-group-label">{n.group}</p>
+                  )}
+                  <NavLink to={n.to} end={n.to === '/app'} onClick={() => setMobile(false)}>
+                    <n.icon size={19} />
+                    <span>{n.label}</span>
+                  </NavLink>
+                </div>
+              ))}
+            </nav>
+          </div>
+        </aside>
+        <div className="work">
+          <header className="topbar">
+            <div className="breadcrumb">
               <button
-                className="icon-button mobile-close"
-                aria-label="Fechar menu"
-                onClick={() => setMobile(false)}
+                className="icon-button mobile-menu"
+                aria-label="Abrir menu"
+                aria-expanded={mobile}
+                onClick={() => setMobile(true)}
               >
-                <X size={20} />
+                <Menu size={21} />
               </button>
+              <strong>{section.label}</strong>
             </div>
-            <div className="sidebar-workspace">
-              <nav aria-label="Navegação da empresa">
-                {sidebarLinks.map((n, index) => (
-                  <div key={n.to}>
-                    {sidebarLinks[index - 1]?.group !== n.group && (
-                      <p className="nav-group-label">{n.group}</p>
-                    )}
-                    <NavLink to={n.to} end={n.to === '/app'} onClick={() => setMobile(false)}>
-                      <n.icon size={19} />
-                      <span>{n.label}</span>
-                    </NavLink>
-                  </div>
-                ))}
-              </nav>
-            </div>
-          </aside>
-          <div className="work">
-            <header className="topbar">
-              <div className="breadcrumb">
-                <button
-                  className="icon-button mobile-menu"
-                  aria-label="Abrir menu"
-                  aria-expanded={mobile}
-                  onClick={() => setMobile(true)}
+            <div className="top-controls">
+              {workspaces!.length > 1 && (
+                <select
+                  aria-label="Empresa vinculada"
+                  value={company.id}
+                  onChange={(e) => {
+                    setCompanyId(e.target.value);
+                    navigate('/app/funil');
+                  }}
                 >
-                  <Menu size={21} />
-                </button>
-                <strong>{section.label}</strong>
-              </div>
-              <div className="top-controls">
-                {workspaces!.length > 1 && (
-                  <select
-                    aria-label="Empresa vinculada"
-                    value={company.id}
-                    onChange={(e) => {
-                      setCompanyId(e.target.value);
-                      navigate('/app/funil');
-                    }}
-                  >
-                    {workspaces!.map((c) => (
-                      <option key={c.id} value={c.id}>
-                        {c.name}
-                      </option>
-                    ))}
-                  </select>
-                )}
-                <NotificationBell
-                  key={user.id + company.id}
-                  userId={user.id}
-                  companyId={company.id}
-                  onRecheck={onRecheck}
-                />
-                <AccountMenu
-                  name={user.displayName}
-                  email={user.email}
-                  role={
-                    company.role === 'manager'
-                      ? 'Gestor'
-                      : granted('team.manage')
-                        ? 'Administrador da empresa'
-                        : 'Funcionário'
-                  }
-                  settings={granted('settings.view') ? '/app/configuracoes' : undefined}
-                  plan={
-                    company.role === 'manager' && granted('plan.view') ? '/app/plano' : undefined
-                  }
-                  busy={busy}
-                  onLogout={() => void logout()}
-                />
-              </div>
-            </header>
-            <div className="crm-homologation-banner" role="note">
-              HOMOLOGAÇÃO INTERNA — As operações deste painel utilizam o banco de dados real. Use
-              apenas informações de teste; não cadastre dados pessoais de clientes reais.
+                  {workspaces!.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              )}
+              <NotificationBell
+                key={user.id + company.id}
+                userId={user.id}
+                companyId={company.id}
+                onRecheck={onRecheck}
+              />
+              <AccountMenu
+                name={user.displayName}
+                email={user.email}
+                role={
+                  company.role === 'manager'
+                    ? 'Gestor'
+                    : granted('team.manage')
+                      ? 'Administrador da empresa'
+                      : 'Funcionário'
+                }
+                settings={granted('settings.view') ? '/app/configuracoes' : undefined}
+                plan={company.role === 'manager' && granted('plan.view') ? '/app/plano' : undefined}
+                busy={busy}
+                onLogout={() => void logout()}
+              />
             </div>
-            <main className="workspace" id="main">
-              <div className="page">
-                <Heading
-                  eyebrow="ÁREA DE TRABALHO"
-                  title={
-                    section.to === '/app' ? `Olá, ${user.displayName.split(' ')[0]}` : section.label
-                  }
-                  description={
-                    section.to === '/app/funil'
-                      ? 'Organize os atendimentos e acompanhe o próximo passo de cada oportunidade.'
-                      : 'Sua rotina e os registros disponíveis para o seu perfil.'
-                  }
-                >
-                  <WorkspaceRefresh onAccessRefresh={() => setTick((n) => n + 1)} />
-                </Heading>
-                {error && (
-                  <p className="secure-access-error" role="alert">
-                    {error}
-                  </p>
-                )}
-                {allowed === null ? (
-                  <p role="status">Verificando o período de acesso...</p>
-                ) : !allowed ? (
-                  company.role === 'manager' && granted('plan.view') ? (
-                    <RealPlan key={company.id + tick} companyId={company.id} />
-                  ) : (
-                    <div className="card panel">
-                      <Empty
-                        title="Acesso da empresa suspenso"
-                        description="Fale com o gestor para regularizar o acesso."
-                      />
-                    </div>
-                  )
-                ) : !granted(sectionPermission[section.to]) ||
-                  (section.to === '/app/plano' && company.role !== 'manager') ? (
+          </header>
+          <div className="crm-homologation-banner" role="note">
+            HOMOLOGAÇÃO INTERNA — As operações deste painel utilizam o banco de dados real. Use
+            apenas informações de teste; não cadastre dados pessoais de clientes reais.
+          </div>
+          <main className="workspace" id="main">
+            <div className="page">
+              <Heading
+                eyebrow="ÁREA DE TRABALHO"
+                title={
+                  section.to === '/app' ? `Olá, ${user.displayName.split(' ')[0]}` : section.label
+                }
+                description={
+                  section.to === '/app/funil'
+                    ? 'Organize os atendimentos e acompanhe o próximo passo de cada oportunidade.'
+                    : 'Sua rotina e os registros disponíveis para o seu perfil.'
+                }
+              >
+                <WorkspaceRefresh onAccessRefresh={() => setTick((n) => n + 1)} />
+              </Heading>
+              {error && (
+                <p className="secure-access-error" role="alert">
+                  {error}
+                </p>
+              )}
+              {allowed === null ? (
+                <p role="status">Verificando o período de acesso...</p>
+              ) : !allowed ? (
+                company.role === 'manager' && granted('plan.view') ? (
+                  <RealPlan key={company.id + tick} companyId={company.id} />
+                ) : (
                   <div className="card panel">
                     <Empty
-                      title="Funcionalidade sem acesso"
-                      description="Peça ao administrador da empresa para liberar esta funcionalidade nas suas permissões."
+                      title="Acesso da empresa suspenso"
+                      description="Fale com o gestor para regularizar o acesso."
                     />
-                    {links[0] && <Link to={links[0].to}>Abrir {links[0].label}</Link>}
                   </div>
-                ) : (
-                  <OperationalContent
-                    path={section.to}
-                    onCompanyChanged={() => setTick((n) => n + 1)}
+                )
+              ) : !granted(sectionPermission[section.to]) ||
+                (section.to === '/app/plano' && company.role !== 'manager') ? (
+                <div className="card panel">
+                  <Empty
+                    title="Funcionalidade sem acesso"
+                    description="Peça ao administrador da empresa para liberar esta funcionalidade nas suas permissões."
                   />
-                )}
-              </div>
-            </main>
-          </div>
+                  {links[0] && <Link to={links[0].to}>Abrir {links[0].label}</Link>}
+                </div>
+              ) : (
+                <OperationalContent
+                  path={section.to}
+                  onCompanyChanged={() => setTick((n) => n + 1)}
+                />
+              )}
+            </div>
+          </main>
         </div>
       </OperationalProvider>
-    </ThemeProvider>
+    </WorkspaceTheme>
   );
 }
 function WorkspaceRefresh({ onAccessRefresh }: { onAccessRefresh: () => void }) {

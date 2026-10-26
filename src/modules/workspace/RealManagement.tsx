@@ -11,6 +11,7 @@ import { Empty, Kpi, Panel } from '../../components/shared';
 import type { TeamRow, CardActivity } from '../../data/backend';
 import { currency, dateLabel, today, uid } from '../../lib/format';
 import { CRM_THEMES } from '../../lib/themes';
+import { ThemePreview } from '../../components/ThemePreview';
 import { RealContactHistory } from '../contacts/RealContactHistory';
 import { RealActivityReport } from '../reports/RealActivityReport';
 import { Pager, QueryState, SaveActions, useOperational, useQuery, useSave } from './operational';
@@ -734,6 +735,7 @@ function BrandForm({
               ))}
             </select>
           </label>
+          <ThemePreview theme={theme} />
           <QueryState query={image} />
           {logo && !remove && !file && (
             <img className="operational-logo-preview" src={logo} alt="Logo atual da empresa" />
