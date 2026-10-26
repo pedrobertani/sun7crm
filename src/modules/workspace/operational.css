@@ -1,8 +1,8 @@
 .admin-live.official-member input:is([type='date'], [type='month'], [type='datetime-local'], [type='time']) {
   background: var(--surface, #fff);
   color: var(--ink);
-  border-color: var(--line);
-  color-scheme: light;
+  border-color: var(--control-border, var(--line));
+  color-scheme: var(--scheme, light);
 }
 
 .official-member .nav-group-label {
@@ -496,3 +496,4 @@
     max-width: 100%;
   }
 }
+
