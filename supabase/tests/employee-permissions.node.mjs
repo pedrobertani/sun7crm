@@ -279,3 +279,58 @@ test('permissões por funcionário: ações, carteira e delegação', async (t) 
     }
   });
 });
+
+test('ADM lista usuários por empresa e redefine funcionários sem ampliar acesso', async (t) => {
+  const { q, user, as } = await fixture(t);
+  const list = (actor, company) =>
+    user(actor, () => q('select public.crm_admin_company_users($1) as users', [id(company)]));
+  await assert.rejects(list(1, 100), /CRM_FORBIDDEN/);
+  const rows = (await list(7, 100)).rows[0].users;
+  assert.ok(rows.some((r) => r.user_id === id(1) && r.role === 'manager'));
+  assert.ok(rows.some((r) => r.user_id === id(2) && r.email === 'fixture@example.invalid'));
+  assert.ok(!rows.some((r) => r.user_id === id(4)));
+  await q('update public.crm_memberships set active=false where user_id=$1', [id(2)]);
+  assert.equal((await list(7, 100)).rows[0].users.find((r) => r.user_id === id(2)).active, false);
+  const reset = (actor, target, request) =>
+    as('service_role', null, () =>
+      q('select public.crm_edge_begin_password_reset($1,$2,$3,$4)', [
+        id(actor),
+        id(request),
+        id(100),
+        id(target),
+      ]),
+    );
+  await assert.rejects(reset(7, 4, 8101), /CRM_FORBIDDEN/);
+  await assert.rejects(reset(7, 7, 8102), /CRM_FORBIDDEN/);
+  await reset(7, 2, 8103);
+  assert.equal(
+    (await q('select password_change_required from public.crm_profiles where id=$1', [id(2)]))
+      .rows[0].password_change_required,
+    true,
+  );
+  assert.equal(
+    (
+      await q(
+        'select count(*)::int n from public.crm_audit_events where record_id=$1 and entity=$2',
+        [id(2), 'crm_password_reset_requested'],
+      )
+    ).rows[0].n,
+    1,
+  );
+  await q('insert into public.crm_memberships(company_id,user_id,role) values($1,$2,$3)', [
+    id(200),
+    id(5),
+    'seller',
+  ]);
+  assert.equal(
+    (await list(7, 100)).rows[0].users.find((r) => r.user_id === id(5)).can_reset,
+    false,
+  );
+  await assert.rejects(reset(7, 5, 8104), /CRM_FORBIDDEN/);
+  await as('anon', null, async () => {
+    await assert.rejects(
+      q('select public.crm_admin_company_users($1)', [id(100)]),
+      /permission denied/,
+    );
+  });
+});
