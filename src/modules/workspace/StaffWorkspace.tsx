@@ -3,7 +3,6 @@ import { Link, Navigate, NavLink, useLocation, useNavigate } from 'react-router-
 import {
   LayoutDashboard,
   ListTodo,
-  LogOut,
   Menu,
   Users,
   X,
@@ -23,7 +22,9 @@ import { Heading, Empty } from '../../components/shared';
 import { ThemeProvider } from '../../components/theme-provider';
 import { getSupabaseClient } from '../../lib/supabase';
 import { initials } from '../../lib/format';
-import { themeStyle, type CrmTheme } from '../../lib/themes';
+import type { CrmTheme } from '../../lib/themes';
+import { ADMIN_THEME } from '../admin/theme';
+import { AccountMenu } from '../../components/AccountMenu';
 import { legacyPermissions } from '../permissions/model';
 import { loadAccountAccess, type AccountUser } from '../auth/access';
 import { PublicShell } from '../public/PublicShell';
@@ -47,10 +48,10 @@ interface Workspace extends OperationalCompany {
   logoPath: string | null;
 }
 export const operationalNavigation = [
+  { to: '/app', label: 'Dashboard', icon: LayoutDashboard, group: 'Dia a dia' },
   { to: '/app/funil', label: 'Funil', icon: KanbanSquare, group: 'Dia a dia' },
   { to: '/app/contatos', label: 'Contatos', icon: Users, group: 'Dia a dia' },
   { to: '/app/tarefas', label: 'Tarefas', icon: ListTodo, group: 'Dia a dia' },
-  { to: '/app', label: 'Dashboard', icon: LayoutDashboard, group: 'Dia a dia' },
   { to: '/app/estrategias', label: 'Estratégias', icon: Megaphone, group: 'Crescimento' },
   {
     to: '/app/embaixadores',
@@ -231,7 +232,7 @@ export function StaffWorkspace({
         </main>
       </PublicShell>
     );
-  const colors = themeStyle(company.theme),
+  const colors = ADMIN_THEME,
     granted = (key: string) =>
       (company.permissions || legacyPermissions(company.role)).keys.includes(key),
     sectionPermission: Record<string, string> = {
@@ -248,7 +249,11 @@ export function StaffWorkspace({
       '/app/configuracoes': 'settings.view',
       '/app/plano': 'plan.view',
     },
-    links = operationalNavigation.filter((n) => granted(sectionPermission[n.to])),
+    links = operationalNavigation.filter(
+      (n) =>
+        granted(sectionPermission[n.to]) && (n.to !== '/app/plano' || company.role === 'manager'),
+    ),
+    sidebarLinks = links.filter((n) => n.group !== 'Preferências'),
     allowed = access?.companyId === company.id ? access.access_allowed : null;
   // Only redirect the workspace entry point; explicit forbidden routes keep their access message.
   if (location.pathname === '/app' && allowed && !granted('dashboard.view') && links[0]) {
@@ -288,9 +293,9 @@ export function StaffWorkspace({
             </div>
             <div className="sidebar-workspace">
               <nav aria-label="Navegação da empresa">
-                {links.map((n, index) => (
+                {sidebarLinks.map((n, index) => (
                   <div key={n.to}>
-                    {links[index - 1]?.group !== n.group && (
+                    {sidebarLinks[index - 1]?.group !== n.group && (
                       <p className="nav-group-label">{n.group}</p>
                     )}
                     <NavLink to={n.to} end={n.to === '/app'} onClick={() => setMobile(false)}>
@@ -300,29 +305,6 @@ export function StaffWorkspace({
                   </div>
                 ))}
               </nav>
-            </div>
-            <div className="sidebar-bottom">
-              <div className="user-block">
-                <span className="avatar">{initials(user.displayName)}</span>
-                <span>
-                  <strong>{user.displayName}</strong>
-                  <small>
-                    {company.role === 'manager'
-                      ? 'Gestor'
-                      : granted('team.manage')
-                        ? 'Administrador da empresa'
-                        : 'Funcionário'}
-                  </small>
-                </span>
-                <button
-                  className="logout-button"
-                  aria-label="Sair da conta"
-                  disabled={busy}
-                  onClick={() => void logout()}
-                >
-                  <LogOut size={18} />
-                </button>
-              </div>
             </div>
           </aside>
           <div className="work">
@@ -361,9 +343,23 @@ export function StaffWorkspace({
                   companyId={company.id}
                   onRecheck={onRecheck}
                 />
-                <Link className="demo-site-link" to="/">
-                  Voltar ao site
-                </Link>
+                <AccountMenu
+                  name={user.displayName}
+                  email={user.email}
+                  role={
+                    company.role === 'manager'
+                      ? 'Gestor'
+                      : granted('team.manage')
+                        ? 'Administrador da empresa'
+                        : 'Funcionário'
+                  }
+                  settings={granted('settings.view') ? '/app/configuracoes' : undefined}
+                  plan={
+                    company.role === 'manager' && granted('plan.view') ? '/app/plano' : undefined
+                  }
+                  busy={busy}
+                  onLogout={() => void logout()}
+                />
               </div>
             </header>
             <div className="crm-homologation-banner" role="note">
@@ -393,7 +389,7 @@ export function StaffWorkspace({
                 {allowed === null ? (
                   <p role="status">Verificando o período de acesso...</p>
                 ) : !allowed ? (
-                  granted('plan.view') ? (
+                  company.role === 'manager' && granted('plan.view') ? (
                     <RealPlan key={company.id + tick} companyId={company.id} />
                   ) : (
                     <div className="card panel">
@@ -403,7 +399,8 @@ export function StaffWorkspace({
                       />
                     </div>
                   )
-                ) : !granted(sectionPermission[section.to]) ? (
+                ) : !granted(sectionPermission[section.to]) ||
+                  (section.to === '/app/plano' && company.role !== 'manager') ? (
                   <div className="card panel">
                     <Empty
                       title="Funcionalidade sem acesso"

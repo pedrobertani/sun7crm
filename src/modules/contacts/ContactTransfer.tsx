@@ -128,8 +128,9 @@ export function ContactTransfer({
               <strong>Contato</strong>. Até 1.000 linhas e 2 MB.
             </p>
             <p>
-              Telefone com DDD, com ou sem máscara e com +55 opcional. Exemplo: (14) 99673-2848.
-              Duplicados serão ignorados, sem substituir cadastros.
+              Telefone opcional. Se preenchido, informe o DDD, com ou sem máscara e com +55
+              opcional. Exemplo: (14) 99673-2848. Duplicados serão ignorados, sem substituir
+              cadastros. Sem telefone, a comparação usa o nome.
             </p>
             <Button
               variant="ghost"

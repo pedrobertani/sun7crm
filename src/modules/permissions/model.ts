@@ -67,7 +67,6 @@ export const permissionModules: PermissionModule[] = [
       { id: 'reports', label: 'Relatórios', actions: ['view'] },
       { id: 'team', label: 'Funcionários e permissões', actions: ['view', 'manage'] },
       { id: 'settings', label: 'Identidade da empresa', actions: ['view', 'edit'] },
-      { id: 'plan', label: 'Plano', actions: ['view'] },
     ],
   },
 ];
@@ -136,7 +135,8 @@ export function togglePermissions(current: string[], keys: string[], enabled: bo
   return allPermissionKeys.filter((k) => next.has(k));
 }
 export function legacyPermissions(role: string): EmployeePermissions {
-  if (role === 'manager') return { keys: [...allPermissionKeys], scope: 'company', version: 0 };
+  if (role === 'manager')
+    return { keys: [...allPermissionKeys, 'plan.view'], scope: 'company', version: 0 };
   const resources = ['cards', 'contacts', 'history', 'tasks'];
   return {
     keys: allPermissionKeys.filter(
