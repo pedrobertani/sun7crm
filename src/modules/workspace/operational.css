@@ -1,3 +1,10 @@
+.admin-live.official-member input:is([type='date'], [type='month'], [type='datetime-local'], [type='time']) {
+  background: var(--surface, #fff);
+  color: var(--ink);
+  border-color: var(--line);
+  color-scheme: light;
+}
+
 .official-member .nav-group-label {
   padding: 18px 14px 7px;
   margin: 0;
