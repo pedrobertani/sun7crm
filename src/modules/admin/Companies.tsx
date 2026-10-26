@@ -14,6 +14,7 @@ import { CRM_THEMES, type CrmTheme } from '../../lib/themes';
 import { getSupabaseClient } from '../../lib/supabase';
 import { AccessChangedError } from '../auth/access';
 import { stateLabels, subscriptionState } from '../billing/subscription';
+import { CompanyUsers } from './CompanyUsers';
 import {
   AdminCommandError,
   companyInput,
@@ -304,6 +305,7 @@ export function AdminCompanies({
                 <tr>
                   <th>Empresa</th>
                   <th>Gestor</th>
+                  <th>Usuários</th>
                   <th>Valor mensal</th>
                   <th>Vencimento</th>
                   <th>Situação</th>
@@ -323,6 +325,10 @@ export function AdminCompanies({
                       ) : (
                         <span className="muted">Sem gestor</span>
                       )}
+                    </td>
+                    <td>
+                      {company.userCounts?.total ?? '—'} contas
+                      <small>{company.userCounts?.activeEmployees ?? 0} funcionários ativos</small>
                     </td>
                     <td>{currency(company.monthlyAmount)}</td>
                     <td>{dateLabel(company.dueDate)}</td>
@@ -628,6 +634,13 @@ export function AdminCompanies({
                 <dd>{selected.managers.map((m) => m.name).join(', ') || 'Ainda não cadastrado'}</dd>
               </div>
             </dl>
+            <CompanyUsers
+              key={selected.id}
+              companyId={selected.id}
+              userId={userId}
+              onRecheck={onRecheck}
+              onNotice={onNotice}
+            />
             <div className="form-actions">
               <Button variant="outline" onClick={() => editCompany(selected)}>
                 Editar empresa
