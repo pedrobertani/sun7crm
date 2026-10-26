@@ -2,13 +2,13 @@ import type { CSSProperties } from 'react';
 import type { Template } from '../domain/types';
 // Opções e cores de origem reaproveitadas de lib/studio-themes.ts do StudioPro.
 export const CRM_THEMES = [
-  { value: 'sun7', label: 'SUN7CRM', colors: ['#236d62', '#65a398', '#f6f8fa'] },
+  { value: 'sun7', label: 'SUN7CRM', colors: ['#fdd158', '#c69a3d', '#101010'] },
   { value: 'blue', label: 'Azul', colors: ['#315ba2', '#88a8d6', '#f5f7fb'] },
-  { value: 'original', label: 'Nude', colors: ['#b86f5c', '#c7a447', '#fcfaf7'] },
+  { value: 'original', label: 'Nude', colors: ['#b86f5c', '#d9b2a7', '#fcfaf7'] },
   { value: 'neutral', label: 'Neutro', colors: ['#334155', '#94a3b8', '#f8fafc'] },
   { value: 'elegant', label: 'Elegante', colors: ['#7c5c20', '#d6b96b', '#faf7f0'] },
   { value: 'rose', label: 'Rosé', colors: ['#b65f73', '#e8b4c0', '#fff7f8'] },
-  { value: 'barber', label: 'Clássico', colors: ['#1f3a3d', '#b48645', '#f3f0e9'] },
+  { value: 'barber', label: 'Clássico', colors: ['#1f3a3d', '#809899', '#f3f0e9'] },
 ] as const;
 export type CrmTheme = (typeof CRM_THEMES)[number]['value'];
 function rgb(hex: string) {
@@ -37,9 +37,18 @@ function luminance(hex: string) {
 export function contrastOnWhite(hex: string) {
   return 1.05 / (luminance(hex) + 0.05);
 }
-function accessiblePrimary(hex: string) {
+export function colorContrast(foreground: string, background: string) {
+  const a = luminance(foreground),
+    b = luminance(background);
+  return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+}
+function accessiblePrimary(hex: string, canvas: string) {
   let next = hex;
-  while (contrastOnWhite(next) < 4.5) {
+  while (
+    [canvas, '#ffffff', '#f5f5f5', mixWithWhite(next, 0.92)].some(
+      (surface) => colorContrast(next, surface) < 4.5,
+    )
+  ) {
     next =
       '#' +
       rgb(next)
@@ -60,24 +69,64 @@ export function resolveTheme(value?: string, template: Template = 'aesthetic') {
 }
 export function themePalette(value?: string, template: Template = 'aesthetic') {
   const theme = resolveTheme(value, template);
-  const primary = accessiblePrimary(theme.colors[0]);
+  const dark = theme.value === 'sun7';
+  const primary = dark ? theme.colors[0] : accessiblePrimary(theme.colors[0], theme.colors[2]);
   return {
     ...theme,
+    colorScheme: dark ? ('dark' as const) : ('light' as const),
     primary,
-    soft: mixWithWhite(primary, 0.92),
-    chart: [primary, mixWithWhite(primary, 0.32), mixWithWhite(primary, 0.65), theme.colors[1]],
+    primaryForeground: dark ? '#171717' : '#ffffff',
+    soft: dark ? '#2c2618' : mixWithWhite(primary, 0.92),
+    canvas: theme.colors[2],
+    surface: dark ? '#191919' : '#ffffff',
+    chrome: dark ? '#101010' : '#ffffff',
+    raised: dark ? '#252525' : '#f5f5f5',
+    ink: dark ? '#f5f5f5' : '#242424',
+    muted: dark ? '#b8b8b8' : '#626262',
+    line: dark ? '#404040' : '#dedede',
+    chart: dark
+      ? [primary, '#d9a93c', '#ad8129', '#f7e2a8']
+      : [
+          primary,
+          mixWithWhite(primary, 0.25),
+          mixWithWhite(primary, 0.5),
+          mixWithWhite(primary, 0.7),
+        ],
   };
 }
 export function themeStyle(value?: string, template: Template = 'aesthetic'): CSSProperties {
   const t = themePalette(value, template);
   return {
+    colorScheme: t.colorScheme,
+    '--scheme': t.colorScheme,
     '--primary': t.primary,
+    '--primary-foreground': t.primaryForeground,
     '--soft': t.soft,
-    '--canvas': t.colors[2],
-    '--accent-brand': t.colors[1],
+    '--primary-soft': t.soft,
+    '--canvas': t.canvas,
+    '--surface': t.surface,
+    '--chrome': t.chrome,
+    '--raised': t.raised,
+    '--ink': t.ink,
+    '--text': t.ink,
+    '--heading': t.primary,
+    '--muted': t.muted,
+    '--line': t.line,
+    '--border': t.line,
+    '--control-border': t.colorScheme === 'dark' ? '#808080' : '#878787',
+    '--control-hover': t.colorScheme === 'dark' ? '#363636' : t.soft,
+    '--accent-brand': t.primary,
     '--color-primary': t.primary,
+    '--color-primary-foreground': t.primaryForeground,
+    '--color-background': t.surface,
+    '--color-foreground': t.ink,
+    '--color-muted-foreground': t.muted,
+    '--color-input': t.line,
     '--color-ring': t.primary,
     '--color-accent': t.soft,
     '--color-accent-foreground': t.primary,
+    '--color-border': t.line,
+    '--color-secondary': t.raised,
+    '--color-secondary-foreground': t.ink,
   } as CSSProperties;
 }

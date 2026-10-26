@@ -19,13 +19,10 @@ export function Modal({
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
-        <Dialog.Overlay
-          className="dialog-overlay"
-          data-color-scheme={colors.colorScheme === 'dark' ? 'dark' : undefined}
-        />
+        <Dialog.Overlay className="dialog-overlay" data-color-scheme={colors.colorScheme} />
         <Dialog.Content
           className="dialog-content"
-          data-color-scheme={colors.colorScheme === 'dark' ? 'dark' : undefined}
+          data-color-scheme={colors.colorScheme}
           style={colors}
           onEscapeKeyDown={(event) => {
             if (event.target instanceof Element && event.target.closest('.contact-picker-popup'))

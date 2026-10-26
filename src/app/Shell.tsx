@@ -1,6 +1,5 @@
 import { AccountMenu } from '../components/AccountMenu';
-import { ThemeProvider } from '../components/theme-provider';
-import { themeStyle } from '../lib/themes';
+import { WorkspaceTheme } from '../components/WorkspaceTheme';
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -84,155 +83,148 @@ export function AppShell() {
     navigate('/demo/painel');
     setMobile(false);
   }
-  const colors = themeStyle(admin ? 'sun7' : company?.theme, company?.template);
   return (
-    <ThemeProvider style={colors}>
-      <div
-        style={colors}
-        className={
-          'layout ' +
-          (collapsed ? 'collapsed ' : '') +
-          (company?.template === 'generic' && !admin ? 'generic' : '')
-        }
-      >
-        {mobile && (
+    <WorkspaceTheme
+      theme={admin ? 'sun7' : company?.theme}
+      template={company?.template}
+      className={
+        (collapsed ? 'collapsed ' : '') +
+        (company?.template === 'generic' && !admin ? 'generic' : '')
+      }
+    >
+      {mobile && (
+        <button
+          className="sidebar-scrim"
+          aria-label="Fechar menu"
+          onClick={() => setMobile(false)}
+        />
+      )}
+      <aside className={'sidebar ' + (mobile ? 'is-open' : '')}>
+        <div className="sidebar-head">
+          <NavLink
+            to="/demo/painel"
+            className={'logo ' + (!admin ? 'workspace-logo' : '')}
+            aria-label={workspaceName + ' início'}
+            title={workspaceName}
+          >
+            <span className="mark">
+              {!admin && company.logo ? (
+                <img src={company.logo} alt={'Logo ' + workspaceName} />
+              ) : admin ? (
+                '7'
+              ) : (
+                initials(workspaceName)
+              )}
+            </span>
+            <span className="brand">
+              <strong>{workspaceName}</strong>
+              {admin && <small>GESTÃO COMERCIAL</small>}
+            </span>
+          </NavLink>
           <button
-            className="sidebar-scrim"
+            className="icon-button collapse-button"
+            aria-label={collapsed ? 'Expandir menu' : 'Recolher menu'}
+            onClick={() => setCollapsed(!collapsed)}
+          >
+            {collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
+          </button>
+          <button
+            className="icon-button mobile-close"
             aria-label="Fechar menu"
             onClick={() => setMobile(false)}
-          />
-        )}
-        <aside className={'sidebar ' + (mobile ? 'is-open' : '')}>
-          <div className="sidebar-head">
-            <NavLink
-              to="/demo/painel"
-              className={'logo ' + (!admin ? 'workspace-logo' : '')}
-              aria-label={workspaceName + ' início'}
-              title={workspaceName}
-            >
-              <span className="mark">
-                {!admin && company.logo ? (
-                  <img src={company.logo} alt={'Logo ' + workspaceName} />
-                ) : admin ? (
-                  '7'
-                ) : (
-                  initials(workspaceName)
-                )}
-              </span>
-              <span className="brand">
-                <strong>{workspaceName}</strong>
-                {admin && <small>GESTÃO COMERCIAL</small>}
-              </span>
-            </NavLink>
-            <button
-              className="icon-button collapse-button"
-              aria-label={collapsed ? 'Expandir menu' : 'Recolher menu'}
-              onClick={() => setCollapsed(!collapsed)}
-            >
-              {collapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
-            </button>
-            <button
-              className="icon-button mobile-close"
-              aria-label="Fechar menu"
-              onClick={() => setMobile(false)}
-            >
-              <X size={20} />
-            </button>
-          </div>
-          <div className="sidebar-workspace">
-            <p className="sbar-label hide-collapsed">
-              {admin ? 'ADMINISTRAÇÃO' : 'ÁREA DE TRABALHO'}
-            </p>
-            <nav aria-label="Navegação principal">
-              {(admin
-                ? ['Administração', 'Preferências']
-                : ['Dia a dia', 'Crescimento', 'Gestão', 'Cadastros', 'Preferências']
-              ).map((group) => {
-                const items = allLinks.filter(
-                  (l) => l.group === group && l.group !== 'Preferências',
-                );
-                return items.length ? (
-                  <div key={group} className="nav-section">
-                    <p className="nav-section-label hide-collapsed">{group}</p>
-                    {items.map(({ to, label, icon: Icon }) => (
-                      <NavLink
-                        key={to}
-                        to={to}
-                        end={to === '/demo/painel'}
-                        title={collapsed ? label : undefined}
-                        onClick={() => setMobile(false)}
-                      >
-                        <Icon size={19} />
-                        <span className="hide-collapsed">{label}</span>
-                      </NavLink>
-                    ))}
-                  </div>
-                ) : null;
-              })}
-            </nav>
-          </div>
-        </aside>
-        <div className="work">
-          <header className="topbar">
-            <div className="breadcrumb">
-              <button
-                className="icon-button mobile-menu"
-                onClick={() => setMobile(true)}
-                aria-label="Abrir menu"
-              >
-                <Menu size={21} />
-              </button>
-              <span className="breadcrumb-root">{admin ? 'Plataforma' : 'Área de trabalho'}</span>
-              <ChevronRight size={14} />
-              <strong>{current}</strong>
-            </div>
-            <div className="top-controls">
-              <AccountMenu
-                name={admin ? 'Caio' : member?.name || 'Usuário'}
-                role={roleLabels[session.role]}
-                settings="/demo/configuracoes"
-                plan={!admin && session.role === 'manager' ? '/demo/plano' : undefined}
-                onLogout={() => {
-                  logout();
-                  navigate('/demo', { replace: true });
-                }}
-              />
-              <label>
-                <span className="sr-only">Empresa da prévia</span>
-                <select
-                  aria-label="Empresa da prévia"
-                  value={session.companyId}
-                  onChange={(e) => switchView('manager', e.target.value)}
-                >
-                  {data.companies.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            </div>
-          </header>
-          <main className="workspace" id="main">
-            <div className="page">
-              <div className="prototype-note">
-                <FlaskConical size={14} />
-                <span>
-                  Dados fictícios salvos neste navegador. Explore todas as funcionalidades.
-                </span>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => navigate('/demo/configuracoes?aba=previa')}
-                >
-                  Sobre a demo <ChevronRight size={13} />
-                </Button>
-              </div>
-              <Outlet />
-            </div>
-          </main>
+          >
+            <X size={20} />
+          </button>
         </div>
+        <div className="sidebar-workspace">
+          <p className="sbar-label hide-collapsed">
+            {admin ? 'ADMINISTRAÇÃO' : 'ÁREA DE TRABALHO'}
+          </p>
+          <nav aria-label="Navegação principal">
+            {(admin
+              ? ['Administração', 'Preferências']
+              : ['Dia a dia', 'Crescimento', 'Gestão', 'Cadastros', 'Preferências']
+            ).map((group) => {
+              const items = allLinks.filter((l) => l.group === group && l.group !== 'Preferências');
+              return items.length ? (
+                <div key={group} className="nav-section">
+                  <p className="nav-section-label hide-collapsed">{group}</p>
+                  {items.map(({ to, label, icon: Icon }) => (
+                    <NavLink
+                      key={to}
+                      to={to}
+                      end={to === '/demo/painel'}
+                      title={collapsed ? label : undefined}
+                      onClick={() => setMobile(false)}
+                    >
+                      <Icon size={19} />
+                      <span className="hide-collapsed">{label}</span>
+                    </NavLink>
+                  ))}
+                </div>
+              ) : null;
+            })}
+          </nav>
+        </div>
+      </aside>
+      <div className="work">
+        <header className="topbar">
+          <div className="breadcrumb">
+            <button
+              className="icon-button mobile-menu"
+              onClick={() => setMobile(true)}
+              aria-label="Abrir menu"
+            >
+              <Menu size={21} />
+            </button>
+            <span className="breadcrumb-root">{admin ? 'Plataforma' : 'Área de trabalho'}</span>
+            <ChevronRight size={14} />
+            <strong>{current}</strong>
+          </div>
+          <div className="top-controls">
+            <AccountMenu
+              name={admin ? 'Caio' : member?.name || 'Usuário'}
+              role={roleLabels[session.role]}
+              settings="/demo/configuracoes"
+              plan={!admin && session.role === 'manager' ? '/demo/plano' : undefined}
+              onLogout={() => {
+                logout();
+                navigate('/demo', { replace: true });
+              }}
+            />
+            <label>
+              <span className="sr-only">Empresa da prévia</span>
+              <select
+                aria-label="Empresa da prévia"
+                value={session.companyId}
+                onChange={(e) => switchView('manager', e.target.value)}
+              >
+                {data.companies.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+        </header>
+        <main className="workspace" id="main">
+          <div className="page">
+            <div className="prototype-note">
+              <FlaskConical size={14} />
+              <span>Dados fictícios salvos neste navegador. Explore todas as funcionalidades.</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/demo/configuracoes?aba=previa')}
+              >
+                Sobre a demo <ChevronRight size={13} />
+              </Button>
+            </div>
+            <Outlet />
+          </div>
+        </main>
       </div>
-    </ThemeProvider>
+    </WorkspaceTheme>
   );
 }

@@ -107,7 +107,12 @@ export function AdminWorkspace({
   return (
     <ThemeProvider style={colors}>
       <div className="admin-canvas">
-        <div className={`layout admin-live ${collapsed ? 'collapsed' : ''}`} style={colors}>
+        <div
+          data-theme="sun7"
+          data-color-scheme="dark"
+          className={`layout themed-workspace admin-live ${collapsed ? 'collapsed' : ''}`}
+          style={colors}
+        >
           {mobile && (
             <button
               className="sidebar-scrim"
