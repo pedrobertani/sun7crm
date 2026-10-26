@@ -6,6 +6,7 @@ import { passwordValidation } from '../auth/flow';
 
 export interface AdminCompany extends Company {
   managers: { id: string; userId: string; name: string }[];
+  userCounts?: { total: number; activeEmployees: number; inactive: number };
   cycleKind?: import('../billing/subscription').CycleKind;
 }
 export interface CompanyInput {
@@ -37,6 +38,51 @@ interface CompanyRow {
   enabled: boolean;
   created_at: string;
 }
+export interface AdminCompanyUser {
+  id: string;
+  user_id: string;
+  display_name: string;
+  email: string;
+  role: 'manager' | 'seller' | 'reception';
+  active: boolean;
+  created_at: string;
+  password_change_required: boolean;
+  can_reset: boolean;
+}
+interface PasswordResetInput {
+  company_id: string;
+  user_id: string;
+  password: string;
+}
+export async function loadAdminCompanyUsers(
+  client: SupabaseClient,
+  userId: string,
+  companyId: string,
+) {
+  await requireReadyAdmin(client, userId);
+  const result = await client.rpc('crm_admin_company_users', { p_company: companyId });
+  if (result.error || !Array.isArray(result.data))
+    throw result.error || Error('Usuários indisponíveis.');
+  return result.data as AdminCompanyUser[];
+}
+export async function resetAdminCompanyPassword(
+  client: SupabaseClient,
+  userId: string,
+  input: PasswordResetInput,
+  operationId: string,
+) {
+  const invalid = passwordValidation(input.password, input.password);
+  if (invalid) throw Error(invalid);
+  const result = await invoke<{ password_changed: boolean }>(
+    client,
+    userId,
+    'crm-reset-password',
+    input,
+    operationId,
+  );
+  if (result.password_changed !== true) throw commandFailure('MISSING_RESULT');
+  return result;
+}
 interface BillingRow {
   company_id: string;
   monthly_amount_cents: number;
@@ -47,6 +93,8 @@ interface ManagerRow {
   id: string;
   company_id: string;
   user_id: string;
+  role?: string;
+  active?: boolean;
   crm_profiles: { display_name: string } | { display_name: string }[] | null;
 }
 type Page<T> = { data: T[] | null; error: unknown };
@@ -98,8 +146,21 @@ export function mapPortfolio(
       monthlyAmount: bill.monthly_amount_cents,
       dueDate: bill.due_date,
       cycleKind: bill.cycle_kind || 'monthly',
+      userCounts: {
+        total: managers.filter((m) => m.company_id === row.id).length,
+        activeEmployees: managers.filter(
+          (m) =>
+            m.company_id === row.id && m.role !== undefined && m.role !== 'manager' && m.active,
+        ).length,
+        inactive: managers.filter((m) => m.company_id === row.id && m.active === false).length,
+      },
       managers: managers
-        .filter((member) => member.company_id === row.id)
+        .filter(
+          (member) =>
+            member.company_id === row.id &&
+            (member.role === undefined || member.role === 'manager') &&
+            member.active !== false,
+        )
         .map((member) => {
           const profile = Array.isArray(member.crm_profiles)
             ? member.crm_profiles[0]
@@ -136,9 +197,7 @@ export async function loadAdminPortfolio(
     readAllPages<ManagerRow>((from, to) => {
       const q = client
         .from('crm_memberships')
-        .select('id,company_id,user_id,crm_profiles(display_name)')
-        .eq('role', 'manager')
-        .eq('active', true)
+        .select('id,company_id,user_id,role,active,crm_profiles(display_name)')
         .order('id')
         .range(from, to);
       return signal ? q.abortSignal(signal) : q;
@@ -230,6 +289,11 @@ export class AdminCommandError extends Error {
 }
 
 function commandFailure(code: string, status?: number) {
+  if (code === 'AUTH_RESET_UNCONFIRMED')
+    return new AdminCommandError(
+      'Não foi possível confirmar a redefinição. Confira o acesso antes de tentar novamente.',
+      'review',
+    );
   if (code === 'BILLING_CHANGED')
     return new AdminCommandError(
       'O plano foi atualizado. Atualize a lista e gerencie o vencimento na aba Planos.',
@@ -274,7 +338,7 @@ async function invoke<T>(
   client: SupabaseClient,
   userId: string,
   endpoint: string,
-  body: CompanyInput | ManagerInput,
+  body: CompanyInput | ManagerInput | PasswordResetInput,
   operationId: string,
 ): Promise<T> {
   await requireReadyAdmin(client, userId);
