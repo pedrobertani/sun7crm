@@ -606,35 +606,41 @@ export function AdminCompanies({
         onOpenChange={(open) => !open && setDetails(null)}
         title={selected?.name || 'Empresa'}
         description="Dados cadastrados na plataforma"
+        size="wide"
       >
         {selected && (
           <>
-            <dl className="admin-company-details">
-              <div>
-                <dt>Segmento</dt>
-                <dd>{selected.segment}</dd>
-              </div>
-              <div>
-                <dt>Modelo inicial</dt>
-                <dd>{selected.template === 'aesthetic' ? 'Estética' : 'Genérico'}</dd>
-              </div>
-              <div>
-                <dt>Valor mensal</dt>
-                <dd>{currency(selected.monthlyAmount)}</dd>
-              </div>
-              <div>
-                <dt>Vencimento</dt>
-                <dd>{dateLabel(selected.dueDate)}</dd>
-              </div>
-              <div>
-                <dt>Situação</dt>
-                <dd>{selected.enabled ? 'Ativa' : 'Desativada'}</dd>
-              </div>
-              <div>
-                <dt>Gestor responsável</dt>
-                <dd>{selected.managers.map((m) => m.name).join(', ') || 'Ainda não cadastrado'}</dd>
-              </div>
-            </dl>
+            <section className="admin-company-section" aria-label="Dados da empresa">
+              <h3>Dados da empresa</h3>
+              <dl className="admin-company-details">
+                <div>
+                  <dt>Segmento</dt>
+                  <dd>{selected.segment}</dd>
+                </div>
+                <div>
+                  <dt>Modelo inicial</dt>
+                  <dd>{selected.template === 'aesthetic' ? 'Estética' : 'Genérico'}</dd>
+                </div>
+                <div>
+                  <dt>Valor mensal</dt>
+                  <dd>{currency(selected.monthlyAmount)}</dd>
+                </div>
+                <div>
+                  <dt>Vencimento</dt>
+                  <dd>{dateLabel(selected.dueDate)}</dd>
+                </div>
+                <div>
+                  <dt>Situação</dt>
+                  <dd>{selected.enabled ? 'Ativa' : 'Desativada'}</dd>
+                </div>
+                <div>
+                  <dt>Gestor responsável</dt>
+                  <dd>
+                    {selected.managers.map((m) => m.name).join(', ') || 'Ainda não cadastrado'}
+                  </dd>
+                </div>
+              </dl>
+            </section>
             <CompanyUsers
               key={selected.id}
               companyId={selected.id}

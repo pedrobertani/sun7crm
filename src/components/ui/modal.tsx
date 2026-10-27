@@ -8,12 +8,14 @@ export function Modal({
   open,
   onOpenChange,
   children,
+  size = 'default',
 }: {
   title: string;
   description?: string;
   open: boolean;
   onOpenChange: (v: boolean) => void;
   children: ReactNode;
+  size?: 'default' | 'wide';
 }) {
   const colors = useThemeStyle();
   return (
@@ -21,7 +23,7 @@ export function Modal({
       <Dialog.Portal>
         <Dialog.Overlay className="dialog-overlay" data-color-scheme={colors.colorScheme} />
         <Dialog.Content
-          className="dialog-content"
+          className={'dialog-content' + (size === 'wide' ? ' dialog-content-wide' : '')}
           data-color-scheme={colors.colorScheme}
           style={colors}
           onEscapeKeyDown={(event) => {

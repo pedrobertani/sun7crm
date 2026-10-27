@@ -1009,7 +1009,7 @@ td small {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: min(570px, calc(100vw - 28px));
+  width: min(var(--dialog-width, 570px), calc(100vw - 28px));
   max-height: calc(100dvh - 36px);
   overflow-y: auto;
   background: var(--surface);
@@ -1017,6 +1017,9 @@ td small {
   border-radius: 12px;
   z-index: 61;
   box-shadow: 0 24px 90px var(--shadow-color);
+}
+.dialog-content-wide {
+  --dialog-width: 960px;
 }
 .dialog-head {
   padding: 22px 24px;

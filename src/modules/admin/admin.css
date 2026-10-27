@@ -121,11 +121,27 @@
 .admin-live.collapsed .admin-account-email {
   display: none;
 }
+.admin-company-section {
+  margin-bottom: 24px;
+}
+.admin-company-section h3,
+.admin-company-users h3 {
+  margin: 0 0 12px;
+  font-size: 15px;
+  color: var(--heading);
+}
 .admin-company-details {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 20px;
-  margin: 0 0 24px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+}
+.admin-company-details > div {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--raised);
 }
 .admin-company-details dt {
   color: var(--muted);
@@ -136,6 +152,138 @@
   margin: 0;
   overflow-wrap: anywhere;
   font-weight: 600;
+}
+.company-user-counts {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 18px;
+}
+.company-user-counts .kpi {
+  min-height: 110px;
+  padding: 12px;
+}
+.company-user-counts .kpi-value {
+  margin-top: 8px;
+  font-size: 24px;
+}
+.company-user-counts .kpi-foot {
+  line-height: 1.5;
+  margin-top: 5px;
+}
+.company-user-table {
+  max-width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.company-user-table table {
+  min-width: 0;
+  table-layout: fixed;
+}
+.company-user-identity {
+  width: 48%;
+}
+.company-user-status {
+  width: 25%;
+}
+.company-user-actions {
+  width: 27%;
+}
+.company-user-table th {
+  font-size: 11px;
+  padding: 12px 14px;
+}
+.company-user-table td {
+  padding: 14px;
+  font-size: 13px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+  white-space: normal;
+  vertical-align: top;
+}
+.company-user-table td strong {
+  font-size: 13px;
+}
+.company-user-table td small {
+  display: block;
+  font-size: 11px;
+  margin-top: 6px;
+  overflow-wrap: anywhere;
+}
+.company-user-table .btn {
+  min-height: 44px;
+  max-width: 100%;
+  white-space: normal;
+}
+.company-user-group th {
+  background: var(--soft);
+  color: var(--primary);
+  border-top: 1px solid var(--line);
+  font-size: 13px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.company-user-group span,
+.company-users-empty td {
+  color: var(--muted);
+}
+@media (max-width: 760px) {
+  .admin-company-details,
+  .company-user-counts {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 700px) {
+  .company-user-table table,
+  .company-user-table tbody,
+  .company-user-group,
+  .company-user-group th,
+  .company-users-empty,
+  .company-users-empty td {
+    display: block;
+    width: 100%;
+  }
+  .company-user-table colgroup {
+    display: none;
+  }
+  .company-user-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .company-user-row {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 6px 0;
+    border-top: 1px solid var(--line);
+  }
+  .company-user-row td {
+    display: block;
+    min-width: 0;
+    padding: 8px 14px;
+    border: 0;
+  }
+  .company-user-row td:first-child {
+    grid-column: 1 / -1;
+  }
+  .company-user-row td::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 6px;
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .company-user-row .btn {
+    width: 100%;
+  }
+}
+@media (max-width: 480px) {
+  .company-user-row {
+    grid-template-columns: 1fr;
+  }
 }
 @media (min-width: 1761px) {
   .admin-canvas .layout.admin-live {
