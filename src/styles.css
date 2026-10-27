@@ -53,6 +53,10 @@
   --shadow-color: #0000001a;
   --overlay: #00000080;
   --scheme: light;
+  --chart-1: var(--primary);
+  --chart-2: var(--primary);
+  --chart-3: var(--primary);
+  --chart-4: var(--primary);
 }
 * {
   box-sizing: border-box;
@@ -121,6 +125,11 @@ input:disabled,
 select:disabled,
 textarea:disabled {
   opacity: 0.6;
+}
+input::placeholder,
+textarea::placeholder {
+  color: var(--muted);
+  opacity: 1;
 }
 fieldset {
   border: 0;

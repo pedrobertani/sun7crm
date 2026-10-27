@@ -11,6 +11,7 @@ export const CRM_THEMES = [
   { value: 'barber', label: 'Clássico', colors: ['#1f3a3d', '#809899', '#f3f0e9'] },
 ] as const;
 export type CrmTheme = (typeof CRM_THEMES)[number]['value'];
+export const CHART_COLORS = [1, 2, 3, 4].map((index) => `var(--chart-${index})`);
 function rgb(hex: string) {
   return [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
 }
@@ -140,6 +141,10 @@ export function themeStyle(value?: string, template: Template = 'aesthetic'): CS
     '--temperature-cold': t.temperatureCold,
     '--shadow-color': t.shadowColor,
     '--overlay': '#00000080',
+    '--chart-1': t.chart[0],
+    '--chart-2': t.chart[1],
+    '--chart-3': t.chart[2],
+    '--chart-4': t.chart[3],
     '--accent-brand': t.primary,
     '--color-primary': t.primary,
     '--color-primary-foreground': t.primaryForeground,

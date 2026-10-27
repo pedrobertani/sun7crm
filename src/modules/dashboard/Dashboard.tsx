@@ -1,5 +1,5 @@
 import { filterCompanies } from '../../domain/filters';
-import { themePalette } from '../../lib/themes';
+import { CHART_COLORS } from '../../lib/themes';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
@@ -35,7 +35,6 @@ import { today, shiftDate, currency, dateLabel } from '../../lib/format';
 import { Heading, Kpi, Panel, Empty } from '../../components/shared';
 import { Button } from '../../components/ui/button';
 import { ThemeTooltip } from '../../components/ThemeTooltip';
-const adminPalette = themePalette('sun7').chart;
 function ChartEmpty() {
   return (
     <Empty
@@ -50,7 +49,7 @@ export function CompanyDashboard() {
   const date = today();
   const from = shiftDate(date, -Number(days) + 1);
   const company = data.companies.find((c) => c.id === session.companyId)!;
-  const palette = themePalette(company.theme, company.template).chart;
+  const palette = CHART_COLORS;
   const all = visibleContacts(data, session);
   const contacts = all.filter((c) => c.createdAt >= from && c.createdAt <= date);
   const allOpps = data.opportunities.filter(
@@ -323,7 +322,7 @@ export function AdminDashboardView({
   basePath?: string;
   live?: boolean;
 }) {
-  const palette = adminPalette;
+  const palette = CHART_COLORS;
   const [filter, setFilter] = useState('all');
   const [days, setDays] = useState('30');
   const date = today();
