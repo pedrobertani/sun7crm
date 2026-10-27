@@ -154,6 +154,42 @@ body :is(.themed-workspace[data-theme], .dialog-content[data-color-scheme]) .bad
   background: var(--raised);
   color: var(--muted);
 }
+/* SUN7 uses graphite status surfaces instead of the legacy pale green fills. */
+body
+  :is(.themed-workspace[data-color-scheme='dark'], .dialog-content[data-color-scheme='dark'])
+  .badge:not(.warn, .warning, .bad) {
+  background: var(--raised);
+}
+body
+  :is(.themed-workspace[data-color-scheme='dark'], .dialog-content[data-color-scheme='dark'])
+  .badge:not(.temperature, .warn, .warning, .bad, .gray) {
+  color: var(--ink);
+}
+body
+  :is(.themed-workspace[data-color-scheme='dark'], .dialog-content[data-color-scheme='dark'])
+  :is(.badge.warn, .badge.warning) {
+  background: var(--soft);
+  color: var(--primary);
+}
+body
+  :is(.themed-workspace[data-color-scheme='dark'], .dialog-content[data-color-scheme='dark'])
+  .whatsapp-button {
+  background: var(--raised);
+  color: var(--primary);
+  border-color: var(--control-border);
+}
+body
+  :is(.themed-workspace[data-color-scheme='dark'], .dialog-content[data-color-scheme='dark'])
+  .whatsapp-button[href]:hover {
+  background: var(--soft);
+  border-color: var(--primary);
+}
+body
+  :is(.themed-workspace[data-color-scheme='dark'], .dialog-content[data-color-scheme='dark'])
+  .whatsapp-button[href]:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 3px;
+}
 body
   :is(.themed-workspace[data-theme], .dialog-content[data-color-scheme])
   .whatsapp-button:disabled {
