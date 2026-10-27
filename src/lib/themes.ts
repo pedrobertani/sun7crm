@@ -11,6 +11,7 @@ export const CRM_THEMES = [
   { value: 'barber', label: 'Clássico', colors: ['#1f3a3d', '#809899', '#f3f0e9'] },
 ] as const;
 export type CrmTheme = (typeof CRM_THEMES)[number]['value'];
+export const CHART_COLORS = [1, 2, 3, 4].map((index) => `var(--chart-${index})`);
 function rgb(hex: string) {
   return [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
 }
@@ -42,11 +43,11 @@ export function colorContrast(foreground: string, background: string) {
     b = luminance(background);
   return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
 }
-function accessiblePrimary(hex: string, canvas: string) {
+function accessiblePrimary(hex: string, canvas: string, minimum = 4.5) {
   let next = hex;
   while (
     [canvas, '#ffffff', '#f5f5f5', mixWithWhite(next, 0.92)].some(
-      (surface) => colorContrast(next, surface) < 4.5,
+      (surface) => colorContrast(next, surface) < minimum,
     )
   ) {
     next =
@@ -84,13 +85,29 @@ export function themePalette(value?: string, template: Template = 'aesthetic') {
     ink: dark ? '#f5f5f5' : '#242424',
     muted: dark ? '#b8b8b8' : '#626262',
     line: dark ? '#404040' : '#dedede',
+    controlBorder: dark ? '#808080' : '#878787',
+    controlHover: dark ? '#363636' : mixWithWhite(primary, 0.92),
+    danger: dark ? '#ffb8bf' : '#a52338',
+    dangerSurface: dark ? '#382126' : '#fcecee',
+    dangerBorder: dark ? '#c16a75' : '#b54b58',
+    temperatureHot: dark ? '#c77b5b' : '#95412b',
+    temperatureWarm: dark ? '#ae8b3e' : '#795b15',
+    temperatureCold: dark ? '#6a92bb' : '#315ba2',
+    shadowColor: dark ? '#00000066' : '#0000001a',
     chart: dark
       ? [primary, '#d9a93c', '#ad8129', '#f7e2a8']
       : [
           primary,
-          mixWithWhite(primary, 0.25),
-          mixWithWhite(primary, 0.5),
-          mixWithWhite(primary, 0.7),
+          accessiblePrimary(mixWithWhite(primary, 0.15), theme.colors[2], 3),
+          accessiblePrimary(mixWithWhite(primary, 0.3), theme.colors[2], 3),
+          '#' +
+            rgb(primary)
+              .map((v) =>
+                Math.floor(v * 0.72)
+                  .toString(16)
+                  .padStart(2, '0'),
+              )
+              .join(''),
         ],
   };
 }
@@ -105,6 +122,7 @@ export function themeStyle(value?: string, template: Template = 'aesthetic'): CS
     '--primary-soft': t.soft,
     '--canvas': t.canvas,
     '--surface': t.surface,
+    '--card': t.surface,
     '--chrome': t.chrome,
     '--raised': t.raised,
     '--ink': t.ink,
@@ -113,8 +131,20 @@ export function themeStyle(value?: string, template: Template = 'aesthetic'): CS
     '--muted': t.muted,
     '--line': t.line,
     '--border': t.line,
-    '--control-border': t.colorScheme === 'dark' ? '#808080' : '#878787',
-    '--control-hover': t.colorScheme === 'dark' ? '#363636' : t.soft,
+    '--control-border': t.controlBorder,
+    '--control-hover': t.controlHover,
+    '--danger': t.danger,
+    '--danger-surface': t.dangerSurface,
+    '--danger-border': t.dangerBorder,
+    '--temperature-hot': t.temperatureHot,
+    '--temperature-warm': t.temperatureWarm,
+    '--temperature-cold': t.temperatureCold,
+    '--shadow-color': t.shadowColor,
+    '--overlay': '#00000080',
+    '--chart-1': t.chart[0],
+    '--chart-2': t.chart[1],
+    '--chart-3': t.chart[2],
+    '--chart-4': t.chart[3],
     '--accent-brand': t.primary,
     '--color-primary': t.primary,
     '--color-primary-foreground': t.primaryForeground,
@@ -128,5 +158,7 @@ export function themeStyle(value?: string, template: Template = 'aesthetic'): CS
     '--color-border': t.line,
     '--color-secondary': t.raised,
     '--color-secondary-foreground': t.ink,
+    '--color-destructive': t.danger,
+    '--color-destructive-foreground': t.dangerSurface,
   } as CSSProperties;
 }

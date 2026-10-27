@@ -1,5 +1,5 @@
 import { filterCompanies } from '../../domain/filters';
-import { themePalette } from '../../lib/themes';
+import { CHART_COLORS } from '../../lib/themes';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
@@ -8,7 +8,6 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  Tooltip,
   ResponsiveContainer,
   BarChart,
   Bar,
@@ -35,8 +34,7 @@ import { visibleContacts } from '../../domain/operations';
 import { today, shiftDate, currency, dateLabel } from '../../lib/format';
 import { Heading, Kpi, Panel, Empty } from '../../components/shared';
 import { Button } from '../../components/ui/button';
-import { ADMIN_CHART_COLORS } from '../admin/theme';
-const adminPalette = themePalette('sun7').chart;
+import { ThemeTooltip } from '../../components/ThemeTooltip';
 function ChartEmpty() {
   return (
     <Empty
@@ -51,7 +49,7 @@ export function CompanyDashboard() {
   const date = today();
   const from = shiftDate(date, -Number(days) + 1);
   const company = data.companies.find((c) => c.id === session.companyId)!;
-  const palette = themePalette(company.theme, company.template).chart;
+  const palette = CHART_COLORS;
   const all = visibleContacts(data, session);
   const contacts = all.filter((c) => c.createdAt >= from && c.createdAt <= date);
   const allOpps = data.opportunities.filter(
@@ -123,7 +121,6 @@ export function CompanyDashboard() {
           value={contacts.filter((c) => c.temperature === 'hot').length}
           foot="Temperatura definida pela equipe"
           icon={<Flame size={19} />}
-          tone="amber"
         />
         <Kpi
           label="Valor no funil de leads"
@@ -133,7 +130,6 @@ export function CompanyDashboard() {
           )}
           foot="Estimado · não representa receita"
           icon={<TrendingUp size={19} />}
-          tone="teal"
         />
         <Kpi
           label="Tarefas pendentes"
@@ -141,7 +137,6 @@ export function CompanyDashboard() {
           value={pending.length}
           foot={overdue + ' atrasadas · todos os períodos'}
           icon={<ListTodo size={19} />}
-          tone="rose"
         />
       </div>
       <div className="dashboard-grid">
@@ -160,20 +155,20 @@ export function CompanyDashboard() {
                       <stop offset="100%" stopColor={palette[0]} stopOpacity={0} />
                     </linearGradient>
                   </defs>
-                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#eaf0ee" />
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--line)" />
                   <XAxis
                     dataKey="name"
                     axisLine={false}
                     tickLine={false}
-                    tick={{ fontSize: 11, fill: '#748b96' }}
+                    tick={{ fontSize: 11, fill: 'var(--muted)' }}
                   />
                   <YAxis
                     allowDecimals={false}
                     axisLine={false}
                     tickLine={false}
-                    tick={{ fontSize: 11, fill: '#748b96' }}
+                    tick={{ fontSize: 11, fill: 'var(--muted)' }}
                   />
-                  <Tooltip contentStyle={{ borderRadius: 10, border: '1px solid #e1e7eb' }} />
+                  <ThemeTooltip />
                   <Area
                     name="Novos contatos"
                     type="monotone"
@@ -211,7 +206,7 @@ export function CompanyDashboard() {
                         <Cell key={s.name} fill={palette[i % 4]} />
                       ))}
                     </Pie>
-                    <Tooltip />
+                    <ThemeTooltip />
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
@@ -318,26 +313,16 @@ export function CompanyDashboard() {
     </>
   );
 }
-export function AdminDashboard() {
-  const { data } = useCrm();
-  return <AdminDashboardView companies={data.companies} basePath="/demo" live={false} />;
-}
-
 export function AdminDashboardView({
   companies: portfolio,
   basePath = '/admin',
   live = true,
-  dark = false,
 }: {
   companies: Company[];
   basePath?: string;
   live?: boolean;
-  dark?: boolean;
 }) {
-  const palette = dark ? ADMIN_CHART_COLORS : adminPalette;
-  const tooltipStyle = dark
-    ? { background: '#1e201a', color: '#f2f0e8', border: '1px solid #414438', borderRadius: 10 }
-    : undefined;
+  const palette = CHART_COLORS;
   const [filter, setFilter] = useState('all');
   const [days, setDays] = useState('30');
   const date = today();
@@ -403,7 +388,6 @@ export function AdminDashboardView({
           value={upcoming.length}
           foot="Entre hoje e os próximos 7 dias"
           icon={<CalendarClock size={19} />}
-          tone="amber"
         />
         <Kpi
           label="Novas empresas"
@@ -411,7 +395,6 @@ export function AdminDashboardView({
           value={news.length}
           foot="Cadastradas no período selecionado"
           icon={<UserPlus size={19} />}
-          tone="teal"
         />
         <Kpi
           label="Mensalidade da carteira"
@@ -419,7 +402,6 @@ export function AdminDashboardView({
           value={currency(active.reduce((s, c) => s + c.monthlyAmount, 0))}
           foot="Soma contratada · não recebimentos"
           icon={<Wallet size={19} />}
-          tone="rose"
         />
       </div>
       <div className="dashboard-grid">
@@ -430,23 +412,20 @@ export function AdminDashboardView({
           <div className="chart">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chart} margin={{ left: -20, right: 12, top: 10 }}>
-                <CartesianGrid
-                  vertical={false}
-                  strokeDasharray="3 3"
-                  stroke={dark ? '#30322c' : '#eaf0ee'}
+                <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--line)" />
+                <XAxis
+                  dataKey="name"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fontSize: 11, fill: 'var(--muted)' }}
                 />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 11 }} />
                 <YAxis
                   allowDecimals={false}
                   axisLine={false}
                   tickLine={false}
-                  tick={{ fontSize: 11 }}
+                  tick={{ fontSize: 11, fill: 'var(--muted)' }}
                 />
-                <Tooltip
-                  cursor={{ fill: dark ? '#282b22' : '#f0f6f4' }}
-                  contentStyle={tooltipStyle}
-                  itemStyle={dark ? { color: '#f2f0e8' } : undefined}
-                />
+                <ThemeTooltip />
                 <Bar
                   name="Novas empresas"
                   dataKey="empresas"
@@ -478,10 +457,7 @@ export function AdminDashboardView({
                     <Cell key={s.name} fill={palette[i]} />
                   ))}
                 </Pie>
-                <Tooltip
-                  contentStyle={tooltipStyle}
-                  itemStyle={dark ? { color: '#f2f0e8' } : undefined}
-                />
+                <ThemeTooltip />
               </PieChart>
             </ResponsiveContainer>
           </div>

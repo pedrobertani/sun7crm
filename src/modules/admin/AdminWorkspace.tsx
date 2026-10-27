@@ -106,12 +106,11 @@ export function AdminWorkspace({
   ];
   return (
     <ThemeProvider style={colors}>
-      <div className="admin-canvas">
+      <div className="admin-canvas" style={colors}>
         <div
           data-theme="sun7"
           data-color-scheme="dark"
           className={`layout themed-workspace admin-live ${collapsed ? 'collapsed' : ''}`}
-          style={colors}
         >
           {mobile && (
             <button
@@ -248,7 +247,7 @@ export function AdminWorkspace({
                         />
                       }
                     />
-                    <Route index element={<AdminDashboardView companies={companies} dark />} />
+                    <Route index element={<AdminDashboardView companies={companies} />} />
                     <Route
                       path="empresas"
                       element={

@@ -87,10 +87,7 @@ export function AppShell() {
     <WorkspaceTheme
       theme={admin ? 'sun7' : company?.theme}
       template={company?.template}
-      className={
-        (collapsed ? 'collapsed ' : '') +
-        (company?.template === 'generic' && !admin ? 'generic' : '')
-      }
+      className={collapsed ? 'collapsed' : ''}
     >
       {mobile && (
         <button

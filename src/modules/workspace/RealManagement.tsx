@@ -3,7 +3,7 @@ import { type EmployeePermissions } from '../permissions/model';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, Users, ListTodo, KanbanSquare, Wallet, History, Clock3 } from 'lucide-react';
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { Bar, BarChart, CartesianGrid, ResponsiveContainer, XAxis, YAxis } from 'recharts';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Modal } from '../../components/ui/modal';
@@ -11,6 +11,7 @@ import { Empty, Kpi, Panel } from '../../components/shared';
 import type { TeamRow, CardActivity } from '../../data/backend';
 import { currency, dateLabel, today, uid } from '../../lib/format';
 import { CRM_THEMES } from '../../lib/themes';
+import { ThemeTooltip } from '../../components/ThemeTooltip';
 import { ThemePreview } from '../../components/ThemePreview';
 import { RealContactHistory } from '../contacts/RealContactHistory';
 import { RealActivityReport } from '../reports/RealActivityReport';
@@ -87,13 +88,21 @@ export function RealDashboard() {
                 <div className="operational-chart">
                   <ResponsiveContainer width="100%" height={260}>
                     <BarChart data={query.data.metrics.contacts_by_day}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--line)" />
                       <XAxis
                         dataKey="day"
+                        tick={{ fill: 'var(--muted)' }}
+                        axisLine={{ stroke: 'var(--line)' }}
+                        tickLine={{ stroke: 'var(--line)' }}
                         tickFormatter={(v) => String(v).slice(5).split('-').reverse().join('/')}
                       />
-                      <YAxis allowDecimals={false} />
-                      <Tooltip labelFormatter={(v) => dateLabel(String(v))} />
+                      <YAxis
+                        allowDecimals={false}
+                        tick={{ fill: 'var(--muted)' }}
+                        axisLine={{ stroke: 'var(--line)' }}
+                        tickLine={{ stroke: 'var(--line)' }}
+                      />
+                      <ThemeTooltip labelFormatter={(v) => dateLabel(String(v))} />
                       <Bar
                         name="Contatos"
                         dataKey="count"

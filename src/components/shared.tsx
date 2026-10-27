@@ -58,18 +58,16 @@ export function Kpi({
   value,
   foot,
   icon,
-  tone = '',
   to,
 }: {
   label: string;
   value: ReactNode;
   foot: string;
   icon: ReactNode;
-  tone?: string;
   to?: string;
 }) {
   return (
-    <div className={'card kpi ' + tone}>
+    <div className="card kpi">
       <div className="kpi-top">
         <span>{label}</span>
         {to ? (
