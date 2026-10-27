@@ -13,7 +13,7 @@ O painel **Planos e cobranças** reúne o histórico da plataforma. Nos detalhes
 - Renovação apenas após pagamento aprovado. Autorização da assinatura, geração de Pix e retorno do checkout não liberam acesso.
 - Cancelamento da assinatura pelo gestor, com confirmação no Mercado Pago e manutenção do período já pago.
 
-**A integração online nasce desativada.** Credenciais e homologação no Mercado Pago ainda são necessárias. Os testes locais não substituem a homologação com a conta recebedora.
+**A integração online nasce desativada.** A migração financeira do Mercado Pago e a implantação das duas novas Edge Functions aguardam autorização explícita para o banco real. Credenciais e homologação no Mercado Pago também são necessárias. Os testes locais não substituem a homologação com a conta recebedora.
 
 ## O que o responsável pela conta precisa fazer
 
@@ -57,6 +57,8 @@ Funções:
 
 - `crm-billing-checkout`: consulta de configuração, início/recuperação de checkout e cancelamento da assinatura.
 - `crm-billing-webhook`: confirmação de eventos do provedor.
+
+No frontend/Cloudflare Pages, a variável pública `VITE_ONLINE_BILLING_ENABLED=true` libera a consulta e os botões online depois da implantação autorizada do backend. Enquanto ausente, o painel apresenta **Configuração pendente** e continua funcionando com o histórico e os recebimentos administrativos. Essa variável controla somente a interface; a autorização e a ativação real continuam no servidor. Não habilitar antes da implantação e da configuração do ambiente de testes.
 
 **Ambientes separados:** contratos e cobranças de teste ficam identificados e separados dos de produção. Um pagamento de teste pode ser validado e exibido no histórico, mas não renova o acesso nem entra nos totais financeiros reais. A regra de renovação é coberta pelos testes locais do banco; a confirmação completa em produção continua exigindo homologação com pagamento real autorizado.
 

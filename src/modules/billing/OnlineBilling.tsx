@@ -4,6 +4,7 @@ import { Button } from '../../components/ui/button';
 import { Modal } from '../../components/ui/modal';
 import { FormError } from '../../components/shared';
 import { getSupabaseClient } from '../../lib/supabase';
+import { DEFAULT_SUPABASE_URL, supabaseOrigin } from '../../lib/public-config';
 import { currency, uid } from '../../lib/format';
 interface ProviderStatus {
   configured: boolean;
@@ -102,6 +103,19 @@ export function OnlineBilling({
     let active = true;
     setStatus(null);
     setError('');
+    // Liberação visual separada da autorização do servidor: a automação ainda aguarda implantação.
+    if (import.meta.env.VITE_ONLINE_BILLING_ENABLED !== 'true') {
+      const origin = supabaseOrigin(
+        import.meta.env.VITE_SUPABASE_URL?.trim() || DEFAULT_SUPABASE_URL,
+      );
+      setStatus({
+        configured: false,
+        environment: 'test',
+        agreement: null,
+        ...(origin ? { webhook_url: `${origin}/functions/v1/crm-billing-webhook` } : {}),
+      });
+      return;
+    }
     void invokeBilling(companyId, 'status', uid())
       .then((value) => {
         if (active) setStatus(value as ProviderStatus);
