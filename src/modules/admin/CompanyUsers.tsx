@@ -1,4 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
+import { Users, ShieldCheck, UserRound, UserRoundX } from 'lucide-react';
+import { Kpi } from '../../components/shared';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Modal } from '../../components/ui/modal';
@@ -56,60 +58,7 @@ export function CompanyUsers({
         </div>
       )}
       {!rows && !error && <p role="status">Carregando usuários...</p>}
-      {rows && (
-        <>
-          <p className="muted">
-            {rows.length} contas cadastradas · {rows.filter((r) => r.role === 'manager').length}{' '}
-            gestores · {rows.filter((r) => r.role !== 'manager' && r.active).length} funcionários
-            ativos · {rows.filter((r) => !r.active).length} contas desativadas
-          </p>
-          {rows.length ? (
-            <div className="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Usuário / e-mail de login</th>
-                    <th>Acesso</th>
-                    <th>Situação</th>
-                    <th>Ações</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((row) => (
-                    <tr key={row.id}>
-                      <td>
-                        <strong>{row.display_name}</strong>
-                        <small>{row.email || 'E-mail não informado'}</small>
-                      </td>
-                      <td>{row.role === 'manager' ? 'Gestor' : 'Funcionário'}</td>
-                      <td>
-                        <span className={'badge ' + (row.active ? 'good' : 'gray')}>
-                          {row.active ? 'Ativo' : 'Desativado'}
-                        </span>
-                        {row.password_change_required && <small>Troca de senha pendente</small>}
-                      </td>
-                      <td>
-                        <Button
-                          variant="outline"
-                          disabled={!row.can_reset}
-                          onClick={() => setTarget(row)}
-                        >
-                          Redefinir senha
-                        </Button>
-                        {!row.can_reset && (
-                          <small>Conta protegida ou vinculada a mais de uma empresa.</small>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          ) : (
-            <p>Nenhum usuário cadastrado nesta empresa.</p>
-          )}
-        </>
-      )}
+      {rows && <CompanyUsersView rows={rows} onReset={setTarget} />}
       {target && (
         <ResetCompanyUser
           key={target.user_id}
@@ -128,6 +77,114 @@ export function CompanyUsers({
         />
       )}
     </section>
+  );
+}
+
+export function CompanyUsersView({
+  rows,
+  onReset,
+}: {
+  rows: AdminCompanyUser[];
+  onReset: (row: AdminCompanyUser) => void;
+}) {
+  const managers = rows.filter((row) => row.role === 'manager');
+  const employees = rows.filter((row) => row.role !== 'manager');
+  const groups = [
+    { title: 'Gestores', rows: managers, empty: 'Nenhum gestor cadastrado nesta empresa.' },
+    {
+      title: 'Funcionários',
+      rows: employees,
+      empty: 'Nenhum funcionário cadastrado nesta empresa.',
+    },
+  ];
+  return (
+    <>
+      <div className="company-user-counts" role="group" aria-label="Resumo dos usuários">
+        <Kpi
+          label="Contas cadastradas"
+          value={rows.length}
+          foot="Gestores e funcionários"
+          icon={<Users size={18} />}
+        />
+        <Kpi
+          label="Gestores"
+          value={managers.length}
+          foot={managers.filter((row) => row.active).length + ' com acesso ativo'}
+          icon={<ShieldCheck size={18} />}
+        />
+        <Kpi
+          label="Funcionários"
+          value={employees.length}
+          foot={employees.filter((row) => row.active).length + ' com acesso ativo'}
+          icon={<UserRound size={18} />}
+        />
+        <Kpi
+          label="Contas desativadas"
+          value={rows.filter((row) => !row.active).length}
+          foot="Incluídas nas contas cadastradas"
+          icon={<UserRoundX size={18} />}
+        />
+      </div>
+      <div className="company-user-table">
+        <table aria-label="Contas da empresa por tipo de acesso">
+          <colgroup>
+            <col className="company-user-identity" />
+            <col className="company-user-status" />
+            <col className="company-user-actions" />
+          </colgroup>
+          <thead>
+            <tr>
+              <th scope="col">Usuário / e-mail de login</th>
+              <th scope="col">Situação</th>
+              <th scope="col">Ações</th>
+            </tr>
+          </thead>
+          {groups.map((group) => (
+            <tbody key={group.title} aria-label={group.title}>
+              <tr className="company-user-group">
+                <th scope="rowgroup" colSpan={3}>
+                  {group.title} <span>({group.rows.length})</span>
+                </th>
+              </tr>
+              {[...group.rows]
+                .sort((a, b) => a.display_name.localeCompare(b.display_name, 'pt-BR'))
+                .map((row) => (
+                  <tr key={row.id} className="company-user-row">
+                    <td data-label="Usuário / e-mail de login">
+                      <strong>{row.display_name}</strong>
+                      <small>{row.email || 'E-mail não informado'}</small>
+                    </td>
+                    <td data-label="Situação">
+                      <span className={'badge ' + (row.active ? 'good' : 'gray')}>
+                        {row.active ? 'Ativo' : 'Desativado'}
+                      </span>
+                      {row.password_change_required && <small>Troca de senha pendente</small>}
+                    </td>
+                    <td data-label="Ações">
+                      <Button
+                        variant="outline"
+                        disabled={!row.can_reset}
+                        aria-label={'Redefinir senha de ' + row.display_name}
+                        onClick={() => onReset(row)}
+                      >
+                        Redefinir senha
+                      </Button>
+                      {!row.can_reset && (
+                        <small>Conta protegida ou vinculada a mais de uma empresa.</small>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              {!group.rows.length && (
+                <tr className="company-users-empty">
+                  <td colSpan={3}>{group.empty}</td>
+                </tr>
+              )}
+            </tbody>
+          ))}
+        </table>
+      </div>
+    </>
   );
 }
 
