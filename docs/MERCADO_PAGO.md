@@ -13,7 +13,7 @@ O painel **Planos e cobranças** reúne o histórico da plataforma. Nos detalhes
 - Renovação apenas após pagamento aprovado. Autorização da assinatura, geração de Pix e retorno do checkout não liberam acesso.
 - Cancelamento da assinatura pelo gestor, com confirmação no Mercado Pago e manutenção do período já pago.
 
-**A integração online permanece desativada até a configuração dos segredos de teste.** A base financeira, a migração adicional de Orders e a versão 2 das duas Edge Functions foram publicadas em 27/10/2026. A verificação dos endpoints confirmou bloqueio de checkout sem sessão (`401`), recebimento online desativado (`503 PAYMENTS_NOT_CONFIGURED`) e CORS permitido para o frontend. A gravação dos segredos no servidor e a homologação no Mercado Pago continuam pendentes; os testes locais e a verificação da implantação não substituem a homologação com a conta recebedora.
+**O backend está configurado para homologação em teste; produção permanece bloqueada.** A base financeira, a migração adicional de Orders e a versão 2 das duas Edge Functions foram publicadas em 27/10/2026. As nove configurações foram salvas no gerenciador de segredos do Supabase e seus digests conferidos. O webhook publicado aceitou uma notificação de verificação sem efeito financeiro com HMAC válido (`200`), recusou corpo com ID divergente (`400`) e assinatura inválida (`401`). O checkout continua exigindo sessão (`401`). A interface online foi habilitada na configuração de build e depende da publicação correspondente. A homologação de pagamentos APRO/OTHE/FUND, Pix e assinatura continua pendente; essas verificações de configuração não substituem uma transação de teste com vendedor e comprador distintos.
 
 ## O que o responsável pela conta precisa fazer
 
