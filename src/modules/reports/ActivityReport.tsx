@@ -1,4 +1,5 @@
 import '../growth/growth.css';
+import { RecordTitle } from '../../components/RecordTitle';
 import { dateLabel } from '../../lib/format';
 import { useState } from 'react';
 import { History } from 'lucide-react';
@@ -109,7 +110,11 @@ export function ActivityReportView({
               {shown.map((r) => (
                 <tr key={r.contactId}>
                   <td>
-                    <strong>{r.name}</strong>
+                    <RecordTitle
+                      title={r.name}
+                      label={'Abrir histórico de ' + r.name}
+                      onOpen={() => onHistory(r)}
+                    />
                     <small className="growth-note">{r.ownerName}</small>
                   </td>
                   <td>

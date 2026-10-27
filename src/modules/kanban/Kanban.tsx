@@ -1,4 +1,5 @@
 import { useStageDrag } from '../../hooks/useStageDrag';
+import { RecordTitle } from '../../components/RecordTitle';
 import { recordWhatsappOpen } from '../../domain/contact-history';
 import { WhatsAppButton } from '../../components/WhatsAppButton';
 import { DemoContactHistory } from '../contacts/ContactHistory';
@@ -301,10 +302,13 @@ export function Kanban() {
                             </button>
                           )}
                         </div>
-                        <button className="contact-link" onClick={() => setSelected(o)}>
-                          {c.name}
-                        </button>
-                        <p>{o.title || c.interests || 'Oportunidade'}</p>
+                        <RecordTitle title={c.name} onOpen={() => setSelected(o)} />
+                        <p>
+                          <RecordTitle
+                            title={o.title || c.interests || 'Oportunidade'}
+                            onOpen={() => setSelected(o)}
+                          />
+                        </p>
                         <strong className="opportunity-value">{currency(o.value)}</strong>
                         <div className="opportunity-quick-actions">
                           <button

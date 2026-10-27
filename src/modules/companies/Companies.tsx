@@ -1,4 +1,5 @@
 import { useSearchParams } from 'react-router-dom';
+import { RecordTitle } from '../../components/RecordTitle';
 import { filterCompanies, companyFilterLabels } from '../../domain/filters';
 import { AppliedFilter } from '../../components/shared';
 import { CurrencyInput } from '../../components/currency-input';
@@ -204,7 +205,7 @@ export function Companies() {
                           <Building2 size={17} />
                         </span>
                         <div>
-                          <strong>{c.name}</strong>
+                          <RecordTitle title={c.name} onOpen={() => open(c)} />
                           <small>{c.segment}</small>
                         </div>
                       </div>

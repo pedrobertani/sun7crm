@@ -10,6 +10,7 @@ import { readPeriod, inPeriod } from '../../domain/filters';
 import { dateLabel } from '../../lib/format';
 import { Input } from '../../components/ui/input';
 import { useState, type FormEvent } from 'react';
+import { RecordTitle } from '../../components/RecordTitle';
 import { Plus, Pencil, ArrowUpRight, Users } from 'lucide-react';
 import { useCrm } from '../../app/context';
 import type { Contact, Temperature } from '../../domain/types';
@@ -216,7 +217,7 @@ export function Contacts() {
                       <div className="person-cell">
                         <span className="avatar">{initials(c.name)}</span>
                         <div>
-                          <strong>{c.name}</strong>
+                          <RecordTitle title={c.name} onOpen={() => open(c)} />
                           <small>{c.email || 'E-mail não informado'}</small>
                         </div>
                       </div>

@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { RecordTitle } from '../../components/RecordTitle';
 import { Link } from 'react-router-dom';
 import { Plus, Handshake, Wallet, CircleDollarSign, CheckCircle2 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
@@ -166,10 +167,13 @@ export function RealAmbassadors() {
                   {refs.data.ambassadors.map((a) => (
                     <tr key={a.id}>
                       <td>
-                        <strong>
-                          {refs.data!.contacts.find((c) => c.id === a.contact_id)?.name ||
-                            'Contato'}
-                        </strong>
+                        <RecordTitle
+                          title={
+                            refs.data!.contacts.find((c) => c.id === a.contact_id)?.name ||
+                            'Contato'
+                          }
+                          onOpen={can('ambassadors.edit') ? () => setAmbassador(a) : undefined}
+                        />
                         <small className="operational-cell-note">
                           {a.active ? 'Ativo' : 'Inativo'}
                         </small>
@@ -237,7 +241,12 @@ export function RealAmbassadors() {
                                     ?.contact_id,
                               )?.name || 'Embaixador'}
                             </td>
-                            <td>{m.name}</td>
+                            <td>
+                              <RecordTitle
+                                title={m.name}
+                                onOpen={can('ambassadors.edit') ? () => setMetric(m) : undefined}
+                              />
+                            </td>
                             <td>
                               {m.value} {m.unit}
                             </td>
@@ -299,9 +308,19 @@ export function RealAmbassadors() {
                   </select>
                 </label>
                 <div>
-                  <strong>
-                    {dateLabel(current.starts_on)} a {dateLabel(current.ends_on)}
-                  </strong>
+                  <RecordTitle
+                    title={current.name}
+                    onOpen={
+                      current.status === 'active' && can('campaigns.edit')
+                        ? () => setCampaign(current)
+                        : undefined
+                    }
+                  />
+                  <p>
+                    <strong>
+                      {dateLabel(current.starts_on)} a {dateLabel(current.ends_on)}
+                    </strong>
+                  </p>
                   <p className="small-note">
                     {current.payment_mode === 'per_point'
                       ? currency(current.rate_cents) + ' por ponto'

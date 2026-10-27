@@ -28,6 +28,7 @@ import type {
 import { currency, uid } from '../../lib/format';
 import { useCardDrag } from '../../hooks/useCardDrag';
 import { useStageDrag } from '../../hooks/useStageDrag';
+import { RecordTitle } from '../../components/RecordTitle';
 import { RealContactHistory } from '../contacts/RealContactHistory';
 import { RecordPicker } from './RecordPicker';
 import { CatalogDialog, ContactDialog, LabelDialog } from './RecordForms';
@@ -286,7 +287,10 @@ export function RealKanban() {
                                         <GripVertical size={16} />
                                       </button>
                                     )}
-                                    <strong>{card.title || contact?.name || 'Oportunidade'}</strong>
+                                    <RecordTitle
+                                      title={card.title || contact?.name || 'Oportunidade'}
+                                      onOpen={() => setEditing(card)}
+                                    />
                                     {can('cards.delete') && (
                                       <button
                                         type="button"

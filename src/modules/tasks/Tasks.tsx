@@ -1,4 +1,6 @@
 import { useCardDrag } from '../../hooks/useCardDrag';
+import { RecordTitle } from '../../components/RecordTitle';
+import type { Task } from '../../domain/types';
 import { useSearchParams } from 'react-router-dom';
 import { Input } from '../../components/ui/input';
 import { useState, type FormEvent } from 'react';
@@ -39,6 +41,7 @@ export function Tasks() {
   }
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
+  const [editingId, setEditingId] = useState('');
   const [error, setError] = useState('');
   const [form, setForm] = useState({
     title: '',
@@ -62,7 +65,20 @@ export function Tasks() {
     .filter((t) => t.title.toLocaleLowerCase().includes(query.toLocaleLowerCase()))
     .sort((a, b) => a.dueDate.localeCompare(b.dueDate));
   function newTask(status: TaskStatus = 'todo') {
+    setEditingId('');
     setForm({ title: '', dueDate: today(), contactId: '', ownerId: session.memberId, status });
+    setError('');
+    setOpen(true);
+  }
+  function openTask(task: Task) {
+    setEditingId(task.id);
+    setForm({
+      title: task.title,
+      dueDate: task.dueDate,
+      contactId: task.contactId,
+      ownerId: task.ownerId,
+      status: taskStatus(task),
+    });
     setError('');
     setOpen(true);
   }
@@ -76,24 +92,28 @@ export function Tasks() {
       setError('Informe a descrição da tarefa.');
       return;
     }
+    if (editingId && !visibleTasks(data, session).some((task) => task.id === editingId)) {
+      setError('Tarefa não encontrada para este perfil.');
+      return;
+    }
+    const task: Task = {
+      ...form,
+      title: form.title.trim(),
+      ownerId: session.role === 'manager' ? form.ownerId : session.memberId,
+      id: editingId || uid(),
+      companyId: session.companyId,
+      done: form.status === 'done',
+    };
     if (
       update((d) => ({
         ...d,
-        tasks: [
-          {
-            ...form,
-            title: form.title.trim(),
-            ownerId: session.role === 'manager' ? form.ownerId : session.memberId,
-            id: uid(),
-            companyId: session.companyId,
-            done: form.status === 'done',
-          },
-          ...d.tasks,
-        ],
+        tasks: editingId
+          ? d.tasks.map((row) => (row.id === editingId ? task : row))
+          : [task, ...d.tasks],
       }))
     ) {
       setOpen(false);
-      notice('Tarefa criada.');
+      notice(editingId ? 'Tarefa atualizada.' : 'Tarefa criada.');
     }
   }
   const startDrag = useCardDrag((id, stage) => move(id, stage as TaskStatus));
@@ -184,7 +204,7 @@ export function Tasks() {
                               draggable={false}
                             >
                               <div className="task-card-heading">
-                                <strong>{t.title}</strong>
+                                <RecordTitle title={t.title} onOpen={() => openTask(t)} />
                                 <button
                                   type="button"
                                   className="card-drag-handle"
@@ -283,7 +303,7 @@ export function Tasks() {
                   {t.done ? <Check size={16} /> : <Circle size={19} />}
                 </button>
                 <div className="task-content">
-                  <strong>{t.title}</strong>
+                  <RecordTitle title={t.title} onOpen={() => openTask(t)} />
                   <small>
                     {data.contacts.find((c) => c.id === t.contactId)?.name ||
                       'Sem contato vinculado'}{' '}
@@ -315,7 +335,7 @@ export function Tasks() {
       <Modal
         open={open}
         onOpenChange={setOpen}
-        title="Nova tarefa"
+        title={editingId ? 'Editar tarefa' : 'Nova tarefa'}
         description="Cadastro manual. Cadências automáticas serão definidas em outra etapa."
       >
         <form onSubmit={save}>

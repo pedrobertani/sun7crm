@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react';
+import { RecordTitle } from '../../components/RecordTitle';
 import { useCrm } from '../../app/context';
 import { Heading, FormActions, FormError } from '../../components/shared';
 import { Button } from '../../components/ui/button';
@@ -70,7 +71,9 @@ export function Catalog() {
             <tbody>
               {items.map((i) => (
                 <tr key={i.id}>
-                  <td>{i.name}</td>
+                  <td>
+                    <RecordTitle title={i.name} onOpen={manager ? () => open(i) : undefined} />
+                  </td>
                   <td>{i.kind === 'service' ? 'Serviço' : 'Produto'}</td>
                   <td>{i.description}</td>
                   <td>{currency(i.value)}</td>
