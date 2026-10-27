@@ -1,13 +1,18 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { CreditCard, ExternalLink, RefreshCw } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Modal } from '../../components/ui/modal';
 import { FormError } from '../../components/shared';
-import { getSupabaseClient } from '../../lib/supabase';
+import { invokeBilling } from './billing-client';
+import { TransparentPayment } from './TransparentPayment';
 import { DEFAULT_SUPABASE_URL, supabaseOrigin } from '../../lib/public-config';
 import { currency, uid } from '../../lib/format';
 interface ProviderStatus {
   configured: boolean;
+  public_key?: string;
+  amount_cents?: number;
+  payer_email?: string;
+  order?: { id: string } | null;
   environment: 'test' | 'production';
   webhook_url?: string;
   agreement: {
@@ -17,47 +22,7 @@ interface ProviderStatus {
     amount_cents: number;
   } | null;
 }
-async function invokeBilling(companyId: string, action: string, operation: string, mode?: string) {
-  const client = getSupabaseClient(),
-    session = await client.auth.getSession();
-  if (session.error || !session.data.session)
-    throw Error('Entre novamente para consultar o pagamento.');
-  const result = await client.functions.invoke('crm-billing-checkout', {
-    body: { company_id: companyId, action, ...(mode ? { mode } : {}) },
-    headers: {
-      Authorization: `Bearer ${session.data.session.access_token}`,
-      'Idempotency-Key': operation,
-    },
-  });
-  if (result.error) {
-    const response = result.error.context;
-    let code = '';
-    if (response instanceof Response) {
-      try {
-        code = (await response.clone().json()).error?.code || '';
-      } catch {
-        /* Envelope indisponível. */
-      }
-    }
-    if (code === 'PAYMENTS_NOT_CONFIGURED')
-      throw Error('O pagamento online ainda não foi ativado.');
-    if (['CHECKOUT_UNCONFIRMED', 'PROVIDER_UNCONFIRMED'].includes(code))
-      throw Error(
-        'Aguarde e use Recuperar solicitação. O resultado anterior será conferido antes de continuar.',
-      );
-    if (['CONFLICT', 'CHECKOUT_REVIEW'].includes(code))
-      throw Error(
-        'Já existe uma cobrança ou assinatura em andamento. Atualize os dados e confira com a administração.',
-      );
-    if (code === 'FORBIDDEN' || code === 'UNAUTHENTICATED')
-      throw Error('Seu acesso precisa ser verificado novamente.');
-    throw Error(
-      'Não foi possível confirmar a operação no Mercado Pago. Tente novamente em instantes.',
-    );
-  }
-  if (!result.data?.data) throw Error('O resultado precisa ser conferido. Atualize os dados.');
-  return result.data.data;
-}
+
 function checkoutUrl(value: unknown) {
   if (typeof value !== 'string') throw Error('O endereço de pagamento precisa ser conferido.');
   const url = new URL(value);
@@ -82,10 +47,12 @@ export function OnlineBilling({
   companyId,
   amount,
   admin = false,
+  onPaymentUpdated,
 }: {
   companyId: string;
   amount?: number;
   admin?: boolean;
+  onPaymentUpdated?: () => void;
 }) {
   const [status, setStatus] = useState<ProviderStatus | null>(null),
     [error, setError] = useState(''),
@@ -99,11 +66,15 @@ export function OnlineBilling({
     [attempted, setAttempted] = useState(false);
   const [formError, setFormError] = useState(''),
     [notice, setNotice] = useState('');
+  const companyScope = useRef(companyId);
   useEffect(() => {
     let active = true;
-    setStatus(null);
+    if (companyScope.current !== companyId) {
+      companyScope.current = companyId;
+      setStatus(null);
+    }
     setError('');
-    // Liberação visual separada da autorização do servidor: a automação ainda aguarda implantação.
+    // A liberação visual não substitui a autorização e a configuração do servidor.
     if (import.meta.env.VITE_ONLINE_BILLING_ENABLED !== 'true') {
       const origin = supabaseOrigin(
         import.meta.env.VITE_SUPABASE_URL?.trim() || DEFAULT_SUPABASE_URL,
@@ -266,6 +237,7 @@ export function OnlineBilling({
           </p>
         ))}
       <Modal
+        size={choice === 'one_time' ? 'wide' : 'default'}
         open={!!choice}
         onOpenChange={(opened) => {
           if (!opened && !busy) setChoice(null);
@@ -279,56 +251,74 @@ export function OnlineBilling({
         }
         description="Plano SUN7CRM"
       >
-        {choice === 'cancel_subscription' ? (
-          <p>
-            As próximas cobranças automáticas serão interrompidas. O cancelamento mantém o período
-            de acesso já pago.
-          </p>
+        {choice === 'one_time' && status?.public_key && status.amount_cents ? (
+          <TransparentPayment
+            companyId={companyId}
+            publicKey={status.public_key}
+            amount={status.amount_cents}
+            environment={status.environment}
+            email={status.payer_email || ''}
+            pendingId={status.order?.id}
+            onBusy={setBusy}
+            onUpdated={() => {
+              setRevision((n) => n + 1);
+              onPaymentUpdated?.();
+            }}
+          />
         ) : (
           <>
-            {amount !== undefined && (
-              <p className="billing-price">
-                {currency(status?.agreement?.amount_cents ?? amount)}
-                {choice === 'subscription' && <small> / mês</small>}
+            {choice === 'cancel_subscription' ? (
+              <p>
+                As próximas cobranças automáticas serão interrompidas. O cancelamento mantém o
+                período de acesso já pago.
               </p>
+            ) : (
+              <>
+                {amount !== undefined && (
+                  <p className="billing-price">
+                    {currency(status?.agreement?.amount_cents ?? amount)}
+                    {choice === 'subscription' && <small> / mês</small>}
+                  </p>
+                )}
+                <p>
+                  {choice === 'subscription'
+                    ? 'Você será encaminhado ao Mercado Pago para autorizar a assinatura mensal. O acesso será renovado após cada cobrança aprovada.'
+                    : 'Você será encaminhado ao Mercado Pago para escolher Pix ou cartão e pagar uma mensalidade.'}
+                </p>
+              </>
             )}
-            <p>
-              {choice === 'subscription'
-                ? 'Você será encaminhado ao Mercado Pago para autorizar a assinatura mensal. O acesso será renovado após cada cobrança aprovada.'
-                : 'Você será encaminhado ao Mercado Pago para escolher Pix ou cartão e pagar uma mensalidade.'}
-            </p>
+            <label className="check-row">
+              <input
+                type="checkbox"
+                disabled={busy || attempted}
+                checked={consent}
+                onChange={(e) => setConsent(e.target.checked)}
+              />
+              <span>
+                {choice === 'cancel_subscription'
+                  ? 'Quero cancelar as próximas cobranças automáticas.'
+                  : choice === 'subscription'
+                    ? 'Concordo com a cobrança mensal recorrente informada.'
+                    : 'Quero pagar esta mensalidade.'}
+              </span>
+            </label>
+            <FormError message={formError} />
+            <div className="form-actions">
+              <Button variant="outline" disabled={busy} onClick={() => setChoice(null)}>
+                Fechar
+              </Button>
+              <Button disabled={busy || !consent} onClick={() => void proceed()}>
+                {busy
+                  ? 'Consultando...'
+                  : attempted
+                    ? 'Recuperar solicitação'
+                    : choice === 'cancel_subscription'
+                      ? 'Confirmar cancelamento'
+                      : 'Continuar no Mercado Pago'}
+              </Button>
+            </div>
           </>
         )}
-        <label className="check-row">
-          <input
-            type="checkbox"
-            disabled={busy || attempted}
-            checked={consent}
-            onChange={(e) => setConsent(e.target.checked)}
-          />
-          <span>
-            {choice === 'cancel_subscription'
-              ? 'Quero cancelar as próximas cobranças automáticas.'
-              : choice === 'subscription'
-                ? 'Concordo com a cobrança mensal recorrente informada.'
-                : 'Quero pagar esta mensalidade.'}
-          </span>
-        </label>
-        <FormError message={formError} />
-        <div className="form-actions">
-          <Button variant="outline" disabled={busy} onClick={() => setChoice(null)}>
-            Fechar
-          </Button>
-          <Button disabled={busy || !consent} onClick={() => void proceed()}>
-            {busy
-              ? 'Consultando...'
-              : attempted
-                ? 'Recuperar solicitação'
-                : choice === 'cancel_subscription'
-                  ? 'Confirmar cancelamento'
-                  : 'Continuar no Mercado Pago'}
-          </Button>
-        </div>
       </Modal>
     </section>
   );

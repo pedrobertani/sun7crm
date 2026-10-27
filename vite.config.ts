@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 import { contentSecurityPolicy } from './src/lib/security-policy';
 
-function productionSecurityPolicy(supabaseUrl?: string): Plugin {
+function productionSecurityPolicy(supabaseUrl?: string, payments = false): Plugin {
   return {
     name: 'sun7crm-production-security-policy',
     apply: 'build',
@@ -14,7 +14,7 @@ function productionSecurityPolicy(supabaseUrl?: string): Plugin {
           tag: 'meta',
           attrs: {
             'http-equiv': 'Content-Security-Policy',
-            content: contentSecurityPolicy(supabaseUrl),
+            content: contentSecurityPolicy(supabaseUrl, payments),
           },
           injectTo: 'head-prepend',
         },
@@ -29,7 +29,10 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       tailwindcss(),
-      productionSecurityPolicy(env.VITE_SUPABASE_URL?.trim() || undefined),
+      productionSecurityPolicy(
+        env.VITE_SUPABASE_URL?.trim() || undefined,
+        env.VITE_ONLINE_BILLING_ENABLED === 'true',
+      ),
     ],
     server: { allowedHosts: ['terminal.local'] },
     build: {

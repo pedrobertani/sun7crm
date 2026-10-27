@@ -351,6 +351,84 @@
 .billing-online .billing-toolbar {
   margin-bottom: 12px;
 }
+.billing-checkout-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 20px;
+  border: 1px solid var(--line);
+  background: var(--raised);
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+.billing-checkout-summary > div {
+  display: grid;
+  gap: 8px;
+}
+.billing-checkout-summary strong {
+  color: var(--heading);
+  font-size: 28px;
+}
+.billing-checkout-summary > span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.billing-methods {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 20px 0;
+}
+.billing-methods > button {
+  flex: 1;
+}
+.billing-methods > button[aria-pressed='true'] {
+  background: var(--primary-soft);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+.billing-transparent > .check-row {
+  margin-bottom: 22px;
+}
+.billing-result-heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--primary);
+}
+.billing-result-heading h3 {
+  margin: 0;
+}
+.billing-pix {
+  display: grid;
+  gap: 16px;
+  max-width: 520px;
+  margin: 20px auto;
+}
+.billing-pix img {
+  justify-self: center;
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+}
+.billing-pix label {
+  display: grid;
+  gap: 8px;
+}
+.billing-pix textarea {
+  width: 100%;
+  min-width: 0;
+  resize: vertical;
+  overflow-wrap: anywhere;
+}
+.billing-card-form {
+  min-height: 120px;
+}
 @media (max-width: 1000px) {
   .billing-kpis {
     grid-template-columns: repeat(2, minmax(0, 1fr));

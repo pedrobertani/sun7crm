@@ -138,7 +138,7 @@ export function RealPlan({ companyId }: { companyId: string }) {
     [revision, setRevision] = useState(0);
   useEffect(() => {
     let active = true;
-    setPlan(null);
+    setPlan((previous) => (previous?.company_id === companyId ? previous : null));
     setError('');
     void loadSubscription(getSupabaseClient(), companyId)
       .then((value) => {
@@ -170,6 +170,7 @@ export function RealPlan({ companyId }: { companyId: string }) {
             key={`online-${companyId}`}
             companyId={companyId}
             amount={plan.monthly_amount_cents}
+            onPaymentUpdated={() => setRevision((n) => n + 1)}
           />
           <BillingHistory key={companyId} companyId={companyId} revision={revision} />
         </>

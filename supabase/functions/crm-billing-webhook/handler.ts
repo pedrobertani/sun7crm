@@ -3,6 +3,7 @@ import { HttpError } from '../_shared/errors.ts';
 import { readBody } from '../_shared/http.ts';
 import { reportSafely } from '../_shared/telemetry.ts';
 import { parseBillingReference, type MercadoPago } from '../_shared/mercado-pago.ts';
+import { recordVerifiedOrder } from '../_shared/billing-orders.ts';
 
 export function billingWebhook(backend: Backend, provider: MercadoPago) {
   return async (request: Request): Promise<Response> => {
@@ -19,7 +20,11 @@ export function billingWebhook(backend: Backend, provider: MercadoPago) {
         data = body.data as { id?: unknown } | undefined;
       if (String(data?.id).toLowerCase() !== id.toLowerCase())
         throw new HttpError(400, 'INVALID_NOTIFICATION', 'Notificação inconsistente.');
-      if (body.type === 'subscription_preapproval') {
+      if (body.type === 'order') {
+        if (!provider.transparentConfigured)
+          throw new HttpError(503, 'PAYMENTS_NOT_CONFIGURED', 'Integração não ativada.');
+        await recordVerifiedOrder(backend, provider, await provider.order(id));
+      } else if (body.type === 'subscription_preapproval') {
         const agreement = await provider.agreement(id),
           reference = parseBillingReference(agreement.reference);
         if (reference?.subscription)

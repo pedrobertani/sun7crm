@@ -139,7 +139,7 @@ test('checkout exige sessão; administrador não contrata em nome da empresa', a
   );
   assert.equal(response.status, 401);
 });
-test('payload separa pagamento avulso e assinatura; não coleta dados de cartão no CRM', async () => {
+test('assinatura usa recorrência mensal e o checkout avulso antigo foi removido', async () => {
   const bodies = [],
     provider = createMercadoPago(config, async (_, init) => {
       bodies.push(JSON.parse(init.body));
@@ -150,20 +150,22 @@ test('payload separa pagamento avulso e assinatura; não coleta dados de cartão
     });
   const input = {
     id,
-    mode: 'one_time',
+    mode: 'subscription',
     amount: 18990,
     email: 'fixture@example.invalid',
     dueDate: '2026-11-01',
     serverDate: '2026-10-27',
   };
   await provider.createCheckout(input);
-  await provider.createCheckout({ ...input, mode: 'subscription' });
-  assert.equal(bodies[0].items[0].unit_price, 189.9);
-  assert.equal(bodies[0].notification_url, config.webhookUrl);
-  assert.equal(bodies[1].auto_recurring.frequency_type, 'months');
-  assert.equal(bodies[1].auto_recurring.start_date, '2026-11-01T15:00:00.000Z');
-  assert.equal(bodies[1].status, 'pending');
-  assert.equal('card_token_id' in bodies[1], false);
+  assert.equal(bodies[0].auto_recurring.frequency_type, 'months');
+  assert.equal(bodies[0].auto_recurring.transaction_amount, 189.9);
+  assert.equal(bodies[0].auto_recurring.start_date, '2026-11-01T15:00:00.000Z');
+  assert.equal(bodies[0].status, 'pending');
+  await assert.rejects(
+    provider.createCheckout({ ...input, mode: 'one_time' }),
+    (e) => e.code === 'INVALID_INPUT',
+  );
+  assert.equal(bodies.length, 1);
 });
 test('HMAC e correspondência do ID são obrigatórios antes de consultar recursos', async () => {
   let calls = 0;
@@ -283,7 +285,7 @@ test('endereços externos são recusados antes do redirecionamento', async () =>
   await assert.rejects(
     provider.createCheckout({
       id,
-      mode: 'one_time',
+      mode: 'subscription',
       amount: 18990,
       email: 'fixture@example.invalid',
       dueDate: '2026-10-27',
