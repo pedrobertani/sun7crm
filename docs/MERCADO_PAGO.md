@@ -13,7 +13,7 @@ O painel **Planos e cobranças** reúne o histórico da plataforma. Nos detalhes
 - Renovação apenas após pagamento aprovado. Autorização da assinatura, geração de Pix e retorno do checkout não liberam acesso.
 - Cancelamento da assinatura pelo gestor, com confirmação no Mercado Pago e manutenção do período já pago.
 
-**A integração online nasce desativada.** A migração financeira do Mercado Pago e a implantação das duas novas Edge Functions aguardam autorização explícita para o banco real. Credenciais e homologação no Mercado Pago também são necessárias. Os testes locais não substituem a homologação com a conta recebedora.
+**A integração online permanece desativada.** Após autorização explícita, a migração financeira foi aplicada no banco real e as duas Edge Functions foram publicadas em 27/10/2026. A verificação dos endpoints confirmou bloqueio de checkout sem sessão (`401`), recebimento online desativado (`503 PAYMENTS_NOT_CONFIGURED`) e CORS permitido para o frontend. Credenciais e homologação no Mercado Pago continuam pendentes; os testes locais e a verificação da implantação não substituem a homologação com a conta recebedora.
 
 ## O que o responsável pela conta precisa fazer
 
