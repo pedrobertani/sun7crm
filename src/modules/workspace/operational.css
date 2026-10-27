@@ -221,7 +221,7 @@
   align-items: center;
   gap: 7px;
 }
-.operational-card-title > strong {
+.operational-card-title > .record-title {
   flex: 1;
   overflow-wrap: anywhere;
   font-size: 13px;

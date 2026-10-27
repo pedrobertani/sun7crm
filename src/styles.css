@@ -574,6 +574,31 @@ svg {
   min-height: 30px;
   padding: 4px;
 }
+.btn-link {
+  justify-content: flex-start;
+  min-height: 24px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--primary);
+  font: inherit;
+  font-weight: 600;
+  text-align: left;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-decoration: underline;
+  text-decoration-color: transparent;
+  text-underline-offset: 3px;
+}
+.btn-link:hover,
+.btn-link:focus-visible {
+  filter: none;
+  text-decoration-color: currentColor;
+}
+.record-title {
+  min-width: 0;
+  max-width: 100%;
+}
 .card {
   background: var(--surface);
   border: 1px solid var(--line);
@@ -1193,19 +1218,6 @@ td small {
   gap: 8px;
   margin-bottom: 13px;
 }
-.contact-link {
-  border: 0;
-  background: none;
-  padding: 0;
-  font-size: 13px;
-  font-weight: 650;
-  color: var(--ink);
-  text-align: left;
-}
-.contact-link:hover {
-  color: var(--primary);
-  text-decoration: underline;
-}
 .opportunity-card p {
   font-size: 10px;
   color: var(--muted);
@@ -1361,7 +1373,7 @@ td small {
   flex: 1;
   min-width: 0;
 }
-.task-content > strong {
+.task-content > .record-title {
   font-size: 12px;
   font-weight: 600;
   display: block;
@@ -1377,7 +1389,7 @@ td small {
   margin: 0 6px;
   color: var(--muted);
 }
-.task-row.done strong {
+.task-row.done .record-title {
   text-decoration: line-through;
   color: var(--ink);
 }
@@ -1826,7 +1838,7 @@ td small {
   .task-content {
     flex-basis: calc(100% - 40px);
   }
-  .task-content strong {
+  .task-content .record-title {
     font-size: 12px;
   }
   .task-content small {
@@ -2203,14 +2215,13 @@ td small {
   justify-content: space-between;
   gap: 10px;
 }
-.task-card-heading > strong {
+.task-card-heading > .record-title {
   font-size: 12px;
   font-weight: 650;
   line-height: 1.6;
-  color: var(--ink);
   overflow-wrap: anywhere;
 }
-.task-kanban-card.task-complete .task-card-heading > strong {
+.task-kanban-card.task-complete .task-card-heading > .record-title {
   color: var(--ink);
   text-decoration: line-through;
 }

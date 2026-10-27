@@ -8,6 +8,7 @@ import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Modal } from '../../components/ui/modal';
 import { Empty, Kpi, Panel } from '../../components/shared';
+import { RecordTitle } from '../../components/RecordTitle';
 import type { TeamRow, CardActivity } from '../../data/backend';
 import { currency, dateLabel, today, uid } from '../../lib/format';
 import { CRM_THEMES } from '../../lib/themes';
@@ -234,7 +235,14 @@ export function RealReports() {
                       return (
                         <tr key={c.opportunity_id}>
                           <td>
-                            <strong>{c.contact_name}</strong>
+                            <RecordTitle
+                              title={c.contact_name}
+                              to={
+                                can('contacts.view')
+                                  ? '/app/contatos?registro=' + c.contact_id
+                                  : undefined
+                              }
+                            />
                             <small className="operational-cell-note">
                               {c.title || 'Card sem título'}
                             </small>
@@ -351,7 +359,14 @@ export function RealTeam() {
               {query.data.map((row) => (
                 <tr key={row.id}>
                   <td>
-                    <strong>{row.display_name}</strong>
+                    <RecordTitle
+                      title={row.display_name}
+                      onOpen={
+                        can('team.manage') && row.role !== 'manager' && row.user_id !== user.id
+                          ? () => setEditing(row)
+                          : undefined
+                      }
+                    />
                     <small className="operational-cell-note">{row.email}</small>
                   </td>
                   <td>{row.role === 'manager' ? 'Gestor' : 'Permissões individuais'}</td>

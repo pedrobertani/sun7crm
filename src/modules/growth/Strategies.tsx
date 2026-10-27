@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react';
+import { RecordTitle } from '../../components/RecordTitle';
 import { useCrm } from '../../app/context';
 import type { Strategy } from '../../domain/types';
 import { currency, today, uid } from '../../lib/format';
@@ -143,7 +144,7 @@ export function Strategies() {
               {rows.map((s) => (
                 <tr key={s.id}>
                   <td>
-                    <strong>{s.name}</strong>
+                    <RecordTitle title={s.name} onOpen={() => open(s)} />
                     <small className="growth-note">{s.notes || 'Sem observações'}</small>
                   </td>
                   <td>{s.channel}</td>

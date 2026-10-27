@@ -1,4 +1,5 @@
 import { PermissionTree } from '../permissions/PermissionTree';
+import { RecordTitle } from '../../components/RecordTitle';
 import { legacyPermissions, type EmployeePermissions } from '../permissions/model';
 import { Input } from '../../components/ui/input';
 import { useState, type FormEvent } from 'react';
@@ -127,7 +128,7 @@ export function Team() {
                     <div className="person-cell">
                       <span className="avatar">{initials(m.name)}</span>
                       <div>
-                        <strong>{m.name}</strong>
+                        <RecordTitle title={m.name} onOpen={() => open(m)} />
                         <small>{m.email}</small>
                       </div>
                     </div>

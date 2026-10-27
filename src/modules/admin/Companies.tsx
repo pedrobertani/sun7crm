@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import { AppliedFilter, Empty, FormError, Heading, SearchInput } from '../../components/shared';
+import { RecordTitle } from '../../components/RecordTitle';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Modal } from '../../components/ui/modal';
@@ -316,7 +317,7 @@ export function AdminCompanies({
                 {rows.map((company) => (
                   <tr key={company.id}>
                     <td>
-                      <strong>{company.name}</strong>
+                      <RecordTitle title={company.name} onOpen={() => setDetails(company.id)} />
                       <small>{company.segment}</small>
                     </td>
                     <td>

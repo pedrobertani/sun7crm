@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react';
+import { RecordTitle } from '../../components/RecordTitle';
 import { useCrm } from '../../app/context';
 import type { Ambassador, AmbassadorCampaign } from '../../domain/types';
 import {
@@ -298,7 +299,13 @@ export function Ambassadors() {
                 return (
                   <tr key={a.id}>
                     <td>
-                      {data.contacts.find((c) => c.id === a.contactId)?.name || a.name}
+                      <RecordTitle
+                        title={data.contacts.find((c) => c.id === a.contactId)?.name || a.name}
+                        onOpen={() => {
+                          setError('');
+                          setPerson({ ...a });
+                        }}
+                      />
                       {!a.active ? ' · Inativo' : ''}
                       <small className="growth-note">
                         {a.category || 'Função não informada'}

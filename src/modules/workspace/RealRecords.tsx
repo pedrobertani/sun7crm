@@ -6,6 +6,7 @@ import { Input } from '../../components/ui/input';
 import { Modal } from '../../components/ui/modal';
 import { CurrencyInput } from '../../components/currency-input';
 import { Empty, SearchInput, TemperatureBadge } from '../../components/shared';
+import { RecordTitle } from '../../components/RecordTitle';
 import { WhatsAppButton } from '../../components/WhatsAppButton';
 import type { ContactRow, CatalogRow, LabelRow, StrategyRow, TaskRow } from '../../data/backend';
 import type { Temperature } from '../../domain/types';
@@ -105,7 +106,10 @@ export function RealContacts() {
                 {query.data.rows.map((c) => (
                   <tr key={c.id}>
                     <td>
-                      <strong>{c.name}</strong>
+                      <RecordTitle
+                        title={c.name}
+                        onOpen={can('contacts.edit') ? () => setEditing(c) : undefined}
+                      />
                       <small className="operational-cell-note">
                         {c.email || 'E-mail não informado'}
                       </small>
@@ -236,7 +240,14 @@ export function RealCatalog({ labels = false }: { labels?: boolean }) {
                 {query.data.rows.map((row) => (
                   <tr key={row.id}>
                     <td>
-                      <strong>{row.name}</strong>
+                      <RecordTitle
+                        title={row.name}
+                        onOpen={
+                          can(labels ? 'labels.edit' : 'catalog.edit')
+                            ? () => setEditing(row)
+                            : undefined
+                        }
+                      />
                       {'description' in row && (
                         <small className="operational-cell-note">{row.description}</small>
                       )}
@@ -347,7 +358,10 @@ export function RealStrategies() {
                 {query.data.rows.map((row) => (
                   <tr key={row.id}>
                     <td>
-                      <strong>{row.name}</strong>
+                      <RecordTitle
+                        title={row.name}
+                        onOpen={can('strategies.edit') ? () => setEditing(row) : undefined}
+                      />
                       <small className="operational-cell-note">{row.notes}</small>
                     </td>
                     <td>{row.month.slice(0, 7).split('-').reverse().join('/')}</td>
@@ -584,7 +598,11 @@ export function RealTasks() {
                 {query.data.rows.map((row) => (
                   <tr key={row.id}>
                     <td>
-                      <strong>{row.title}</strong>
+                      <RecordTitle
+                        title={row.title}
+                        label={'Abrir tarefa ' + row.title}
+                        onOpen={can('tasks.edit') ? () => setEditing(row) : undefined}
+                      />
                       {row.completed_at && (
                         <small className="operational-cell-note">
                           Concluída em{' '}
