@@ -2,31 +2,53 @@ import type { Command, JsonObject } from '../_shared/contracts.ts';
 import { HttpError } from '../_shared/errors.ts';
 import { keys, uuid } from '../_shared/validation.ts';
 import type { CheckoutInput, MercadoPago } from '../_shared/mercado-pago.ts';
+import { transparentCheckout } from '../_shared/billing-orders.ts';
 
 export function billingCheckout(provider: MercadoPago): Command {
   return async ({ actorId, requestId, body, backend }) => {
-    keys(body, ['company_id', 'action', 'mode']);
+    keys(body, ['company_id', 'action', 'mode', 'payment', 'attempt_id']);
     const companyId = uuid(body.company_id, 'empresa');
     const action = body.action;
-    if (!['status', 'checkout', 'cancel_subscription'].includes(String(action)))
+    if (
+      !['status', 'checkout', 'cancel_subscription', 'create_order', 'order_status'].includes(
+        String(action),
+      )
+    )
       throw new HttpError(400, 'INVALID_INPUT', 'Selecione uma ação válida.');
     const context = await backend.rpc<JsonObject>('crm_edge_billing_context', {
       p_actor: actorId,
       p_company: companyId,
       p_environment: provider.environment,
     });
-    if (action === 'status')
+    if (action === 'status') {
+      keys(body, ['company_id', 'action']);
+      const pending = provider.transparentConfigured
+        ? await backend.rpc<JsonObject | null>('crm_edge_order_context', {
+            p_actor: actorId,
+            p_company: companyId,
+            p_id: null,
+            p_environment: provider.environment,
+          })
+        : null;
       return {
         status: 200,
         data: {
-          configured: provider.configured,
+          configured: provider.transparentConfigured === true,
           environment: provider.environment,
+          public_key: provider.publicKey,
+          amount_cents: context.amount_cents,
+          payer_email: context.email,
+          order: pending?.attempt ? { id: (pending.attempt as JsonObject).id } : null,
           ...(context.is_admin ? { webhook_url: provider.webhookUrl } : {}),
           agreement: context.agreement || null,
         },
       };
+    }
     if (context.is_admin)
       throw new HttpError(403, 'FORBIDDEN', 'A contratação é realizada pelo gestor da empresa.');
+    if (action === 'create_order' || action === 'order_status')
+      return transparentCheckout(backend, provider, actorId, companyId, requestId, body);
+    keys(body, ['company_id', 'action', 'mode']);
     if (!provider.configured)
       throw new HttpError(
         503,
@@ -56,8 +78,8 @@ export function billingCheckout(provider: MercadoPago): Command {
       });
       return { status: 200, data: { cancelled: true } };
     }
-    if (body.mode !== 'one_time' && body.mode !== 'subscription')
-      throw new HttpError(400, 'INVALID_INPUT', 'Selecione pagamento ou assinatura.');
+    if (body.mode !== 'subscription')
+      throw new HttpError(400, 'INVALID_INPUT', 'Use o pagamento integrado por Pix ou cartão.');
     const prepared = await backend.rpc<JsonObject>('crm_edge_begin_checkout', {
       p_actor: actorId,
       p_company: companyId,

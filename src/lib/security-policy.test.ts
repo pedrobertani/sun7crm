@@ -31,6 +31,20 @@ describe('Política de segurança do build', () => {
     );
     expect(supabaseOrigin('http://127.0.0.1:54321/')).toBe('http://127.0.0.1:54321');
   });
+  it('libera somente hosts específicos do provedor quando pagamentos estão habilitados', () => {
+    const policy = contentSecurityPolicy(undefined, true);
+    expect(policy).toContain(
+      "script-src 'self' https://sdk.mercadopago.com https://http2.mlstatic.com",
+    );
+    expect(policy).toContain('https://secure-fields.mercadopago.com');
+    expect(policy).toContain('https://api.mercadopago.com');
+    expect(policy).toContain("script-src-attr 'none'");
+    expect(policy).toContain("object-src 'none'");
+    expect(policy).not.toContain("'unsafe-eval'");
+    expect(policy).not.toContain('https:;');
+    expect(policy).not.toContain('*');
+    expect(contentSecurityPolicy()).not.toContain('mercadopago');
+  });
   it.each([
     'https://example.invalid;script-src',
     'https://*.example.invalid',

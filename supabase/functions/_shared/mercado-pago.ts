@@ -1,5 +1,6 @@
 import { HttpError } from './errors.ts';
 import type { JsonObject } from './contracts.ts';
+import { createOrderGateway } from './mercado-pago-orders.ts';
 
 export interface MercadoPagoConfig {
   accessToken: string;
@@ -9,6 +10,9 @@ export interface MercadoPagoConfig {
   returnUrl: string;
   webhookUrl: string;
   enabled: boolean;
+  publicKey?: string;
+  applicationId?: string;
+  productionEnabled?: boolean;
 }
 export interface CheckoutInput {
   id: string;
@@ -30,7 +34,9 @@ export interface VerifiedPayment {
   method: string;
   paidAt: string | null;
 }
-export interface MercadoPago {
+export interface MercadoPago extends ReturnType<typeof createOrderGateway> {
+  transparentConfigured: boolean;
+  publicKey: string;
   configured: boolean;
   environment: 'test' | 'production';
   webhookUrl: string;
@@ -81,6 +87,7 @@ export function createMercadoPago(
 ): MercadoPago {
   const configured =
     config.enabled &&
+    (config.environment === 'test' || config.productionEnabled === true) &&
     !!config.accessToken &&
     !!config.webhookSecret &&
     /^\d+$/.test(config.collectorId) &&
@@ -118,6 +125,12 @@ export function createMercadoPago(
         'O Mercado Pago não confirmou o resultado. Tente recuperar esta mesma solicitação.',
       );
     }
+    if (method === 'POST' && path === '/v1/orders' && [400, 422].includes(response.status))
+      throw new HttpError(
+        422,
+        'PAYMENT_INPUT_REJECTED',
+        'O Mercado Pago não aceitou os dados. Confira o formulário e tente novamente.',
+      );
     if (!response.ok)
       throw new HttpError(
         502,
@@ -139,13 +152,28 @@ export function createMercadoPago(
     url: safeCheckoutUrl(row.init_point),
   });
   return {
+    ...createOrderGateway(
+      {
+        collectorId: config.collectorId,
+        applicationId: config.applicationId || '',
+        environment: config.environment,
+      },
+      api,
+    ),
+    transparentConfigured:
+      configured &&
+      /^APP_USR-[a-f0-9-]{36}$/i.test(config.publicKey || '') &&
+      /^\d+$/.test(config.applicationId || ''),
+    publicKey: config.publicKey || '',
     configured,
     environment: config.environment,
     webhookUrl: config.webhookUrl,
     async findCheckout(input) {
+      if (input.mode !== 'subscription')
+        throw new HttpError(400, 'INVALID_INPUT', 'Use o pagamento integrado por Pix ou cartão.');
       const reference = billingReference(input.mode, input.id);
       const result = await api(
-        `${input.mode === 'subscription' ? '/preapproval/search' : '/checkout/preferences/search'}?external_reference=${encodeURIComponent(reference)}`,
+        `/preapproval/search?external_reference=${encodeURIComponent(reference)}`,
       );
       const candidates = result.results || result.elements || [];
       const rows = Array.isArray(candidates)
@@ -162,57 +190,26 @@ export function createMercadoPago(
       return rows.length ? checkout(rows[0]) : null;
     },
     async createCheckout(input) {
+      if (input.mode !== 'subscription')
+        throw new HttpError(400, 'INVALID_INPUT', 'Use o pagamento integrado por Pix ou cartão.');
       const reference = billingReference(input.mode, input.id);
-      const body: JsonObject =
-        input.mode === 'subscription'
-          ? {
-              reason: 'SUN7CRM Mensal',
-              external_reference: reference,
-              payer_email: input.email,
-              auto_recurring: {
-                frequency: 1,
-                frequency_type: 'months',
-                transaction_amount: input.amount / 100,
-                currency_id: 'BRL',
-                ...(input.dueDate > input.serverDate
-                  ? { start_date: `${input.dueDate}T15:00:00.000Z` }
-                  : {}),
-              },
-              back_url: config.returnUrl,
-              status: 'pending',
-            }
-          : {
-              items: [
-                {
-                  id: input.id,
-                  title: 'SUN7CRM Mensal',
-                  currency_id: 'BRL',
-                  quantity: 1,
-                  unit_price: input.amount / 100,
-                },
-              ],
-              payer: { email: input.email },
-              external_reference: reference,
-              notification_url: config.webhookUrl,
-              auto_return: 'approved',
-              back_urls: {
-                success: config.returnUrl,
-                pending: config.returnUrl,
-                failure: config.returnUrl,
-              },
-              payment_methods: {
-                installments: 1,
-                excluded_payment_types: [{ id: 'ticket' }, { id: 'atm' }],
-              },
-            };
-      return checkout(
-        await api(
-          input.mode === 'subscription' ? '/preapproval' : '/checkout/preferences',
-          'POST',
-          body,
-          input.id,
-        ),
-      );
+      const body: JsonObject = {
+        reason: 'SUN7CRM Mensal',
+        external_reference: reference,
+        payer_email: input.email,
+        auto_recurring: {
+          frequency: 1,
+          frequency_type: 'months',
+          transaction_amount: input.amount / 100,
+          currency_id: 'BRL',
+          ...(input.dueDate > input.serverDate
+            ? { start_date: `${input.dueDate}T15:00:00.000Z` }
+            : {}),
+        },
+        back_url: config.returnUrl,
+        status: 'pending',
+      };
+      return checkout(await api('/preapproval', 'POST', body, input.id));
     },
     async payment(id) {
       if (!/^\d{1,30}$/.test(id))
