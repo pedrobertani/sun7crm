@@ -198,6 +198,227 @@
   letter-spacing: 1px;
   color: var(--muted);
 }
+.billing-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+.billing-tabs button[aria-pressed='true'] {
+  color: var(--primary);
+  background: var(--primary-soft);
+  border-color: var(--primary);
+}
+.billing-ledger {
+  min-width: 0;
+  margin-top: 28px;
+}
+.billing-ledger h2 {
+  font-size: 20px;
+  margin: 0 0 8px;
+}
+.billing-ledger .muted {
+  margin: 0;
+  line-height: 1.6;
+}
+.billing-filters {
+  display: flex;
+  gap: 14px;
+  align-items: end;
+  flex-wrap: wrap;
+  padding: 18px;
+  margin-bottom: 18px;
+}
+.billing-filters label,
+.billing-company-search {
+  min-width: 0;
+}
+.billing-filters label {
+  display: grid;
+  gap: 8px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.billing-filters input,
+.billing-filters select {
+  width: 100%;
+  min-width: 130px;
+  min-height: 42px;
+}
+.billing-company-search {
+  display: flex;
+  gap: 8px;
+  align-items: end;
+  flex: 1;
+}
+.billing-company-search label {
+  flex: 1;
+}
+.billing-kpis {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+}
+.billing-kpis .kpi {
+  padding: 20px;
+  min-width: 0;
+}
+.billing-kpis .kpi-value {
+  font-size: clamp(20px, 2vw, 28px);
+  overflow-wrap: anywhere;
+}
+.billing-ledger > .small-note {
+  margin: 16px 0;
+}
+.billing-table-card {
+  padding: 16px;
+}
+.billing-charge-table {
+  min-width: 680px;
+  width: 100%;
+}
+.billing-charge-table td {
+  vertical-align: top;
+}
+.billing-charge-table small {
+  display: block;
+  font-size: 11px;
+  margin-top: 6px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+.billing-pagination {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
+  margin-top: 20px;
+  font-size: 13px;
+  color: var(--muted);
+}
+.billing-pagination > div {
+  display: flex;
+  gap: 8px;
+}
+.billing-charge-details {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0 0 20px;
+}
+.billing-charge-details > div {
+  background: var(--raised);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 14px;
+  min-width: 0;
+}
+.billing-charge-details dt {
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+.billing-charge-details dd {
+  color: var(--text);
+  font-weight: 600;
+  font-size: 14px;
+  margin: 0;
+  overflow-wrap: anywhere;
+  line-height: 1.6;
+}
+.billing-note {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  line-height: 1.6;
+}
+.billing-note strong {
+  display: block;
+  margin-bottom: 6px;
+}
+.billing-online {
+  padding: 22px;
+  margin: 24px 0;
+}
+.billing-online h3 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 8px;
+}
+.billing-online p {
+  line-height: 1.65;
+}
+.billing-online .billing-toolbar {
+  margin-bottom: 12px;
+}
+@media (max-width: 1000px) {
+  .billing-kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 650px) {
+  .billing-charge-details {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .billing-filters > label {
+    flex: 1 1 40%;
+  }
+  .billing-company-search {
+    flex-basis: 100%;
+  }
+  .billing-charge-table {
+    min-width: 0;
+    table-layout: fixed;
+  }
+  .billing-charge-table thead {
+    display: none;
+  }
+  .billing-charge-table tbody,
+  .billing-charge-table tr {
+    display: block;
+  }
+  .billing-charge-table tr {
+    padding: 16px 0;
+    border-bottom: 1px solid var(--line);
+  }
+  .billing-charge-table tr:last-child {
+    border-bottom: 0;
+  }
+  .billing-charge-table td {
+    display: grid;
+    grid-template-columns: 90px minmax(0, 1fr);
+    gap: 4px 10px;
+    padding: 7px 0;
+    border: 0;
+    overflow-wrap: anywhere;
+  }
+  .billing-charge-table td::before {
+    content: attr(data-label);
+    grid-column: 1;
+    color: var(--muted);
+    font-size: 12px;
+  }
+  .billing-charge-table td > * {
+    grid-column: 2;
+    justify-self: start;
+  }
+  .billing-table-card .table-wrap {
+    overflow: visible;
+  }
+  .billing-table-card {
+    padding: 16px;
+  }
+}
+@media (max-width: 420px) {
+  .billing-charge-details,
+  .billing-kpis {
+    grid-template-columns: 1fr;
+  }
+  .billing-pagination {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
 @media (min-width: 1250px) {
   .billing-admin-main .billing-plan {
     grid-template-columns: minmax(290px, 0.9fr) minmax(300px, 1fr);

@@ -45,7 +45,7 @@ export function AdminWorkspace({
   const location = useLocation();
   const isCompanies = location.pathname.startsWith('/admin/empresas');
   const isPlans = location.pathname.startsWith('/admin/planos');
-  const current = isCompanies ? 'Empresas' : isPlans ? 'Planos' : 'Visão geral';
+  const current = isCompanies ? 'Empresas' : isPlans ? 'Planos e cobranças' : 'Visão geral';
   const colors = ADMIN_THEME;
 
   useEffect(() => {
@@ -102,7 +102,7 @@ export function AdminWorkspace({
   const links = [
     { to: '/admin', label: 'Visão geral', icon: LayoutDashboard },
     { to: '/admin/empresas', label: 'Empresas', icon: Building2 },
-    { to: '/admin/planos', label: 'Planos', icon: CreditCard },
+    { to: '/admin/planos', label: 'Planos e cobranças', icon: CreditCard },
   ];
   return (
     <ThemeProvider style={colors}>

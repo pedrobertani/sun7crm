@@ -15,3 +15,11 @@ verify_jwt = false
 
 [functions.crm-update-company]
 verify_jwt = false
+
+# Checkout valida JWT de sessão; webhook exige HMAC e consulta autenticada ao provedor.
+[functions.crm-billing-checkout]
+verify_jwt = false
+
+[functions.crm-billing-webhook]
+verify_jwt = false
+

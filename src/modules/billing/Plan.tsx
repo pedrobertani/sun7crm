@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { CalendarDays, CreditCard, Gift, ShieldCheck } from 'lucide-react';
 import { Heading } from '../../components/shared';
 import { Button } from '../../components/ui/button';
@@ -13,6 +13,9 @@ import {
   type Subscription,
 } from './subscription';
 import './billing.css';
+import { BillingHistory } from './BillingHistory';
+import { OnlineBilling } from './OnlineBilling';
+import { demoChargeHistory } from './demo-history';
 
 export function PlanPanel({ plan, demo = false }: { plan: Subscription; demo?: boolean }) {
   return (
@@ -67,11 +70,11 @@ export function PlanPanel({ plan, demo = false }: { plan: Subscription; demo?: b
             {plan.status === 'blocked'
               ? 'O período de acesso terminou.'
               : 'Seu plano aguarda liberação.'}{' '}
-            Combine o pagamento com a administração para continuar.
+            Consulte abaixo as opções de pagamento ou combine a renovação com a administração.
           </p>
         )}
         <p className="small-note">
-          O pagamento é confirmado pela administração. Os dias de carência utilizados são
+          A renovação depende da confirmação do pagamento. Os dias de carência utilizados são
           descontados do próximo período pago, até o limite de sete dias. Dias bloqueados não são
           descontados.
         </p>
@@ -88,8 +91,8 @@ export function PlanPanel({ plan, demo = false }: { plan: Subscription; demo?: b
         )}
       </section>
       <section className="card billing-history">
-        <h3>Histórico do plano</h3>
-        <p className="muted">Últimos 20 registros de pagamentos e períodos gratuitos.</p>
+        <h3>Movimentações de acesso</h3>
+        <p className="muted">Últimas 20 renovações e concessões de dias gratuitos.</p>
         {!plan.events.length ? (
           <div className="billing-empty">Nenhum pagamento ou gratuidade registrado.</div>
         ) : (
@@ -161,7 +164,15 @@ export function RealPlan({ companyId }: { companyId: string }) {
           {error}
         </p>
       ) : plan ? (
-        <PlanPanel plan={plan} />
+        <>
+          <PlanPanel plan={plan} />
+          <OnlineBilling
+            key={`online-${companyId}`}
+            companyId={companyId}
+            amount={plan.monthly_amount_cents}
+          />
+          <BillingHistory key={companyId} companyId={companyId} revision={revision} />
+        </>
       ) : (
         <p role="status">Consultando seu plano...</p>
       )}
@@ -170,9 +181,15 @@ export function RealPlan({ companyId }: { companyId: string }) {
 }
 export function DemoPlan() {
   const { data, session } = useCrm();
-  if (session.role !== 'manager') return <p>O plano é exclusivo do gestor.</p>;
   const company = data.companies.find((item) => item.id === session.companyId)!;
   const date = today();
+  const history = useMemo(
+    () =>
+      company ? demoChargeHistory(company.id, company.name, company.dueDate, date) : undefined,
+    [company?.id, company?.name, company?.dueDate, date],
+  );
+  if (session.role !== 'manager' || !company || !history)
+    return <p>O plano é exclusivo do gestor.</p>;
   const status = subscriptionState(company.dueDate, 'monthly', date);
   const used = Math.min(
     7,
@@ -201,6 +218,7 @@ export function DemoPlan() {
           events: [],
         }}
       />
+      <BillingHistory demoData={history} companyId={company.id} />
     </>
   );
 }
