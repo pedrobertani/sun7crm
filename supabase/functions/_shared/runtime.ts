@@ -15,7 +15,7 @@ function injectedKey(name: string, prefix: string): string {
   throw new HttpError(503, 'SERVER_CONFIGURATION', 'O serviço ainda não está configurado.');
 }
 
-export function serve(command: Command, functionName: string) {
+export function backendRuntime(functionName: string) {
   // Clientes separados: o JWT do solicitante nunca substitui a credencial administrativa.
   const clients = () => {
     const url = Deno.env.get('SUPABASE_URL');
@@ -132,5 +132,9 @@ export function serve(command: Command, functionName: string) {
     .split(',')
     .map((value) => value.trim())
     .filter(Boolean);
+  return { backend, origins };
+}
+export function serve(command: Command, functionName: string) {
+  const { backend, origins } = backendRuntime(functionName);
   Deno.serve(createHttpHandler(backend, command, origins));
 }

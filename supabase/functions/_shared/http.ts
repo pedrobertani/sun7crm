@@ -6,7 +6,7 @@ import { reportSafely, safeException } from './telemetry.ts';
 export const DEFAULT_ORIGIN = 'https://sun7crm-base.dreamygull10.chatgpt.site';
 const MAX_BODY_BYTES = 16_384;
 
-async function readBody(request: Request): Promise<JsonObject> {
+export async function readBody(request: Request): Promise<JsonObject> {
   if (
     request.headers.get('content-type')?.split(';')[0].trim().toLowerCase() !== 'application/json'
   ) {

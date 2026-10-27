@@ -16,6 +16,7 @@ import { getSupabaseClient } from '../../lib/supabase';
 import { AccessChangedError } from '../auth/access';
 import { stateLabels, subscriptionState } from '../billing/subscription';
 import { CompanyUsers } from './CompanyUsers';
+import { BillingHistory } from '../billing/BillingHistory';
 import {
   AdminCommandError,
   companyInput,
@@ -59,6 +60,11 @@ export function AdminCompanies({
   const [params, setParams] = useSearchParams();
   const [query, setQuery] = useState('');
   const [details, setDetails] = useState<string | null>(null);
+  const [detailsTab, setDetailsTab] = useState<'company' | 'billing'>('company');
+  function openDetails(id: string) {
+    setDetailsTab('company');
+    setDetails(id);
+  }
   const [newCompanyOpen, setNewCompanyOpen] = useState(false);
   const [editingCompany, setEditingCompany] = useState<AdminCompany | null>(null);
   const [companyForm, setCompanyForm] = useState(initialCompany);
@@ -317,7 +323,7 @@ export function AdminCompanies({
                 {rows.map((company) => (
                   <tr key={company.id}>
                     <td>
-                      <RecordTitle title={company.name} onOpen={() => setDetails(company.id)} />
+                      <RecordTitle title={company.name} onOpen={() => openDetails(company.id)} />
                       <small>{company.segment}</small>
                     </td>
                     <td>
@@ -356,7 +362,7 @@ export function AdminCompanies({
                         <Button
                           size="sm"
                           variant="ghost"
-                          onClick={() => setDetails(company.id)}
+                          onClick={() => openDetails(company.id)}
                           aria-label={`Ver detalhes de ${company.name}`}
                         >
                           Detalhes
@@ -610,52 +616,88 @@ export function AdminCompanies({
       >
         {selected && (
           <>
-            <section className="admin-company-section" aria-label="Dados da empresa">
-              <h3>Dados da empresa</h3>
-              <dl className="admin-company-details">
-                <div>
-                  <dt>Segmento</dt>
-                  <dd>{selected.segment}</dd>
-                </div>
-                <div>
-                  <dt>Modelo inicial</dt>
-                  <dd>{selected.template === 'aesthetic' ? 'Estética' : 'Genérico'}</dd>
-                </div>
-                <div>
-                  <dt>Valor mensal</dt>
-                  <dd>{currency(selected.monthlyAmount)}</dd>
-                </div>
-                <div>
-                  <dt>Vencimento</dt>
-                  <dd>{dateLabel(selected.dueDate)}</dd>
-                </div>
-                <div>
-                  <dt>Situação</dt>
-                  <dd>{selected.enabled ? 'Ativa' : 'Desativada'}</dd>
-                </div>
-                <div>
-                  <dt>Gestor responsável</dt>
-                  <dd>
-                    {selected.managers.map((m) => m.name).join(', ') || 'Ainda não cadastrado'}
-                  </dd>
-                </div>
-              </dl>
-            </section>
-            <CompanyUsers
-              key={selected.id}
-              companyId={selected.id}
-              userId={userId}
-              onRecheck={onRecheck}
-              onNotice={onNotice}
-            />
-            <div className="form-actions">
-              <Button variant="outline" onClick={() => editCompany(selected)}>
-                Editar empresa
+            <div className="billing-tabs" role="group" aria-label="Detalhes da empresa">
+              <Button
+                variant={detailsTab === 'company' ? 'outline' : 'ghost'}
+                aria-pressed={detailsTab === 'company'}
+                onClick={() => setDetailsTab('company')}
+              >
+                Dados e usuários
               </Button>
-              {!selected.managers.length && (
-                <Button onClick={() => openManager(selected)}>Cadastrar gestor</Button>
-              )}
+              <Button
+                variant={detailsTab === 'billing' ? 'outline' : 'ghost'}
+                aria-pressed={detailsTab === 'billing'}
+                onClick={() => setDetailsTab('billing')}
+              >
+                Cobranças
+              </Button>
             </div>
+            {detailsTab === 'billing' ? (
+              <>
+                <BillingHistory
+                  key={selected.id}
+                  companyId={selected.id}
+                  admin
+                  onChanged={onReload}
+                />
+                <div className="form-actions">
+                  <Button asChild variant="outline">
+                    <Link to={`/admin/planos?empresa=${selected.id}&visao=planos`}>
+                      Gerenciar plano e cobranças
+                    </Link>
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <>
+                <section className="admin-company-section" aria-label="Dados da empresa">
+                  <h3>Dados da empresa</h3>
+                  <dl className="admin-company-details">
+                    <div>
+                      <dt>Segmento</dt>
+                      <dd>{selected.segment}</dd>
+                    </div>
+                    <div>
+                      <dt>Modelo inicial</dt>
+                      <dd>{selected.template === 'aesthetic' ? 'Estética' : 'Genérico'}</dd>
+                    </div>
+                    <div>
+                      <dt>Valor mensal</dt>
+                      <dd>{currency(selected.monthlyAmount)}</dd>
+                    </div>
+                    <div>
+                      <dt>Vencimento</dt>
+                      <dd>{dateLabel(selected.dueDate)}</dd>
+                    </div>
+                    <div>
+                      <dt>Situação</dt>
+                      <dd>{selected.enabled ? 'Ativa' : 'Desativada'}</dd>
+                    </div>
+                    <div>
+                      <dt>Gestor responsável</dt>
+                      <dd>
+                        {selected.managers.map((m) => m.name).join(', ') || 'Ainda não cadastrado'}
+                      </dd>
+                    </div>
+                  </dl>
+                </section>
+                <CompanyUsers
+                  key={selected.id}
+                  companyId={selected.id}
+                  userId={userId}
+                  onRecheck={onRecheck}
+                  onNotice={onNotice}
+                />
+                <div className="form-actions">
+                  <Button variant="outline" onClick={() => editCompany(selected)}>
+                    Editar empresa
+                  </Button>
+                  {!selected.managers.length && (
+                    <Button onClick={() => openManager(selected)}>Cadastrar gestor</Button>
+                  )}
+                </div>
+              </>
+            )}
           </>
         )}
       </Modal>

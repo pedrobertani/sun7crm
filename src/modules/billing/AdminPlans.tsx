@@ -9,6 +9,9 @@ import { currency, dateLabel, shiftDate, today, uid } from '../../lib/format';
 import type { AdminCompany } from '../admin/repository';
 import { AccessChangedError } from '../auth/access';
 import { PlanPanel } from './Plan';
+import { BillingHistory } from './BillingHistory';
+import { createCharge } from './charges';
+import { OnlineBilling } from './OnlineBilling';
 import {
   applyBillingCommand,
   BillingCommandError,
@@ -19,6 +22,8 @@ import {
   type BillingAttempt,
   type Subscription,
 } from './subscription';
+
+type AdminBillingAttempt = BillingAttempt | (Omit<BillingAttempt, 'kind'> & { kind: 'charge' });
 
 export function AdminPlans({
   companies,
@@ -34,18 +39,20 @@ export function AdminPlans({
   onNotice: (message: string) => void;
 }) {
   const [params, setParams] = useSearchParams();
+  const showPlans =
+    params.get('visao') === 'planos' || (!params.has('visao') && params.has('empresa'));
   const selectedId = params.get('empresa') || companies[0]?.id || '';
   const company = companies.find((item) => item.id === selectedId);
   const [query, setQuery] = useState(''),
     [plan, setPlan] = useState<Subscription | null>(null),
     [error, setError] = useState('');
   const [revision, setRevision] = useState(0),
-    [action, setAction] = useState<'payment' | 'complimentary' | null>(null);
+    [action, setAction] = useState<'payment' | 'complimentary' | 'charge' | null>(null);
   const [days, setDays] = useState(7),
     [note, setNote] = useState(''),
     [confirmed, setConfirmed] = useState(false);
   const [busy, setBusy] = useState(false),
-    [attempt, setAttempt] = useState<BillingAttempt | null>(null),
+    [attempt, setAttempt] = useState<AdminBillingAttempt | null>(null),
     [formError, setFormError] = useState('');
   useEffect(() => {
     let active = true;
@@ -63,7 +70,7 @@ export function AdminPlans({
       active = false;
     };
   }, [company?.id, revision]);
-  function open(kind: 'payment' | 'complimentary') {
+  function open(kind: 'payment' | 'complimentary' | 'charge') {
     setAction(kind);
     setDays(7);
     setNote('');
@@ -77,7 +84,7 @@ export function AdminPlans({
   async function submit(event: FormEvent) {
     event.preventDefault();
     if (busy || !plan || !action || !confirmed) return;
-    const request = attempt || {
+    const request: AdminBillingAttempt = attempt || {
       id: uid(),
       companyId: plan.company_id,
       dueDate: plan.due_date,
@@ -90,13 +97,24 @@ export function AdminPlans({
     setBusy(true);
     setFormError('');
     try {
-      const result = await applyBillingCommand(getSupabaseClient(), userId, request);
+      const result =
+        request.kind === 'charge'
+          ? await createCharge(
+              getSupabaseClient(),
+              request.companyId,
+              request.id,
+              request.dueDate,
+              request.note,
+            )
+          : await applyBillingCommand(getSupabaseClient(), userId, request);
       setAction(null);
       setAttempt(null);
       setRevision((n) => n + 1);
       onReload();
       onNotice(
-        `${request.kind === 'payment' ? 'Pagamento registrado' : 'Gratuidade concedida'}. Próximo vencimento: ${dateLabel(result.next_due_date)}.`,
+        request.kind === 'charge'
+          ? 'Cobrança criada. O gestor pode acompanhá-la na tela Plano.'
+          : `${request.kind === 'payment' ? 'Pagamento registrado' : 'Gratuidade concedida'}. Próximo vencimento: ${dateLabel(result.next_due_date)}.`,
       );
     } catch (cause) {
       if (cause instanceof AccessChangedError) {
@@ -125,9 +143,28 @@ export function AdminPlans({
     <>
       <Heading
         eyebrow="ADMINISTRAÇÃO"
-        title="Planos"
-        description="Plano mensal SUN7CRM · R$ 189,90. Liberações e pagamentos são registrados por empresa."
+        title="Planos e cobranças"
+        description="Acompanhe os recebimentos da plataforma e gerencie o acesso de cada empresa."
       />
+      <div className="billing-tabs" role="group" aria-label="Visão financeira">
+        <Button
+          variant={showPlans ? 'ghost' : 'outline'}
+          aria-pressed={!showPlans}
+          onClick={() => setParams({ visao: 'cobrancas' })}
+        >
+          Todas as cobranças
+        </Button>
+        <Button
+          variant={showPlans ? 'outline' : 'ghost'}
+          aria-pressed={showPlans}
+          onClick={() =>
+            setParams({ visao: 'planos', ...(selectedId ? { empresa: selectedId } : {}) })
+          }
+        >
+          Planos por empresa
+        </Button>
+      </div>
+      {companies[0] && <OnlineBilling key={companies[0].id} companyId={companies[0].id} admin />}
       {!companies.length ? (
         <div className="card panel">
           <Empty
@@ -138,6 +175,15 @@ export function AdminPlans({
             Ir para empresas
           </Link>
         </div>
+      ) : !showPlans ? (
+        <BillingHistory
+          admin
+          revision={revision}
+          onChanged={() => {
+            setRevision((n) => n + 1);
+            onReload();
+          }}
+        />
       ) : (
         <div className="billing-admin-layout">
           <aside className="card billing-companies" aria-label="Empresas e planos">
@@ -155,7 +201,7 @@ export function AdminPlans({
                     key={item.id}
                     className="billing-company"
                     aria-pressed={item.id === selectedId}
-                    onClick={() => setParams({ empresa: item.id })}
+                    onClick={() => setParams({ empresa: item.id, visao: 'planos' })}
                   >
                     <strong>{item.name}</strong>
                     <small>{!item.enabled ? 'Empresa desativada' : stateLabels[state]}</small>
@@ -186,6 +232,9 @@ export function AdminPlans({
                 {plan ? (
                   <>
                     <div className="billing-admin-actions">
+                      <Button variant="outline" onClick={() => open('charge')}>
+                        <CreditCard size={16} /> Criar cobrança
+                      </Button>
                       <Button onClick={() => open('payment')}>
                         <CreditCard size={16} /> Registrar pagamento
                       </Button>
@@ -194,6 +243,16 @@ export function AdminPlans({
                       </Button>
                     </div>
                     <PlanPanel plan={plan} />
+                    <BillingHistory
+                      key={company.id}
+                      companyId={company.id}
+                      admin
+                      revision={revision}
+                      onChanged={() => {
+                        setRevision((n) => n + 1);
+                        onReload();
+                      }}
+                    />
                   </>
                 ) : (
                   !error && <p role="status">Consultando o plano...</p>
@@ -208,13 +267,29 @@ export function AdminPlans({
       <Modal
         open={!!action}
         onOpenChange={close}
-        title={action === 'payment' ? 'Registrar pagamento recebido' : 'Liberar dias gratuitos'}
+        title={
+          action === 'payment'
+            ? 'Registrar pagamento recebido'
+            : action === 'charge'
+              ? 'Criar cobrança da mensalidade'
+              : 'Liberar dias gratuitos'
+        }
         description={company?.name}
       >
         {plan && (
           <form onSubmit={(event) => void submit(event)}>
             <fieldset disabled={locked}>
-              {action === 'payment' ? (
+              {action === 'charge' ? (
+                <div className="billing-confirm">
+                  <strong>
+                    {currency(plan.monthly_amount_cents)} · vencimento {dateLabel(plan.due_date)}
+                  </strong>
+                  <p>
+                    A cobrança ficará em aberto no histórico desta empresa. A criação não confirma
+                    pagamento nem altera o período de acesso.
+                  </p>
+                </div>
+              ) : action === 'payment' ? (
                 <div className="billing-confirm">
                   <strong>{currency(plan.monthly_amount_cents)} · um mês</strong>
                   <p>
@@ -279,9 +354,11 @@ export function AdminPlans({
                   onChange={(event) => setConfirmed(event.target.checked)}
                 />
                 <span>
-                  {action === 'payment'
-                    ? 'Conferi o recebimento e quero registrar este pagamento.'
-                    : 'Confirmo a concessão deste período gratuito.'}
+                  {action === 'charge'
+                    ? 'Confirmo a criação desta cobrança.'
+                    : action === 'payment'
+                      ? 'Conferi o recebimento e quero registrar este pagamento.'
+                      : 'Confirmo a concessão deste período gratuito.'}
                 </span>
               </label>
             </fieldset>
@@ -300,9 +377,11 @@ export function AdminPlans({
                   ? 'Registrando...'
                   : attempt
                     ? 'Confirmar resultado'
-                    : action === 'payment'
-                      ? 'Confirmar pagamento'
-                      : 'Conceder gratuidade'}
+                    : action === 'charge'
+                      ? 'Criar cobrança'
+                      : action === 'payment'
+                        ? 'Confirmar pagamento'
+                        : 'Conceder gratuidade'}
               </Button>
             </div>
           </form>
