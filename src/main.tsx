@@ -4,7 +4,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { App } from './app/App';
 import { legacyRouteTarget } from './lib/routing';
 import './styles.css';
-import './dark.css';
+import './workspace-theme.css';
 
 const legacyRoute = legacyRouteTarget(window.location.href);
 if (legacyRoute) window.history.replaceState(window.history.state, '', legacyRoute);

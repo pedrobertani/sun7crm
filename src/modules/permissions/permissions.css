@@ -15,7 +15,7 @@
   color: var(--muted);
 }
 .permission-module {
-  border: 1px solid var(--border, #dbe3e5);
+  border: 1px solid var(--border);
   border-radius: 10px;
   overflow: hidden;
 }
@@ -65,7 +65,7 @@
   padding: 0 12px 12px 20px;
 }
 .permission-resource {
-  border-left: 2px solid var(--border, #dbe3e5);
+  border-left: 2px solid var(--border);
 }
 .permission-actions {
   display: flex;

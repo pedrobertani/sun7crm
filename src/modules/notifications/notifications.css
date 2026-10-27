@@ -7,7 +7,7 @@
   height: 44px;
   flex-shrink: 0;
   border: 1px solid var(--line);
-  background: white;
+  background: var(--surface);
   border-radius: 9px;
   color: var(--ink);
 }
@@ -15,8 +15,8 @@
   position: absolute;
   top: -5px;
   right: -5px;
-  background: #a67516;
-  color: white;
+  background: var(--primary);
+  color: var(--primary-foreground);
   min-width: 19px;
   height: 19px;
   padding-inline: 4px;
@@ -26,7 +26,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2px solid white;
+  border: 2px solid var(--line);
 }
 .notification-toolbar {
   display: flex;
@@ -45,16 +45,16 @@
   padding: 17px;
   border: 1px solid var(--line);
   border-radius: 10px;
-  background: #fafbfc;
+  background: var(--surface);
 }
 .notification-list li.is-unread {
-  background: white;
+  background: var(--surface);
   border-left: 3px solid var(--primary);
 }
 .notification-list li.subscription-notice {
-  background: #fcf8ed;
-  border-color: #e4ce94;
-  border-left: 3px solid #a67516;
+  background: var(--soft);
+  border-color: var(--line);
+  border-left: 3px solid var(--line);
 }
 .notification-list li > div:first-child {
   display: flex;
@@ -72,8 +72,8 @@
 }
 .notification-new {
   font-size: 10px;
-  color: #8a641c;
-  background: #f6e9c4;
+  color: var(--primary);
+  background: var(--soft);
   border-radius: 4px;
   padding: 3px 6px;
 }

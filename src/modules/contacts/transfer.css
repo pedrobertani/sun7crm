@@ -12,7 +12,7 @@
 .contact-transfer-preview th {
   position: sticky;
   top: 0;
-  background: var(--card, #fff);
+  background: var(--card);
 }
 .contact-transfer-preview td {
   white-space: normal;

@@ -251,7 +251,7 @@ export function Kanban() {
       </div>
       <div className="kanban-scroll" key={board.id}>
         <div className="kanban-board">
-          {board.stages.map((stage, i) => {
+          {board.stages.map((stage) => {
             const rows = opps.filter((o) => o.stageId === stage.id);
             return (
               <section
@@ -262,7 +262,7 @@ export function Kanban() {
               >
                 <div className="column-head">
                   <div>
-                    <span className={'stage-dot tone-' + (i % 4)} />
+                    <span className="stage-dot" />
                     <h2>{stage.name}</h2>
                     <span className="stage-count">{rows.length}</span>
                   </div>

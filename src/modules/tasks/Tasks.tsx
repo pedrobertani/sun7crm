@@ -154,7 +154,7 @@ export function Tasks() {
           <>
             <div className="kanban-scroll">
               <div className="tasks-kanban">
-                {TASK_STAGES.map((stage, i) => {
+                {TASK_STAGES.map((stage) => {
                   const rows = tasks.filter((t) => taskStatus(t) === stage.id);
                   return (
                     <section
@@ -165,7 +165,7 @@ export function Tasks() {
                     >
                       <div className="column-head">
                         <div>
-                          <span className={'stage-dot tone-' + i} />
+                          <span className="stage-dot" />
                           <h2>{stage.label}</h2>
                           <span className="stage-count">{rows.length}</span>
                         </div>
