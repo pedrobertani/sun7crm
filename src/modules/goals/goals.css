@@ -50,3 +50,6 @@
  .goal-step b {font-size:16px;}
  .goal-indicators strong {font-size:16px;}
 }
+
+.goal-medal-icon { font-size:29px;line-height:1.25;filter:grayscale(1);opacity:.65; }
+.goal-medal.earned .goal-medal-icon {filter:none;opacity:1;}

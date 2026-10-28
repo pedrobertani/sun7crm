@@ -12,10 +12,10 @@ describe('Kanban e gamificação de vendas',()=>{
  });
  it('preserva vendedor histórico na venda confirmada, mas reabrir cancela a conquista da demo',()=>{
   const seed=createSeed();
-  const sale=seed.opportunities.find(o=>o.confirmedSaleAt&&o.companyId==='aurora');
+  const sale=seed.opportunities.find(o=>o.confirmedSaleAt&&o.confirmedSaleOwnerId==='aurora-champion');
   expect(sale).toBeDefined();
   const original=sale!;
-  expect(original.confirmedSaleOwnerId).toBe('aurora-seller');
+  expect(original.confirmedSaleOwnerId).toBe('aurora-champion');
   const session={role:'manager' as const,companyId:'aurora',memberId:'aurora-manager'};
   const next=moveOpportunity(seed,session,original.id,'aurora-leads-0');
   const moved=next.opportunities.find(o=>o.id===original.id)!;

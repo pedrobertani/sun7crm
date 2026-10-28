@@ -19,7 +19,7 @@ import { RealActivityReport } from '../reports/RealActivityReport';
 import { Pager, QueryState, SaveActions, useOperational, useQuery, useSave } from './operational';
 
 export function RealDashboard() {
-  const { api } = useOperational(),
+  const { api, can } = useOperational(),
     [from, setFrom] = useState(today().slice(0, 7) + '-01'),
     [to, setTo] = useState(today());
   const query = useQuery(async () => {
@@ -80,7 +80,7 @@ export function RealDashboard() {
               to="/app/tarefas"
             />
           </div>
-          <GoalFunnel />
+          {can('goals.view') && <GoalFunnel />}
           <div className="operational-dashboard-grid">
             <ContactIntakeChart data={query.data.metrics.contacts_by_day} />
             <Panel title="Cards por etapa" description="Distribuição atual dos cards abertos">
@@ -416,14 +416,20 @@ function MemberDialog({
   onClose: () => void;
   onSaved: () => void;
 }) {
-  const { api } = useOperational(),
+  const { api, company, companyScope } = useOperational(),
     save = useSave(),
+    permissionSave = useSave(),
+    permissionQuery = useQuery(() => api.employeePermissions(row.id), [api, row.id], {live:false}),
+    [permissions, setPermissions] = useState<EmployeePermissions | null>(null),
     [form, setForm] = useState({
       display_name: row.display_name,
       role: row.role as 'seller' | 'reception',
       active: row.active,
     }),
     [target, setTarget] = useState('');
+  useEffect(() => {
+    if (permissionQuery.data && permissions === null) setPermissions(permissionQuery.data);
+  }, [permissionQuery.data, permissions]);
   return (
     <Modal open title="Editar integrante" onOpenChange={(v) => !v && !save.busy && onClose()}>
       <form
@@ -474,8 +480,26 @@ function MemberDialog({
             </label>
           )}
         </fieldset>
-        <SaveActions save={save} onClose={onClose} />
+        <SaveActions save={save} onClose={onClose} label="Salvar cadastro" />
       </form>
+      <div className="goal-medals">
+        <h3>Permissões de acesso</h3>
+        <p className="small-note">Controle o que este funcionário poderá visualizar. Em Metas e conquistas, a opção Minhas metas e medalhas libera somente os próprios resultados.</p>
+        <QueryState query={permissionQuery} />
+        {permissions && <form onSubmit={e=>{
+          e.preventDefault();
+          void permissionSave.run(async()=>{
+            await api.saveEmployeePermissions(row.id,permissions);
+            onSaved();
+          });
+        }}>
+          <fieldset disabled={permissionSave.busy || permissionSave.uncertain}>
+            <PermissionTree value={permissions} availableKeys={company.permissions?.keys}
+              allowCompanyScope={companyScope} onChange={setPermissions} />
+          </fieldset>
+          <SaveActions save={permissionSave} onClose={onClose} label="Salvar permissões" />
+        </form>}
+      </div>
     </Modal>
   );
 }

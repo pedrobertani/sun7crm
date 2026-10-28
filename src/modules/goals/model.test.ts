@@ -1,5 +1,5 @@
 import {describe,it,expect} from 'vitest';
-import {buildGoalFunnel,validateGoalConfig,medalUnlocked,starterMedals,starterStages,numberInputToCents} from './model';
+import {buildGoalFunnel,validateGoalConfig,medalUnlocked,starterMedals,starterStages,numberInputToCents,medalSymbol,medalIcons} from './model';
 
 describe('Metas e medalhas configuráveis',()=>{
   const stages=[{label:'Contatos',rate:null},{label:'Agendamentos',rate:50},{label:'Comparecimentos',rate:80},{label:'Vendas',rate:10}];
@@ -26,6 +26,12 @@ describe('Metas e medalhas configuráveis',()=>{
     expect(medalUnlocked({label:'50%',kind:'percent',threshold:50},r)).toBe(false);
     expect(medalUnlocked({label:'50%',kind:'percent',threshold:50},{...r,sales_cents:500000})).toBe(true);
     expect(medalUnlocked({label:'1',kind:'sales',threshold:1},{...r,sales_count:1})).toBe(true);
+  });
+  it('mantém os ícones personalizáveis e compatibilidade das medalhas antigas',()=>{
+    expect(medalSymbol({label:'Diamante',kind:'sales',threshold:1,icon:'diamond'})).toBe('💎');
+    expect(medalSymbol({label:'Legada',kind:'percent',threshold:100})).toBe('🏆');
+    expect(validateGoalConfig(10000000,300000,stages,[{label:'Ouro',kind:'sales',threshold:1,icon:'gold'}])).toBeNull();
+    expect(Object.keys(medalIcons)).toHaveLength(9);
   });
   it('valida valores monetários em centavos sem notação exponencial',()=>{
     expect(numberInputToCents('3000.00')).toBe(300000);

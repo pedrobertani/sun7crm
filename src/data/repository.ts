@@ -18,9 +18,13 @@ export class BrowserRepository implements CrmRepository {
       if (!isSnapshot(data)) throw Error('Formato incompatível');
       const examples = marketingSeed(data.companies);
       const defaultGoals=createSeed();
+      const demoChampion='aurora-champion';
+      const seededShowcase=defaultGoals.opportunities.filter(o=>o.confirmedSaleOwnerId===demoChampion);
       // Migração aditiva: preserva os cadastros locais de versões anteriores.
       return {
         ...data,
+        members:[...data.members,...defaultGoals.members.filter(m=>m.id===demoChampion&&!data.members.some(old=>old.id===m.id))],
+        contacts:[...data.contacts,...defaultGoals.contacts.filter(c=>c.ownerId===demoChampion&&!data.contacts.some(old=>old.id===c.id))],
         labels:
           data.labels ||
           data.companies.flatMap((c) => [
@@ -28,7 +32,7 @@ export class BrowserRepository implements CrmRepository {
             { id: c.id + '-warm', companyId: c.id, name: 'Morno', color: '#eab308' },
             { id: c.id + '-hot', companyId: c.id, name: 'Quente', color: '#ef4444' },
           ]),
-        opportunities: data.opportunities.map((o) =>
+        opportunities: [...data.opportunities.map((o) =>
           o.labelIds
             ? o
             : {
@@ -40,9 +44,9 @@ export class BrowserRepository implements CrmRepository {
                     : [];
                 })(),
               },
-        ),
+        ),...seededShowcase.filter(o=>!data.opportunities.some(old=>old.id===o.id))],
         goalPlans:Array.isArray(data.goalPlans)?data.goalPlans:(defaultGoals.goalPlans||[]).filter(p=>data.companies.some(c=>c.id===p.companyId)),
-        employeeGoals:Array.isArray(data.employeeGoals)?data.employeeGoals:(defaultGoals.employeeGoals||[]).filter(p=>data.companies.some(c=>c.id===p.companyId)),
+        employeeGoals:[...(Array.isArray(data.employeeGoals)?data.employeeGoals:(defaultGoals.employeeGoals||[]).filter(p=>data.companies.some(c=>c.id===p.companyId))),...(defaultGoals.employeeGoals||[]).filter(p=>p.memberId===demoChampion&&!data.employeeGoals?.some(old=>old.memberId===p.memberId&&old.month===p.month))],
         contactHistory: Array.isArray(data.contactHistory) ? data.contactHistory : [],
         catalog: data.catalog || [],
         ambassadorCampaigns: data.ambassadorCampaigns || [],
