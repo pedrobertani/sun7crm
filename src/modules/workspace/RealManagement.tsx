@@ -23,6 +23,9 @@ export function RealDashboard() {
     [from, setFrom] = useState(today().slice(0, 7) + '-01'),
     [to, setTo] = useState(today()),
     [dashboardTab, setDashboardTab] = useState<'overview'|'commercial'|'achievements'>('overview');
+  const commercialAllowed=can('cards.view') || can('goals.view');
+  const availableTabs=[['overview','Visão geral'], ...(commercialAllowed?[['commercial','Comercial']]:[]), ...(can('goals.view')?[['achievements','Conquistas']]:[])];
+  const activeTab=availableTabs.some(([key])=>key===dashboardTab)?dashboardTab:'overview';
   const query = useQuery(async () => {
     const [metrics, boards, stages, strategies] = await Promise.all([
       api.metrics(from, to),
@@ -51,11 +54,11 @@ export function RealDashboard() {
       </div>
       <QueryState query={query} />
       <div className="dashboard-tabs" role="tablist" aria-label="Áreas do dashboard">
-        {([['overview','Visão geral'],['commercial','Comercial'],['achievements','Conquistas']] as const).filter(([key])=>key!=='achievements'||can('goals.view')).map(([key,label])=><button type="button" key={key} role="tab" aria-selected={dashboardTab===key} className={dashboardTab===key?'active':''} onClick={()=>setDashboardTab(key)}>{label}</button>)}
+        {availableTabs.map(([key,label])=><button type="button" key={key} role="tab" aria-selected={activeTab===key} className={activeTab===key?'active':''} onClick={()=>setDashboardTab(key)}>{label}</button>)}
       </div>
       {query.data && (
         <>
-          {dashboardTab==='overview'&&<div className="kpis">
+          {activeTab==='overview'&&<div className="kpis">
             <Kpi
               label="Novos contatos"
               value={query.data.metrics.contacts}
@@ -84,9 +87,9 @@ export function RealDashboard() {
               to="/app/tarefas"
             />
           </div>}
-          {dashboardTab==='commercial'&&can('goals.view')&&<GoalFunnel view="commercial" />}
-          {dashboardTab==='achievements'&&can('goals.view')&&<GoalFunnel view="medals" />}
-          {dashboardTab==='commercial'&&<>
+          {activeTab==='commercial'&&can('goals.view')&&<GoalFunnel view="commercial" />}
+          {activeTab==='achievements'&&can('goals.view')&&<GoalFunnel view="medals" />}
+          {activeTab==='commercial'&&<>
           <div className="operational-dashboard-grid">
             <ContactIntakeChart data={query.data.metrics.contacts_by_day} />
             <Panel title="Cards por etapa" description="Distribuição atual dos cards abertos">
