@@ -21,7 +21,8 @@ import { Pager, QueryState, SaveActions, useOperational, useQuery, useSave } fro
 export function RealDashboard() {
   const { api, can } = useOperational(),
     [from, setFrom] = useState(today().slice(0, 7) + '-01'),
-    [to, setTo] = useState(today());
+    [to, setTo] = useState(today()),
+    [dashboardTab, setDashboardTab] = useState<'overview'|'commercial'|'achievements'>('overview');
   const query = useQuery(async () => {
     const [metrics, boards, stages, strategies] = await Promise.all([
       api.metrics(from, to),
@@ -49,9 +50,12 @@ export function RealDashboard() {
         </Link>
       </div>
       <QueryState query={query} />
+      <div className="dashboard-tabs" role="tablist" aria-label="Áreas do dashboard">
+        {([['overview','Visão geral'],['commercial','Comercial'],['achievements','Conquistas']] as const).filter(([key])=>key!=='achievements'||can('goals.view')).map(([key,label])=><button type="button" key={key} role="tab" aria-selected={dashboardTab===key} className={dashboardTab===key?'active':''} onClick={()=>setDashboardTab(key)}>{label}</button>)}
+      </div>
       {query.data && (
         <>
-          <div className="kpis">
+          {dashboardTab==='overview'&&<div className="kpis">
             <Kpi
               label="Novos contatos"
               value={query.data.metrics.contacts}
@@ -79,8 +83,10 @@ export function RealDashboard() {
               icon={<ListTodo size={19} />}
               to="/app/tarefas"
             />
-          </div>
-          {can('goals.view') && <GoalFunnel />}
+          </div>}
+          {dashboardTab==='commercial'&&can('goals.view')&&<GoalFunnel view="commercial" />}
+          {dashboardTab==='achievements'&&can('goals.view')&&<GoalFunnel view="medals" />}
+          {dashboardTab==='commercial'&&<>
           <div className="operational-dashboard-grid">
             <ContactIntakeChart data={query.data.metrics.contacts_by_day} />
             <Panel title="Cards por etapa" description="Distribuição atual dos cards abertos">
@@ -140,6 +146,7 @@ export function RealDashboard() {
               )}
             </div>
           </Panel>
+          </>}
         </>
       )}
     </>
