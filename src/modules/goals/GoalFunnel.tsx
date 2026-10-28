@@ -8,7 +8,7 @@ import { Panel, FormError } from '../../components/shared';
 import { currency, today } from '../../lib/format';
 import { CHART_COLORS } from '../../lib/themes';
 import type { GoalEmployeeProgress, GoalMedal, GoalPlan, GoalStep } from './model';
-import { starterStages, starterMedals, validateGoalConfig, buildGoalFunnel, medalUnlocked, numberInputToCents } from './model';
+import { starterStages, starterMedals, validateGoalConfig, buildGoalFunnel, medalUnlocked, numberInputToCents, medalIcons, medalSymbol } from './model';
 import { useOperational, useQuery, useSave, QueryState } from '../workspace/operational';
 import type { TeamRow } from '../../data/backend';
 import './goals.css';
@@ -130,7 +130,7 @@ export function GoalFunnel() {
 }
 function Medal({medal,earned}:{medal:GoalMedal;earned:boolean}){
   return <div className={'goal-medal'+(earned?' earned':'')} title={earned?'Conquista liberada':'Conquista bloqueada'}>
-    {earned?<Award size={22}/>:<LockKeyhole size={22}/>}
+    <span className="goal-medal-icon" aria-hidden="true">{medalSymbol(medal)}</span>{!earned&&<LockKeyhole size={15} aria-label="Bloqueada"/>}
     <strong>{medal.label}</strong>
     <small>{earned?'Conquistada':medal.kind==='sales'?medal.threshold+' venda(s)':medal.threshold+'% da meta'}</small>
   </div>;
@@ -211,14 +211,14 @@ function GoalSettings({month,plan,results,team,onClose,onSaved}:{
     {section==='medals'&&<div className="goal-edit-list">
       <p className="small-note">O gestor escolhe os nomes e as condições. As conquistas só são liberadas quando há resultados individuais registrados, nunca pelo valor estimado do funil.</p>
       {medals.map((m,i)=><div className="goal-edit-step" key={i}>
-        <label className="form-row">Medalha<Input value={m.label} maxLength={60} onChange={e=>updateMedal(i,{label:e.target.value})}/></label>
+        <label className="form-row">Medalha<Input value={m.label} maxLength={60} onChange={e=>updateMedal(i,{label:e.target.value})}/></label><label className="form-row">Ícone<select aria-label={'Ícone de '+m.label} value={m.icon||'trophy'} onChange={e=>updateMedal(i,{icon:e.target.value as keyof typeof medalIcons})}>{Object.entries(medalIcons).map(([key,emoji])=><option key={key} value={key}>{emoji} {key}</option>)}</select></label>
         <label className="form-row">Critério<select value={m.kind} onChange={e=>updateMedal(i,{kind:e.target.value as GoalMedal['kind']})}>
           <option value="sales">Quantidade de vendas</option><option value="percent">% da meta individual</option>
         </select></label>
         <label className="form-row">Limite<Input type="number" min="1" max="1000" step="1" value={m.threshold} onChange={e=>updateMedal(i,{threshold:Number(e.target.value)})}/></label>
         <Button type="button" variant="ghost" aria-label={'Remover medalha '+m.label} onClick={()=>setMedals(a=>a.filter((_,j)=>j!==i))}><Trash2 size={15}/></Button>
       </div>)}
-      {medals.length<8&&<Button type="button" variant="outline" onClick={()=>setMedals(a=>[...a,{label:'Nova medalha',kind:'percent',threshold:100}])}><Plus size={15}/> Nova medalha</Button>}
+      {medals.length<8&&<Button type="button" variant="outline" onClick={()=>setMedals(a=>[...a,{label:'Nova medalha',kind:'percent',threshold:100,icon:'trophy'}])}><Plus size={15}/> Nova medalha</Button>}
     </div>}
     {section==='results'&&<div className="goal-edit-list">
       <p className="small-note">O gestor informa apenas metas individuais e contatos. Vendas e valores são contabilizados exclusivamente por confirmação na etapa de conclusão do Kanban. Não representam pagamentos recebidos.</p>
