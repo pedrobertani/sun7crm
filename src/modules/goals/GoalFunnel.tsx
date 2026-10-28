@@ -59,13 +59,13 @@ export function GoalFunnel() {
         <QueryState query={data}/>
         {plan ? (
           <>
-            <div className="goal-indicators">
+            {manager&&<div className="goal-indicators">
               <div><small>Meta mensal</small><strong>{currency(plan.target_cents)}</strong></div>
               <div><small>Ticket médio planejado</small><strong>{currency(plan.ticket_cents)}</strong></div>
               <div><small>Vendas necessárias</small><strong>{numberFormat(plannedSales)}</strong></div>
               <div><small>Vendas confirmadas</small><strong>{manager?confirmed.length:mine.sales_count}</strong></div>
             </div>
-            <div className="goal-funnel" role="img" aria-label={funnel.map(x=>x.label+': '+numberFormat(x.count)).join('; ')}>
+            {manager&&<div className="goal-funnel" role="img" aria-label={funnel.map(x=>x.label+': '+numberFormat(x.count)).join('; ')}>
               {funnel.map((step,i)=>(
                 <div className="goal-step" key={i} style={{
                   width:`${100 - (i/funnel.length)*39}%`,
@@ -77,7 +77,7 @@ export function GoalFunnel() {
                 </div>
               ))}
             </div>
-            {funnel.some(x=>x.count===null)&&<p className="small-note">Complete as taxas de conversão na configuração para estimar todas as etapas.</p>}
+            {manager&&funnel.some(x=>x.count===null)&&<p className="small-note">Complete as taxas de conversão na configuração para estimar todas as etapas.</p>}
             {manager && plan && (
               <div className="goal-total">
                 <span>Vendas confirmadas no Kanban</span>
