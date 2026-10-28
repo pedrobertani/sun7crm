@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Award, ChartNoAxesCombined, Settings2, Plus, Trash2, Trophy } from 'lucide-react';
+import { Award, LockKeyhole, ChartNoAxesCombined, Settings2, Plus, Trash2, Trophy } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Modal } from '../../components/ui/modal';
@@ -24,15 +24,26 @@ export function GoalFunnel() {
   const [month,setMonth]=useState(today().slice(0,7));
   const [configOpen,setConfigOpen]=useState(false);
   const data=useQuery(async()=>{
-    const [plan,results]=await Promise.all([api.goalPlan(month+'-01'),api.goalEmployeeProgress(month+'-01')]);
-    return {plan,results};
+    const [plan,results,confirmed]=await Promise.all([api.goalPlan(month+'-01'),api.goalEmployeeProgress(month+'-01'),api.confirmedSales(month)]);
+    return {plan,results,confirmed};
   },[api,month,revision]);
   const team=useQuery(()=>manager?api.team():Promise.resolve([] as TeamRow[]),[api,manager],{live:false});
   const plan=data.data?.plan;
   const funnel=plan?buildGoalFunnel(plan):[];
   const results=data.data?.results||[];
-  const mine=results.find(r=>r.membership_id===company.membershipId);
-  const recorded=results.reduce((sum,r)=>sum+r.sales_cents,0);
+  const confirmed=data.data?.confirmed||[];
+  const salesByMember=new Map<string,{count:number;cents:number}>();
+  confirmed.forEach(sale=>{
+    const current=salesByMember.get(sale.membership_id)||{count:0,cents:0};
+    salesByMember.set(sale.membership_id,{count:current.count+1,cents:current.cents+sale.value_cents});
+  });
+  const progressFor=(memberId:string)=>{
+    const current=results.find(r=>r.membership_id===memberId);
+    const real=salesByMember.get(memberId)||{count:0,cents:0};
+    return {membership_id:memberId,goal_cents:current?.goal_cents||0,sales_count:real.count,sales_cents:real.cents};
+  };
+  const mine=progressFor(company.membershipId);
+  const recorded=confirmed.reduce((sum,r)=>sum+r.value_cents,0);
   const plannedSales=plan?Math.ceil(plan.target_cents/plan.ticket_cents):null;
   return (
     <div className="goal-area">
@@ -52,7 +63,7 @@ export function GoalFunnel() {
               <div><small>Meta mensal</small><strong>{currency(plan.target_cents)}</strong></div>
               <div><small>Ticket médio planejado</small><strong>{currency(plan.ticket_cents)}</strong></div>
               <div><small>Vendas necessárias</small><strong>{numberFormat(plannedSales)}</strong></div>
-              <div><small>Vendas registradas pelo gestor</small><strong>{manager?results.reduce((n,r)=>n+r.sales_count,0):mine?.sales_count??'—'}</strong></div>
+              <div><small>Vendas confirmadas</small><strong>{manager?confirmed.length:mine.sales_count}</strong></div>
             </div>
             <div className="goal-funnel" role="img" aria-label={funnel.map(x=>x.label+': '+numberFormat(x.count)).join('; ')}>
               {funnel.map((step,i)=>(
@@ -67,34 +78,34 @@ export function GoalFunnel() {
               ))}
             </div>
             {funnel.some(x=>x.count===null)&&<p className="small-note">Complete as taxas de conversão na configuração para estimar todas as etapas.</p>}
-            {manager && results.length>0 && (
+            {manager && plan && (
               <div className="goal-total">
-                <span>Resultado informado pelo gestor (equipe)</span>
+                <span>Vendas confirmadas no Kanban</span>
                 <strong>{currency(recorded)} de {currency(plan.target_cents)}</strong>
                 <div className="goal-progress"><i style={{width:Math.min(100,percent(recorded,plan.target_cents))+'%'}}/></div>
-                <small>Dados informados manualmente; não representam pagamentos confirmados.</small>
+                <small>Concluídas e confirmadas; não representam pagamentos recebidos.</small>
               </div>
             )}
-            {!manager && mine && (
+            {!manager && plan && (
               <div className="goal-total">
-                <span>Seu desempenho informado pelo gestor</span>
-                <strong>{currency(mine.sales_cents)} de {currency(mine.goal_cents)}</strong>
+                <span>Seu desempenho confirmado no Kanban</span>
+                <strong>{currency(mine.sales_cents)} de {mine.goal_cents>0?currency(mine.goal_cents):'meta individual pendente'}</strong>
                 <div className="goal-progress"><i style={{width:Math.min(100,percent(mine.sales_cents,mine.goal_cents))+'%'}}/></div>
               </div>
             )}
             <div className="goal-medals">
               <h3><Trophy size={17}/> Medalhas</h3>
               {!plan.medals.length && <p className="small-note">O gestor ainda não definiu as conquistas.</p>}
-              {!manager && !mine && <p className="small-note">Seu resultado individual ainda não foi configurado.</p>}
-              {manager && !results.length && <p className="small-note">Registre resultados individuais no botão Configurar metas para acompanhar as conquistas.</p>}
+              {!manager && !mine.goal_cents && <p className="small-note">Sua meta individual ainda não foi configurada. Medalhas permanecem bloqueadas até a conquista.</p>}
+              {manager && !team.data?.length && <p className="small-note">Cadastre colaboradores para acompanhar as conquistas.</p>}
               {manager ? (
-                results.map(r=><div className="goal-medal-person" key={r.membership_id}>
-                  <strong>{team.data?.find(x=>x.id===r.membership_id)?.display_name||'Colaborador'}</strong>
+                (team.data||[]).filter(x=>x.active&&(x.role==='seller'||x.role==='manager')).map(member=><div className="goal-medal-person" key={member.id}>
+                  <strong>{member.display_name}</strong>
                   <div className="goal-medal-grid">
-                    {plan.medals.map((m,i)=><Medal key={i} medal={m} earned={medalUnlocked(m,r)}/>)}
+                    {plan.medals.map((m,i)=><Medal key={i} medal={m} earned={medalUnlocked(m,progressFor(member.id))}/>)}
                   </div>
                 </div>)
-              ):mine && <div className="goal-medal-grid">
+              ):<div className="goal-medal-grid">
                 {plan.medals.map((m,i)=><Medal key={i} medal={m} earned={medalUnlocked(m,mine)}/>)}
               </div>}
             </div>
@@ -118,7 +129,7 @@ export function GoalFunnel() {
 }
 function Medal({medal,earned}:{medal:GoalMedal;earned:boolean}){
   return <div className={'goal-medal'+(earned?' earned':'')} title={earned?'Conquista liberada':'Conquista bloqueada'}>
-    <Award size={22}/>
+    {earned?<Award size={22}/>:<LockKeyhole size={22}/>}
     <strong>{medal.label}</strong>
     <small>{earned?'Conquistada':medal.kind==='sales'?medal.threshold+' venda(s)':medal.threshold+'% da meta'}</small>
   </div>;
@@ -136,14 +147,10 @@ function GoalSettings({month,plan,results,team,onClose,onSaved}:{
   const [employee,setEmployee]=useState(team.find(x=>x.active&&x.role==='seller')?.id||team[0]?.id||'');
   const entry=results.find(x=>x.membership_id===employee);
   const [empGoal,setEmpGoal]=useState(moneyInput(entry?.goal_cents||0));
-  const [empSales,setEmpSales]=useState((entry?.sales_count||0).toString());
-  const [empAmount,setEmpAmount]=useState(moneyInput(entry?.sales_cents||0));
   const [empContacts,setEmpContacts]=useState((entry?.contacts_count||0).toString());
   useEffect(()=>{
     const current=results.find(x=>x.membership_id===employee);
     setEmpGoal(moneyInput(current?.goal_cents||0));
-    setEmpSales((current?.sales_count||0).toString());
-    setEmpAmount(moneyInput(current?.sales_cents||0));
     setEmpContacts((current?.contacts_count||0).toString());
   },[employee,results]);
   function updateStage(index:number,part:Partial<GoalStep>){
@@ -167,15 +174,14 @@ function GoalSettings({month,plan,results,team,onClose,onSaved}:{
   }
   function saveResult() {
     if(!plan){notice('Salve primeiro o planejamento do mês.');return;}
-    const goal=numberInputToCents(empGoal),sales=empAmount.trim()?numberInputToCents(empAmount):0;
-    const n=Number(empSales),ct=Number(empContacts);
-    if(!employee||!goal||sales===null||![n,ct].every(x=>Number.isSafeInteger(x)&&x>=0&&x<=1e6)){
+    const goal=numberInputToCents(empGoal),ct=Number(empContacts);
+    if(!employee||!goal||!Number.isSafeInteger(ct)||ct<0||ct>1e6){
       notice('Confira meta, valores, vendas e contatos do colaborador.');return;
     }
     void save.run(async()=>{
       await api.saveGoalEmployeeProgress({
         goal_month:month+'-01',membership_id:employee,goal_cents:goal,
-        sales_count:n,sales_cents:sales,contacts_count:ct,
+        sales_count:entry?.sales_count||0,sales_cents:entry?.sales_cents||0,contacts_count:ct,
       });
       notice('Resultados individuais registrados pelo gestor.');
       refresh();onSaved();
@@ -214,7 +220,7 @@ function GoalSettings({month,plan,results,team,onClose,onSaved}:{
       {medals.length<8&&<Button type="button" variant="outline" onClick={()=>setMedals(a=>[...a,{label:'Nova medalha',kind:'percent',threshold:100}])}><Plus size={15}/> Nova medalha</Button>}
     </div>}
     {section==='results'&&<div className="goal-edit-list">
-      <p className="small-note">Lançamento manual de resultados pelo gestor. Não são pagamentos conciliados nem vendas inferidas de um card. A integração automática será definida após validação das regras de negócio.</p>
+      <p className="small-note">O gestor informa apenas metas individuais e contatos. Vendas e valores são contabilizados exclusivamente por confirmação na etapa de conclusão do Kanban. Não representam pagamentos recebidos.</p>
       {!plan&&<p className="small-note">Salve o planejamento primeiro. Volte à configuração depois para informar os resultados por colaborador.</p>}
       <label className="form-row">Colaborador
         <select value={employee} onChange={e=>setEmployee(e.target.value)}>
@@ -223,8 +229,7 @@ function GoalSettings({month,plan,results,team,onClose,onSaved}:{
       </label>
       <div className="goal-edit-grid">
         <label className="form-row">Meta individual (R$)<CurrencyInput value={empGoal} onValueChange={setEmpGoal}/></label>
-        <label className="form-row">Valor de vendas informado (R$)<CurrencyInput value={empAmount} onValueChange={setEmpAmount}/></label>
-        <label className="form-row">Vendas informadas<Input type="number" min="0" step="1" value={empSales} onChange={e=>setEmpSales(e.target.value)}/></label>
+        <p className="small-note">Vendas confirmadas são computadas automaticamente a partir do Kanban e não podem ser alteradas aqui.</p>
         <label className="form-row">Contatos informados<Input type="number" min="0" step="1" value={empContacts} onChange={e=>setEmpContacts(e.target.value)}/></label>
       </div>
     </div>}
