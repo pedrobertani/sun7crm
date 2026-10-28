@@ -65,6 +65,7 @@ export function OnlineBilling({
     [attempted, setAttempted] = useState(false);
   const [formError, setFormError] = useState(''),
     [notice, setNotice] = useState('');
+  const [testPayerEmail, setTestPayerEmail] = useState('');
   const {
     data: status,
     error,
@@ -100,6 +101,7 @@ export function OnlineBilling({
     setConsent(false);
     setFormError('');
     setAttempted(false);
+    setTestPayerEmail('');
   }
   async function proceed() {
     if (!choice || !consent || busy) return;
@@ -112,6 +114,9 @@ export function OnlineBilling({
         choice === 'cancel_subscription' ? choice : 'checkout',
         operation,
         choice === 'cancel_subscription' ? undefined : choice,
+        choice === 'subscription' && status?.environment === 'test'
+          ? { payer_email: testPayerEmail.trim() }
+          : {},
       );
       if (choice === 'cancel_subscription') {
         setChoice(null);
@@ -120,6 +125,15 @@ export function OnlineBilling({
       } else window.location.assign(checkoutUrl(result.url));
     } catch (cause) {
       setFormError((cause as Error).message);
+      if (
+        ['SUBSCRIPTION_INPUT_REJECTED', 'SUBSCRIPTION_TEST_BUYER_REQUIRED'].includes(
+          (cause as { code?: string }).code || '',
+        )
+      ) {
+        setAttempted(false);
+        setOperation(uid());
+        void refreshBilling(companyId);
+      }
     } finally {
       setBusy(false);
     }
@@ -290,6 +304,23 @@ export function OnlineBilling({
                 </p>
               </>
             )}
+            {choice === 'subscription' && status?.environment === 'test' && (
+              <label className="form-row">
+                E-mail do comprador de teste no Mercado Pago
+                <input
+                  type="email"
+                  required
+                  maxLength={254}
+                  autoComplete="off"
+                  value={testPayerEmail}
+                  disabled={busy || attempted}
+                  onChange={(event) => setTestPayerEmail(event.target.value)}
+                />
+                <span className="small-note">
+                  Use a conta compradora de teste, diferente da conta vendedora e do login do CRM.
+                </span>
+              </label>
+            )}
             <label className="check-row">
               <input
                 type="checkbox"
@@ -310,7 +341,16 @@ export function OnlineBilling({
               <Button variant="outline" disabled={busy} onClick={() => setChoice(null)}>
                 Fechar
               </Button>
-              <Button disabled={busy || !consent} onClick={() => void proceed()}>
+              <Button
+                disabled={
+                  busy ||
+                  !consent ||
+                  (choice === 'subscription' &&
+                    status?.environment === 'test' &&
+                    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(testPayerEmail.trim()))
+                }
+                onClick={() => void proceed()}
+              >
                 {busy
                   ? 'Consultando...'
                   : attempted

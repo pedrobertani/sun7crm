@@ -5,6 +5,8 @@ import { createMercadoPago, billingReference } from '../functions/_shared/mercad
 import { billingCheckout } from '../functions/crm-billing-checkout/handler.ts';
 import { billingWebhook } from '../functions/crm-billing-webhook/handler.ts';
 import { createHttpHandler } from '../functions/_shared/http.ts';
+import { HttpError } from '../functions/_shared/errors.ts';
+import { safeException } from '../functions/_shared/telemetry.ts';
 const id = '00000000-0000-4000-8000-000000000001';
 const config = {
   enabled: true,
@@ -99,11 +101,17 @@ test('checkout usa preço do banco e URLs controladas; recupera sem criar duas a
   const context = {
     actorId: id,
     requestId: id,
-    body: { company_id: id, action: 'checkout', mode: 'subscription' },
+    body: {
+      company_id: id,
+      action: 'checkout',
+      mode: 'subscription',
+      payer_email: 'buyer@testuser.com',
+    },
     backend: db,
   };
   assert.ok((await billingCheckout(provider)(context)).data.url);
   assert.equal(calls[0].amount, 18990);
+  assert.equal(calls[0].email, 'buyer@testuser.com');
   claimed = false;
   await assert.rejects(
     billingCheckout(provider)(context),
@@ -291,6 +299,174 @@ test('endereços externos são recusados antes do redirecionamento', async () =>
       dueDate: '2026-10-27',
       serverDate: '2026-10-27',
     }),
+    (e) => e.code === 'PROVIDER_RESPONSE',
+  );
+});
+
+test('assinatura: falha na consulta anterior não marca um envio que não ocorreu', async () => {
+  const calls = [];
+  const db = backend({
+    rpc: async (name) => {
+      calls.push(name);
+      if (name === 'crm_edge_billing_context') return { is_admin: false };
+      if (name === 'crm_edge_begin_checkout')
+        return { checkout: { id, amount_cents: 18990 }, email: 'crm@example.invalid' };
+      return true;
+    },
+  });
+  const provider = {
+    configured: true,
+    environment: 'test',
+    findCheckout: async () => {
+      throw new HttpError(503, 'PROVIDER_UNCONFIRMED', 'timeout');
+    },
+  };
+  await assert.rejects(
+    billingCheckout(provider)({
+      actorId: id,
+      requestId: id,
+      backend: db,
+      body: {
+        company_id: id,
+        action: 'checkout',
+        mode: 'subscription',
+        payer_email: 'buyer@testuser.com',
+      },
+    }),
+    (e) => e.code === 'PROVIDER_UNCONFIRMED',
+  );
+  assert.equal(calls.includes('crm_edge_claim_checkout'), false);
+});
+
+test('assinatura: teste exige comprador próprio; produção conserva o e-mail do servidor', async () => {
+  const run = async (environment, extra = {}) => {
+    const inputs = [],
+      calls = [];
+    const provider = {
+      configured: true,
+      environment,
+      findCheckout: async () => null,
+      createCheckout: async (input) => {
+        inputs.push(input);
+        return { id: 'provider', url: 'https://www.mercadopago.com.br/checkout/fixture' };
+      },
+    };
+    const db = backend({
+      rpc: async (name) => {
+        calls.push(name);
+        if (name === 'crm_edge_billing_context') return { is_admin: false };
+        if (name === 'crm_edge_begin_checkout')
+          return { checkout: { id, amount_cents: 18990 }, email: 'server@example.invalid' };
+        return true;
+      },
+    });
+    const request = billingCheckout(provider)({
+      actorId: id,
+      requestId: id,
+      backend: db,
+      body: { company_id: id, action: 'checkout', mode: 'subscription', ...extra },
+    });
+    return { request, inputs, calls };
+  };
+  const missing = await run('test');
+  await assert.rejects(missing.request, (e) => e.code === 'SUBSCRIPTION_TEST_BUYER_REQUIRED');
+  assert.equal(missing.calls.includes('crm_edge_begin_checkout'), false);
+  const production = await run('production');
+  await production.request;
+  assert.equal(production.inputs[0].email, 'server@example.invalid');
+  const forged = await run('production', { payer_email: 'untrusted@example.invalid' });
+  await assert.rejects(forged.request, (e) => e.code === 'INVALID_INPUT');
+});
+
+test('assinatura: recusa definitiva encerra apenas a reserva sem provedor; timeout continua reservado', async () => {
+  for (const code of [
+    'SUBSCRIPTION_INPUT_REJECTED',
+    'SUBSCRIPTION_TEST_BUYER_REQUIRED',
+    'PROVIDER_UNCONFIRMED',
+  ]) {
+    const calls = [];
+    const provider = {
+      configured: true,
+      environment: 'test',
+      findCheckout: async () => null,
+      createCheckout: async () => {
+        throw new HttpError(code === 'PROVIDER_UNCONFIRMED' ? 503 : 422, code, 'fixture');
+      },
+    };
+    const db = backend({
+      rpc: async (name, args) => {
+        calls.push({ name, args });
+        if (name === 'crm_edge_billing_context') return { is_admin: false };
+        if (name === 'crm_edge_begin_checkout')
+          return { checkout: { id, amount_cents: 18990 }, email: 'crm@example.invalid' };
+        return true;
+      },
+    });
+    await assert.rejects(
+      billingCheckout(provider)({
+        actorId: id,
+        requestId: id,
+        backend: db,
+        body: {
+          company_id: id,
+          action: 'checkout',
+          mode: 'subscription',
+          payer_email: 'buyer@testuser.com',
+        },
+      }),
+      (e) => e.code === code,
+    );
+    const closed = calls.filter((x) => x.name === 'crm_edge_update_agreement');
+    assert.equal(closed.length, code === 'PROVIDER_UNCONFIRMED' ? 0 : 1);
+    if (closed.length)
+      assert.deepEqual(closed[0].args, {
+        p_id: id,
+        p_provider_id: null,
+        p_status: 'cancelled',
+        p_environment: 'test',
+      });
+  }
+});
+
+test('assinatura: HTTP 400 de comprador incompatível informa a causa sem expor a resposta privada', async () => {
+  const provider = createMercadoPago(config, async () =>
+    Response.json(
+      { message: 'Both payer and collector must be real or test users - private-must-not-leak' },
+      { status: 400 },
+    ),
+  );
+  const error = await provider
+    .createCheckout({ id, mode: 'subscription', amount: 18990, email: 'buyer@testuser.com' })
+    .catch((e) => e);
+  assert.equal(error.code, 'SUBSCRIPTION_TEST_BUYER_REQUIRED');
+  assert.equal(error.message.includes('private-must-not-leak'), false);
+  const trace = safeException(error);
+  assert.match(trace.trace, /provider_operation=SUBSCRIPTION_CREATE;provider_status=400/);
+  assert.equal(JSON.stringify(trace).includes('private-must-not-leak'), false);
+});
+
+test('assinatura: recuperação consulta o contrato completo quando a busca não inclui o link', async () => {
+  const reference = billingReference('subscription', id),
+    calls = [];
+  const provider = createMercadoPago(config, async (url) => {
+    calls.push(String(url));
+    return Response.json(
+      String(url).includes('/search?')
+        ? { results: [{ id: 'provider', external_reference: reference, status: 'pending' }] }
+        : {
+            id: 'provider',
+            external_reference: reference,
+            init_point: 'https://www.mercadopago.com.br/checkout/fixture',
+          },
+    );
+  });
+  const result = await provider.findCheckout({ id, mode: 'subscription' });
+  assert.equal(result.id, 'provider');
+  assert.equal(calls.length, 2);
+  assert.ok(calls[1].endsWith('/preapproval/provider'));
+  const malformed = createMercadoPago(config, async () => Response.json({ message: 'unexpected' }));
+  await assert.rejects(
+    malformed.findCheckout({ id, mode: 'subscription' }),
     (e) => e.code === 'PROVIDER_RESPONSE',
   );
 });
