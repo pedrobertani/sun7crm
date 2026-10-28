@@ -117,6 +117,14 @@ begin
   select x.id into target from jsonb_to_recordset(old_stages) as x(id uuid,position integer) where x.id=any(new_ids) and x.position<removed.position order by x.position desc limit 1;
   if target is null then select x.id into target from jsonb_to_recordset(old_stages) as x(id uuid,position integer) where x.id=any(new_ids) order by x.position limit 1;end if;
   target:=coalesce(target,new_ids[1]);
+  if exists(
+    select 1 from public.crm_confirmed_sales sale
+    join public.crm_opportunities o on o.company_id=sale.company_id and o.id=sale.opportunity_id
+    where o.company_id=p_company and o.board_id=p_board and o.stage_id=removed.id
+      and sale.reversed_at is null
+   ) then
+    raise exception 'CRM_CANNOT_REMOVE_STAGE_WITH_CONFIRMED_SALES' using errcode='23514';
+   end if;
   update public.crm_opportunities set stage_id=target where company_id=p_company and board_id=p_board and stage_id=removed.id;
   delete from public.crm_stages where company_id=p_company and id=removed.id;
  end loop;
