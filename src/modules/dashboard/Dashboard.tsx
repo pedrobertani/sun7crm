@@ -49,6 +49,11 @@ export function CompanyDashboard() {
   const { data, session } = useCrm();
   const [days, setDays] = useState('30');
   const [dashboardTab, setDashboardTab] = useState<'overview'|'commercial'|'achievements'>('overview');
+  const member=data.members.find(m=>m.id===session.memberId);
+  const keys=(member?.permissions||legacyPermissions(session.role)).keys;
+  const canView=(key:string)=>session.role==='manager'||keys.includes(key);
+  const availableTabs=[['overview','Visão geral'],...(canView('cards.view')||canView('goals.view')?[['commercial','Comercial']]:[]),...(canView('goals.view')?[['achievements','Conquistas']]:[])];
+  const activeTab=availableTabs.some(([key])=>key===dashboardTab)?dashboardTab:'overview';
   const date = today();
   const from = shiftDate(date, -Number(days) + 1);
   const company = data.companies.find((c) => c.id === session.companyId)!;
@@ -111,9 +116,9 @@ export function CompanyDashboard() {
         </select>
       </Heading>
       <div className="dashboard-tabs" role="tablist" aria-label="Áreas do dashboard">
-        {([['overview','Visão geral'],['commercial','Comercial'],['achievements','Conquistas']] as const).filter(([key])=>key!=='achievements'||session.role==='manager'||(data.members.find(m=>m.id===session.memberId)?.permissions||legacyPermissions(session.role)).keys.includes('goals.view')).map(([key,label])=><button key={key} type="button" role="tab" aria-selected={dashboardTab===key} className={dashboardTab===key?'active':''} onClick={()=>setDashboardTab(key)}>{label}</button>)}
+        {availableTabs.map(([key,label])=><button key={key} type="button" role="tab" aria-selected={activeTab===key} className={activeTab===key?'active':''} onClick={()=>setDashboardTab(key)}>{label}</button>)}
       </div>
-      {dashboardTab==='overview'&&<>
+      {activeTab==='overview'&&<>
       <div className="kpis">
         <Kpi
           label="Novos contatos"
@@ -147,8 +152,8 @@ export function CompanyDashboard() {
         />
       </div>
       </>}
-      {dashboardTab==='commercial'&&<>
-      {(session.role==='manager'||(data.members.find(m=>m.id===session.memberId)?.permissions||legacyPermissions(session.role)).keys.includes('goals.view'))&&<DemoGoalFunnel view="commercial" />}
+      {activeTab==='commercial'&&<>
+      {canView('goals.view')&&<DemoGoalFunnel view="commercial" />}
       
       <div className="dashboard-grid">
         <Panel
@@ -309,8 +314,8 @@ export function CompanyDashboard() {
         </Panel>
       </div>
       </>}
-      {dashboardTab==='achievements'&&(session.role==='manager'||(data.members.find(m=>m.id===session.memberId)?.permissions||legacyPermissions(session.role)).keys.includes('goals.view'))&&<DemoGoalFunnel view="medals" />}
-            {dashboardTab==='overview'&&<div className="insight-strip">
+      {activeTab==='achievements'&&canView('goals.view')&&<DemoGoalFunnel view="medals" />}
+            {activeTab==='overview'&&<div className="insight-strip">
         <CheckCircle2 size={20} />
         <p>
           <strong>Um próximo passo para cada conversa.</strong>
