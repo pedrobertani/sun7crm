@@ -7,7 +7,11 @@ export interface GoalMedal {
   label: string;
   kind: 'sales' | 'percent';
   threshold: number;
+  icon?: MedalIcon;
 }
+export const medalIcons = {bronze:'🥉',silver:'🥈',gold:'🥇',trophy:'🏆',diamond:'💎',crown:'👑',fire:'🔥',star:'⭐',rocket:'🚀'} as const;
+export type MedalIcon = keyof typeof medalIcons;
+export function medalSymbol(medal:GoalMedal){return medalIcons[medal.icon||'trophy']||medalIcons.trophy;}
 export interface GoalPlan {
   company_id: string;
   goal_month: string;
@@ -33,9 +37,9 @@ export const starterStages: GoalStep[] = [
   {label:'Vendas',rate:null},
 ];
 export const starterMedals: GoalMedal[] = [
-  {label:'Primeira venda',kind:'sales',threshold:1},
-  {label:'Metade da meta',kind:'percent',threshold:50},
-  {label:'Meta alcançada',kind:'percent',threshold:100},
+  {label:'Primeira venda',kind:'sales',threshold:1,icon:'bronze'},
+  {label:'Metade da meta',kind:'percent',threshold:50,icon:'silver'},
+  {label:'Meta alcançada',kind:'percent',threshold:100,icon:'gold'},
 ];
 function positiveInteger(value: number) {
   return Number.isSafeInteger(value) && value > 0;
@@ -49,7 +53,7 @@ export function validateGoalConfig(targetCents:number,ticketCents:number,stages:
     (i===0?s.rate!==null:s.rate===null||!Number.isFinite(s.rate)||s.rate<=0||s.rate>100)))
     return 'Informe todas as taxas de passagem (acima de 0% até 100%).';
   if(medals.length>8||medals.some(m=>!m.label.trim()||m.label.length>60||
-    !['sales','percent'].includes(m.kind)||!positiveInteger(m.threshold)||m.threshold>1000))
+    !['sales','percent'].includes(m.kind)||(m.icon!==undefined&&!(m.icon in medalIcons))||!positiveInteger(m.threshold)||m.threshold>1000))
     return 'Revise os critérios de medalhas (de 1 a 1000).';
   return null;
 }
