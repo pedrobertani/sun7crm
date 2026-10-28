@@ -54,7 +54,7 @@ export function RealDashboard() {
       </div>
       <QueryState query={query} />
       <div className="dashboard-tabs" role="tablist" aria-label="Áreas do dashboard">
-        {availableTabs.map(([key,label])=><button type="button" key={key} role="tab" aria-selected={activeTab===key} className={activeTab===key?'active':''} onClick={()=>setDashboardTab(key)}>{label}</button>)}
+        {availableTabs.map(([key,label])=><button type="button" key={key} role="tab" aria-selected={activeTab===key} className={activeTab===key?'active':''} onClick={()=>setDashboardTab(key as 'overview'|'commercial'|'achievements')}>{label}</button>)}
       </div>
       {query.data && (
         <>
