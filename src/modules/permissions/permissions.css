@@ -95,3 +95,12 @@
     flex-direction: column;
   }
 }
+
+.permission-group-row{background:var(--surface);padding:14px}
+.permission-group-row .permission-expand{font-weight:700}
+.permission-expand{justify-content:flex-start;gap:10px}
+.permission-expand small{margin-left:auto;color:var(--muted);font-size:11px}
+.permission-resource-title{flex:1;font-size:13px;padding:4px}
+.permission-resource+.permission-resource{border-top:1px solid var(--border)}
+.permission-resource{border-left:0}
+.permission-resource .permission-check{white-space:nowrap}
