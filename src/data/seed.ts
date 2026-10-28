@@ -83,6 +83,11 @@ export function createSeed(): Snapshot {
       active: true,
     },
   ]);
+  // Exemplo comercial fictício: Ana começa sem vendas, Lucas conquistou todas as medalhas.
+  members.push({
+    id:'aurora-champion',companyId:'aurora',name:'Lucas Ferreira',
+    email:'lucas@aurora.example',role:'seller',active:true,
+  });
   const boards = companies.flatMap((c) =>
     (['leads', 'clients'] as const).map((kind) => ({
       id: c.id + '-' + kind,
@@ -145,6 +150,25 @@ export function createSeed(): Snapshot {
       createdAt: c.createdAt,
     };
   });
+  // Oito vendas confirmadas de R$ 450 para mostrar 100% da meta individual.
+  // Registros exclusivamente ilustrativos; nunca são enviados ao app real.
+  for (let i=0;i<8;i++) {
+    const id='aurora-champion-contact-'+i;
+    contacts.push({
+      id,companyId:'aurora',name:'Cliente exemplo '+(i+1),
+      phone:'1197777'+String(1000+i),email:'lucas-cliente-'+i+'@example.com',
+      temperature:'hot',ownerId:'aurora-champion',interests:'Tratamento estético',
+      notes:'Venda fictícia usada para demonstração de conquistas',
+      createdAt:date,
+    });
+    opportunities.push({
+      id:id+'-opp',companyId:'aurora',contactId:id,
+      boardId:'aurora-leads',stageId:'aurora-leads-5',
+      value:45000,source:'Indicação',createdAt:date,
+      confirmedSaleAt:date+'T12:00:00.000Z',
+      confirmedSaleOwnerId:'aurora-champion',confirmedSaleCents:45000,
+    });
+  }
   const tasks = companies.flatMap((c) => [
     {
       id: c.id + '-task1',
@@ -207,12 +231,9 @@ export function createSeed(): Snapshot {
       ],
       medals:starterMedals.map(m=>({...m})),
     })),
-    employeeGoals:companies.map(c=>({companyId:c.id,month:date.slice(0,7),memberId:c.id+'-seller',goalCents:1500000})),
+    employeeGoals:[...companies.map(c=>({companyId:c.id,month:date.slice(0,7),memberId:c.id+'-seller',goalCents:1500000})),{companyId:'aurora',month:date.slice(0,7),memberId:'aurora-champion',goalCents:300000}],
     opportunities: opportunities.map((o) => ({
       ...o,
-      ...(o.companyId==='aurora' && o.stageId==='aurora-leads-5'
-       ? {confirmedSaleAt:date+'T12:00:00.000Z',confirmedSaleOwnerId:'aurora-seller',confirmedSaleCents:o.value}
-       : {}),
       labelIds: [
         o.companyId + '-' + contacts.find((c) => c.id === o.contactId)!.temperature,
       ].filter((id) => !id.endsWith('unclassified')),
