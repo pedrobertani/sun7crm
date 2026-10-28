@@ -111,10 +111,13 @@ export function saveCard(data: Snapshot, session: Session, card: Opportunity): S
     )
   )
     throw Error('Item de catálogo indisponível.');
+  const safeCard=previous?.confirmedSaleAt && previous.stageId!==card.stageId
+    ? {...card,confirmedSaleAt:undefined,confirmedSaleOwnerId:undefined,confirmedSaleCents:undefined}
+    : card;
   return {
     ...data,
     opportunities: previous
-      ? data.opportunities.map((o) => (o.id === card.id ? card : o))
-      : [...data.opportunities, card],
+      ? data.opportunities.map((o) => (o.id === card.id ? safeCard : o))
+      : [...data.opportunities, safeCard],
   };
 }
