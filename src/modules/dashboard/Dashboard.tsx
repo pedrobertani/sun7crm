@@ -48,6 +48,12 @@ function ChartEmpty() {
 export function CompanyDashboard() {
   const { data, session } = useCrm();
   const [days, setDays] = useState('30');
+  const [dashboardTab, setDashboardTab] = useState<'overview'|'commercial'|'achievements'>('overview');
+  const member=data.members.find(m=>m.id===session.memberId);
+  const keys=(member?.permissions||legacyPermissions(session.role)).keys;
+  const canView=(key:string)=>session.role==='manager'||keys.includes(key);
+  const availableTabs=[['overview','Visão geral'],...(canView('cards.view')?[['commercial','Comercial']]:[]),...(canView('goals.view')?[['achievements','Conquistas']]:[])];
+  const activeTab=availableTabs.some(([key])=>key===dashboardTab)?dashboardTab:'overview';
   const date = today();
   const from = shiftDate(date, -Number(days) + 1);
   const company = data.companies.find((c) => c.id === session.companyId)!;
@@ -109,6 +115,10 @@ export function CompanyDashboard() {
           <option value="90">Últimos 90 dias</option>
         </select>
       </Heading>
+      <div className="dashboard-tabs" role="tablist" aria-label="Áreas do dashboard">
+        {availableTabs.map(([key,label])=><button key={key} type="button" role="tab" aria-selected={activeTab===key} className={activeTab===key?'active':''} onClick={()=>setDashboardTab(key as 'overview'|'commercial'|'achievements')}>{label}</button>)}
+      </div>
+      {activeTab==='overview'&&<>
       <div className="kpis">
         <Kpi
           label="Novos contatos"
@@ -141,7 +151,10 @@ export function CompanyDashboard() {
           icon={<ListTodo size={19} />}
         />
       </div>
-      {(session.role==='manager'||(data.members.find(m=>m.id===session.memberId)?.permissions||legacyPermissions(session.role)).keys.includes('goals.view'))&&<DemoGoalFunnel />}
+      </>}
+      {activeTab==='commercial'&&<>
+      {canView('goals.view')&&<DemoGoalFunnel view="commercial" />}
+      
       <div className="dashboard-grid">
         <Panel
           title="Novos contatos ao longo do tempo"
@@ -300,7 +313,9 @@ export function CompanyDashboard() {
           )}
         </Panel>
       </div>
-      <div className="insight-strip">
+      </>}
+      {activeTab==='achievements'&&canView('goals.view')&&<DemoGoalFunnel view="medals" />}
+            {activeTab==='overview'&&<div className="insight-strip">
         <CheckCircle2 size={20} />
         <p>
           <strong>Um próximo passo para cada conversa.</strong>
@@ -312,7 +327,7 @@ export function CompanyDashboard() {
             <ArrowUpRight size={14} />
           </Link>
         </Button>
-      </div>
+      </div>}
     </>
   );
 }

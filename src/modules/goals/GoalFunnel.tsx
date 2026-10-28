@@ -18,7 +18,7 @@ const numberFormat = (value:number|null)=>value===null?'A definir':value.toLocal
 function moneyInput(cents:number){return cents>0?(cents/100).toFixed(2):'';}
 function percent(value:number,goal:number){return goal>0?Math.round(value/goal*100):0;}
 
-export function GoalFunnel() {
+export function GoalFunnel({view='commercial'}:{view?:'commercial'|'medals'}) {
   const {api,company,can,refresh,revision}=useOperational();
   const manager=company.role==='manager' && can('settings.edit');
   const [month,setMonth]=useState(today().slice(0,7));
@@ -46,7 +46,7 @@ export function GoalFunnel() {
   const recorded=confirmed.reduce((sum,r)=>sum+r.value_cents,0);
   const plannedSales=plan?Math.ceil(plan.target_cents/plan.ticket_cents):null;
   return (
-    <div className="goal-area">
+    <div className="goal-area" data-view={view}>
       <Panel title="Funil de metas" description="Planejamento mensal configurado pelo gestor — separado dos resultados realizados.">
         <div className="goal-head">
           <label className="form-row">Competência

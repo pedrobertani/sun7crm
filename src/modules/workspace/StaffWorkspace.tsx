@@ -258,9 +258,13 @@ export function StaffWorkspace({
     ),
     sidebarLinks = links.filter((n) => n.group !== 'Preferências'),
     allowed = access?.companyId === company.id ? access.access_allowed : null;
-  // Only redirect the workspace entry point; explicit forbidden routes keep their access message.
-  if (location.pathname === '/app' && allowed && !granted('dashboard.view') && links[0]) {
-    return <Navigate to={links[0].to} replace />;
+  // An inaccessible dashboard must never become an empty landing page.
+  // Also handle revoked access to routes already open after permissions refresh.
+  const currentAllowed = granted(sectionPermission[section.to]) &&
+    (section.to !== '/app/plano' || company.role === 'manager');
+  if (allowed && !currentAllowed && links.length) {
+    const next = links.find(n=>n.to!==section.to);
+    if (next) return <Navigate to={next.to} replace />;
   }
   return (
     <WorkspaceTheme theme={company.theme} className="admin-live official-member">
@@ -280,7 +284,7 @@ export function StaffWorkspace({
         )}
         <aside className={'sidebar ' + (mobile ? 'is-open' : '')}>
           <div className="sidebar-head">
-            <Link className="logo workspace-logo" to="/app">
+            <Link className="logo workspace-logo" to={links[0]?.to||"/app"}>
               <WorkspaceLogo path={allowed ? company.logoPath : null} name={company.name} />
               <span className="brand">
                 <strong>{company.name}</strong>

@@ -21,7 +21,11 @@ import { Pager, QueryState, SaveActions, useOperational, useQuery, useSave } fro
 export function RealDashboard() {
   const { api, can } = useOperational(),
     [from, setFrom] = useState(today().slice(0, 7) + '-01'),
-    [to, setTo] = useState(today());
+    [to, setTo] = useState(today()),
+    [dashboardTab, setDashboardTab] = useState<'overview'|'commercial'|'achievements'>('overview');
+  const commercialAllowed=can('cards.view');
+  const availableTabs=[['overview','Visão geral'], ...(commercialAllowed?[['commercial','Comercial']]:[]), ...(can('goals.view')?[['achievements','Conquistas']]:[])];
+  const activeTab=availableTabs.some(([key])=>key===dashboardTab)?dashboardTab:'overview';
   const query = useQuery(async () => {
     const [metrics, boards, stages, strategies] = await Promise.all([
       api.metrics(from, to),
@@ -49,9 +53,12 @@ export function RealDashboard() {
         </Link>
       </div>
       <QueryState query={query} />
+      <div className="dashboard-tabs" role="tablist" aria-label="Áreas do dashboard">
+        {availableTabs.map(([key,label])=><button type="button" key={key} role="tab" aria-selected={activeTab===key} className={activeTab===key?'active':''} onClick={()=>setDashboardTab(key as 'overview'|'commercial'|'achievements')}>{label}</button>)}
+      </div>
       {query.data && (
         <>
-          <div className="kpis">
+          {activeTab==='overview'&&<div className="kpis">
             <Kpi
               label="Novos contatos"
               value={query.data.metrics.contacts}
@@ -79,8 +86,10 @@ export function RealDashboard() {
               icon={<ListTodo size={19} />}
               to="/app/tarefas"
             />
-          </div>
-          {can('goals.view') && <GoalFunnel />}
+          </div>}
+          {activeTab==='commercial'&&can('goals.view')&&<GoalFunnel view="commercial" />}
+          {activeTab==='achievements'&&can('goals.view')&&<GoalFunnel view="medals" />}
+          {activeTab==='commercial'&&<>
           <div className="operational-dashboard-grid">
             <ContactIntakeChart data={query.data.metrics.contacts_by_day} />
             <Panel title="Cards por etapa" description="Distribuição atual dos cards abertos">
@@ -140,6 +149,7 @@ export function RealDashboard() {
               )}
             </div>
           </Panel>
+          </>}
         </>
       )}
     </>
