@@ -19,7 +19,7 @@ import { RealActivityReport } from '../reports/RealActivityReport';
 import { Pager, QueryState, SaveActions, useOperational, useQuery, useSave } from './operational';
 
 export function RealDashboard() {
-  const { api } = useOperational(),
+  const { api, can } = useOperational(),
     [from, setFrom] = useState(today().slice(0, 7) + '-01'),
     [to, setTo] = useState(today());
   const query = useQuery(async () => {
@@ -80,7 +80,7 @@ export function RealDashboard() {
               to="/app/tarefas"
             />
           </div>
-          <GoalFunnel />
+          {can('goals.view') && <GoalFunnel />}
           <div className="operational-dashboard-grid">
             <ContactIntakeChart data={query.data.metrics.contacts_by_day} />
             <Panel title="Cards por etapa" description="Distribuição atual dos cards abertos">
