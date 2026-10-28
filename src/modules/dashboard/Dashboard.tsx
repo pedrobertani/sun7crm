@@ -52,7 +52,7 @@ export function CompanyDashboard() {
   const member=data.members.find(m=>m.id===session.memberId);
   const keys=(member?.permissions||legacyPermissions(session.role)).keys;
   const canView=(key:string)=>session.role==='manager'||keys.includes(key);
-  const availableTabs=[['overview','Visão geral'],...(canView('cards.view')||canView('goals.view')?[['commercial','Comercial']]:[]),...(canView('goals.view')?[['achievements','Conquistas']]:[])];
+  const availableTabs=[['overview','Visão geral'],...(canView('cards.view')?[['commercial','Comercial']]:[]),...(canView('goals.view')?[['achievements','Conquistas']]:[])];
   const activeTab=availableTabs.some(([key])=>key===dashboardTab)?dashboardTab:'overview';
   const date = today();
   const from = shiftDate(date, -Number(days) + 1);
