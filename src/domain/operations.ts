@@ -1,6 +1,7 @@
 import type { Board, Session, Snapshot, Stage, Opportunity } from './types';
 import { normalize } from '../lib/format';
 import { PROVISIONAL_MAX_STAGES } from './config';
+import { highImpactStage } from '../modules/goals/stageOutcome';
 export function canManage(session: Session) {
   return session.role === 'manager';
 }
@@ -33,6 +34,10 @@ export function removeStage(board: Board, opps: Opportunity[], id: string, targe
     id === targetId
   )
     throw Error('Escolha outra etapa de destino.');
+  if (highImpactStage(board.stages.find(s=>s.id===id)?.name||'')==='sale' &&
+    opps.some(o=>o.boardId===board.id&&o.stageId===id&&o.confirmedSaleAt)) {
+    throw Error('Não é possível excluir uma etapa que contém vendas confirmadas.');
+  }
   return {
     board: { ...board, stages: board.stages.filter((s) => s.id !== id) },
     opportunities: opps.map((o) =>
@@ -56,7 +61,12 @@ export function moveOpportunity(
   if (!board?.stages.some((s) => s.id === stageId)) throw Error('Etapa inválida para este quadro.');
   return {
     ...data,
-    opportunities: data.opportunities.map((o) => (o.id === id ? { ...o, stageId } : o)),
+    opportunities: data.opportunities.map((o) => o.id !== id ? o : {
+      ...o,stageId,
+      ...(o.confirmedSaleAt?{
+        confirmedSaleAt:undefined,confirmedSaleOwnerId:undefined,confirmedSaleCents:undefined,
+      }:{}),
+    }),
   };
 }
 
