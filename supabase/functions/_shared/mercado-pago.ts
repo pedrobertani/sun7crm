@@ -1,4 +1,4 @@
-import { HttpError } from './errors.ts';
+import { HttpError, ProviderError } from './errors.ts';
 import type { JsonObject } from './contracts.ts';
 import { createOrderGateway } from './mercado-pago-orders.ts';
 
@@ -125,6 +125,33 @@ export function createMercadoPago(
         'O Mercado Pago não confirmou o resultado. Tente recuperar esta mesma solicitação.',
       );
     }
+    const operation =
+      method === 'POST' && path === '/preapproval'
+        ? 'SUBSCRIPTION_CREATE'
+        : path.startsWith('/preapproval/search?')
+          ? 'SUBSCRIPTION_SEARCH'
+          : 'PROVIDER_API';
+    if (operation === 'SUBSCRIPTION_CREATE' && [400, 422].includes(response.status)) {
+      let testBuyer = false;
+      try {
+        const data = object(await response.json());
+        testBuyer =
+          config.environment === 'test' &&
+          typeof data.message === 'string' &&
+          /both payer and collector must be real or test users/i.test(data.message);
+      } catch {
+        /* Nunca devolver ou registrar a resposta privada do provedor. */
+      }
+      throw new ProviderError(
+        422,
+        testBuyer ? 'SUBSCRIPTION_TEST_BUYER_REQUIRED' : 'SUBSCRIPTION_INPUT_REJECTED',
+        testBuyer
+          ? 'Use uma conta compradora de teste do Mercado Pago para autorizar a assinatura.'
+          : 'O Mercado Pago recusou os dados da assinatura. Confira o comprador antes de tentar novamente.',
+        response.status,
+        operation,
+      );
+    }
     if (method === 'POST' && path === '/v1/orders' && [400, 422].includes(response.status))
       throw new HttpError(
         422,
@@ -132,22 +159,28 @@ export function createMercadoPago(
         'O Mercado Pago não aceitou os dados. Confira o formulário e tente novamente.',
       );
     if (response.status === 401)
-      throw new HttpError(
+      throw new ProviderError(
         502,
         'PROVIDER_CREDENTIALS',
         'As credenciais do Mercado Pago não foram aceitas. Peça à administração que confira a integração.',
+        response.status,
+        operation,
       );
     if (response.status === 403)
-      throw new HttpError(
+      throw new ProviderError(
         502,
         'PROVIDER_FORBIDDEN',
         'O Mercado Pago não autorizou a operação. A administração precisa conferir a aplicação e suas permissões.',
+        response.status,
+        operation,
       );
     if (!response.ok)
-      throw new HttpError(
+      throw new ProviderError(
         502,
         'PROVIDER_UNAVAILABLE',
         'Não foi possível confirmar a operação no Mercado Pago.',
+        response.status,
+        operation,
       );
     try {
       return object(await response.json());
@@ -188,6 +221,12 @@ export function createMercadoPago(
         `/preapproval/search?external_reference=${encodeURIComponent(reference)}`,
       );
       const candidates = result.results || result.elements || [];
+      if (!Array.isArray(result.results) && !Array.isArray(result.elements))
+        throw new HttpError(
+          502,
+          'PROVIDER_RESPONSE',
+          'A consulta da assinatura precisa ser conferida.',
+        );
       const rows = Array.isArray(candidates)
         ? candidates
             .map(object)
@@ -199,7 +238,17 @@ export function createMercadoPago(
           'CHECKOUT_REVIEW',
           'Há mais de um cadastro no Mercado Pago para esta solicitação. A administração precisa conferir.',
         );
-      return rows.length ? checkout(rows[0]) : null;
+      if (!rows.length) return null;
+      const row = rows[0].init_point
+        ? rows[0]
+        : await api(`/preapproval/${resourceId(rows[0].id)}`);
+      if (row.external_reference !== reference)
+        throw new HttpError(
+          409,
+          'PAYMENT_MISMATCH',
+          'A assinatura encontrada não corresponde à solicitação.',
+        );
+      return checkout(row);
     },
     async createCheckout(input) {
       if (input.mode !== 'subscription')

@@ -9,6 +9,23 @@ export class HttpError extends Error {
   }
 }
 
+export class ProviderError extends HttpError {
+  readonly providerStatus: number;
+  readonly providerOperation: 'SUBSCRIPTION_SEARCH' | 'SUBSCRIPTION_CREATE' | 'PROVIDER_API';
+  constructor(
+    status: number,
+    code: string,
+    message: string,
+    providerStatus: number,
+    providerOperation: 'SUBSCRIPTION_SEARCH' | 'SUBSCRIPTION_CREATE' | 'PROVIDER_API',
+  ) {
+    super(status, code, message);
+    this.name = 'ProviderError';
+    this.providerStatus = providerStatus;
+    this.providerOperation = providerOperation;
+  }
+}
+
 export function databaseError(error: { code?: string; message?: string }): HttpError {
   if (error.message?.includes('CRM_BILLING_CHANGED')) {
     return new HttpError(

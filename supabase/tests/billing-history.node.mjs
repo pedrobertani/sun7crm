@@ -348,6 +348,78 @@ test('cobranças: histórico, autorização, confirmação e recibos do provedor
     },
   );
   await t.test(
+    'recusa de criação libera a reserva de teste sem criar recebimento ou renovar acesso',
+    async () => {
+      const before = await bill(),
+        totals = (await history()).totals;
+      await q(
+        `insert into public.crm_subscription_charges(id,company_id,created_by,amount_cents,due_date,environment)
+        values($1,$2,$3,18990,$4,'test')`,
+        [id(7992), id(100), id(7), before.due_date],
+      );
+      const first = await service('crm_edge_begin_checkout', [
+        id(1),
+        id(100),
+        id(7990),
+        'subscription',
+        'test',
+      ]);
+      await service('crm_edge_claim_checkout', [id(1), id(100), first.checkout.id, 'subscription']);
+      await service('crm_edge_update_agreement', [first.checkout.id, null, 'cancelled', 'test']);
+      const restored = (
+        await q(
+          'select status,source,kind,agreement_id from public.crm_subscription_charges where id=$1',
+          [id(7992)],
+        )
+      ).rows[0];
+      assert.deepEqual(restored, {
+        status: 'pending',
+        source: 'manual',
+        kind: 'one_time',
+        agreement_id: null,
+      });
+      await service('crm_edge_update_agreement', [
+        first.checkout.id,
+        'late-provider',
+        'authorized',
+        'test',
+      ]);
+      assert.equal(
+        (
+          await q('select status from public.crm_subscription_agreements where id=$1', [
+            first.checkout.id,
+          ])
+        ).rows[0].status,
+        'cancelled',
+      );
+      const next = await service('crm_edge_begin_checkout', [
+        id(1),
+        id(100),
+        id(7991),
+        'subscription',
+        'test',
+      ]);
+      assert.notEqual(first.checkout.id, next.checkout.id);
+      assert.deepEqual(await bill(), before);
+      assert.equal((await history()).totals.paid_cents, totals.paid_cents);
+      assert.equal(
+        (
+          await q(
+            'select count(*)::int n from public.crm_subscription_charges where agreement_id=any($1::uuid[])',
+            [[first.checkout.id, next.checkout.id]],
+          )
+        ).rows[0].n,
+        1,
+      );
+      await service('crm_edge_update_agreement', [next.checkout.id, null, 'cancelled', 'test']);
+      assert.equal(
+        (await q('select status from public.crm_subscription_charges where id=$1', [id(7992)]))
+          .rows[0].status,
+        'pending',
+      );
+    },
+  );
+  await t.test(
     'gestor mantém histórico durante bloqueio, sem expor financeiro aos funcionários',
     async () => {
       await q('update public.crm_company_billing set due_date=$1::date-20 where company_id=$2', [

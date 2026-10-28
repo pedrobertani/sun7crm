@@ -1,4 +1,5 @@
 import type { Backend, ErrorContext } from './contracts.ts';
+import { ProviderError } from './errors.ts';
 
 export function safeException(error: unknown) {
   const type =
@@ -16,7 +17,14 @@ export function safeException(error: unknown) {
   ]
     .slice(0, 12)
     .map((match) => `${match[1]}:${match[2]}:${match[3]}`);
-  return { exceptionType: type, trace: frames.join('\n').slice(0, 2048) };
+  const provider =
+    error instanceof ProviderError
+      ? `provider_operation=${error.providerOperation};provider_status=${error.providerStatus}`
+      : '';
+  return {
+    exceptionType: type,
+    trace: [provider, ...frames].filter(Boolean).join('\n').slice(0, 2048),
+  };
 }
 
 export async function reportSafely(

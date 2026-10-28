@@ -38,6 +38,14 @@ export async function invokeBilling(
       );
     if (code === 'PAYMENTS_NOT_CONFIGURED')
       throw failure('O pagamento online ainda não foi ativado.');
+    if (code === 'SUBSCRIPTION_TEST_BUYER_REQUIRED')
+      throw failure(
+        'Para testar a assinatura, use o e-mail da conta compradora de teste do Mercado Pago. O login do CRM é separado.',
+      );
+    if (code === 'SUBSCRIPTION_INPUT_REJECTED')
+      throw failure(
+        'O Mercado Pago recusou os dados da assinatura. Confira o comprador e tente novamente.',
+      );
     if (code === 'PROVIDER_CREDENTIALS')
       throw failure(
         'As credenciais do Mercado Pago não foram aceitas. A administração precisa conferir a integração.',

@@ -6,7 +6,7 @@ import { transparentCheckout } from '../_shared/billing-orders.ts';
 
 export function billingCheckout(provider: MercadoPago): Command {
   return async ({ actorId, requestId, body, backend }) => {
-    keys(body, ['company_id', 'action', 'mode', 'payment', 'attempt_id']);
+    keys(body, ['company_id', 'action', 'mode', 'payment', 'attempt_id', 'payer_email']);
     const companyId = uuid(body.company_id, 'empresa');
     const action = body.action;
     if (
@@ -48,7 +48,12 @@ export function billingCheckout(provider: MercadoPago): Command {
       throw new HttpError(403, 'FORBIDDEN', 'A contratação é realizada pelo gestor da empresa.');
     if (action === 'create_order' || action === 'order_status')
       return transparentCheckout(backend, provider, actorId, companyId, requestId, body);
-    keys(body, ['company_id', 'action', 'mode']);
+    keys(body, [
+      'company_id',
+      'action',
+      'mode',
+      ...(body.action === 'checkout' && provider.environment === 'test' ? ['payer_email'] : []),
+    ]);
     if (!provider.configured)
       throw new HttpError(
         503,
@@ -80,6 +85,22 @@ export function billingCheckout(provider: MercadoPago): Command {
     }
     if (body.mode !== 'subscription')
       throw new HttpError(400, 'INVALID_INPUT', 'Use o pagamento integrado por Pix ou cartão.');
+    let testPayer: string | undefined;
+    if (provider.environment === 'test') {
+      if (typeof body.payer_email !== 'string' || !body.payer_email.trim())
+        throw new HttpError(
+          422,
+          'SUBSCRIPTION_TEST_BUYER_REQUIRED',
+          'Informe o e-mail da conta compradora de teste do Mercado Pago.',
+        );
+      testPayer = body.payer_email.trim();
+      if (testPayer.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(testPayer))
+        throw new HttpError(
+          422,
+          'SUBSCRIPTION_INPUT_REJECTED',
+          'Confira o e-mail da conta compradora de teste.',
+        );
+    }
     const prepared = await backend.rpc<JsonObject>('crm_edge_begin_checkout', {
       p_actor: actorId,
       p_company: companyId,
@@ -93,19 +114,40 @@ export function billingCheckout(provider: MercadoPago): Command {
       id: String(checkout.id),
       mode: body.mode,
       amount: Number(checkout.amount_cents),
-      email: String(prepared.email),
+      email: testPayer || String(prepared.email),
       dueDate: String(prepared.due_date),
       serverDate: String(prepared.server_date),
     };
-    const claimed = await backend.rpc<boolean>('crm_edge_claim_checkout', {
-      p_actor: actorId,
-      p_company: companyId,
-      p_id: input.id,
-      p_mode: input.mode,
-    });
     // Após timeout, só recuperar pela referência; nunca repetir a criação às cegas.
     let result = await provider.findCheckout(input);
-    if (!result && claimed) result = await provider.createCheckout(input);
+    if (!result) {
+      // A consulta não reserva um envio que ainda não foi feito ao provedor.
+      const claimed = await backend.rpc<boolean>('crm_edge_claim_checkout', {
+        p_actor: actorId,
+        p_company: companyId,
+        p_id: input.id,
+        p_mode: input.mode,
+      });
+      if (claimed) {
+        try {
+          result = await provider.createCheckout(input);
+        } catch (cause) {
+          if (
+            cause instanceof HttpError &&
+            ['SUBSCRIPTION_INPUT_REJECTED', 'SUBSCRIPTION_TEST_BUYER_REQUIRED'].includes(cause.code)
+          ) {
+            // Um 400/422 definitivo não criou contrato. Preservar o registro local encerrado.
+            await backend.rpc('crm_edge_update_agreement', {
+              p_id: input.id,
+              p_provider_id: null,
+              p_status: 'cancelled',
+              p_environment: provider.environment,
+            });
+          }
+          throw cause;
+        }
+      }
+    }
     if (!result)
       throw new HttpError(
         503,
