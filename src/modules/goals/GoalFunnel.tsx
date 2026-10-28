@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Award, LockKeyhole, ChartNoAxesCombined, Settings2, Plus, Trash2, Trophy } from 'lucide-react';
+import { LockKeyhole, ChartNoAxesCombined, Settings2, Plus, Trash2, Trophy } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Modal } from '../../components/ui/modal';
