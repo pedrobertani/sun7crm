@@ -1,5 +1,6 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { EmployeePermissions } from '../modules/permissions/model';
+import type { GoalPlan, GoalEmployeeProgress } from '../modules/goals/model';
 import { uid } from '../lib/format';
 
 export interface VersionedRow {
@@ -975,6 +976,30 @@ export class OperationalBackend {
       },
       true,
     );
+  }
+  async goalPlan(month: string): Promise<GoalPlan | null> {
+    const result=await this.client.from('crm_goal_plans').select('*')
+      .eq('company_id',this.companyId).eq('goal_month',month).maybeSingle();
+    if(result.error) throw failure(result.error);
+    return result.data as GoalPlan | null;
+  }
+  async goalEmployeeProgress(month: string):Promise<GoalEmployeeProgress[]> {
+    const result=await this.client.from('crm_goal_employee_progress').select('*')
+      .eq('company_id',this.companyId).eq('goal_month',month)
+      .order('membership_id');
+    if(result.error||!result.data)throw failure(result.error);
+    return result.data as GoalEmployeeProgress[];
+  }
+  async saveGoalPlan(input:Omit<GoalPlan,'company_id'>):Promise<void> {
+    const result=await this.client.from('crm_goal_plans').upsert(
+      {...input,company_id:this.companyId},{onConflict:'company_id,goal_month'});
+    if(result.error)throw failure(result.error,true);
+  }
+  async saveGoalEmployeeProgress(input:Omit<GoalEmployeeProgress,'company_id'>):Promise<void> {
+    uuid(input.membership_id);
+    const result=await this.client.from('crm_goal_employee_progress').upsert(
+      {...input,company_id:this.companyId},{onConflict:'company_id,goal_month,membership_id'});
+    if(result.error)throw failure(result.error,true);
   }
   metrics(from: string, to: string) {
     return this.rpc<WorkspaceMetrics>('crm_workspace_metrics', { p_from: from, p_to: to });

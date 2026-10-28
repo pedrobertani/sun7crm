@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, Users, ListTodo, KanbanSquare, Wallet, History, Clock3 } from 'lucide-react';
 import { ContactIntakeChart } from '../dashboard/ContactIntakeChart';
+import { GoalFunnel } from '../goals/GoalFunnel';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Modal } from '../../components/ui/modal';
@@ -79,6 +80,7 @@ export function RealDashboard() {
               to="/app/tarefas"
             />
           </div>
+          <GoalFunnel />
           <div className="operational-dashboard-grid">
             <ContactIntakeChart data={query.data.metrics.contacts_by_day} />
             <Panel title="Cards por etapa" description="Distribuição atual dos cards abertos">
