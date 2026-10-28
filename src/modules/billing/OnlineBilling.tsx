@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { CreditCard, ExternalLink, RefreshCw } from 'lucide-react';
+import { CreditCard, ExternalLink } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Modal } from '../../components/ui/modal';
 import { FormError } from '../../components/shared';
@@ -50,11 +50,13 @@ export function OnlineBilling({
   companyId,
   amount,
   admin = false,
+  active = true,
   onPaymentUpdated,
 }: {
   companyId: string;
   amount?: number;
   admin?: boolean;
+  active?: boolean;
   onPaymentUpdated?: () => void;
 }) {
   const [choice, setChoice] = useState<'one_time' | 'subscription' | 'cancel_subscription' | null>(
@@ -93,7 +95,7 @@ export function OnlineBilling({
     [companyId],
     {
       group: billingRefreshGroup(companyId),
-      automatic: !choice && import.meta.env.VITE_ONLINE_BILLING_ENABLED === 'true',
+      automatic: active && !choice && import.meta.env.VITE_ONLINE_BILLING_ENABLED === 'true',
     },
   );
   function open(value: typeof choice) {
@@ -164,11 +166,6 @@ export function OnlineBilling({
                 : 'Consultando integração...'}
           </p>
         </div>
-        {admin && (
-          <Button variant="outline" size="sm" onClick={() => void refresh()}>
-            <RefreshCw size={15} /> Atualizar
-          </Button>
-        )}
       </div>
       <FormError message={error} />
       {error && (

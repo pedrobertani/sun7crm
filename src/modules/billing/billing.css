@@ -5,6 +5,27 @@
   gap: 16px;
   margin-bottom: 20px;
 }
+.billing-plan-page .billing-summary,
+.billing-plan-page .billing-online {
+  max-width: 920px;
+  margin: 0;
+}
+.billing-plan-page .billing-facts {
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+.billing-plan-page .billing-ledger {
+  margin-top: 0;
+}
+.billing-renewal-rules summary,
+.billing-access-details > summary {
+  color: var(--primary);
+  font-weight: 600;
+  cursor: pointer;
+  padding: 12px 0;
+}
+.billing-access-details {
+  margin-top: 24px;
+}
 .billing-plan {
   display: grid;
   grid-template-columns: minmax(290px, 0.9fr) minmax(320px, 1.2fr);

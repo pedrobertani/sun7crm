@@ -34,7 +34,7 @@ Tabela `public.crm_notifications`, com destinatário individual, empresa, tipo, 
 
 O vencimento tem prioridade visual e aparece somente para gestores ativos daquela empresa. A consulta privilegiada projeta apenas o aviso da própria identidade; não recebe destinatário ou mensagem do navegador e não concede leitura da cobrança aos vendedores ou à recepção.
 
-Os avisos são gerados no banco pelo job `sun7crm-notifications-minute` a cada minuto, inclusive com o site fechado. O sininho consulta os registros ao entrar, abrir, voltar à janela e a cada 60 segundos enquanto a página está visível, sem botão Atualizar. Não há envio de push ou e-mail em segundo plano nesta entrega. Estados de vencimento são deduplicados por data e fase; atualizar a página não recria avisos lidos. Renovação, conclusão de tarefa e mudanças de atribuição resolvem ou ocultam avisos que não se aplicam mais.
+Os avisos são gerados no banco pelo job `sun7crm-notifications` a cada 15 minutos, inclusive com o site fechado. O sininho acompanha eventos privados do próprio usuário e consulta ao entrar, abrir ou reconectar; somente com o canal indisponível usa consulta de segurança a cada 60 segundos com a página visível, sem botão Atualizar. Não há envio de push ou e-mail em segundo plano nesta entrega. Estados de vencimento são deduplicados por data e fase; atualizar a página não recria avisos lidos. Renovação, conclusão de tarefa e mudanças de atribuição resolvem ou ocultam avisos que não se aplicam mais.
 
 `crm_refresh_notifications()` permanece como compatibilidade para abas antigas, limitado ao próprio usuário. A versão atual consulta diretamente a tabela. `crm_mark_notifications_read(uuid[])` marca somente notificações visíveis do próprio usuário, com horário do servidor e até 100 identificadores por chamada. RLS e grants impedem fabricar notificações, trocar o destinatário ou consultar outra empresa. Implantação, execução e limites do job: `notificacoes-cron.md`.
 
@@ -83,3 +83,4 @@ QA de navegador usa dados fictícios isolados e não grava empresas, gestores, a
 - Aviso anterior do projeto: proteção de senha vazada permanece desativada; ver https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection. A configuração não foi alterada nesta entrega. Tabelas privadas de controle permanecem intencionalmente sem políticas e sem grants para clientes.
 
 A execução integral de cadastro real com a conta do titular permanece condicionada aos documentos oficiais. As verificações locais não substituem esse teste.
+

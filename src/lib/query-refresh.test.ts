@@ -141,4 +141,56 @@ describe('Atualização compartilhada das consultas', () => {
     expect(error).toHaveBeenCalledTimes(1);
     expect(value).toHaveBeenCalledWith('current');
   });
+  it('aguarda o formulário fechar e agrupa eventos sem consultar outro contexto', () => {
+    const f = fixture();
+    let editing = true;
+    const affected = vi.fn(async () => {}),
+      other = vi.fn(async () => {});
+    f.scheduler.subscribe(
+      affected,
+      'company:a',
+      60_000,
+      () => false,
+      () => !editing,
+    );
+    f.scheduler.subscribe(
+      other,
+      'company:b',
+      60_000,
+      () => false,
+      () => true,
+    );
+    for (let n = 0; n < 100; n++) f.scheduler.invalidate((group) => group === 'company:a');
+    expect(affected).not.toHaveBeenCalled();
+    editing = false;
+    f.advance(1000);
+    expect(affected).toHaveBeenCalledTimes(1);
+    expect(other).not.toHaveBeenCalled();
+    f.advance(120_000);
+    expect(affected).toHaveBeenCalledTimes(1);
+  });
+  it('uma alteração recebida durante a consulta agenda só uma leitura final', async () => {
+    let finish!: (value: string) => void;
+    const load = vi.fn(
+      () =>
+        new Promise<string>((resolve) => {
+          finish = resolve;
+        }),
+    );
+    const value = vi.fn();
+    const task = createQueryTask(load, { value, error: vi.fn() });
+    const first = task.refresh();
+    await Promise.resolve();
+    for (let n = 0; n < 20; n++) void task.invalidate();
+    expect(load).toHaveBeenCalledTimes(1);
+    finish('anterior');
+    await first;
+    await Promise.resolve();
+    expect(load).toHaveBeenCalledTimes(2);
+    const latest = task.refresh();
+    finish('atualizado');
+    await latest;
+    expect(value).toHaveBeenLastCalledWith('atualizado');
+    expect(load).toHaveBeenCalledTimes(2);
+  });
 });

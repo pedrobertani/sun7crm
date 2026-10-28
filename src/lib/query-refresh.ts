@@ -2,7 +2,10 @@ type RefreshJob = {
   group: string;
   interval: number;
   automatic: () => boolean;
+  events: () => boolean;
   refresh: () => Promise<void>;
+  invalidate: () => Promise<void>;
+  dirty: boolean;
   last: number;
 };
 
@@ -14,15 +17,18 @@ export function createRefreshScheduler(runtime: {
 }) {
   const jobs = new Set<RefreshJob>();
   let stop: (() => void) | undefined;
-  const run = (job: RefreshJob) => {
+  const run = (job: RefreshJob, invalidated = false) => {
     job.last = runtime.now();
-    return job.refresh().catch(() => {});
+    job.dirty = false;
+    return (invalidated ? job.invalidate() : job.refresh()).catch(() => {});
   };
   const update = (wake = false) => {
     if (!runtime.active()) return;
-    for (const job of jobs)
-      if (job.automatic() && runtime.now() - job.last >= (wake ? 5000 : job.interval))
-        void run(job);
+    for (const job of jobs) {
+      if (job.dirty && job.events()) void run(job, true);
+      else if (wake && job.events() && runtime.now() - job.last >= 5000) void run(job);
+      else if (job.automatic() && runtime.now() - job.last >= job.interval) void run(job);
+    }
   };
   return {
     subscribe(
@@ -30,8 +36,19 @@ export function createRefreshScheduler(runtime: {
       group: string,
       interval = 30_000,
       automatic = () => true,
+      events = automatic,
+      invalidate = refresh,
     ) {
-      const job = { refresh, group, interval, automatic, last: runtime.now() };
+      const job = {
+        refresh,
+        invalidate,
+        group,
+        interval,
+        automatic,
+        events,
+        dirty: false,
+        last: runtime.now(),
+      };
       jobs.add(job);
       if (!stop) {
         const unlisten = runtime.listen(() => update(true));
@@ -48,7 +65,11 @@ export function createRefreshScheduler(runtime: {
       };
     },
     async refresh(group: string) {
-      await Promise.all([...jobs].filter((job) => job.group === group).map(run));
+      await Promise.all([...jobs].filter((job) => job.group === group).map((job) => run(job)));
+    },
+    invalidate(matches: (group: string) => boolean) {
+      for (const job of jobs) if (matches(job.group)) job.dirty = true;
+      update();
     },
   };
 }
@@ -64,7 +85,8 @@ export function createQueryTask<T>(
   let disposed = false;
   let pending: Promise<void> | undefined;
   let controller: AbortController | undefined;
-  return {
+  let dirty = false;
+  const task = {
     refresh() {
       if (disposed) return Promise.resolve();
       if (pending) return pending;
@@ -82,14 +104,26 @@ export function createQueryTask<T>(
         .finally(() => {
           pending = undefined;
           if (!disposed) callbacks.pending?.(false);
+          if (!disposed && dirty) {
+            dirty = false;
+            void task.refresh();
+          }
         });
       return pending;
+    },
+    invalidate() {
+      if (pending) {
+        dirty = true;
+        return pending;
+      }
+      return task.refresh();
     },
     dispose() {
       disposed = true;
       controller?.abort();
     },
   };
+  return task;
 }
 
 let pageScheduler: ReturnType<typeof createRefreshScheduler> | undefined;

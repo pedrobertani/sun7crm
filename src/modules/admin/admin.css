@@ -68,15 +68,6 @@
   font-size: 11px;
   line-height: 1.5;
 }
-.admin-live .admin-data-bar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 18px;
-  color: var(--muted);
-  font-size: 12px;
-}
 .admin-live .admin-feedback {
   padding: 14px 16px;
   border: 1px solid var(--line);
@@ -359,9 +350,6 @@
   .admin-live .heading .actions select {
     flex: 1;
     min-width: 120px;
-  }
-  .admin-live .admin-data-bar .btn {
-    flex-shrink: 0;
   }
   .admin-live .toolbar {
     align-items: stretch;

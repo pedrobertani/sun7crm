@@ -1,0 +1,33 @@
+.ui-tabs-list {
+  display: flex;
+  gap: 6px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 24px;
+}
+.ui-tabs-list > .btn {
+  border: 0;
+  border-bottom: 3px solid transparent;
+  border-radius: 8px 8px 0 0;
+  padding: 12px 18px;
+  color: var(--muted);
+}
+.ui-tabs-list > .btn:hover,
+.ui-tabs-list > .btn[aria-selected='true'] {
+  color: var(--primary);
+  background: var(--primary-soft);
+}
+.ui-tabs-list > .btn[aria-selected='true'] {
+  border-bottom-color: var(--primary);
+}
+.ui-tabs > [hidden] {
+  display: none;
+}
+@media (max-width: 500px) {
+  .ui-tabs-list {
+    gap: 0;
+  }
+  .ui-tabs-list > .btn {
+    flex: 1;
+    padding: 12px 8px;
+  }
+}

@@ -15,10 +15,11 @@ import {
   UsersRound,
   Settings,
   CreditCard,
-  RefreshCw,
 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
-import { refreshBilling } from '../../lib/query-refresh';
+import { pageRefreshScheduler } from '../../lib/query-refresh';
+import { hasChangeConnection } from '../../lib/data-changes';
+import { useDataChanges } from '../../hooks/useDataChanges';
 import { Heading, Empty } from '../../components/shared';
 import { WorkspaceTheme } from '../../components/WorkspaceTheme';
 import { getSupabaseClient } from '../../lib/supabase';
@@ -102,16 +103,19 @@ export function StaffWorkspace({
       operationalNavigation.find((n) => n.to !== '/app' && location.pathname.startsWith(n.to)) ||
       operationalNavigation.find((n) => n.to === '/app')!;
   useEffect(() => {
-    const update = () => {
-      if (document.visibilityState === 'visible') setTick((n) => n + 1);
-    };
-    const timer = window.setInterval(update, 60000);
-    window.addEventListener('focus', update);
-    return () => {
-      window.clearInterval(timer);
-      window.removeEventListener('focus', update);
-    };
-  }, []);
+    return pageRefreshScheduler().subscribe(
+      async () => setTick((n) => n + 1),
+      `access:${user.id}`,
+      60_000,
+      () => !hasChangeConnection(`access:${user.id}`),
+      () => true,
+    );
+  }, [user.id]);
+  useDataChanges({
+    userId: user.id,
+    companyId: company?.id,
+    onAccessChanged: () => setTick((n) => n + 1),
+  });
   useEffect(() => {
     let active = true;
     void (async () => {
@@ -263,6 +267,7 @@ export function StaffWorkspace({
       <OperationalProvider
         key={company.id + ':' + JSON.stringify(company.permissions)}
         company={company}
+        page={section.to}
         user={user}
         onRecheck={onRecheck}
       >
@@ -372,21 +377,24 @@ export function StaffWorkspace({
                 description={
                   section.to === '/app/funil'
                     ? 'Organize os atendimentos e acompanhe o próximo passo de cada oportunidade.'
-                    : 'Sua rotina e os registros disponíveis para o seu perfil.'
+                    : section.to === '/app/plano'
+                      ? 'Acompanhe seu plano, pague a mensalidade e consulte o histórico.'
+                      : 'Sua rotina e os registros disponíveis para o seu perfil.'
                 }
-              >
-                <WorkspaceRefresh onAccessRefresh={() => setTick((n) => n + 1)} />
-              </Heading>
+              />
               {error && (
-                <p className="secure-access-error" role="alert">
-                  {error}
-                </p>
+                <div className="secure-access-error" role="alert">
+                  <p>{error}</p>
+                  <Button variant="outline" onClick={() => setTick((n) => n + 1)}>
+                    Tentar novamente
+                  </Button>
+                </div>
               )}
               {allowed === null ? (
                 <p role="status">Verificando o período de acesso...</p>
               ) : !allowed ? (
                 company.role === 'manager' && granted('plan.view') ? (
-                  <RealPlan key={company.id + tick} companyId={company.id} />
+                  <RealPlan key={company.id} companyId={company.id} />
                 ) : (
                   <div className="card panel">
                     <Empty
@@ -417,26 +425,11 @@ export function StaffWorkspace({
     </WorkspaceTheme>
   );
 }
-function WorkspaceRefresh({ onAccessRefresh }: { onAccessRefresh: () => void }) {
-  const { refresh, company } = useOperational();
-  const { pathname } = useLocation();
-  return (
-    <Button
-      variant="outline"
-      onClick={() => {
-        if (pathname === '/app/plano') void refreshBilling(company.id);
-        else refresh();
-        onAccessRefresh();
-      }}
-    >
-      <RefreshCw size={15} />
-      Atualizar
-    </Button>
-  );
-}
 function WorkspaceLogo({ path, name }: { path: string | null; name: string }) {
   const { api } = useOperational(),
-    image = useQuery(() => (path ? api.downloadLogo(path) : Promise.resolve(null)), [api, path]),
+    image = useQuery(() => (path ? api.downloadLogo(path) : Promise.resolve(null)), [api, path], {
+      live: false,
+    }),
     [url, setUrl] = useState('');
   useEffect(() => {
     if (!image.data) {
@@ -464,7 +457,7 @@ function OperationalContent({
   path: string;
   onCompanyChanged: () => void;
 }) {
-  const { company, revision } = useOperational();
+  const { company } = useOperational();
   switch (path) {
     case '/app/funil':
       return <RealKanban />;
@@ -487,7 +480,7 @@ function OperationalContent({
     case '/app/relatorios':
       return <RealReports />;
     case '/app/plano':
-      return <RealPlan key={company.id + revision} companyId={company.id} />;
+      return <RealPlan key={company.id} companyId={company.id} />;
     default:
       return <RealDashboard />;
   }

@@ -1,8 +1,9 @@
 import { recordRealWhatsapp } from './real-history';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import type { ContactHistoryEvent } from '../../domain/types';
 import { getSupabaseClient } from '../../lib/supabase';
 import { ContactHistoryDialog } from './ContactHistory';
+import { useLiveQuery } from '../../hooks/useLiveQuery';
 export function RealContactHistory({
   contact,
   companyId,
@@ -18,18 +19,18 @@ export function RealContactHistory({
   onClose: () => void;
   cardId?: string;
 }) {
-  const [items, setItems] = useState<ContactHistoryEvent[]>([]),
-    [loading, setLoading] = useState(true),
-    [error, setError] = useState(''),
-    [page, setPage] = useState(0),
-    [hasMore, setHasMore] = useState(false),
-    [refresh, setRefresh] = useState(0);
-  useEffect(() => {
-    let active = true;
-    setLoading(true);
-    setError('');
-    async function load() {
-      try {
+  const [page, setPage] = useState(0),
+    [revision, setRefresh] = useState(0);
+  const [actionError, setError] = useState('');
+  const {
+    data,
+    loading,
+    error: queryError,
+  } = useLiveQuery(
+    async () => {
+      const limit = (page + 1) * 50;
+      const rows: ContactHistoryEvent[] = [];
+      for (let offset = 0; offset <= limit; offset += 500) {
         let query = getSupabaseClient()
           .from('crm_contact_history')
           .select(
@@ -38,43 +39,38 @@ export function RealContactHistory({
           .eq('company_id', companyId)
           .eq('contact_id', contact.id);
         if (cardId) query = query.eq('opportunity_id', cardId);
-        const r = await query
+        const result = await query
           .order('occurred_at', { ascending: false })
           .order('id', { ascending: false })
-          .range(page * 50, page * 50 + 49);
-        if (r.error) throw r.error;
-        const rows: ContactHistoryEvent[] = (r.data || []).map((e) => ({
-          id: e.id,
-          companyId: e.company_id,
-          contactId: e.contact_id,
-          opportunityId: e.opportunity_id || undefined,
-          actorId: e.actor_user_id || undefined,
-          actorName: e.actor_name,
-          kind: e.kind,
-          title: e.title,
-          body: e.body,
-          occurredAt: e.occurred_at,
-        }));
-        if (active) {
-          setItems((previous) =>
-            page === 0
-              ? rows
-              : [...previous, ...rows.filter((r) => !previous.some((p) => p.id === r.id))],
+          .range(offset, Math.min(offset + 499, limit));
+        if (result.error)
+          throw Error(
+            'Não foi possível consultar o histórico. Tentaremos novamente automaticamente.',
           );
-          setHasMore(rows.length === 50);
-        }
-      } catch {
-        if (active)
-          setError('Não foi possível carregar o histórico. Feche e abra novamente para tentar.');
-      } finally {
-        if (active) setLoading(false);
+        rows.push(
+          ...(result.data || []).map((e) => ({
+            id: e.id,
+            companyId: e.company_id,
+            contactId: e.contact_id,
+            opportunityId: e.opportunity_id || undefined,
+            actorId: e.actor_user_id || undefined,
+            actorName: e.actor_name,
+            kind: e.kind,
+            title: e.title,
+            body: e.body,
+            occurredAt: e.occurred_at,
+          })),
+        );
+        if ((result.data || []).length < Math.min(500, limit - offset + 1)) break;
       }
-    }
-    void load();
-    return () => {
-      active = false;
-    };
-  }, [companyId, contact.id, cardId, page, refresh]);
+      return { items: rows.slice(0, limit), hasMore: rows.length > limit };
+    },
+    [companyId, contact.id, cardId, page, revision],
+    { group: `workspace:${companyId}:/app/contatos` },
+  );
+  const items = data?.items || [];
+  const hasMore = data?.hasMore || false;
+  const error = queryError || actionError;
   return (
     <ContactHistoryDialog
       contact={contact}

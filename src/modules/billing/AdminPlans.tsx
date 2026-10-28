@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { CreditCard, Gift } from 'lucide-react';
 import { Empty, FormError, Heading, SearchInput } from '../../components/shared';
@@ -12,6 +12,8 @@ import { PlanPanel } from './Plan';
 import { BillingHistory } from './BillingHistory';
 import { createCharge } from './charges';
 import { OnlineBilling } from './OnlineBilling';
+import { useLiveQuery } from '../../hooks/useLiveQuery';
+import { billingRefreshGroup } from '../../lib/query-refresh';
 import {
   applyBillingCommand,
   BillingCommandError,
@@ -20,7 +22,6 @@ import {
   stateLabels,
   subscriptionState,
   type BillingAttempt,
-  type Subscription,
 } from './subscription';
 
 type AdminBillingAttempt = BillingAttempt | (Omit<BillingAttempt, 'kind'> & { kind: 'charge' });
@@ -44,7 +45,6 @@ export function AdminPlans({
   const selectedId = params.get('empresa') || companies[0]?.id || '';
   const company = companies.find((item) => item.id === selectedId);
   const [query, setQuery] = useState(''),
-    [plan, setPlan] = useState<Subscription | null>(null),
     [error, setError] = useState('');
   const [revision, setRevision] = useState(0),
     [action, setAction] = useState<'payment' | 'complimentary' | 'charge' | null>(null);
@@ -54,22 +54,19 @@ export function AdminPlans({
   const [busy, setBusy] = useState(false),
     [attempt, setAttempt] = useState<AdminBillingAttempt | null>(null),
     [formError, setFormError] = useState('');
-  useEffect(() => {
-    let active = true;
-    setPlan(null);
-    setError('');
-    if (company)
-      void loadSubscription(getSupabaseClient(), company.id)
-        .then((value) => {
-          if (active) setPlan(value);
-        })
-        .catch((cause) => {
-          if (active) setError((cause as Error).message);
-        });
-    return () => {
-      active = false;
-    };
-  }, [company?.id, revision]);
+  const {
+    data: plan,
+    error: planError,
+    refresh: retryPlan,
+  } = useLiveQuery(
+    () => (company ? loadSubscription(getSupabaseClient(), company.id) : Promise.resolve(null)),
+    [company?.id, revision],
+    {
+      group: billingRefreshGroup(company?.id),
+      enabled: !!company && showPlans,
+      automatic: () => !action,
+    },
+  );
   function open(kind: 'payment' | 'complimentary' | 'charge') {
     setAction(kind);
     setDays(7);
@@ -214,9 +211,6 @@ export function AdminPlans({
               <>
                 <div className="billing-toolbar">
                   <h2>{company.name}</h2>
-                  <Button variant="outline" onClick={() => setRevision((n) => n + 1)}>
-                    Atualizar plano
-                  </Button>
                 </div>
                 {!company.enabled && (
                   <p className="billing-alert">
@@ -224,10 +218,19 @@ export function AdminPlans({
                     habilitação em Empresas.
                   </p>
                 )}
-                {error && (
-                  <p role="alert" className="secure-access-error">
-                    {error}
-                  </p>
+                {(error || planError) && (
+                  <div role="alert" className="secure-access-error">
+                    <p>{error || planError}</p>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setError('');
+                        void retryPlan();
+                      }}
+                    >
+                      Tentar novamente
+                    </Button>
+                  </div>
                 )}
                 {plan ? (
                   <>
@@ -255,7 +258,7 @@ export function AdminPlans({
                     />
                   </>
                 ) : (
-                  !error && <p role="status">Consultando o plano...</p>
+                  !error && !planError && <p role="status">Consultando o plano...</p>
                 )}
               </>
             ) : (

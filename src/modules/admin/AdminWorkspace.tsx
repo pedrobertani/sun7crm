@@ -19,11 +19,13 @@ import { AccessChangedError, type AccountUser } from '../auth/access';
 import { BrandSymbol } from '../public/PublicShell';
 import { AdminDashboardView } from '../dashboard/Dashboard';
 import { AdminCompanies } from './Companies';
-import { loadAdminPortfolio, type AdminCompany } from './repository';
+import { loadAdminPortfolio } from './repository';
 import './admin.css';
 import { NotificationBell } from '../notifications/NotificationBell';
 import { AdminPlans } from '../billing/AdminPlans';
 import { ADMIN_THEME } from './theme';
+import { useLiveQuery } from '../../hooks/useLiveQuery';
+import { useDataChanges } from '../../hooks/useDataChanges';
 
 export function AdminWorkspace({
   user,
@@ -34,11 +36,8 @@ export function AdminWorkspace({
   onLogout: () => Promise<void>;
   onRecheck: () => void;
 }) {
-  const [companies, setCompanies] = useState<AdminCompany[] | null>(null);
-  const [refresh, setRefresh] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+  const [sessionError, setError] = useState('');
   const [collapsed, setCollapsed] = useState(false);
   const [mobile, setMobile] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
@@ -52,33 +51,27 @@ export function AdminWorkspace({
     document.title = `${current} · Administração SUN7CRM`;
     setMobile(false);
   }, [current]);
-  useEffect(() => {
-    let active = true;
-    const controller = new AbortController();
-    setLoading(true);
-    setError('');
-    void loadAdminPortfolio(getSupabaseClient(), user.id, controller.signal)
-      .then((rows) => {
-        if (active) setCompanies(rows);
-      })
-      .catch((cause: unknown) => {
-        if (!active) return;
-        if (cause instanceof AccessChangedError) {
-          setCompanies(null);
-          onRecheck();
-        } else
-          setError(
-            'Não foi possível atualizar as empresas. Confira sua conexão e tente novamente.',
-          );
-      })
-      .finally(() => {
-        if (active) setLoading(false);
-      });
-    return () => {
-      active = false;
-      controller.abort();
-    };
-  }, [refresh, user.id, onRecheck]);
+  const {
+    data: companies,
+    error: portfolioError,
+    loading,
+    refresh: reloadPortfolio,
+  } = useLiveQuery(
+    async (signal) => {
+      try {
+        return await loadAdminPortfolio(getSupabaseClient(), user.id, signal);
+      } catch (cause) {
+        if (!signal.aborted && cause instanceof AccessChangedError) onRecheck();
+        throw new Error(
+          'Não foi possível consultar as empresas. Confira sua conexão e tente novamente.',
+        );
+      }
+    },
+    [user.id],
+    { group: 'admin:portfolio', automatic: () => !document.querySelector('[role="dialog"]') },
+  );
+  useDataChanges({ userId: user.id, admin: true, onAccessChanged: onRecheck });
+  const error = portfolioError || sessionError;
   useEffect(() => {
     if (!mobile) return;
     const close = (event: KeyboardEvent) => {
@@ -197,20 +190,6 @@ export function AdminWorkspace({
             </div>
             <main className="workspace" id="main">
               <div className="page">
-                <div className="admin-data-bar">
-                  <span>{loading ? 'Atualizando empresas...' : 'Dados da plataforma'}</span>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    disabled={loading}
-                    onClick={() => {
-                      setNotice('');
-                      setRefresh((n) => n + 1);
-                    }}
-                  >
-                    Atualizar
-                  </Button>
-                </div>
                 {notice && (
                   <p className="admin-feedback" role="status">
                     {notice}
@@ -220,6 +199,9 @@ export function AdminWorkspace({
                   <div className="secure-access-error" role="alert">
                     <p>{error}</p>
                     {companies && <p>Os dados abaixo podem estar desatualizados.</p>}
+                    <Button variant="outline" onClick={() => void reloadPortfolio()}>
+                      Tentar novamente
+                    </Button>
                   </div>
                 )}
                 {companies === null ? (
@@ -227,10 +209,15 @@ export function AdminWorkspace({
                     {loading ? (
                       <p>Carregando seu painel...</p>
                     ) : (
-                      <Empty
-                        title="O painel não pôde ser carregado"
-                        description="Use Atualizar para tentar novamente."
-                      />
+                      <>
+                        <Empty
+                          title="O painel não pôde ser carregado"
+                          description="Verifique a conexão e tente novamente."
+                        />
+                        <Button variant="outline" onClick={() => void reloadPortfolio()}>
+                          Tentar novamente
+                        </Button>
+                      </>
                     )}
                   </div>
                 ) : (
@@ -242,7 +229,7 @@ export function AdminWorkspace({
                           companies={companies}
                           userId={user.id}
                           onRecheck={onRecheck}
-                          onReload={() => setRefresh((n) => n + 1)}
+                          onReload={() => void reloadPortfolio()}
                           onNotice={setNotice}
                         />
                       }
@@ -255,7 +242,7 @@ export function AdminWorkspace({
                           companies={companies}
                           userId={user.id}
                           onRecheck={onRecheck}
-                          onReload={() => setRefresh((n) => n + 1)}
+                          onReload={() => void reloadPortfolio()}
                           onNotice={setNotice}
                         />
                       }

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type DependencyList } from 'react';
 import { createQueryTask, pageRefreshScheduler } from '../lib/query-refresh';
+import { hasChangeConnection } from '../lib/data-changes';
 
 export function useLiveQuery<T>(
   load: (signal: AbortSignal) => Promise<T>,
@@ -8,8 +9,8 @@ export function useLiveQuery<T>(
     group,
     enabled = true,
     automatic = true,
-    interval = 30_000,
-  }: { group: string; enabled?: boolean; automatic?: boolean; interval?: number },
+    interval = 60_000,
+  }: { group: string; enabled?: boolean; automatic?: boolean | (() => boolean); interval?: number },
 ) {
   const loader = useRef(load);
   loader.current = load;
@@ -35,11 +36,14 @@ export function useLiveQuery<T>(
     });
     task.current = current;
     void current.refresh();
+    const allowed = () => (typeof auto.current === 'function' ? auto.current() : auto.current);
     const unsubscribe = pageRefreshScheduler().subscribe(
       current.refresh,
       group,
       interval,
-      () => auto.current,
+      () => allowed() && !hasChangeConnection(group),
+      allowed,
+      current.invalidate,
     );
     return () => {
       unsubscribe();
