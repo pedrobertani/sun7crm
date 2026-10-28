@@ -91,3 +91,8 @@
  .page:has(.dashboard-tabs) .goal-medal strong{font-size:10px!important}
  .page:has(.dashboard-tabs) .goal-medal small{font-size:9px!important}
 }
+
+/* Navigation-style dashboard tabs: don't stretch each tab to one third of the screen. */
+.dashboard-tabs{width:max-content;max-width:100%;display:flex;justify-content:flex-start;flex-wrap:wrap;padding:4px;gap:4px}
+.dashboard-tabs button{flex:0 0 auto;min-width:0;padding:9px 18px;font-size:13px}
+@media(max-width:500px){.dashboard-tabs{width:100%}.dashboard-tabs button{flex:1 1 auto;padding:10px 8px;font-size:12px}}
