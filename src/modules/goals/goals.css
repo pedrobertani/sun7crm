@@ -1,0 +1,52 @@
+.goal-area { margin: 20px 0 24px; min-width: 0; }
+.goal-head { display:flex; align-items:end; justify-content:space-between; gap:12px; flex-wrap:wrap; margin: 0 0 18px; }
+.goal-head .form-row { max-width:185px; margin:0; }
+.goal-indicators { display:grid; grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:18px; }
+.goal-indicators>div { padding:14px; border:1px solid var(--line); border-radius:10px; background:var(--surface);min-width:0; }
+.goal-indicators small { display:block; font-size:11px; color:var(--muted); margin-bottom:7px;line-height:1.4; }
+.goal-indicators strong { font-size:18px; font-variant-numeric:tabular-nums; overflow-wrap:anywhere; }
+.goal-funnel { display:flex; flex-direction:column; align-items:center; gap:6px; width:100%; margin:14px auto; }
+.goal-step { display:flex; align-items:center;justify-content:space-between;gap:12px; padding:13px clamp(14px,3vw,24px); min-height:72px; border-radius:8px; color:var(--ink); min-width:0; }
+.goal-step strong { display:block; font-size:14px; overflow-wrap:anywhere; }
+.goal-step small { display:block; color:var(--muted); font-size:11px; margin-top:4px; }
+.goal-step b { font-size:20px; font-variant-numeric:tabular-nums; white-space:nowrap; }
+.goal-total { margin-top:18px;display:grid;gap:7px;font-size:13px; }
+.goal-total>span,.goal-total>small { color:var(--muted); }
+.goal-progress { width:100%;height:9px;overflow:hidden;border-radius:999px;background:var(--line); }
+.goal-progress i { display:block;height:100%;border-radius:inherit;background:var(--primary);min-width:0; }
+.goal-medals { padding-top:20px; margin-top:22px; border-top:1px solid var(--line); }
+.goal-medals h3 { display:flex; align-items:center;gap:8px;font-size:15px;font-weight:700;margin:0 0 12px; }
+.goal-medal-person { margin:16px 0; }
+.goal-medal-person>strong { font-size:13px;display:block;margin-bottom:10px; }
+.goal-medal-grid { display:grid;grid-template-columns:repeat(auto-fit,minmax(146px,1fr));gap:10px; }
+.goal-medal { display:flex;flex-direction:column;gap:7px;align-items:center;justify-content:center; min-height:124px;padding:14px 10px; text-align:center; border:1px solid var(--line);border-radius:12px;background:var(--surface);opacity:.57; }
+.goal-medal.earned { opacity:1;border-color:var(--primary);background:color-mix(in srgb,var(--primary) 8%,var(--surface)); }
+.goal-medal svg { color:var(--muted); }
+.goal-medal.earned svg {color:var(--primary); }
+.goal-medal strong { font-size:12px; }
+.goal-medal small { color:var(--muted);font-size:11px; }
+.goal-empty {min-height:180px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:24px;color:var(--muted); }
+.goal-empty strong {color:var(--ink);font-size:14px; }
+.goal-empty p { font-size:13px;max-width:380px; }
+.goal-dialog-tabs { display:flex;gap:6px;margin-bottom:18px;overflow-x:auto; }
+.goal-dialog-tabs button { border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;padding:10px 14px;font-size:13px;white-space:nowrap;cursor:pointer; }
+.goal-dialog-tabs button.active {background:var(--primary);color:var(--primary-foreground);border-color:var(--primary); }
+.goal-edit-list {display:grid;gap:14px;min-width:0; }
+.goal-edit-grid {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px; }
+.goal-edit-step {display:flex;align-items:end;gap:10px;padding:10px 0;border-bottom:1px solid var(--line); }
+.goal-edit-step .form-row {min-width:0;flex:1;margin:0; }
+.goal-edit-step>button {flex:0 0 auto;align-self:end; }
+.goal-edit-step select {width:100%; }
+.goal-edit-actions {display:flex;justify-content:flex-end;flex-wrap:wrap;gap:10px;margin-top:22px; }
+@media(max-width:800px) {
+ .goal-indicators {grid-template-columns:repeat(2,minmax(0,1fr));}
+ .goal-edit-step {flex-wrap:wrap;align-items:stretch;}
+ .goal-edit-step .form-row {min-width:120px;}
+}
+@media(max-width:450px) {
+ .goal-edit-grid {grid-template-columns:1fr;}
+ .goal-step {min-height:62px;padding:10px 12px;}
+ .goal-step strong {font-size:12px;}
+ .goal-step b {font-size:16px;}
+ .goal-indicators strong {font-size:16px;}
+}
