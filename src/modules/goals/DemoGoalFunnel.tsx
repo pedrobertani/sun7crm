@@ -1,5 +1,5 @@
 import {useState} from 'react';
-import {Award,LockKeyhole,Settings2,Trophy} from 'lucide-react';
+import {LockKeyhole,Settings2,Trophy} from 'lucide-react';
 import {useCrm} from '../../app/context';
 import {today,currency} from '../../lib/format';
 import {CHART_COLORS} from '../../lib/themes';
