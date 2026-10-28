@@ -23,7 +23,9 @@ A validação no navegador com o gestor da Empresa B recuperou o Pix original, e
 
 O reembolso integral desse Pix também foi reconhecido: após o evento `order.refunded` de 28/10/2026 às 02:02 UTC, o CRM registrou `status=refunded`, `provider_status=refunded` e a ocorrência para conferência administrativa. A última verificação foi às 02:02:42 UTC; o vencimento permaneceu em 10/11/2026. O teste não movimentou dinheiro real e não houve atualização manual do recebimento no banco.
 
-Os identificadores de sandbox usam `ORDTST`/`PAYTST`; eles são aceitos somente no ambiente de teste, sem relaxar a conferência de recebedor, aplicação, referência ou valor. O frontend diferencia falhas de credenciais, permissão e conferência e preserva a solicitação durante erros de recuperação. Aprovação/recusa dos cartões e assinatura ainda precisam da homologação correspondente. Neste navegador, a consulta pública de meios de pagamento retornou HTTP 403, sem causa identificada.
+Os identificadores de sandbox usam `ORDTST`/`PAYTST`; eles são aceitos somente no ambiente de teste, sem relaxar a conferência de recebedor, aplicação, referência ou valor. O frontend diferencia falhas de credenciais, permissão e conferência e preserva a solicitação durante erros de recuperação.
+
+Em 28/10/2026, o responsável confirmou a conclusão dos testes reais de Pix e cartão e autorizou manter somente esses meios de pagamento. A confirmação do cartão foi informada pelo responsável; no navegador de validação automatizada, a inicialização do Brick falhou e não houve confirmação independente de transação por cartão. O Pix aprovado e seu estorno foram observados também no CRM e no banco, conforme os registros acima. Não há comprovação individual registrada para cada cenário de recusa de cartão. A assinatura recorrente fica fora do escopo atual. Essa confirmação não altera a configuração de teste nem habilita recebimentos de produção.
 
 ### Carregamento do cartão e atualização da tela
 
@@ -60,9 +62,9 @@ Todos os Previews do projeto usam as configurações de Preview do Cloudflare; n
 ## O que o responsável pela conta precisa fazer
 
 1. Entrar no [Mercado Pago Developers](https://www.mercadopago.com.br/developers) com a conta que receberá as mensalidades e criar uma aplicação **SUN7CRM** em **Suas integrações**. A aplicação é o cadastro da integração.
-2. Selecionar **Checkout Transparente → API de Orders**. A aplicação também usará a API de Assinaturas. O CRM cria a assinatura individual com o valor cadastrado no servidor; não exige cadastrar manualmente um link de plano compartilhado.
+2. Selecionar **Checkout Transparente → API de Orders**, para pagamento avulso por Pix e cartão.
 3. Preparar as credenciais e contas de teste conforme o painel da aplicação. Para Pix, cadastrar uma chave Pix na conta recebedora.
-4. Nas configurações de Webhooks, cadastrar a URL abaixo para o ambiente correspondente e habilitar **Order (Mercado Pago)** e, para recorrência, **Planos e assinaturas**. O pagamento avulso usa `order`; a assinatura usa `payment`, `subscription_preapproval` e `subscription_authorized_payment`. Não habilitar todos os eventos nem depender de Pagamentos (legacy) para Orders.
+4. Nas configurações de Webhooks, cadastrar a URL abaixo para o ambiente correspondente e habilitar **Order (Mercado Pago)**. O pagamento avulso usa `order`. Eventos de recorrência ficam reservados para uma retomada futura, com homologação específica.
 5. Guardar a assinatura secreta gerada e configurar os segredos no servidor. Não colocar Access Token em código frontend, variáveis `VITE_*`, repositório, prints ou mensagens comuns.
 6. Homologar os cenários abaixo. Depois, habilitar as credenciais de produção conforme as exigências apresentadas pelo Mercado Pago para a conta e validar o fluxo de produção com participação do responsável pelo pagamento.
 
@@ -92,6 +94,7 @@ No Supabase, em **Edge Functions → Secrets**, configurar:
 | `MP_COLLECTOR_ID`       | ID do usuário vendedor/recebedor correspondente às credenciais. Não é o ID da aplicação.             |
 | `MP_ENVIRONMENT`        | `test` durante homologação; `production` para receber pagamentos reais.                              |
 | `MP_PAYMENTS_ENABLED`   | `true` para habilitar o ambiente configurado; ausente ou diferente mantém o serviço desativado.      |
+| `MP_SUBSCRIPTIONS_ENABLED` | `false` nesta etapa; assinatura só pode ser criada com liberação explícita `true`.                |
 | `CRM_PUBLIC_URL`        | `https://sun7crm.pages.dev` neste ambiente.                                                          |
 
 As funções também usam as variáveis já existentes do Supabase e `CRM_ALLOWED_ORIGINS`. Para o frontend deste projeto, a lista de origens deve incluir `https://sun7crm.pages.dev`. Tokens, assinatura e Collector ID devem pertencer à mesma conta/ambiente.
@@ -127,7 +130,7 @@ Utilizar uma empresa de QA, as credenciais e os dados de teste do produto integr
 
 1. Sessão ausente, funcionário e gestor de outra empresa: consulta e comandos negados.
 2. Checkout Transparente: cartão aprovado (APRO), erro geral (OTHE), saldo insuficiente (FUND), segurança inválida (SECU), vencimento inválido (EXPI), erro de formulário (FORM), pendente, rejeição de dados e nova tentativa; Pix gerado, recuperação após fechar/reabrir, confirmação e reembolso conforme as limitações de teste do produto.
-3. Assinatura: autorização sem recebimento, primeiro pagamento confirmado, atualização da assinatura e cancelamento.
+3. Assinatura, somente se retomada futuramente: autorização sem recebimento, primeiro pagamento confirmado, atualização da assinatura e cancelamento.
 4. Webhook: assinatura inválida, ID divergente, recebedor/moeda/ambiente incorretos e repetição do evento.
 5. Falha transitória de comunicação: reenvio do webhook e recuperação do checkout sem criar nova contratação.
 6. Recebimento de valor divergente, cobrança antiga e estorno: ocorrência visível para conferência.
@@ -136,17 +139,17 @@ Utilizar uma empresa de QA, as credenciais e os dados de teste do produto integr
 
 ### Cenários de cartão fornecidos para homologação
 
-Os dados são cartões fictícios do painel de testes do Mercado Pago. Todos os cenários abaixo continuam **pendentes de execução no checkout real**; testes locais de resposta não comprovam uma transação no provedor. Usar vencimento 11/30 e o titular indicado, mantendo os demais dados conforme as instruções do painel de teste.
+Os dados são cartões fictícios do painel de testes do Mercado Pago. O usuário confirmou os testes gerais de Pix e cartão em 28/10/2026; o quadro abaixo permanece como lista de cenários **sem comprovação individual registrada**, e não indica que o teste geral informado pelo usuário falhou. Testes locais de resposta não comprovam uma transação no provedor. Usar vencimento 11/30 e o titular indicado, mantendo os demais dados conforme as instruções do painel de teste.
 
 | Titular                   | Cartão de teste             | CVV       | Resultado esperado                               | Situação                            |
 | ------------------------- | --------------------------- | --------- | ------------------------------------------------ | ----------------------------------- |
-| APRO                      | Mastercard final 3311       | 3 dígitos | Aprovado uma única vez                           | Pendente                            |
-| OTHE                      | Mastercard final 3311       | 3 dígitos | Recusa por erro geral                            | Pendente                            |
-| FUND                      | Mastercard final 3311       | 3 dígitos | Recusa por saldo insuficiente                    | Pendente                            |
-| SECU                      | Mastercard final 3311       | 3 dígitos | Recusa por código de segurança inválido          | Pendente                            |
-| EXPI                      | American Express final 6885 | 4 dígitos | Recusa por problema na validade                  | Pendente                            |
-| FORM                      | Mastercard final 3311       | 3 dígitos | Recusa por erro no formulário                    | Pendente                            |
-| FORM fornecido com débito | Elo débito final 8311       | 3 dígitos | Bloqueio de meio não suportado no checkout atual | Pendente; não comprova retorno FORM |
+| APRO                      | Mastercard final 3311       | 3 dígitos | Aprovado uma única vez                           | Sem registro individual            |
+| OTHE                      | Mastercard final 3311       | 3 dígitos | Recusa por erro geral                            | Sem registro individual            |
+| FUND                      | Mastercard final 3311       | 3 dígitos | Recusa por saldo insuficiente                    | Sem registro individual            |
+| SECU                      | Mastercard final 3311       | 3 dígitos | Recusa por código de segurança inválido          | Sem registro individual            |
+| EXPI                      | American Express final 6885 | 4 dígitos | Recusa por problema na validade                  | Sem registro individual            |
+| FORM                      | Mastercard final 3311       | 3 dígitos | Recusa por erro no formulário                    | Sem registro individual            |
+| FORM fornecido com débito | Elo débito final 8311       | 3 dígitos | Bloqueio de meio não suportado no checkout atual | Meio não suportado; não comprova FORM |
 
 O checkout atual aceita Pix e crédito. O Elo **débito** fornecido não deve ser convertido em crédito para forçar o cenário FORM. Para validar a recusa FORM da API, usar um cartão de crédito de teste compatível com esse cenário conforme a documentação do Mercado Pago, ou implementar e homologar débito separadamente. Toda recusa deve manter o acesso, não contar como receita e permitir uma nova tentativa quando o provedor confirmar que a anterior terminou.
 
