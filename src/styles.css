@@ -5832,3 +5832,11 @@ input:is([type='checkbox'], [type='radio']):focus-visible {
   padding-top: 7px;
   border-top: 1px solid var(--line);
 }
+
+/* Dashboard desktop density: keep cards readable without stretching across the screen. */
+.page:has(.dashboard-tabs){max-width:1320px;width:100%;margin-inline:auto}
+.page:has(.dashboard-tabs) .kpis{gap:12px}
+.page:has(.dashboard-tabs) .kpi{min-height:108px;padding:16px}
+.page:has(.dashboard-tabs) .dashboard-grid{gap:14px}
+.page:has(.dashboard-tabs) .panel{min-width:0}
+@media(min-width:1100px){.page:has(.dashboard-tabs) .dashboard-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
