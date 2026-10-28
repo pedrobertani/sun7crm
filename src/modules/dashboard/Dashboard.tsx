@@ -116,7 +116,7 @@ export function CompanyDashboard() {
         </select>
       </Heading>
       <div className="dashboard-tabs" role="tablist" aria-label="Áreas do dashboard">
-        {availableTabs.map(([key,label])=><button key={key} type="button" role="tab" aria-selected={activeTab===key} className={activeTab===key?'active':''} onClick={()=>setDashboardTab(key)}>{label}</button>)}
+        {availableTabs.map(([key,label])=><button key={key} type="button" role="tab" aria-selected={activeTab===key} className={activeTab===key?'active':''} onClick={()=>setDashboardTab(key as 'overview'|'commercial'|'achievements')}>{label}</button>)}
       </div>
       {activeTab==='overview'&&<>
       <div className="kpis">
