@@ -4,7 +4,7 @@ insert into crm_private.permission_catalog(key) values ('goals.view') on conflic
 -- Keep manager access and default seller access for legacy memberships.
 create or replace function crm_private.member_permission(p_member uuid,p_key text) returns boolean
 language sql stable security definer set search_path='' as $$
- select coalesce((select case when a.membership_id is not null then p_key=any(a.keys)
+ select coalesce((select case when p_key='plan.view' then m.role='manager'\n when a.membership_id is not null then p_key=any(a.keys)
  when m.role='manager' then true
  when m.role='seller' and p_key='goals.view' then true
  when p_key in ('boards.view','catalog.view','labels.view','strategies.view','dashboard.view') then true
