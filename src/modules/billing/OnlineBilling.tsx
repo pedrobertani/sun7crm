@@ -186,7 +186,7 @@ export function OnlineBilling({
           <>
             {status.environment === 'test' && (
               <p className="billing-alert">
-                Ambiente de testes. Utilize somente contas e meios de pagamento de teste. Pagamentos
+                Ambiente de testes. Utilize somente dados e meios de pagamento de teste. Pagamentos
                 de teste não renovam o acesso nem entram nos totais financeiros.
               </p>
             )}

@@ -41,7 +41,7 @@ interface MpSdk {
       name: 'cardPayment',
       container: string,
       settings: Record<string, unknown>,
-    ): Promise<BrickController>;
+    ): Promise<BrickController | null>;
   };
 }
 
@@ -74,9 +74,19 @@ function CardForm({
     line = palette['--line'];
   useEffect(() => {
     let cancelled = false;
-    let controller: BrickController | undefined;
+    let controller: BrickController | null | undefined;
     setLoading(true);
     setError('');
+    const unavailable = () => {
+      clearTimeout(readyTimer);
+      if (!cancelled) {
+        setLoading(false);
+        setError(
+          'Não foi possível carregar o formulário do cartão. Tente novamente ou escolha Pix.',
+        );
+      }
+    };
+    const readyTimer = setTimeout(unavailable, 30_000);
     void (async () => {
       try {
         const { loadMercadoPago } = await import('@mercadopago/sdk-js');
@@ -89,7 +99,7 @@ function CardForm({
         ).MercadoPago;
         const mp = new Constructor(publicKey, { locale: 'pt-BR' });
         controller = await mp.bricks().create('cardPayment', containerId, {
-          initialization: { amount: amount / 100, payer: { email } },
+          initialization: { amount: amount / 100, ...(email ? { payer: { email } } : {}) },
           customization: {
             paymentMethods: { minInstallments: 1, maxInstallments: 1 },
             visual: {
@@ -109,7 +119,11 @@ function CardForm({
           },
           callbacks: {
             onReady: () => {
-              if (!cancelled) setLoading(false);
+              clearTimeout(readyTimer);
+              if (!cancelled) {
+                setLoading(false);
+                setError('');
+              }
             },
             onSubmit: (form: CardFormData, additional: { paymentTypeId?: string }) => {
               if (cancelled) return Promise.reject(new Error('Formulário encerrado.'));
@@ -123,26 +137,19 @@ function CardForm({
                 identification: form.payer.identification,
               });
             },
-            onError: () => {
-              if (!cancelled) {
-                setLoading(false);
-                setError(
-                  'Não foi possível carregar o formulário seguro. Feche o pagamento e abra novamente.',
-                );
-              }
-            },
+            onError: unavailable,
           },
         });
+        // O SDK também sinaliza falha retornando null, sem rejeitar a promessa.
+        if (!controller) throw new Error('Card Payment indisponível.');
         if (cancelled) await controller.unmount();
       } catch {
-        if (!cancelled) {
-          setLoading(false);
-          setError('O formulário do Mercado Pago está indisponível. Tente novamente em instantes.');
-        }
+        unavailable();
       }
     })();
     return () => {
       cancelled = true;
+      clearTimeout(readyTimer);
       if (controller) void controller.unmount().catch(() => {});
     };
   }, [publicKey, amount, email, containerId, dark, primary, foreground, ink, muted, surface, line]);
@@ -238,14 +245,15 @@ export function TransparentPayment({
         setError((cause as Error).message);
         const code = (cause as { code?: string }).code;
         if (
-          [
-            'PAYMENT_INPUT_REJECTED',
-            'INVALID_INPUT',
-            'UNAUTHENTICATED',
-            'FORBIDDEN',
-            'PAYMENTS_NOT_CONFIGURED',
-            'NOT_FOUND',
-          ].includes(code || '')
+          code === 'NOT_FOUND' ||
+          (action === 'create_order' &&
+            [
+              'PAYMENT_INPUT_REJECTED',
+              'INVALID_INPUT',
+              'UNAUTHENTICATED',
+              'FORBIDDEN',
+              'PAYMENTS_NOT_CONFIGURED',
+            ].includes(code || ''))
         ) {
           setRecover('');
           operation.current = uid();
@@ -293,7 +301,7 @@ export function TransparentPayment({
       </div>
       {environment === 'test' && (
         <p className="billing-alert">
-          Ambiente de teste. Use os dados e o e-mail de um comprador de teste. Esta operação não
+          Ambiente de teste. Use os cartões e os dados de teste do Mercado Pago. Esta operação não
           renova o acesso nem conta como receita.
         </p>
       )}

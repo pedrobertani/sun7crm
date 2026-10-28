@@ -10,7 +10,11 @@ export async function invokeBilling(
     session = await client.auth.getSession();
   if (session.error || !session.data.session)
     throw Error('Entre novamente para consultar o pagamento.');
-  const result = await client.functions.invoke('crm-billing-checkout', {
+  const endpoint =
+    import.meta.env.VITE_BILLING_ENVIRONMENT === 'hom'
+      ? 'crm-billing-checkout-hom'
+      : 'crm-billing-checkout';
+  const result = await client.functions.invoke(endpoint, {
     body: { company_id: companyId, action, ...(mode ? { mode } : {}), ...extra },
     headers: {
       Authorization: `Bearer ${session.data.session.access_token}`,
@@ -34,6 +38,18 @@ export async function invokeBilling(
       );
     if (code === 'PAYMENTS_NOT_CONFIGURED')
       throw failure('O pagamento online ainda não foi ativado.');
+    if (code === 'PROVIDER_CREDENTIALS')
+      throw failure(
+        'As credenciais do Mercado Pago não foram aceitas. A administração precisa conferir a integração.',
+      );
+    if (code === 'PROVIDER_FORBIDDEN')
+      throw failure(
+        'O Mercado Pago não autorizou a operação. A administração precisa conferir a aplicação e suas permissões.',
+      );
+    if (code === 'PAYMENT_MISMATCH')
+      throw failure(
+        'O retorno do pagamento precisa ser conferido. Recupere a solicitação ou entre em contato com a administração.',
+      );
     if (['CHECKOUT_UNCONFIRMED', 'PROVIDER_UNCONFIRMED'].includes(code))
       throw failure(
         'Aguarde e use Recuperar solicitação. O resultado anterior será conferido antes de continuar.',

@@ -13,7 +13,31 @@ O painel **Planos e cobranças** reúne o histórico da plataforma. Nos detalhes
 - Renovação apenas após pagamento aprovado. Autorização da assinatura, geração de Pix e retorno do checkout não liberam acesso.
 - Cancelamento da assinatura pelo gestor, com confirmação no Mercado Pago e manutenção do período já pago.
 
-**O backend está configurado para homologação em teste; produção permanece bloqueada.** A base financeira, a migração adicional de Orders e a versão 2 das duas Edge Functions foram publicadas em 27/10/2026. As nove configurações foram salvas no gerenciador de segredos do Supabase e seus digests conferidos. O webhook publicado aceitou uma notificação de verificação sem efeito financeiro com HMAC válido (`200`), recusou corpo com ID divergente (`400`) e assinatura inválida (`401`). O checkout continua exigindo sessão (`401`). A interface online foi habilitada na configuração de build e depende da publicação correspondente. A homologação de pagamentos APRO/OTHE/FUND, Pix e assinatura continua pendente; essas verificações de configuração não substituem uma transação de teste com vendedor e comprador distintos.
+**O backend está configurado para homologação em teste; produção permanece bloqueada.** As configurações de teste foram salvas no gerenciador de segredos do Supabase e seus digests conferidos. O webhook publicado aceitou uma notificação de verificação sem efeito financeiro com HMAC válido (`200`), recusou corpo com ID divergente (`400`) e assinatura inválida (`401`). O checkout continua exigindo sessão (`401`). A interface online foi habilitada no Cloudflare.
+
+A validação no navegador com o gestor da Empresa B recuperou o Pix original, exibiu QR Code e copia e cola e confirmou seu encerramento no provedor. Um novo Pix com `payer.first_name=APRO`, enviado exclusivamente em teste conforme a documentação de Orders, foi aprovado pelo Mercado Pago e exibido como **Pagamento aprovado**. O histórico registrou R$ 189,90 em teste, sem conferência pendente; o vencimento real permaneceu em 10/11/2026. Não houve pagamento bancário real nem atualização manual do status no banco.
+
+Os identificadores de sandbox usam `ORDTST`/`PAYTST`; eles são aceitos somente no ambiente de teste, sem relaxar a conferência de recebedor, aplicação, referência ou valor. O cartão encerra o carregamento com uma orientação quando o SDK devolve `null` ou não fica pronto em 30 segundos. O frontend diferencia falhas de credenciais, permissão e conferência e preserva a solicitação durante erros de recuperação. Aprovação/recusa dos cartões APRO/OTHE/FUND e assinatura ainda precisam da homologação correspondente. Neste navegador, o Brick não conseguiu inicializar; a consulta pública de meios de pagamento retornou HTTP 403, sem causa identificada.
+
+## Branch hom e configurações permanentes de teste
+
+`main` é a branch de produção do Cloudflare Pages; `hom` usa o endereço estável de Preview. As chaves ficam no Supabase, nunca no Git. O mesmo código de cobrança atende ambos os perfis, com pontos de entrada distintos:
+
+| Configuração               | main                                       | hom                                         |
+| -------------------------- | ------------------------------------------ | ------------------------------------------- |
+| Frontend                   | `https://sun7crm.pages.dev`                | `https://hom.sun7crm.pages.dev`             |
+| `VITE_BILLING_ENVIRONMENT` | ausente ou `main`                          | `hom` no Preview                            |
+| Checkout                   | `crm-billing-checkout`                     | `crm-billing-checkout-hom`                  |
+| Webhook                    | `crm-billing-webhook`                      | `crm-billing-webhook-hom`                   |
+| Credenciais no Supabase    | `MP_*`                                     | `MP_HOM_*`                                  |
+| Retorno ao CRM             | `CRM_PUBLIC_URL`                           | `CRM_HOM_PUBLIC_URL`                        |
+| Ambiente de pagamento      | `MP_ENVIRONMENT`; produção exige liberação | sempre `test`, produção bloqueada no código |
+
+O perfil hom exige `MP_HOM_ACCESS_TOKEN`, `MP_HOM_WEBHOOK_SECRET`, `MP_HOM_COLLECTOR_ID`, `MP_HOM_PUBLIC_KEY`, `MP_HOM_APPLICATION_ID` e `MP_HOM_PAYMENTS_ENABLED=true`. Não usa as credenciais de main como fallback. Seu webhook de teste deve ser cadastrado no Mercado Pago em `https://oduhbimlxnuyqliayvpl.supabase.co/functions/v1/crm-billing-webhook-hom`; a assinatura secreta precisa corresponder a esse cadastro. Não é necessário trocar ou apagar essas variáveis ao configurar main para a conta do Caio.
+
+**O banco, os usuários e as regras do CRM continuam compartilhados.** Somente as configurações e o ambiente dos pagamentos foram separados. Uma branch Git não isola o banco. A criação de uma branch Supabase foi recusada pelo plano atual, pois exige Pro; nenhum recurso pago foi criado. A separação completa de dados exige um projeto ou branch Supabase próprio, com URL/chave pública no Preview, migrações, funções, segredos e contas QA próprias. Até lá, usar somente as empresas QA e respeitar o aviso de homologação. As demais Edge Functions mantêm sua lista de origens autorizadas; o checkout hom aceita apenas sua origem configurada.
+
+Todos os Previews do projeto usam as configurações de Preview do Cloudflare; não há variáveis por branch individual nesse projeto Pages. Mudar o backend de main para produção só deve ocorrer depois de cadastrar as credenciais definitivas do Caio e homologar o fluxo autorizado. As funções hom permanecem obrigatoriamente em teste.
 
 ## O que o responsável pela conta precisa fazer
 
@@ -78,10 +102,10 @@ No frontend/Cloudflare Pages, a variável pública `VITE_ONLINE_BILLING_ENABLED=
 
 ## Homologação antes de receber pagamentos reais
 
-Utilizar uma empresa de QA e as contas/meios de pagamento de teste do Mercado Pago, com vendedor e comprador de teste distintos conforme a documentação. Cobrir:
+Utilizar uma empresa de QA, as credenciais e os dados de teste do produto integrado. No Checkout Transparente com Orders, não é necessário criar uma conta compradora adicional: o teste de cartão aceita um e-mail válido e os cartões fornecidos pelo Mercado Pago. Cenários que exigem entrar em outra conta, como a autorização de assinatura, seguem as regras de contas de teste do produto. Cobrir:
 
 1. Sessão ausente, funcionário e gestor de outra empresa: consulta e comandos negados.
-2. Checkout Transparente: cartão aprovado (APRO), erro geral (OTHE), saldo insuficiente (FUND), pendente, rejeição de dados e nova tentativa; Pix gerado, recuperação após fechar/reabrir e confirmação conforme as limitações de teste do produto. Usar vendedor e comprador de teste distintos.
+2. Checkout Transparente: cartão aprovado (APRO), erro geral (OTHE), saldo insuficiente (FUND), pendente, rejeição de dados e nova tentativa; Pix gerado, recuperação após fechar/reabrir e confirmação conforme as limitações de teste do produto.
 3. Assinatura: autorização sem recebimento, primeiro pagamento confirmado, atualização da assinatura e cancelamento.
 4. Webhook: assinatura inválida, ID divergente, recebedor/moeda/ambiente incorretos e repetição do evento.
 5. Falha transitória de comunicação: reenvio do webhook e recuperação do checkout sem criar nova contratação.
@@ -94,6 +118,9 @@ Utilizar uma empresa de QA e as contas/meios de pagamento de teste do Mercado Pa
 - [Criar aplicação](https://www.mercadopago.com.br/developers/pt/docs/checkout-api-orders/create-application)
 - [Cartão com Card Payment Brick e Orders](https://www.mercadopago.com.br/developers/pt/docs/checkout-api-orders/payment-integration/websites/cards)
 - [Pix com Orders](https://www.mercadopago.com.br/developers/pt/docs/checkout-api-orders/payment-integration/websites/pix)
+- [Compra de teste com cartões](https://www.mercadopago.com.br/developers/pt/docs/checkout-api-orders/integration-test/cards)
+- [Compra de teste com Pix](https://www.mercadopago.com.br/developers/pt/docs/checkout-api-orders/integration-test/pix)
+- [Contas de teste de Orders](https://www.mercadopago.com.br/developers/pt/docs/checkout-api-orders/resources/test-accounts)
 - [Notificações de Orders](https://www.mercadopago.com.br/developers/pt/docs/checkout-api-orders/notifications)
 - [Assinatura sem plano associado, com pagamento pendente](https://www.mercadopago.com.br/developers/pt/docs/subscriptions/integration-configuration/subscription-no-associated-plan/pending-payments)
 - [Webhooks](https://www.mercadopago.com.br/developers/pt/docs/subscriptions/additional-content/your-integrations/notifications/webhooks)
@@ -102,6 +129,6 @@ Utilizar uma empresa de QA e as contas/meios de pagamento de teste do Mercado Pa
 
 ## Troca da conta recebedora
 
-A conta de desenvolvimento é usada apenas em Teste. Antes de produção, criar/configurar a aplicação da conta definitiva do Caio, substituir o conjunto completo de Public Key, Access Token, assinatura do webhook, Application ID e Collector ID e repetir a homologação. Somente depois definir `MP_ENVIRONMENT=production` e liberar `MP_PRODUCTION_ENABLED`. Contratos recorrentes de clientes reais devem começar na conta definitiva; a troca de credenciais não migra contratos ou recebimentos antigos.
+A conta de desenvolvimento é usada apenas em Teste e fica preservada nas variáveis `MP_HOM_*`. Antes de produção, criar/configurar a aplicação da conta definitiva do Caio, configurar o conjunto `MP_*` com Public Key, Access Token, assinatura do webhook, Application ID e Collector ID e repetir a homologação. Somente depois definir `MP_ENVIRONMENT=production` e liberar `MP_PRODUCTION_ENABLED`. Contratos recorrentes de clientes reais devem começar na conta definitiva; a troca de credenciais não migra contratos ou recebimentos antigos.
 
 A política de conteúdo do build libera somente os hosts específicos do SDK quando `VITE_ONLINE_BILLING_ENABLED=true`; a configuração padrão permanece restrita ao aplicativo. As proteções de scripts inline/eventos, objetos e base URI permanecem ativas.
