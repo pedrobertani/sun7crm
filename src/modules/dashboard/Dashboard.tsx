@@ -36,6 +36,7 @@ import { Heading, Kpi, Panel, Empty } from '../../components/shared';
 import { Button } from '../../components/ui/button';
 import { ThemeTooltip } from '../../components/ThemeTooltip';
 import { DemoGoalFunnel } from '../goals/DemoGoalFunnel';
+import { legacyPermissions } from '../permissions/model';
 function ChartEmpty() {
   return (
     <Empty
@@ -140,7 +141,7 @@ export function CompanyDashboard() {
           icon={<ListTodo size={19} />}
         />
       </div>
-      <DemoGoalFunnel />
+      {(session.role==='manager'||(data.members.find(m=>m.id===session.memberId)?.permissions||legacyPermissions(session.role)).keys.includes('goals.view'))&&<DemoGoalFunnel />}
       <div className="dashboard-grid">
         <Panel
           title="Novos contatos ao longo do tempo"
