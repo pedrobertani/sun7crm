@@ -26,12 +26,10 @@ create function crm_private.core_confirm_card_sale(
 language plpgsql security definer set search_path='' as $$
 declare c public.crm_opportunities;owner uuid;stage_name text;result jsonb;
 begin
-  if (select auth.uid()) is null or not crm_private.has_company_access(p_company)
-    or crm_private.company_role(p_company) not in ('manager','seller')
-  then raise exception 'CRM_FORBIDDEN' using errcode='42501'; end if;
+  perform crm_private.require_permission(p_company,'cards.edit');
   select * into c from public.crm_opportunities
     where company_id=p_company and id=p_card for update;
-  if not found or not crm_private.can_write_contact(p_company,c.contact_id)
+  if not found or c.archived_at is not null or not crm_private.permission_contact_scope(p_company,c.contact_id)
   then raise exception 'CRM_FORBIDDEN' using errcode='42501';end if;
   if c.row_version<>p_expected_version then
     raise exception 'CRM_STALE_VERSION' using errcode='40001';end if;
@@ -96,7 +94,8 @@ create or replace function crm_private.core_configure_board(p_company uuid,p_boa
 language plpgsql security definer set search_path='' as $$
 declare board public.crm_boards;old_stages jsonb;item record;removed record;target uuid;new_ids uuid[];
 begin
- perform crm_private.core_require_manager(p_company);
+ if not crm_private.has_company_access(p_company) then raise exception 'CRM_FORBIDDEN' using errcode='42501';end if;
+ if not (crm_private.has_permission(p_company,'boards.edit') or crm_private.has_permission(p_company,'stages.create') or crm_private.has_permission(p_company,'stages.edit') or crm_private.has_permission(p_company,'stages.reorder') or crm_private.has_permission(p_company,'stages.delete')) then raise exception 'CRM_FORBIDDEN' using errcode='42501';end if;
  select * into board from public.crm_boards where company_id=p_company and id=p_board for update;
  if not found then raise exception 'CRM_NOT_FOUND' using errcode='P0002';end if;
  if p_expected_version is null or p_expected_version<>board.row_version then raise exception 'CRM_STALE_VERSION' using errcode='40001';end if;
@@ -108,6 +107,11 @@ begin
  if exists(select 1 from public.crm_stages where id=any(new_ids) and (company_id<>p_company or board_id<>p_board)) then raise exception 'CRM_FORBIDDEN' using errcode='42501';end if;
  if exists(select 1 from public.crm_boards where company_id=p_company and id<>p_board and lower(btrim(name))=lower(btrim(p_name))) then raise exception 'CRM_NAME_EXISTS' using errcode='23505';end if;
  select jsonb_agg(jsonb_build_object('id',id,'position',position) order by position) into old_stages from public.crm_stages where company_id=p_company and board_id=p_board;
+ if p_name is distinct from board.name then perform crm_private.require_permission(p_company,'boards.edit');end if;
+ if exists(select 1 from jsonb_array_elements(p_stages) x where not exists(select 1 from public.crm_stages s where s.company_id=p_company and s.board_id=p_board and s.id=(x->>'id')::uuid)) then perform crm_private.require_permission(p_company,'stages.create');end if;
+ if exists(select 1 from public.crm_stages s where s.company_id=p_company and s.board_id=p_board and not(s.id=any(new_ids))) then perform crm_private.require_permission(p_company,'stages.delete');end if;
+ if exists(select 1 from jsonb_array_elements(p_stages) x join public.crm_stages s on s.company_id=p_company and s.board_id=p_board and s.id=(x->>'id')::uuid where s.name is distinct from btrim(x->>'name')) then perform crm_private.require_permission(p_company,'stages.edit');end if;
+ if (select array_agg(s.id order by s.position) from public.crm_stages s where s.company_id=p_company and s.board_id=p_board and s.id=any(new_ids)) is distinct from (select array_agg((x.value->>'id')::uuid order by x.ordinality) from jsonb_array_elements(p_stages) with ordinality x where exists(select 1 from public.crm_stages s where s.company_id=p_company and s.board_id=p_board and s.id=(x.value->>'id')::uuid)) then perform crm_private.require_permission(p_company,'stages.reorder');end if;
  update public.crm_stages set position=position+1000 where company_id=p_company and board_id=p_board;
  for item in select value,ordinality from jsonb_array_elements(p_stages) with ordinality loop
   insert into public.crm_stages(id,company_id,board_id,name,position) values((item.value->>'id')::uuid,p_company,p_board,btrim(item.value->>'name'),item.ordinality-1)
