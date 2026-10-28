@@ -42,7 +42,7 @@ export function DemoGoalFunnel(){
           <div><small>Ticket médio</small><strong>{currency(plan.ticketCents)}</strong></div>
           <div><small>Vendas necessárias</small><strong>{fmt(Math.ceil(plan.targetCents/plan.ticketCents))}</strong></div>
           <div><small>Vendas confirmadas · demo</small><strong>{manager?confirmed.length:mine.sales_count}</strong></div>
-        </div>
+        </div>}
         {manager&&<div className="goal-funnel" role="img" aria-label={funnel.map(s=>s.label+': '+fmt(s.count)).join('; ')}>
           {funnel.map((s,i)=><div key={i} className="goal-step" style={{
             width:`${100-(i/funnel.length)*39}%`,
@@ -51,7 +51,7 @@ export function DemoGoalFunnel(){
             <span><strong>{s.label}</strong><small>{i?'Conversão: '+s.rate+'%':'Entrada do funil'}</small></span>
             <b>{fmt(s.count)}</b>
           </div>)}
-        </div>
+        </div>}
         <div className="goal-total">
           <span>{manager?'Faturamento comercial confirmado · exemplo':'Seu desempenho confirmado · exemplo'}</span>
           <strong>{currency(manager?recorded:mine.sales_cents)} de {currency(manager?plan.targetCents:mine.goal_cents)}</strong>
