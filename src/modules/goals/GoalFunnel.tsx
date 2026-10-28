@@ -4,12 +4,12 @@ import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Modal } from '../../components/ui/modal';
 import { CurrencyInput } from '../../components/currency-input';
-import { Panel } from '../../components/shared';
+import { Panel, FormError } from '../../components/shared';
 import { currency, today } from '../../lib/format';
 import { CHART_COLORS } from '../../lib/themes';
 import type { GoalEmployeeProgress, GoalMedal, GoalPlan, GoalStep } from './model';
 import { starterStages, starterMedals, validateGoalConfig, buildGoalFunnel, medalUnlocked, numberInputToCents } from './model';
-import { useOperational, useQuery, useSave, QueryState, FormError } from '../workspace/operational';
+import { useOperational, useQuery, useSave, QueryState } from '../workspace/operational';
 import type { TeamRow } from '../../data/backend';
 import './goals.css';
 
