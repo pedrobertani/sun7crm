@@ -17,6 +17,8 @@ O painel **Planos e cobranças** reúne o histórico da plataforma. Nos detalhes
 
 A validação no navegador com o gestor da Empresa B recuperou o Pix original, exibiu QR Code e copia e cola e confirmou seu encerramento no provedor. Um novo Pix com `payer.first_name=APRO`, enviado exclusivamente em teste conforme a documentação de Orders, foi aprovado pelo Mercado Pago e exibido como **Pagamento aprovado**. O histórico registrou R$ 189,90 em teste, sem conferência pendente; o vencimento real permaneceu em 10/11/2026. Não houve pagamento bancário real nem atualização manual do status no banco.
 
+O reembolso integral desse Pix também foi reconhecido: após o evento `order.refunded` de 28/10/2026 às 02:02 UTC, o CRM registrou `status=refunded`, `provider_status=refunded` e a ocorrência para conferência administrativa. A última verificação foi às 02:02:42 UTC; o vencimento permaneceu em 10/11/2026. O teste não movimentou dinheiro real e não houve atualização manual do recebimento no banco.
+
 Os identificadores de sandbox usam `ORDTST`/`PAYTST`; eles são aceitos somente no ambiente de teste, sem relaxar a conferência de recebedor, aplicação, referência ou valor. O cartão encerra o carregamento com uma orientação quando o SDK devolve `null` ou não fica pronto em 30 segundos. O frontend diferencia falhas de credenciais, permissão e conferência e preserva a solicitação durante erros de recuperação. Aprovação/recusa dos cartões APRO/OTHE/FUND e assinatura ainda precisam da homologação correspondente. Neste navegador, o Brick não conseguiu inicializar; a consulta pública de meios de pagamento retornou HTTP 403, sem causa identificada.
 
 ## Branch hom e configurações permanentes de teste
@@ -105,13 +107,29 @@ No frontend/Cloudflare Pages, a variável pública `VITE_ONLINE_BILLING_ENABLED=
 Utilizar uma empresa de QA, as credenciais e os dados de teste do produto integrado. No Checkout Transparente com Orders, não é necessário criar uma conta compradora adicional: o teste de cartão aceita um e-mail válido e os cartões fornecidos pelo Mercado Pago. Cenários que exigem entrar em outra conta, como a autorização de assinatura, seguem as regras de contas de teste do produto. Cobrir:
 
 1. Sessão ausente, funcionário e gestor de outra empresa: consulta e comandos negados.
-2. Checkout Transparente: cartão aprovado (APRO), erro geral (OTHE), saldo insuficiente (FUND), pendente, rejeição de dados e nova tentativa; Pix gerado, recuperação após fechar/reabrir e confirmação conforme as limitações de teste do produto.
+2. Checkout Transparente: cartão aprovado (APRO), erro geral (OTHE), saldo insuficiente (FUND), segurança inválida (SECU), vencimento inválido (EXPI), erro de formulário (FORM), pendente, rejeição de dados e nova tentativa; Pix gerado, recuperação após fechar/reabrir, confirmação e reembolso conforme as limitações de teste do produto.
 3. Assinatura: autorização sem recebimento, primeiro pagamento confirmado, atualização da assinatura e cancelamento.
 4. Webhook: assinatura inválida, ID divergente, recebedor/moeda/ambiente incorretos e repetição do evento.
 5. Falha transitória de comunicação: reenvio do webhook e recuperação do checkout sem criar nova contratação.
 6. Recebimento de valor divergente, cobrança antiga e estorno: ocorrência visível para conferência.
 7. Registro de teste fora dos totais reais e sem renovação do acesso.
 8. Produção: confirmar que o pagamento aprovado entra no histórico e renova uma única vez. Validar também o prazo de disponibilização do saldo na conta do Mercado Pago; aprovação e saldo disponível são estados distintos.
+
+### Cenários de cartão fornecidos para homologação
+
+Os dados são cartões fictícios do painel de testes do Mercado Pago. Todos os cenários abaixo continuam **pendentes de execução no checkout real**; testes locais de resposta não comprovam uma transação no provedor. Usar vencimento 11/30 e o titular indicado, mantendo os demais dados conforme as instruções do painel de teste.
+
+| Titular                   | Cartão de teste             | CVV       | Resultado esperado                               | Situação                            |
+| ------------------------- | --------------------------- | --------- | ------------------------------------------------ | ----------------------------------- |
+| APRO                      | Mastercard final 3311       | 3 dígitos | Aprovado uma única vez                           | Pendente                            |
+| OTHE                      | Mastercard final 3311       | 3 dígitos | Recusa por erro geral                            | Pendente                            |
+| FUND                      | Mastercard final 3311       | 3 dígitos | Recusa por saldo insuficiente                    | Pendente                            |
+| SECU                      | Mastercard final 3311       | 3 dígitos | Recusa por código de segurança inválido          | Pendente                            |
+| EXPI                      | American Express final 6885 | 4 dígitos | Recusa por problema na validade                  | Pendente                            |
+| FORM                      | Mastercard final 3311       | 3 dígitos | Recusa por erro no formulário                    | Pendente                            |
+| FORM fornecido com débito | Elo débito final 8311       | 3 dígitos | Bloqueio de meio não suportado no checkout atual | Pendente; não comprova retorno FORM |
+
+O checkout atual aceita Pix e crédito. O Elo **débito** fornecido não deve ser convertido em crédito para forçar o cenário FORM. Para validar a recusa FORM da API, usar um cartão de crédito de teste compatível com esse cenário conforme a documentação do Mercado Pago, ou implementar e homologar débito separadamente. Toda recusa deve manter o acesso, não contar como receita e permitir uma nova tentativa quando o provedor confirmar que a anterior terminou.
 
 ## Documentação oficial consultada
 
