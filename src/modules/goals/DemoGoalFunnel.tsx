@@ -14,7 +14,7 @@ import type {GoalStep,GoalMedal} from './model';
 import './goals.css';
 
 const fmt=(v:number|null)=>v===null?'A definir':v.toLocaleString('pt-BR');
-export function DemoGoalFunnel(){
+export function DemoGoalFunnel({view='commercial'}:{view?:'commercial'|'medals'}){
   const {data,session,update,notice}=useCrm();
   const [month,setMonth]=useState(today().slice(0,7));
   const [open,setOpen]=useState(false);
@@ -30,7 +30,7 @@ export function DemoGoalFunnel(){
   const mine=progress(session.memberId);
   const recorded=confirmed.reduce((v,o)=>v+(o.confirmedSaleCents||0),0);
   const funnel=plan?buildGoalFunnel({target_cents:plan.targetCents,ticket_cents:plan.ticketCents,stages:plan.stages}):[];
-  return <div className="goal-area" data-demo="true">
+  return <div className="goal-area" data-demo="true" data-view={view}>
     <Panel title="Funil de metas e medalhas" description="Dados fictícios da demonstração — configure metas e conquistas como um gestor.">
       <div className="goal-head">
         <label className="form-row">Competência <Input type="month" aria-label="Competência das metas" value={month} onChange={e=>setMonth(e.target.value)}/></label>
