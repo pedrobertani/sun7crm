@@ -19,7 +19,17 @@ A validação no navegador com o gestor da Empresa B recuperou o Pix original, e
 
 O reembolso integral desse Pix também foi reconhecido: após o evento `order.refunded` de 28/10/2026 às 02:02 UTC, o CRM registrou `status=refunded`, `provider_status=refunded` e a ocorrência para conferência administrativa. A última verificação foi às 02:02:42 UTC; o vencimento permaneceu em 10/11/2026. O teste não movimentou dinheiro real e não houve atualização manual do recebimento no banco.
 
-Os identificadores de sandbox usam `ORDTST`/`PAYTST`; eles são aceitos somente no ambiente de teste, sem relaxar a conferência de recebedor, aplicação, referência ou valor. O cartão encerra o carregamento com uma orientação quando o SDK devolve `null` ou não fica pronto em 30 segundos. O frontend diferencia falhas de credenciais, permissão e conferência e preserva a solicitação durante erros de recuperação. Aprovação/recusa dos cartões APRO/OTHE/FUND e assinatura ainda precisam da homologação correspondente. Neste navegador, o Brick não conseguiu inicializar; a consulta pública de meios de pagamento retornou HTTP 403, sem causa identificada.
+Os identificadores de sandbox usam `ORDTST`/`PAYTST`; eles são aceitos somente no ambiente de teste, sem relaxar a conferência de recebedor, aplicação, referência ou valor. O frontend diferencia falhas de credenciais, permissão e conferência e preserva a solicitação durante erros de recuperação. Aprovação/recusa dos cartões e assinatura ainda precisam da homologação correspondente. Neste navegador, a consulta pública de meios de pagamento retornou HTTP 403, sem causa identificada.
+
+### Carregamento do cartão e atualização da tela
+
+A validação também encontrou um bloqueio concreto na CSP do aplicativo: o SDK faz um preflight por `fetch` em `https://secure-fields.mercadopago.com/` e usa `https://api-static.mercadopago.com/secure-fields` como fallback, mas a política anterior não permitia a primeira conexão nem o iframe do fallback. A política agora permite esses hosts nos usos necessários. Scripts inline/eventos e curingas continuam bloqueados; não há proxy de dados do cartão no CRM.
+
+O cartão abre ao selecionar o meio de pagamento, sem um checkbox anterior. A confirmação fica no botão do Brick, identificado com o valor. Em Pix, o botão Gerar Pix é a ação explícita. A confirmação de recorrência permanece no fluxo de assinatura. Falha, retorno `null` ou ausência de prontidão por 20 segundos interrompem o carregamento, descartam o controlador e apresentam uma nova tentativa. Callbacks atrasados não reabrem um formulário encerrado.
+
+Plano, integração e histórico compartilham um agendador de consultas da página, com um timer e listeners comuns. Consultam a cada 30 segundos enquanto a aba estiver visível e online, e ao voltar à página após ao menos cinco segundos. Um único Atualizar no cabeçalho recarrega os três. A atualização preserva os dados já exibidos e os formulários abertos; a consulta de configuração da integração pausa enquanto seu modal está aberto. Solicitações em andamento são deduplicadas e resultados de telas/empresas encerradas são ignorados.
+
+Pagamentos pendentes ou em recuperação são consultados automaticamente a cada cinco segundos, passando a 15 segundos após falha. A consulta não cria novos pagamentos e pausa em aba oculta/offline. Para nos estados finais; consultas manuais aparecem apenas como recuperação de erro. Webhook continua sendo a confirmação principal no servidor. Isso é independente do cron de notificações, que já executa a cada minuto.
 
 ## Branch hom e configurações permanentes de teste
 

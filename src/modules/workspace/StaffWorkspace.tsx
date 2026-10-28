@@ -18,6 +18,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
+import { refreshBilling } from '../../lib/query-refresh';
 import { Heading, Empty } from '../../components/shared';
 import { WorkspaceTheme } from '../../components/WorkspaceTheme';
 import { getSupabaseClient } from '../../lib/supabase';
@@ -417,12 +418,14 @@ export function StaffWorkspace({
   );
 }
 function WorkspaceRefresh({ onAccessRefresh }: { onAccessRefresh: () => void }) {
-  const { refresh } = useOperational();
+  const { refresh, company } = useOperational();
+  const { pathname } = useLocation();
   return (
     <Button
       variant="outline"
       onClick={() => {
-        refresh();
+        if (pathname === '/app/plano') void refreshBilling(company.id);
+        else refresh();
         onAccessRefresh();
       }}
     >

@@ -5,6 +5,8 @@ import { FormError } from '../../components/shared';
 import { useThemeStyle } from '../../components/theme-provider';
 import { currency, uid } from '../../lib/format';
 import { invokeBilling } from './billing-client';
+import { mountCardBrick, type CardBrickController } from './card-brick';
+import { useAutoRefresh } from '../../hooks/useLiveQuery';
 
 export interface OrderResult {
   id: string;
@@ -27,9 +29,6 @@ type PaymentData =
       payment_method_id: string;
       identification: { type: string; number: string };
     };
-interface BrickController {
-  unmount(): Promise<void>;
-}
 interface CardFormData {
   token: string;
   payment_method_id: string;
@@ -41,7 +40,7 @@ interface MpSdk {
       name: 'cardPayment',
       container: string,
       settings: Record<string, unknown>,
-    ): Promise<BrickController | null>;
+    ): Promise<CardBrickController | null>;
   };
 }
 
@@ -56,7 +55,8 @@ function CardForm({
   email: string;
   onPay: (payment: PaymentData) => Promise<void>;
 }) {
-  const containerId = `mp-card-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}`;
+  const [attempt, setAttempt] = useState(0);
+  const containerId = `mp-card-${useId().replace(/[^a-zA-Z0-9_-]/g, '')}-${attempt}`;
   const theme = useThemeStyle();
   const [loading, setLoading] = useState(true),
     [error, setError] = useState('');
@@ -73,60 +73,48 @@ function CardForm({
     surface = palette['--surface'],
     line = palette['--line'];
   useEffect(() => {
-    let cancelled = false;
-    let controller: BrickController | null | undefined;
+    let active = true;
     setLoading(true);
     setError('');
-    const unavailable = () => {
-      clearTimeout(readyTimer);
-      if (!cancelled) {
-        setLoading(false);
-        setError(
-          'Não foi possível carregar o formulário do cartão. Tente novamente ou escolha Pix.',
-        );
-      }
-    };
-    const readyTimer = setTimeout(unavailable, 30_000);
-    void (async () => {
-      try {
+    const dispose = mountCardBrick(
+      async ({ ready, error: unavailable }) => {
         const { loadMercadoPago } = await import('@mercadopago/sdk-js');
         await loadMercadoPago();
-        if (cancelled) return;
+        if (!active) return null;
         const Constructor = (
           window as unknown as {
             MercadoPago: new (key: string, options: { locale: string }) => MpSdk;
           }
         ).MercadoPago;
         const mp = new Constructor(publicKey, { locale: 'pt-BR' });
-        controller = await mp.bricks().create('cardPayment', containerId, {
+        return mp.bricks().create('cardPayment', containerId, {
           initialization: { amount: amount / 100, ...(email ? { payer: { email } } : {}) },
           customization: {
-            paymentMethods: { minInstallments: 1, maxInstallments: 1 },
+            paymentMethods: {
+              minInstallments: 1,
+              maxInstallments: 1,
+              types: { included: ['credit_card'] },
+            },
             visual: {
+              texts: { formSubmit: `Pagar ${currency(amount)}` },
               style: {
                 theme: dark ? 'dark' : 'default',
                 customVariables: {
                   formBackgroundColor: surface,
+                  inputBackgroundColor: surface,
                   baseColor: primary,
                   textPrimaryColor: ink,
                   textSecondaryColor: muted,
-                  inputBorderColor: line,
-                  buttonBackgroundColor: primary,
+                  outlinePrimaryColor: line,
                   buttonTextColor: foreground,
                 },
               },
             },
           },
           callbacks: {
-            onReady: () => {
-              clearTimeout(readyTimer);
-              if (!cancelled) {
-                setLoading(false);
-                setError('');
-              }
-            },
+            onReady: ready,
             onSubmit: (form: CardFormData, additional: { paymentTypeId?: string }) => {
-              if (cancelled) return Promise.reject(new Error('Formulário encerrado.'));
+              if (!active) return Promise.reject(new Error('Formulário encerrado.'));
               if (additional?.paymentTypeId && additional.paymentTypeId !== 'credit_card')
                 return Promise.reject(new Error('Selecione um cartão de crédito.'));
               return submit.current({
@@ -140,24 +128,35 @@ function CardForm({
             onError: unavailable,
           },
         });
-        // O SDK também sinaliza falha retornando null, sem rejeitar a promessa.
-        if (!controller) throw new Error('Card Payment indisponível.');
-        if (cancelled) await controller.unmount();
-      } catch {
-        unavailable();
-      }
-    })();
+      },
+      {
+        ready: () => {
+          setLoading(false);
+          setError('');
+        },
+        unavailable: () => {
+          setLoading(false);
+          setError(
+            'Não foi possível carregar o formulário do cartão. Tente novamente ou escolha Pix.',
+          );
+        },
+      },
+    );
     return () => {
-      cancelled = true;
-      clearTimeout(readyTimer);
-      if (controller) void controller.unmount().catch(() => {});
+      active = false;
+      dispose();
     };
   }, [publicKey, amount, email, containerId, dark, primary, foreground, ink, muted, surface, line]);
   return (
     <div className="billing-card-form">
       {loading && <p role="status">Carregando formulário seguro...</p>}
       <FormError message={error} />
-      <div id={containerId} />
+      {error && (
+        <Button variant="outline" onClick={() => setAttempt((n) => n + 1)}>
+          Tentar carregar o cartão novamente
+        </Button>
+      )}
+      <div id={containerId} hidden={!!error} />
     </div>
   );
 }
@@ -192,8 +191,7 @@ export function TransparentPayment({
 }) {
   const [method, setMethod] = useState<'pix' | 'credit_card'>('pix');
   const [payerEmail, setPayerEmail] = useState(environment === 'test' ? '' : email);
-  const [consent, setConsent] = useState(false),
-    [busy, setBusy] = useState(false);
+  const [busy, setBusy] = useState(false);
   const [order, setOrder] = useState<OrderResult | null>(null),
     [error, setError] = useState('');
   const [notice, setNotice] = useState(''),
@@ -272,6 +270,10 @@ export function TransparentPayment({
     // A recuperação ocorre uma vez por instância; não acompanha callbacks do componente pai.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pendingId]);
+  useAutoRefresh(() => run('order_status'), {
+    enabled: !!(order ? ['creating', 'pending'].includes(order.status) : recover),
+    interval: error ? 15_000 : 5000,
+  });
   async function copyPix() {
     try {
       await navigator.clipboard.writeText(order?.qr_code || '');
@@ -324,12 +326,14 @@ export function TransparentPayment({
           )}
           {order.status === 'creating' && (
             <p>
-              A solicitação está sendo conferida no Mercado Pago. Use Atualizar pagamento antes de
+              A solicitação está sendo conferida automaticamente no Mercado Pago. Aguarde antes de
               tentar pagar novamente.
             </p>
           )}
           {order.status === 'pending' && (
-            <p>O acesso é renovado somente após a confirmação do recebimento.</p>
+            <p role="status">
+              A confirmação é consultada automaticamente. O acesso é renovado após o recebimento.
+            </p>
           )}
           {order.qr_code && order.status === 'pending' && (
             <div className="billing-pix">
@@ -379,13 +383,15 @@ export function TransparentPayment({
             </p>
           )}
           <div className="billing-admin-actions">
-            <Button
-              variant="outline"
-              disabled={busy}
-              onClick={() => void run('order_status').catch(() => {})}
-            >
-              <RefreshCw size={15} /> {busy ? 'Consultando...' : 'Atualizar pagamento'}
-            </Button>
+            {error && (
+              <Button
+                variant="outline"
+                disabled={busy}
+                onClick={() => void run('order_status').catch(() => {})}
+              >
+                <RefreshCw size={15} /> {busy ? 'Consultando...' : 'Consultar novamente'}
+              </Button>
+            )}
             {terminal && (
               <Button disabled={busy} onClick={retry}>
                 Tentar outro pagamento
@@ -395,10 +401,14 @@ export function TransparentPayment({
         </div>
       ) : recover ? (
         <div className="billing-payment-result">
-          <p>A solicitação precisa ser conferida antes de iniciar outro pagamento.</p>
-          <Button disabled={busy} onClick={() => void run('order_status').catch(() => {})}>
-            {busy ? 'Conferindo...' : 'Recuperar solicitação'}
-          </Button>
+          <p role="status">
+            Conferindo a solicitação anterior automaticamente antes de iniciar outro pagamento.
+          </p>
+          {error && (
+            <Button disabled={busy} onClick={() => void run('order_status').catch(() => {})}>
+              {busy ? 'Conferindo...' : 'Recuperar solicitação'}
+            </Button>
+          )}
         </div>
       ) : (
         <>
@@ -420,21 +430,11 @@ export function TransparentPayment({
               <CreditCard size={19} /> Cartão de crédito
             </Button>
           </div>
-          <label className="check-row">
-            <input
-              type="checkbox"
-              checked={consent}
-              disabled={busy}
-              onChange={(e) => setConsent(e.target.checked)}
-            />
-            <span>Quero pagar uma mensalidade de {currency(amount)}.</span>
-          </label>
           {method === 'pix' ? (
             <form
               onSubmit={(e) => {
                 e.preventDefault();
-                if (consent)
-                  void run('create_order', { method: 'pix', email: payerEmail }).catch(() => {});
+                void run('create_order', { method: 'pix', email: payerEmail }).catch(() => {});
               }}
             >
               <label className="form-row">
@@ -450,21 +450,17 @@ export function TransparentPayment({
                 />
               </label>
               <p className="small-note">O QR Code e o código copia e cola serão exibidos aqui.</p>
-              <Button type="submit" disabled={busy || !consent}>
+              <Button type="submit" disabled={busy}>
                 {busy ? 'Gerando Pix...' : 'Gerar Pix'}
               </Button>
             </form>
-          ) : consent ? (
+          ) : (
             <CardForm
               publicKey={publicKey}
               amount={amount}
               email={environment === 'test' ? '' : email}
               onPay={(payment) => run('create_order', payment)}
             />
-          ) : (
-            <p className="small-note">
-              Confirme o valor acima para abrir o formulário seguro do cartão.
-            </p>
           )}
         </>
       )}
