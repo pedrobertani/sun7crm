@@ -64,7 +64,7 @@ export function GoalFunnel() {
               <div><small>Ticket médio planejado</small><strong>{currency(plan.ticket_cents)}</strong></div>
               <div><small>Vendas necessárias</small><strong>{numberFormat(plannedSales)}</strong></div>
               <div><small>Vendas confirmadas</small><strong>{manager?confirmed.length:mine.sales_count}</strong></div>
-            </div>
+            </div>}
             {manager&&<div className="goal-funnel" role="img" aria-label={funnel.map(x=>x.label+': '+numberFormat(x.count)).join('; ')}>
               {funnel.map((step,i)=>(
                 <div className="goal-step" key={i} style={{
@@ -76,7 +76,7 @@ export function GoalFunnel() {
                   <b>{numberFormat(step.count)}</b>
                 </div>
               ))}
-            </div>
+            </div>}
             {manager&&funnel.some(x=>x.count===null)&&<p className="small-note">Complete as taxas de conversão na configuração para estimar todas as etapas.</p>}
             {manager && plan && (
               <div className="goal-total">
