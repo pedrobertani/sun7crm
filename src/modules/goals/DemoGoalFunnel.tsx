@@ -37,13 +37,13 @@ export function DemoGoalFunnel(){
         {manager&&<Button variant="outline" type="button" onClick={()=>setOpen(true)}><Settings2 size={16}/> Configurar metas</Button>}
       </div>
       {plan?<>
-        <div className="goal-indicators">
+        {manager&&<div className="goal-indicators">
           <div><small>Meta mensal</small><strong>{currency(plan.targetCents)}</strong></div>
           <div><small>Ticket médio</small><strong>{currency(plan.ticketCents)}</strong></div>
           <div><small>Vendas necessárias</small><strong>{fmt(Math.ceil(plan.targetCents/plan.ticketCents))}</strong></div>
           <div><small>Vendas confirmadas · demo</small><strong>{manager?confirmed.length:mine.sales_count}</strong></div>
         </div>
-        <div className="goal-funnel" role="img" aria-label={funnel.map(s=>s.label+': '+fmt(s.count)).join('; ')}>
+        {manager&&<div className="goal-funnel" role="img" aria-label={funnel.map(s=>s.label+': '+fmt(s.count)).join('; ')}>
           {funnel.map((s,i)=><div key={i} className="goal-step" style={{
             width:`${100-(i/funnel.length)*39}%`,
             background:`color-mix(in srgb, ${CHART_COLORS[i%CHART_COLORS.length]} 38%,var(--surface))`,
