@@ -1,6 +1,7 @@
 import type { Snapshot } from '../domain/types';
 import { today, shiftDate } from '../lib/format';
 import { defaultStages } from '../domain/config';
+import { starterMedals } from '../modules/goals/model';
 import { marketingSeed } from './marketingSeed';
 export function createSeed(): Snapshot {
   const date = today();
@@ -198,8 +199,20 @@ export function createSeed(): Snapshot {
     members,
     boards,
     contacts,
+    goalPlans:companies.map(c=>({
+      companyId:c.id,month:date.slice(0,7),targetCents:10000000,ticketCents:300000,
+      stages:[
+        {label:'Contatos',rate:null},{label:'Agendamentos',rate:50},
+        {label:'Comparecimentos',rate:80},{label:'Vendas',rate:10}
+      ],
+      medals:starterMedals.map(m=>({...m})),
+    })),
+    employeeGoals:companies.map(c=>({companyId:c.id,month:date.slice(0,7),memberId:c.id+'-seller',goalCents:1500000})),
     opportunities: opportunities.map((o) => ({
       ...o,
+      ...(o.companyId==='aurora' && o.stageId==='aurora-leads-5'
+       ? {confirmedSaleAt:date+'T12:00:00.000Z',confirmedSaleOwnerId:'aurora-seller',confirmedSaleCents:o.value}
+       : {}),
       labelIds: [
         o.companyId + '-' + contacts.find((c) => c.id === o.contactId)!.temperature,
       ].filter((id) => !id.endsWith('unclassified')),

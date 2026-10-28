@@ -614,6 +614,21 @@ export class OperationalBackend {
       true,
     );
   }
+  confirmCardSale(id: string, stage: string, expectedVersion: number, amountCents: number) {
+    return this.rpc<CardRow>(
+      'crm_confirm_card_sale',
+      {p_card:uuid(id),p_stage:uuid(stage),p_expected_version:version(expectedVersion),p_amount_cents:amountCents},
+      true
+    );
+  }
+  async confirmedSales(month: string):Promise<{membership_id:string;value_cents:number}[]>{
+    const first=month+'-01', end=new Date(Date.UTC(Number(month.slice(0,4)),Number(month.slice(5,7)),1)).toISOString().slice(0,10);
+    const result=await this.client.from('crm_confirmed_sales').select('membership_id,value_cents')
+      .eq('company_id',this.companyId).gte('confirmed_at',first+'T00:00:00Z')
+      .lt('confirmed_at',end+'T00:00:00Z').is('reversed_at',null);
+    if(result.error)throw failure(result.error);
+    return result.data as {membership_id:string;value_cents:number}[];
+  }
   saveTask(input: TaskInput, id?: string, expectedVersion?: number) {
     return this.rpc<TaskRow>(
       'crm_save_task',

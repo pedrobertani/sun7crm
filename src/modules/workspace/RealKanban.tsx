@@ -28,6 +28,8 @@ import type {
 import { currency, uid } from '../../lib/format';
 import { useCardDrag } from '../../hooks/useCardDrag';
 import { useStageDrag } from '../../hooks/useStageDrag';
+import { highImpactStage } from '../goals/stageOutcome';
+import { ConfirmKanbanMove, type ConfirmedMove } from '../goals/ConfirmKanbanMove';
 import { RecordTitle } from '../../components/RecordTitle';
 import { RealContactHistory } from '../contacts/RealContactHistory';
 import { RecordPicker } from './RecordPicker';
@@ -129,9 +131,14 @@ export function RealKanban() {
       );
   }
   const moving = useSave();
+  const [pendingMove,setPendingMove]=useState<{card:CardRow;stage:StageRow;kind:'sale'|'other'}|null>(null);
   async function move(id: string, stage: string) {
     const card = cards.data?.rows.find((c) => c.id === id);
-    if (!card || !writable || card.stage_id === stage) return;
+    if (!card || !writable || card.stage_id === stage || moving.busy || moving.uncertain) return;
+    const dest=stages.find(x=>x.id===stage);
+    if(!dest)return;
+    const kind=highImpactStage(dest.name);
+    if(kind) { setPendingMove({card,stage:dest,kind});return; }
     await moving.run(async () => {
       await api.saveCard({ stage_id: stage }, card.id, card.row_version);
       refresh();
@@ -457,6 +464,26 @@ export function RealKanban() {
           }}
         />
       )}
+      {pendingMove && <ConfirmKanbanMove
+        key={pendingMove.card.id+'-'+pendingMove.stage.id}
+        contactName={cards.data?.contacts.find(c=>c.id===pendingMove.card.contact_id)?.name||pendingMove.card.title||'Cliente'}
+        fromStage={stages.find(x=>x.id===pendingMove.card.stage_id)?.name||'Etapa anterior'}
+        toStage={pendingMove.stage.name}
+        kind={pendingMove.kind}
+        amountCents={pendingMove.card.value_cents}
+        busy={moving.busy}
+        onCancel={()=>setPendingMove(null)}
+        onConfirm={(result:ConfirmedMove)=>void moving.run(async()=>{
+          if(result.confirmed){
+            await api.confirmCardSale(pendingMove.card.id,pendingMove.stage.id,pendingMove.card.row_version,result.amountCents);
+          }else{
+            await api.saveCard({stage_id:pendingMove.stage.id},pendingMove.card.id,pendingMove.card.row_version);
+          }
+          setPendingMove(null);
+          refresh();
+          notice(result.confirmed?'Venda confirmada e registrada nas metas.':'Movimentação confirmada.');
+        })}
+      />}
       {deleting && (
         <DeleteCardDialog
           card={deleting}

@@ -1,4 +1,5 @@
 import type { CrmTheme } from '../lib/themes';
+import type { GoalStep, GoalMedal } from '../modules/goals/model';
 export type Role = 'admin' | 'manager' | 'seller' | 'reception';
 export type Template = 'aesthetic' | 'generic';
 export type Temperature = 'unclassified' | 'cold' | 'warm' | 'hot';
@@ -62,6 +63,9 @@ export interface Opportunity {
   labelIds?: string[];
   catalogIds?: string[];
   createdAt: string;
+  confirmedSaleAt?: string;
+  confirmedSaleOwnerId?: string;
+  confirmedSaleCents?: number;
 }
 export interface Task {
   id: string;
@@ -92,7 +96,23 @@ export interface ContactHistoryEvent {
   body: string;
   opportunityId?: string;
 }
+export interface DemoGoalPlan {
+  companyId:string;
+  month:string;
+  targetCents:number;
+  ticketCents:number;
+  stages:GoalStep[];
+  medals:GoalMedal[];
+}
+export interface DemoEmployeeGoal {
+  companyId:string;
+  month:string;
+  memberId:string;
+  goalCents:number;
+}
 export interface Snapshot {
+  goalPlans?:DemoGoalPlan[];
+  employeeGoals?:DemoEmployeeGoal[];
   contactHistory?: ContactHistoryEvent[];
   version: 1;
   companies: Company[];

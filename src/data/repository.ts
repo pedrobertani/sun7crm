@@ -17,6 +17,7 @@ export class BrowserRepository implements CrmRepository {
       const data: unknown = JSON.parse(raw);
       if (!isSnapshot(data)) throw Error('Formato incompatível');
       const examples = marketingSeed(data.companies);
+      const defaultGoals=createSeed();
       // Migração aditiva: preserva os cadastros locais de versões anteriores.
       return {
         ...data,
@@ -40,6 +41,8 @@ export class BrowserRepository implements CrmRepository {
                 })(),
               },
         ),
+        goalPlans:Array.isArray(data.goalPlans)?data.goalPlans:(defaultGoals.goalPlans||[]).filter(p=>data.companies.some(c=>c.id===p.companyId)),
+        employeeGoals:Array.isArray(data.employeeGoals)?data.employeeGoals:(defaultGoals.employeeGoals||[]).filter(p=>data.companies.some(c=>c.id===p.companyId)),
         contactHistory: Array.isArray(data.contactHistory) ? data.contactHistory : [],
         catalog: data.catalog || [],
         ambassadorCampaigns: data.ambassadorCampaigns || [],
