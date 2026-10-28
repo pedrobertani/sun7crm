@@ -135,7 +135,7 @@ export function createSeed(): Snapshot {
       createdAt: shiftDate(date, -i * 2),
     })),
   );
-  const opportunities = contacts.map((c, i) => {
+  const opportunities: Snapshot['opportunities'] = contacts.map((c, i) => {
     const b = boards.find(
       (b) => b.companyId === c.companyId && b.kind === (i % 12 < 9 ? 'leads' : 'clients'),
     )!;
