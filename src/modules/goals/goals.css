@@ -74,3 +74,20 @@
 .goal-area[data-view="commercial"] .goal-step{min-height:54px;padding:9px 14px}
 .goal-area[data-view="commercial"] .goal-indicators>div{padding:11px}
 @media(max-width:700px){.goal-area[data-view="medals"] .goal-medal-person{display:block}.goal-area[data-view="medals"] .goal-medal-person>strong{display:block;width:auto;margin-bottom:9px}.goal-area[data-view="medals"] .goal-medal{flex:1 1 104px}}
+
+/* A compact layout that is visibly different from full-width dashboard cards. */
+@media(min-width:901px){
+ .page:has(.dashboard-tabs) .goal-area{max-width:980px;margin-left:auto;margin-right:auto}
+ .page:has(.dashboard-tabs) .goal-funnel{max-width:760px}
+ .page:has(.dashboard-tabs) .goal-step{min-height:46px!important;padding:7px 13px!important}
+ .page:has(.dashboard-tabs) .goal-step strong{font-size:12px}
+ .page:has(.dashboard-tabs) .goal-step b{font-size:15px}
+ .page:has(.dashboard-tabs) .goal-indicators{max-width:980px}
+ .page:has(.dashboard-tabs) .goal-indicators>div{padding:10px}
+ .page:has(.dashboard-tabs) .goal-indicators strong{font-size:15px}
+ .page:has(.dashboard-tabs) .goal-medal-person{padding:9px!important;gap:10px!important}
+ .page:has(.dashboard-tabs) .goal-medal{flex:0 0 116px!important;min-height:78px!important;padding:6px!important}
+ .page:has(.dashboard-tabs) .goal-medal-icon{font-size:20px!important}
+ .page:has(.dashboard-tabs) .goal-medal strong{font-size:10px!important}
+ .page:has(.dashboard-tabs) .goal-medal small{font-size:9px!important}
+}
