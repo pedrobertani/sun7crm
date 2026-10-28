@@ -68,6 +68,17 @@ begin
   end if;
   if resource='notifications' then
     perform crm_private.emit_data_change('user:'||(row_data->>'recipient_user_id'),'notifications');
+    -- A deadline can change a projection without changing the source record.
+    if tg_op<>'UPDATE' or (row_data->'active') is distinct from (to_jsonb(old)->'active') then
+      if row_data->>'kind'='subscription_due' then
+        perform crm_private.emit_data_change('company:'||company::text,'billing');
+        perform crm_private.emit_data_change('user:'||(row_data->>'recipient_user_id'),'access');
+      elsif row_data->>'kind' in ('task_due','task_assigned') then
+        perform crm_private.emit_data_change('company:'||company::text,'tasks');
+      elsif row_data->>'kind' in ('card_first_response','card_idle','card_escalation') then
+        perform crm_private.emit_data_change('company:'||company::text,'cards');
+      end if;
+    end if;
     return null;
   end if;
   if company is not null then

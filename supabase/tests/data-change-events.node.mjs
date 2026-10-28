@@ -125,4 +125,23 @@ test('eventos privados: isolamento, agrupamento e transações', async (t) => {
       ),
     );
   });
+  await t.test(
+    'um prazo do cron também avisa a tela do plano e a verificação de acesso',
+    async () => {
+      await q('delete from realtime.messages');
+      await q(
+        "insert into public.crm_notifications(company_id,recipient_user_id,kind,entity_id,event_key,title,body,priority) values($1,$2,'subscription_due',$1,'fixture-timer','Prazo de teste','Reavaliar acesso',3)",
+        [id(100), id(1)],
+      );
+      const events = await messages();
+      assert.ok(
+        events.some(
+          (r) => r.topic === `crm:company:${id(100)}` && r.payload.resource === 'billing',
+        ),
+      );
+      assert.ok(
+        events.some((r) => r.topic === `crm:user:${id(1)}` && r.payload.resource === 'access'),
+      );
+    },
+  );
 });
