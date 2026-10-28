@@ -90,3 +90,37 @@ $$;
 revoke all on function crm_private.reverse_confirmed_sale_when_leaving_stage() from public,anon,authenticated,service_role;
 create trigger crm_reverse_confirmed_sale after update of stage_id,board_id
 on public.crm_opportunities for each row execute function crm_private.reverse_confirmed_sale_when_leaving_stage();
+
+-- Preserva vendas confirmadas ao excluir etapas de Kanban.
+create or replace function crm_private.core_configure_board(p_company uuid,p_board uuid,p_name text,p_stages jsonb,p_expected_version bigint) returns jsonb
+language plpgsql security definer set search_path='' as $$
+declare board public.crm_boards;old_stages jsonb;item record;removed record;target uuid;new_ids uuid[];
+begin
+ perform crm_private.core_require_manager(p_company);
+ select * into board from public.crm_boards where company_id=p_company and id=p_board for update;
+ if not found then raise exception 'CRM_NOT_FOUND' using errcode='P0002';end if;
+ if p_expected_version is null or p_expected_version<>board.row_version then raise exception 'CRM_STALE_VERSION' using errcode='40001';end if;
+ if p_name is null or length(btrim(p_name)) not between 1 and 100 or jsonb_typeof(p_stages) is distinct from 'array' then raise exception 'CRM_INVALID_INPUT' using errcode='22023';end if;
+ if jsonb_array_length(p_stages) not between 1 and 10 or exists(select 1 from jsonb_array_elements(p_stages) x where jsonb_typeof(x) is distinct from 'object' or x->>'id' is null or x->>'name' is null or length(btrim(x->>'name')) not between 1 and 50)
+ or (select count(distinct lower(btrim(x->>'name'))) from jsonb_array_elements(p_stages) x)<>jsonb_array_length(p_stages) then raise exception 'CRM_INVALID_STAGES' using errcode='22023';end if;
+ select array_agg((x->>'id')::uuid) into new_ids from jsonb_array_elements(p_stages) x;
+ if (select count(distinct n) from unnest(new_ids) n)<>cardinality(new_ids) then raise exception 'CRM_INVALID_STAGES' using errcode='22023';end if;
+ if exists(select 1 from public.crm_stages where id=any(new_ids) and (company_id<>p_company or board_id<>p_board)) then raise exception 'CRM_FORBIDDEN' using errcode='42501';end if;
+ if exists(select 1 from public.crm_boards where company_id=p_company and id<>p_board and lower(btrim(name))=lower(btrim(p_name))) then raise exception 'CRM_NAME_EXISTS' using errcode='23505';end if;
+ select jsonb_agg(jsonb_build_object('id',id,'position',position) order by position) into old_stages from public.crm_stages where company_id=p_company and board_id=p_board;
+ update public.crm_stages set position=position+1000 where company_id=p_company and board_id=p_board;
+ for item in select value,ordinality from jsonb_array_elements(p_stages) with ordinality loop
+  insert into public.crm_stages(id,company_id,board_id,name,position) values((item.value->>'id')::uuid,p_company,p_board,btrim(item.value->>'name'),item.ordinality-1)
+  on conflict(id) do update set name=excluded.name,position=excluded.position;
+ end loop;
+ for removed in select * from jsonb_to_recordset(coalesce(old_stages,'[]')) as x(id uuid,position integer) where not(id=any(new_ids)) order by position loop
+  select x.id into target from jsonb_to_recordset(old_stages) as x(id uuid,position integer) where x.id=any(new_ids) and x.position<removed.position order by x.position desc limit 1;
+  if target is null then select x.id into target from jsonb_to_recordset(old_stages) as x(id uuid,position integer) where x.id=any(new_ids) order by x.position limit 1;end if;
+  target:=coalesce(target,new_ids[1]);
+  update public.crm_opportunities set stage_id=target where company_id=p_company and board_id=p_board and stage_id=removed.id;
+  delete from public.crm_stages where company_id=p_company and id=removed.id;
+ end loop;
+ update public.crm_boards set name=btrim(p_name),row_version=row_version+1 where id=p_board returning * into board;
+ return to_jsonb(board)||jsonb_build_object('stages',(select jsonb_agg(to_jsonb(x) order by x.position) from public.crm_stages x where company_id=p_company and board_id=p_board));
+end;
+$$;
