@@ -23,7 +23,7 @@ export function RealDashboard() {
     [from, setFrom] = useState(today().slice(0, 7) + '-01'),
     [to, setTo] = useState(today()),
     [dashboardTab, setDashboardTab] = useState<'overview'|'commercial'|'achievements'>('overview');
-  const commercialAllowed=can('cards.view') || can('goals.view');
+  const commercialAllowed=can('cards.view');
   const availableTabs=[['overview','Visão geral'], ...(commercialAllowed?[['commercial','Comercial']]:[]), ...(can('goals.view')?[['achievements','Conquistas']]:[])];
   const activeTab=availableTabs.some(([key])=>key===dashboardTab)?dashboardTab:'overview';
   const query = useQuery(async () => {
