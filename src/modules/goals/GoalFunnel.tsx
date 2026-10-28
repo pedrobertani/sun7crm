@@ -99,8 +99,9 @@ export function GoalFunnel() {
               {!manager && !mine.goal_cents && <p className="small-note">Sua meta individual ainda não foi configurada. Medalhas permanecem bloqueadas até a conquista.</p>}
               {manager && !team.data?.length && <p className="small-note">Cadastre colaboradores para acompanhar as conquistas.</p>}
               {manager ? (
-                (team.data||[]).filter(x=>x.active&&(x.role==='seller'||x.role==='manager')).map(member=><div className="goal-medal-person" key={member.id}>
-                  <strong>{member.display_name}</strong>
+                (team.data||[]).filter(x=>(x.role==='seller'||x.role==='manager') &&
+                  (x.active||salesByMember.has(x.id)||results.some(r=>r.membership_id===x.id))).map(member=><div className="goal-medal-person" key={member.id}>
+                  <strong>{member.display_name}{!member.active?' · Inativo':''}</strong>
                   <div className="goal-medal-grid">
                     {plan.medals.map((m,i)=><Medal key={i} medal={m} earned={medalUnlocked(m,progressFor(member.id))}/>)}
                   </div>
