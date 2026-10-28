@@ -449,27 +449,44 @@ export function Ambassadors() {
       {!!legacy.length && (
         <section className="card growth-section">
           <h2>Histórico anterior às campanhas</h2>
-          <p>
+          <p className="small-note">
             {legacy.length} indicações preservadas. Não entram nas campanhas novas sem conferência.
           </p>
-          {legacy.map((s) => (
-            <p key={s.id}>
-              {s.customer} · {currency(s.value)} · {s.cancelled ? 'Cancelada' : 'Registro anterior'}
-            </p>
-          ))}
+          <div className="table-wrap">
+            <table>
+              <thead><tr><th>Cliente indicado</th><th>Valor</th><th>Situação</th></tr></thead>
+              <tbody>
+                {legacy.map(s => (
+                  <tr key={s.id}>
+                    <td>{s.customer}</td>
+                    <td>{currency(s.value)}</td>
+                    <td><span className={'badge '+(s.cancelled?'gray':'good')}>
+                      {s.cancelled?'Cancelada':'Registro anterior'}
+                    </span></td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </section>
       )}
       <section className="card growth-section">
         <h2>Histórico de pagamentos</h2>
-        {(data.ambassadorPayments || [])
-          .filter((p) => p.companyId === session.companyId)
-          .map((p) => (
-            <p key={p.id}>
-              {people.find((a) => a.id === p.ambassadorId)?.name} ·{' '}
-              {campaigns.find((c) => c.id === p.campaignId)?.name} · {p.points} pontos ·{' '}
-              {currency(p.amount)} · {dateLabel(p.paidAt.slice(0, 10))}
-            </p>
-          ))}
+        {(() => {
+          const payments=(data.ambassadorPayments||[]).filter(p=>p.companyId===session.companyId);
+          return payments.length ? <div className="table-wrap">
+            <table>
+              <thead><tr><th>Embaixador</th><th>Campanha</th><th>Pontos</th><th>Valor pago</th><th>Data</th></tr></thead>
+              <tbody>{payments.map(p=><tr key={p.id}>
+                <td>{people.find(a=>a.id===p.ambassadorId)?.name||'Embaixador não encontrado'}</td>
+                <td>{campaigns.find(c=>c.id===p.campaignId)?.name||'Campanha anterior'}</td>
+                <td>{p.points}</td>
+                <td>{currency(p.amount)}</td>
+                <td>{dateLabel(p.paidAt.slice(0,10))}</td>
+              </tr>)}</tbody>
+            </table>
+          </div> : <p className="small-note">Nenhum pagamento registrado até o momento.</p>;
+        })()}
       </section>
       <Modal
         open={!!person}
