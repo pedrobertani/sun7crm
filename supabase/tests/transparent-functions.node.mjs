@@ -15,6 +15,7 @@ test('Hom usa segredos exclusivos e nunca aceita a ativação de produção', ()
     MP_ENVIRONMENT: 'production',
     MP_PRODUCTION_ENABLED: 'true',
     MP_PAYMENTS_ENABLED: 'true',
+    MP_SUBSCRIPTIONS_ENABLED: 'true',
     MP_HOM_ACCESS_TOKEN: 'test-fixture',
     MP_HOM_WEBHOOK_SECRET: 'test-secret',
     MP_HOM_PUBLIC_KEY: 'test-public',
@@ -28,6 +29,7 @@ test('Hom usa segredos exclusivos e nunca aceita a ativação de produção', ()
   const config = billingConfiguration((name) => values[name], 'hom');
   assert.equal(config.environment, 'test');
   assert.equal(config.productionEnabled, false);
+  assert.equal(config.subscriptionsEnabled, false);
   assert.equal(config.accessToken, 'test-fixture');
   assert.equal(config.webhookSecret, 'test-secret');
   assert.equal(config.publicKey, 'test-public');
@@ -44,6 +46,7 @@ test('Hom usa segredos exclusivos e nunca aceita a ativação de produção', ()
   assert.equal(createMercadoPago(missing).configured, false);
   const main = billingConfiguration((name) => values[name]);
   assert.equal(main.environment, 'production');
+  assert.equal(main.subscriptionsEnabled, true);
   assert.equal(main.accessToken, 'production-fixture');
   assert.equal(main.webhookUrl, 'https://fixture.supabase.co/functions/v1/crm-billing-webhook');
 });

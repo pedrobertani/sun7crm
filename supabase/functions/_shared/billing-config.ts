@@ -20,6 +20,7 @@ export function billingConfiguration(
     productionEnabled: !hom && get('MP_PRODUCTION_ENABLED') === 'true',
     environment: !hom && get('MP_ENVIRONMENT') === 'production' ? 'production' : 'test',
     enabled: get(`${prefix}PAYMENTS_ENABLED`) === 'true',
+    subscriptionsEnabled: get(`${prefix}SUBSCRIPTIONS_ENABLED`) === 'true',
     returnUrl: `${origin.replace(/\/$/, '')}/app/plano`,
     webhookUrl: `${get('SUPABASE_URL') || ''}/functions/v1/crm-billing-webhook${hom ? '-hom' : ''}`,
   };

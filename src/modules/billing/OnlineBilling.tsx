@@ -11,6 +11,7 @@ import { useLiveQuery } from '../../hooks/useLiveQuery';
 import { billingRefreshGroup, refreshBilling } from '../../lib/query-refresh';
 interface ProviderStatus {
   configured: boolean;
+  subscriptions_enabled?: boolean;
   public_key?: string;
   amount_cents?: number;
   payer_email?: string;
@@ -125,6 +126,11 @@ export function OnlineBilling({
       } else window.location.assign(checkoutUrl(result.url));
     } catch (cause) {
       setFormError((cause as Error).message);
+      if ((cause as { code?: string }).code === 'SUBSCRIPTIONS_DISABLED') {
+        setChoice(null);
+        setNotice('Pague a mensalidade por Pix ou cartão.');
+        void refreshBilling(companyId);
+      }
       if (
         ['SUBSCRIPTION_INPUT_REJECTED', 'SUBSCRIPTION_TEST_BUYER_REQUIRED'].includes(
           (cause as { code?: string }).code || '',
@@ -186,8 +192,8 @@ export function OnlineBilling({
               </label>
             )}
             <p className="small-note">
-              As credenciais são configuradas nos segredos do servidor. A contratação e o
-              cancelamento da assinatura ficam na tela Plano do gestor.
+              As credenciais são configuradas nos segredos do servidor. Os pagamentos são
+              acompanhados na tela Plano do gestor.
             </p>
             <Button asChild variant="outline">
               <a
@@ -218,9 +224,10 @@ export function OnlineBilling({
                   interrompe as próximas cobranças e mantém o período já pago.
                 </p>
                 <div className="billing-admin-actions">
-                  {['creating', 'pending'].includes(status.agreement.status) && (
-                    <Button onClick={() => open('subscription')}>Continuar assinatura</Button>
-                  )}
+                  {status.subscriptions_enabled &&
+                    ['creating', 'pending'].includes(status.agreement.status) && (
+                      <Button onClick={() => open('subscription')}>Continuar assinatura</Button>
+                    )}
                   {status.agreement.provider_id && (
                     <Button variant="outline" onClick={() => open('cancel_subscription')}>
                       Cancelar assinatura
@@ -236,13 +243,16 @@ export function OnlineBilling({
                 </p>
                 <div className="billing-admin-actions">
                   <Button onClick={() => open('one_time')}>Pagar mensalidade</Button>
-                  <Button variant="outline" onClick={() => open('subscription')}>
-                    Assinar mensalmente
-                  </Button>
+                  {status.subscriptions_enabled && (
+                    <Button variant="outline" onClick={() => open('subscription')}>
+                      Assinar mensalmente
+                    </Button>
+                  )}
                 </div>
                 <p className="small-note">
-                  Pagamento avulso por Pix ou cartão. A assinatura autoriza cobranças mensais
-                  recorrentes no Mercado Pago.
+                  {status.subscriptions_enabled
+                    ? 'Pagamento avulso por Pix ou cartão. A assinatura autoriza cobranças mensais recorrentes no Mercado Pago.'
+                    : 'Pagamento por Pix ou cartão, uma mensalidade por vez.'}
                 </p>
               </>
             )}

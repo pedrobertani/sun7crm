@@ -10,6 +10,7 @@ import { safeException } from '../functions/_shared/telemetry.ts';
 const id = '00000000-0000-4000-8000-000000000001';
 const config = {
   enabled: true,
+  subscriptionsEnabled: true,
   accessToken: 'fixture-token',
   webhookSecret: 'fixture-secret',
   collectorId: '123',
@@ -71,10 +72,92 @@ test('Mercado Pago: configuração desativada não cria cobranças nem expõe se
   assert.equal((await billingWebhook(backend(), provider)(signed())).status, 503);
   assert.equal(called, false);
 });
+test('assinaturas pausadas: Pix/cartão continuam ativos; criação é recusada sem reservar nem enviar cobrança', async () => {
+  let sent = 0;
+  const calls = [],
+    provider = createMercadoPago(
+      {
+        ...config,
+        subscriptionsEnabled: false,
+        applicationId: '456',
+        publicKey: 'APP_USR-00000000-0000-4000-8000-000000000001',
+      },
+      async () => {
+        sent++;
+        throw Error('não deve consultar ou criar assinatura');
+      },
+    ),
+    db = backend({
+      rpc: async (name) => {
+        calls.push(name);
+        return name === 'crm_edge_billing_context' ? { is_admin: false } : null;
+      },
+    });
+  const command = billingCheckout(provider),
+    context = { actorId: id, requestId: id, backend: db };
+  const status = await command({ ...context, body: { company_id: id, action: 'status' } });
+  assert.equal(status.data.configured, true);
+  assert.equal(status.data.subscriptions_enabled, false);
+  await assert.rejects(
+    command({
+      ...context,
+      body: {
+        company_id: id,
+        action: 'checkout',
+        mode: 'subscription',
+        payer_email: 'buyer@testuser.com',
+      },
+    }),
+    (e) => e.code === 'SUBSCRIPTIONS_DISABLED',
+  );
+  await assert.rejects(
+    provider.createCheckout({
+      id,
+      mode: 'subscription',
+      amount: 18990,
+      email: 'buyer@testuser.com',
+    }),
+    (e) => e.code === 'SUBSCRIPTIONS_DISABLED',
+  );
+  assert.equal(calls.includes('crm_edge_begin_checkout'), false);
+  assert.equal(sent, 0);
+});
+test('pausar novas assinaturas mantém o cancelamento de um contrato existente', async () => {
+  let status = 'authorized';
+  const calls = [],
+    provider = createMercadoPago({ ...config, subscriptionsEnabled: false }, async (_, init) => {
+      if (init.method === 'PUT') status = 'cancelled';
+      return Response.json({
+        id: 'agreement',
+        status,
+        external_reference: billingReference('subscription', id),
+      });
+    }),
+    db = backend({
+      rpc: async (name, args) => {
+        calls.push({ name, args });
+        return name === 'crm_edge_billing_context'
+          ? { is_admin: false, agreement: { id, provider_id: 'agreement' } }
+          : null;
+      },
+    });
+  const result = await billingCheckout(provider)({
+    actorId: id,
+    requestId: id,
+    backend: db,
+    body: { company_id: id, action: 'cancel_subscription' },
+  });
+  assert.equal(result.data.cancelled, true);
+  assert.equal(
+    calls.find((x) => x.name === 'crm_edge_update_agreement').args.p_status,
+    'cancelled',
+  );
+});
 test('checkout usa preço do banco e URLs controladas; recupera sem criar duas assinaturas', async () => {
   const calls = [],
     provider = {
       configured: true,
+      subscriptionsEnabled: true,
       environment: 'test',
       findCheckout: async () => null,
       createCheckout: async (input) => {
@@ -316,6 +399,7 @@ test('assinatura: falha na consulta anterior não marca um envio que não ocorre
   });
   const provider = {
     configured: true,
+    subscriptionsEnabled: true,
     environment: 'test',
     findCheckout: async () => {
       throw new HttpError(503, 'PROVIDER_UNCONFIRMED', 'timeout');
@@ -344,6 +428,7 @@ test('assinatura: teste exige comprador próprio; produção conserva o e-mail d
       calls = [];
     const provider = {
       configured: true,
+      subscriptionsEnabled: true,
       environment,
       findCheckout: async () => null,
       createCheckout: async (input) => {
@@ -387,6 +472,7 @@ test('assinatura: recusa definitiva encerra apenas a reserva sem provedor; timeo
     const calls = [];
     const provider = {
       configured: true,
+      subscriptionsEnabled: true,
       environment: 'test',
       findCheckout: async () => null,
       createCheckout: async () => {
