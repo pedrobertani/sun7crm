@@ -4,11 +4,15 @@ O painel **Planos e cobranças** reúne o histórico da plataforma. Nos detalhes
 
 ## O que está implementado
 
+**Escopo atual: pagamento avulso por Pix e cartão, uma mensalidade por vez.** A oferta e a criação de novas assinaturas estão pausadas. O status autenticado informa a liberação; o servidor recusa criação de assinatura antes de reservar qualquer tentativa ou chamar o provedor. Não há contratos ativos registrados. Histórico, notificações e cancelamento de contratos anteriores são preservados.
+
+Assinaturas exigem liberação explícita com `MP_SUBSCRIPTIONS_ENABLED=true` em main ou `MP_HOM_SUBSCRIPTIONS_ENABLED=true` em hom; a ausência mantém a criação bloqueada. Esses parâmetros permanecem desativados nesta etapa. A reativação depende de concluir a homologação específica de recorrência. Os testes desse fluxo permanecem para proteger o comportamento ao retomá-lo.
+
 - Histórico paginado com vencimento, valor, origem, situação, meio de pagamento e datas de confirmação.
 - Totais de recebimentos, valores em aberto, vencidos e ocorrências para conferência. Os filtros usam o vencimento da cobrança; os totais consideram empresa e período e ficam independentes do filtro de situação.
 - Criação de cobrança administrativa, confirmação de recebimento conferido e cancelamento com motivo. Os comandos são idempotentes e não sobrescrevem o histórico anterior.
 - Registro de conferência administrativa com autoria, data e providências. Conferir uma ocorrência não altera automaticamente o período de acesso.
-- Checkout Transparente por Orders: cartão tokenizado no componente oficial e Pix com QR Code/copia e cola dentro da tela Plano. Assinatura mensal individual mantém a autorização recorrente no Mercado Pago, em um fluxo separado. O CRM não armazena cartão, token de cartão nem documento do pagador.
+- Checkout Transparente por Orders: cartão tokenizado no componente oficial e Pix com QR Code/copia e cola dentro da tela Plano. O CRM não armazena cartão, token de cartão nem documento do pagador.
 - Webhook autenticado por HMAC, seguido de consulta à API para conferir pagamento, recebedor, moeda, ambiente e referência da empresa.
 - Renovação apenas após pagamento aprovado. Autorização da assinatura, geração de Pix e retorno do checkout não liberam acesso.
 - Cancelamento da assinatura pelo gestor, com confirmação no Mercado Pago e manutenção do período já pago.
@@ -46,6 +50,8 @@ Pagamentos pendentes ou em recuperação são consultados automaticamente a cada
 | Ambiente de pagamento      | `MP_ENVIRONMENT`; produção exige liberação | sempre `test`, produção bloqueada no código |
 
 O perfil hom exige `MP_HOM_ACCESS_TOKEN`, `MP_HOM_WEBHOOK_SECRET`, `MP_HOM_COLLECTOR_ID`, `MP_HOM_PUBLIC_KEY`, `MP_HOM_APPLICATION_ID` e `MP_HOM_PAYMENTS_ENABLED=true`. Não usa as credenciais de main como fallback. Seu webhook de teste deve ser cadastrado no Mercado Pago em `https://oduhbimlxnuyqliayvpl.supabase.co/functions/v1/crm-billing-webhook-hom`; a assinatura secreta precisa corresponder a esse cadastro. Não é necessário trocar ou apagar essas variáveis ao configurar main para a conta do Caio.
+
+Durante a pausa da recorrência, hom usa as credenciais da aplicação de Checkout. As credenciais da aplicação separada de Assinaturas ficam preservadas em `MP_HOM_SUBSCRIPTION_ACCESS_TOKEN`, `MP_HOM_SUBSCRIPTION_PUBLIC_KEY`, `MP_HOM_SUBSCRIPTION_APPLICATION_ID` e `MP_HOM_SUBSCRIPTION_WEBHOOK_SECRET`. São uma reserva de configuração para retomar a homologação; não são lidas pelo fluxo de pagamentos ativo nem habilitam cobranças recorrentes.
 
 **O banco, os usuários e as regras do CRM continuam compartilhados.** Somente as configurações e o ambiente dos pagamentos foram separados. Uma branch Git não isola o banco. A criação de uma branch Supabase foi recusada pelo plano atual, pois exige Pro; nenhum recurso pago foi criado. A separação completa de dados exige um projeto ou branch Supabase próprio, com URL/chave pública no Preview, migrações, funções, segredos e contas QA próprias. Até lá, usar somente as empresas QA e respeitar o aviso de homologação. As demais Edge Functions mantêm sua lista de origens autorizadas; o checkout hom aceita apenas sua origem configurada.
 

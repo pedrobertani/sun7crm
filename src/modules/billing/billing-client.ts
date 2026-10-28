@@ -38,6 +38,10 @@ export async function invokeBilling(
       );
     if (code === 'PAYMENTS_NOT_CONFIGURED')
       throw failure('O pagamento online ainda não foi ativado.');
+    if (code === 'SUBSCRIPTIONS_DISABLED')
+      throw failure(
+        'Pague a mensalidade por Pix ou cartão. A assinatura mensal está indisponível.',
+      );
     if (code === 'SUBSCRIPTION_TEST_BUYER_REQUIRED')
       throw failure(
         'Para testar a assinatura, use o e-mail da conta compradora de teste do Mercado Pago. O login do CRM é separado.',

@@ -34,6 +34,7 @@ export function billingCheckout(provider: MercadoPago): Command {
         status: 200,
         data: {
           configured: provider.transparentConfigured === true,
+          subscriptions_enabled: provider.subscriptionsEnabled === true,
           environment: provider.environment,
           public_key: provider.publicKey,
           amount_cents: context.amount_cents,
@@ -48,6 +49,16 @@ export function billingCheckout(provider: MercadoPago): Command {
       throw new HttpError(403, 'FORBIDDEN', 'A contratação é realizada pelo gestor da empresa.');
     if (action === 'create_order' || action === 'order_status')
       return transparentCheckout(backend, provider, actorId, companyId, requestId, body);
+    if (
+      action === 'checkout' &&
+      body.mode === 'subscription' &&
+      provider.subscriptionsEnabled !== true
+    )
+      throw new HttpError(
+        409,
+        'SUBSCRIPTIONS_DISABLED',
+        'Use Pix ou cartão para pagar a mensalidade.',
+      );
     keys(body, [
       'company_id',
       'action',

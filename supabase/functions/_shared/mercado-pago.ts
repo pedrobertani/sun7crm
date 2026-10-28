@@ -10,6 +10,7 @@ export interface MercadoPagoConfig {
   returnUrl: string;
   webhookUrl: string;
   enabled: boolean;
+  subscriptionsEnabled?: boolean;
   publicKey?: string;
   applicationId?: string;
   productionEnabled?: boolean;
@@ -38,6 +39,7 @@ export interface MercadoPago extends ReturnType<typeof createOrderGateway> {
   transparentConfigured: boolean;
   publicKey: string;
   configured: boolean;
+  subscriptionsEnabled: boolean;
   environment: 'test' | 'production';
   webhookUrl: string;
   findCheckout(input: CheckoutInput): Promise<ProviderCheckout | null>;
@@ -211,6 +213,7 @@ export function createMercadoPago(
       /^\d+$/.test(config.applicationId || ''),
     publicKey: config.publicKey || '',
     configured,
+    subscriptionsEnabled: configured && config.subscriptionsEnabled === true,
     environment: config.environment,
     webhookUrl: config.webhookUrl,
     async findCheckout(input) {
@@ -253,6 +256,12 @@ export function createMercadoPago(
     async createCheckout(input) {
       if (input.mode !== 'subscription')
         throw new HttpError(400, 'INVALID_INPUT', 'Use o pagamento integrado por Pix ou cartão.');
+      if (config.subscriptionsEnabled !== true)
+        throw new HttpError(
+          409,
+          'SUBSCRIPTIONS_DISABLED',
+          'Use Pix ou cartão para pagar a mensalidade.',
+        );
       const reference = billingReference(input.mode, input.id);
       const body: JsonObject = {
         reason: 'SUN7CRM Mensal',
