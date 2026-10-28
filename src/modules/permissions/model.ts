@@ -60,6 +60,11 @@ export const permissionModules: PermissionModule[] = [
     ],
   },
   {
+    id: 'goals',
+    label: 'Metas e conquistas',
+    resources: [{id:'goals',label:'Minhas metas e medalhas',actions:['view']}],
+  },
+  {
     id: 'management',
     label: 'Gestão',
     resources: [
@@ -147,6 +152,7 @@ export function legacyPermissions(role: string): EmployeePermissions {
           'labels.view',
           'strategies.view',
           'dashboard.view',
+          ...(role === 'seller' ? ['goals.view'] : []),
         ].includes(k) ||
         (resources.includes(k.split('.')[0]) &&
           (role === 'seller'
