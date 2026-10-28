@@ -117,4 +117,87 @@ test('Orders: isolamento, idempotência e pagamentos de teste no banco', async (
       assert.equal(row.status, 'refunded');
     },
   );
+  await t.test(
+    'IDs de sandbox registram uma vez sem renovar acesso nem somar receita real',
+    async () => {
+      const before = await bill(),
+        prepared = await prepare(1, 100, 9200);
+      const sandboxOrder = 'ORDTST' + '8'.repeat(26),
+        sandboxPayment = 'PAYTST' + '9'.repeat(26);
+      const args = [
+        prepared.attempt.id,
+        sandboxOrder,
+        'approved',
+        sandboxPayment,
+        18990,
+        'pix',
+        '2026-10-27T12:00:00Z',
+        'test',
+      ];
+      await service('crm_edge_record_order', args);
+      await service('crm_edge_record_order', args);
+      assert.deepEqual(await bill(), before);
+      const rows = (
+        await q(
+          'select status,environment,event_id from public.crm_subscription_charges where provider_payment_id=$1',
+          [sandboxPayment],
+        )
+      ).rows;
+      assert.equal(rows.length, 1);
+      assert.equal(rows[0].status, 'paid');
+      assert.equal(rows[0].environment, 'test');
+      assert.equal(rows[0].event_id, null);
+      const history = (
+        await user(1, () =>
+          q("select public.crm_billing_history($1,'all',null,null,'',0) result", [id(100)]),
+        )
+      ).rows[0].result;
+      assert.equal(history.totals.paid_cents, 0);
+    },
+  );
+  await t.test(
+    'banco recusa IDs de sandbox no ambiente de produção antes de alterar acesso',
+    async () => {
+      const before = await bill(),
+        prepared = await prepare(1, 100, 9300, 'pix', 'production');
+      const sandboxOrder = 'ORDTST' + '8'.repeat(26),
+        sandboxPayment = 'PAYTST' + '9'.repeat(26);
+      await assert.rejects(
+        service('crm_edge_record_order', [
+          prepared.attempt.id,
+          sandboxOrder,
+          'pending',
+          null,
+          18990,
+          'pix',
+          null,
+          'production',
+        ]),
+        (error) => error.code === '22023',
+      );
+      await assert.rejects(
+        service('crm_edge_apply_provider_payment', [
+          prepared.attempt.charge_id,
+          false,
+          sandboxPayment,
+          18990,
+          'approved',
+          'pix',
+          '2026-10-27T12:00:00Z',
+          null,
+          'production',
+        ]),
+        (error) => error.code === '22023',
+      );
+      assert.equal(
+        (
+          await q('select status from crm_private.payment_attempts where id=$1', [
+            prepared.attempt.id,
+          ])
+        ).rows[0].status,
+        'creating',
+      );
+      assert.deepEqual(await bill(), before);
+    },
+  );
 });

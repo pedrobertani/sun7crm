@@ -29,8 +29,9 @@ export type MpApi = (
   body?: JsonObject,
   idempotency?: string,
 ) => Promise<JsonObject>;
-const orderIdPattern = /^ORD[A-Z0-9]{26}$/;
-const paymentIdPattern = /^PAY[A-Z0-9]{26}$/;
+const orderIdPattern = /^ORD(?:TST)?[A-Z0-9]{26}$/;
+const paymentIdPattern = /^PAY(?:TST)?[A-Z0-9]{26}$/;
+const sandboxIdPattern = /^(ORD|PAY)TST[A-Z0-9]{26}$/;
 const referencePattern =
   /^sun7-order-([0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12})$/i;
 export const orderReference = (id: string) => `sun7-order-${id}`;
@@ -108,6 +109,7 @@ export function createOrderGateway(
     const match = referencePattern.exec(reference);
     if (
       !orderIdPattern.test(id) ||
+      (config.environment === 'production' && sandboxIdPattern.test(id)) ||
       (expectedId && id !== expectedId) ||
       !match ||
       String(data.user_id) !== config.collectorId ||
@@ -143,7 +145,12 @@ export function createOrderGateway(
     )
       return providerResponse();
     const paymentId = payment.id === undefined ? null : String(payment.id);
-    if (paymentId && !paymentIdPattern.test(paymentId)) return providerResponse();
+    if (
+      paymentId &&
+      (!paymentIdPattern.test(paymentId) ||
+        (config.environment === 'production' && sandboxIdPattern.test(paymentId)))
+    )
+      return providerResponse();
     const chargedBack =
       Array.isArray(transactions.chargebacks) && transactions.chargebacks.length > 0;
     const refunded =
@@ -255,6 +262,9 @@ export function createOrderGateway(
           description: 'SUN7CRM Mensal',
           payer: {
             email: payment.email,
+            ...(config.environment === 'test' && payment.method === 'pix'
+              ? { first_name: 'APRO' }
+              : {}),
             ...(payment.identification ? { identification: payment.identification } : {}),
           },
           transactions: {

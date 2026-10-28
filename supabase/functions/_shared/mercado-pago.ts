@@ -131,6 +131,18 @@ export function createMercadoPago(
         'PAYMENT_INPUT_REJECTED',
         'O Mercado Pago não aceitou os dados. Confira o formulário e tente novamente.',
       );
+    if (response.status === 401)
+      throw new HttpError(
+        502,
+        'PROVIDER_CREDENTIALS',
+        'As credenciais do Mercado Pago não foram aceitas. Peça à administração que confira a integração.',
+      );
+    if (response.status === 403)
+      throw new HttpError(
+        502,
+        'PROVIDER_FORBIDDEN',
+        'O Mercado Pago não autorizou a operação. A administração precisa conferir a aplicação e suas permissões.',
+      );
     if (!response.ok)
       throw new HttpError(
         502,

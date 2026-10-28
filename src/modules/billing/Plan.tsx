@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { CalendarDays, CreditCard, Gift, ShieldCheck } from 'lucide-react';
 import { Heading } from '../../components/shared';
 import { Button } from '../../components/ui/button';
@@ -16,6 +16,8 @@ import './billing.css';
 import { BillingHistory } from './BillingHistory';
 import { OnlineBilling } from './OnlineBilling';
 import { demoChargeHistory } from './demo-history';
+import { useLiveQuery } from '../../hooks/useLiveQuery';
+import { billingRefreshGroup, refreshBilling } from '../../lib/query-refresh';
 
 export function PlanPanel({ plan, demo = false }: { plan: Subscription; demo?: boolean }) {
   return (
@@ -133,50 +135,40 @@ export function PlanPanel({ plan, demo = false }: { plan: Subscription; demo?: b
 }
 
 export function RealPlan({ companyId }: { companyId: string }) {
-  const [plan, setPlan] = useState<Subscription | null>(null),
-    [error, setError] = useState(''),
-    [revision, setRevision] = useState(0);
-  useEffect(() => {
-    let active = true;
-    setPlan((previous) => (previous?.company_id === companyId ? previous : null));
-    setError('');
-    void loadSubscription(getSupabaseClient(), companyId)
-      .then((value) => {
-        if (active) setPlan(value);
-      })
-      .catch((cause) => {
-        if (active) setError((cause as Error).message);
-      });
-    return () => {
-      active = false;
-    };
-  }, [companyId, revision]);
+  const {
+    data: plan,
+    error,
+    refresh,
+  } = useLiveQuery(() => loadSubscription(getSupabaseClient(), companyId), [companyId], {
+    group: billingRefreshGroup(companyId),
+  });
   return (
     <>
       <div className="billing-toolbar">
         <p className="muted">Acompanhe o período de acesso e os registros da sua empresa.</p>
-        <Button variant="outline" onClick={() => setRevision((n) => n + 1)}>
-          Atualizar plano
-        </Button>
       </div>
-      {error ? (
-        <p role="alert" className="secure-access-error">
-          {error}
-        </p>
-      ) : plan ? (
+      {error && (
+        <div role="alert" className="secure-access-error">
+          <p>{error}</p>
+          <Button variant="outline" onClick={() => void refresh()}>
+            Tentar consulta novamente
+          </Button>
+        </div>
+      )}
+      {plan ? (
         <>
           <PlanPanel plan={plan} />
           <OnlineBilling
             key={`online-${companyId}`}
             companyId={companyId}
             amount={plan.monthly_amount_cents}
-            onPaymentUpdated={() => setRevision((n) => n + 1)}
+            onPaymentUpdated={() => void refreshBilling(companyId)}
           />
-          <BillingHistory key={companyId} companyId={companyId} revision={revision} />
+          <BillingHistory key={companyId} companyId={companyId} showRefresh={false} />
         </>
-      ) : (
+      ) : !error ? (
         <p role="status">Consultando seu plano...</p>
-      )}
+      ) : null}
     </>
   );
 }

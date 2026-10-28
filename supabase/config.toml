@@ -23,3 +23,10 @@ verify_jwt = false
 [functions.crm-billing-webhook]
 verify_jwt = false
 
+# Hom usa os mesmos handlers e força ambiente de pagamento de teste.
+[functions.crm-billing-checkout-hom]
+verify_jwt = false
+
+[functions.crm-billing-webhook-hom]
+verify_jwt = false
+

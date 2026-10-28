@@ -23,6 +23,8 @@ import {
   type PaymentMethod,
 } from './charges';
 import './billing.css';
+import { useLiveQuery } from '../../hooks/useLiveQuery';
+import { billingRefreshGroup } from '../../lib/query-refresh';
 
 export function BillingHistory({
   companyId,
@@ -30,17 +32,17 @@ export function BillingHistory({
   revision = 0,
   onChanged,
   demoData,
+  showRefresh = true,
 }: {
   companyId?: string;
   admin?: boolean;
   revision?: number;
   onChanged?: () => void;
   demoData?: ChargeHistory;
+  showRefresh?: boolean;
 }) {
   const [filters, setFilters] = useState(defaultHistoryFilters);
   const [draftQuery, setDraftQuery] = useState('');
-  const [history, setHistory] = useState<ChargeHistory | null>(null),
-    [error, setError] = useState('');
   const [reload, setReload] = useState(0),
     [selected, setSelected] = useState<Charge | null>(null);
   const [action, setAction] = useState<'confirm' | 'cancel' | 'review' | null>(null),
@@ -51,66 +53,65 @@ export function BillingHistory({
     [formError, setFormError] = useState(''),
     [uncertain, setUncertain] = useState(false);
   const [notice, setNotice] = useState('');
+  const {
+    data: history,
+    error,
+    refresh,
+  } = useLiveQuery<ChargeHistory>(
+    async () => {
+      if (demoData) {
+        const records = demoData.records.filter(
+          (r) =>
+            (!filters.from || r.due_date >= filters.from) &&
+            (!filters.to || r.due_date <= filters.to) &&
+            (!filters.query ||
+              r.company_name
+                .toLocaleLowerCase('pt-BR')
+                .includes(filters.query.toLocaleLowerCase('pt-BR'))),
+        );
+        const visible = records.filter(
+          (r) =>
+            filters.status === 'all' ||
+            r.display_status === filters.status ||
+            (filters.status === 'pending' && r.status === 'pending') ||
+            (filters.status === 'review' && r.needs_review),
+        );
+        const sum = (state: string) =>
+          records.filter((r) => r.status === state).reduce((total, r) => total + r.amount_cents, 0);
+        return {
+          ...demoData,
+          records: visible.slice(filters.offset, filters.offset + 20),
+          total: visible.length,
+          totals: {
+            ...demoData.totals,
+            paid_cents: sum('paid'),
+            pending_cents: sum('pending'),
+            overdue_cents: records
+              .filter((r) => r.display_status === 'overdue')
+              .reduce((n, r) => n + r.amount_cents, 0),
+            paid_count: records.filter((r) => r.status === 'paid').length,
+            pending_count: records.filter((r) => r.status === 'pending').length,
+            overdue_count: records.filter((r) => r.display_status === 'overdue').length,
+            review_count: records.filter((r) => r.needs_review).length,
+          },
+        };
+      }
+      return loadChargeHistory(getSupabaseClient(), companyId, filters);
+    },
+    [companyId, filters, revision, reload, demoData],
+    {
+      group: billingRefreshGroup(companyId),
+      enabled: validHistoryDates(filters.from, filters.to),
+      automatic: !demoData,
+    },
+  );
   useEffect(() => {
-    let active = true;
-    setHistory(null);
-    setError('');
-    if (!validHistoryDates(filters.from, filters.to)) return;
-    if (demoData) {
-      const records = demoData.records.filter(
-        (r) =>
-          (!filters.from || r.due_date >= filters.from) &&
-          (!filters.to || r.due_date <= filters.to) &&
-          (!filters.query ||
-            r.company_name
-              .toLocaleLowerCase('pt-BR')
-              .includes(filters.query.toLocaleLowerCase('pt-BR'))),
-      );
-      const visible = records.filter(
-        (r) =>
-          filters.status === 'all' ||
-          r.display_status === filters.status ||
-          (filters.status === 'pending' && r.status === 'pending') ||
-          (filters.status === 'review' && r.needs_review),
-      );
-      const sum = (state: string) =>
-        records.filter((r) => r.status === state).reduce((total, r) => total + r.amount_cents, 0);
-      setHistory({
-        ...demoData,
-        records: visible.slice(filters.offset, filters.offset + 20),
-        total: visible.length,
-        totals: {
-          ...demoData.totals,
-          paid_cents: sum('paid'),
-          pending_cents: sum('pending'),
-          overdue_cents: records
-            .filter((r) => r.display_status === 'overdue')
-            .reduce((n, r) => n + r.amount_cents, 0),
-          paid_count: records.filter((r) => r.status === 'paid').length,
-          pending_count: records.filter((r) => r.status === 'pending').length,
-          overdue_count: records.filter((r) => r.display_status === 'overdue').length,
-          review_count: records.filter((r) => r.needs_review).length,
-        },
-      });
-    } else
-      void loadChargeHistory(getSupabaseClient(), companyId, filters)
-        .then((value) => {
-          if (active) {
-            if (value.total > 0 && filters.offset >= value.total) {
-              setFilters((current) => ({
-                ...current,
-                offset: Math.floor((value.total - 1) / 20) * 20,
-              }));
-            } else setHistory(value);
-          }
-        })
-        .catch((cause) => {
-          if (active) setError((cause as Error).message);
-        });
-    return () => {
-      active = false;
-    };
-  }, [companyId, filters, revision, reload, demoData]);
+    if (history && filters.offset > 0 && filters.offset >= history.total)
+      setFilters((current) => ({
+        ...current,
+        offset: history.total ? Math.floor((history.total - 1) / 20) * 20 : 0,
+      }));
+  }, [history, filters.offset]);
   const updateFilter = (values: Partial<typeof filters>) =>
     setFilters((current) => ({ ...current, ...values, offset: 0 }));
   function open(charge: Charge) {
@@ -165,9 +166,11 @@ export function BillingHistory({
             {companyId ? ' da empresa' : ' de todas as empresas'}.
           </p>
         </div>
-        <Button variant="outline" onClick={() => setReload((n) => n + 1)}>
-          <RefreshCw size={16} /> Atualizar cobranças
-        </Button>
+        {showRefresh && (
+          <Button variant="outline" onClick={() => void refresh()}>
+            <RefreshCw size={16} /> Atualizar cobranças
+          </Button>
+        )}
       </div>
       <div className="card billing-filters">
         {!companyId && (

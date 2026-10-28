@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { CreditCard, ExternalLink, RefreshCw } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Modal } from '../../components/ui/modal';
@@ -7,6 +7,8 @@ import { invokeBilling } from './billing-client';
 import { TransparentPayment } from './TransparentPayment';
 import { DEFAULT_SUPABASE_URL, supabaseOrigin } from '../../lib/public-config';
 import { currency, uid } from '../../lib/format';
+import { useLiveQuery } from '../../hooks/useLiveQuery';
+import { billingRefreshGroup, refreshBilling } from '../../lib/query-refresh';
 interface ProviderStatus {
   configured: boolean;
   public_key?: string;
@@ -54,9 +56,6 @@ export function OnlineBilling({
   admin?: boolean;
   onPaymentUpdated?: () => void;
 }) {
-  const [status, setStatus] = useState<ProviderStatus | null>(null),
-    [error, setError] = useState(''),
-    [revision, setRevision] = useState(0);
   const [choice, setChoice] = useState<'one_time' | 'subscription' | 'cancel_subscription' | null>(
     null,
   );
@@ -66,38 +65,35 @@ export function OnlineBilling({
     [attempted, setAttempted] = useState(false);
   const [formError, setFormError] = useState(''),
     [notice, setNotice] = useState('');
-  const companyScope = useRef(companyId);
-  useEffect(() => {
-    let active = true;
-    if (companyScope.current !== companyId) {
-      companyScope.current = companyId;
-      setStatus(null);
-    }
-    setError('');
-    // A liberação visual não substitui a autorização e a configuração do servidor.
-    if (import.meta.env.VITE_ONLINE_BILLING_ENABLED !== 'true') {
-      const origin = supabaseOrigin(
-        import.meta.env.VITE_SUPABASE_URL?.trim() || DEFAULT_SUPABASE_URL,
-      );
-      setStatus({
-        configured: false,
-        environment: 'test',
-        agreement: null,
-        ...(origin ? { webhook_url: `${origin}/functions/v1/crm-billing-webhook` } : {}),
-      });
-      return;
-    }
-    void invokeBilling(companyId, 'status', uid())
-      .then((value) => {
-        if (active) setStatus(value as ProviderStatus);
-      })
-      .catch((cause) => {
-        if (active) setError((cause as Error).message);
-      });
-    return () => {
-      active = false;
-    };
-  }, [companyId, revision]);
+  const {
+    data: status,
+    error,
+    refresh,
+  } = useLiveQuery<ProviderStatus>(
+    async () => {
+      if (import.meta.env.VITE_ONLINE_BILLING_ENABLED !== 'true') {
+        const origin = supabaseOrigin(
+          import.meta.env.VITE_SUPABASE_URL?.trim() || DEFAULT_SUPABASE_URL,
+        );
+        return {
+          configured: false,
+          environment: 'test',
+          agreement: null,
+          ...(origin
+            ? {
+                webhook_url: `${origin}/functions/v1/crm-billing-webhook${import.meta.env.VITE_BILLING_ENVIRONMENT === 'hom' ? '-hom' : ''}`,
+              }
+            : {}),
+        };
+      }
+      return (await invokeBilling(companyId, 'status', uid())) as ProviderStatus;
+    },
+    [companyId],
+    {
+      group: billingRefreshGroup(companyId),
+      automatic: !choice && import.meta.env.VITE_ONLINE_BILLING_ENABLED === 'true',
+    },
+  );
   function open(value: typeof choice) {
     setChoice(value);
     setOperation(uid());
@@ -120,7 +116,7 @@ export function OnlineBilling({
       if (choice === 'cancel_subscription') {
         setChoice(null);
         setNotice('Assinatura cancelada. O período já pago continua disponível.');
-        setRevision((n) => n + 1);
+        void refreshBilling(companyId);
       } else window.location.assign(checkoutUrl(result.url));
     } catch (cause) {
       setFormError((cause as Error).message);
@@ -148,11 +144,18 @@ export function OnlineBilling({
                 : 'Consultando integração...'}
           </p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => setRevision((n) => n + 1)}>
-          <RefreshCw size={15} /> Atualizar
-        </Button>
+        {admin && (
+          <Button variant="outline" size="sm" onClick={() => void refresh()}>
+            <RefreshCw size={15} /> Atualizar
+          </Button>
+        )}
       </div>
       <FormError message={error} />
+      {error && (
+        <Button variant="outline" onClick={() => void refresh()}>
+          Tentar consulta novamente
+        </Button>
+      )}
       {notice && <p role="status">{notice}</p>}
       {status &&
         (admin ? (
@@ -186,7 +189,7 @@ export function OnlineBilling({
           <>
             {status.environment === 'test' && (
               <p className="billing-alert">
-                Ambiente de testes. Utilize somente contas e meios de pagamento de teste. Pagamentos
+                Ambiente de testes. Utilize somente dados e meios de pagamento de teste. Pagamentos
                 de teste não renovam o acesso nem entram nos totais financeiros.
               </p>
             )}
@@ -261,7 +264,7 @@ export function OnlineBilling({
             pendingId={status.order?.id}
             onBusy={setBusy}
             onUpdated={() => {
-              setRevision((n) => n + 1);
+              void refreshBilling(companyId);
               onPaymentUpdated?.();
             }}
           />

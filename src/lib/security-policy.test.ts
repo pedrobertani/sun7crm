@@ -45,6 +45,25 @@ describe('Política de segurança do build', () => {
     expect(policy).not.toContain('*');
     expect(contentSecurityPolicy()).not.toContain('mercadopago');
   });
+  it('permite o preflight dos campos seguros e o iframe de fallback usados pelo SDK', () => {
+    const directives = Object.fromEntries(
+      contentSecurityPolicy(undefined, true)
+        .split('; ')
+        .map((value) => {
+          const [name, ...sources] = value.split(' ');
+          return [name, sources];
+        }),
+    );
+    for (const host of [
+      'https://secure-fields.mercadopago.com',
+      'https://api-static.mercadopago.com',
+    ]) {
+      expect(directives['connect-src']).toContain(host);
+      expect(directives['frame-src']).toContain(host);
+    }
+    expect(directives['script-src']).not.toContain("'unsafe-inline'");
+    expect(directives['script-src-attr']).toEqual(["'none'"]);
+  });
   it.each([
     'https://example.invalid;script-src',
     'https://*.example.invalid',

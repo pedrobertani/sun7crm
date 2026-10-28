@@ -5,6 +5,48 @@ import { createMercadoPago } from '../functions/_shared/mercado-pago.ts';
 import { orderPaymentInput, orderReference } from '../functions/_shared/mercado-pago-orders.ts';
 import { billingCheckout } from '../functions/crm-billing-checkout/handler.ts';
 import { billingWebhook } from '../functions/crm-billing-webhook/handler.ts';
+import { billingConfiguration } from '../functions/_shared/billing-config.ts';
+
+test('Hom usa segredos exclusivos e nunca aceita a ativação de produção', () => {
+  const values = {
+    MP_ACCESS_TOKEN: 'production-fixture',
+    MP_WEBHOOK_SECRET: 'production-secret',
+    MP_PUBLIC_KEY: 'production-public',
+    MP_ENVIRONMENT: 'production',
+    MP_PRODUCTION_ENABLED: 'true',
+    MP_PAYMENTS_ENABLED: 'true',
+    MP_HOM_ACCESS_TOKEN: 'test-fixture',
+    MP_HOM_WEBHOOK_SECRET: 'test-secret',
+    MP_HOM_PUBLIC_KEY: 'test-public',
+    MP_HOM_COLLECTOR_ID: '123',
+    MP_HOM_APPLICATION_ID: '456',
+    MP_HOM_PAYMENTS_ENABLED: 'true',
+    MP_HOM_ENVIRONMENT: 'production',
+    MP_HOM_PRODUCTION_ENABLED: 'true',
+    SUPABASE_URL: 'https://fixture.supabase.co',
+  };
+  const config = billingConfiguration((name) => values[name], 'hom');
+  assert.equal(config.environment, 'test');
+  assert.equal(config.productionEnabled, false);
+  assert.equal(config.accessToken, 'test-fixture');
+  assert.equal(config.webhookSecret, 'test-secret');
+  assert.equal(config.publicKey, 'test-public');
+  assert.equal(config.collectorId, '123');
+  assert.equal(config.applicationId, '456');
+  assert.equal(config.returnUrl, 'https://hom.sun7crm.pages.dev/app/plano');
+  assert.equal(
+    config.webhookUrl,
+    'https://fixture.supabase.co/functions/v1/crm-billing-webhook-hom',
+  );
+  delete values.MP_HOM_ACCESS_TOKEN;
+  const missing = billingConfiguration((name) => values[name], 'hom');
+  assert.equal(missing.accessToken, '');
+  assert.equal(createMercadoPago(missing).configured, false);
+  const main = billingConfiguration((name) => values[name]);
+  assert.equal(main.environment, 'production');
+  assert.equal(main.accessToken, 'production-fixture');
+  assert.equal(main.webhookUrl, 'https://fixture.supabase.co/functions/v1/crm-billing-webhook');
+});
 const id = '00000000-0000-4000-8000-000000000001';
 const orderId = 'ORD' + '0'.repeat(26),
   paymentId = 'PAY' + '1'.repeat(26);
@@ -70,6 +112,7 @@ test('Orders: preço é do servidor, referência aceita pela API e chave idempot
   assert.equal(body.total_amount, '189.90');
   assert.equal(body.transactions.payments[0].amount, '189.90');
   assert.equal(body.transactions.payments[0].payment_method.id, 'pix');
+  assert.equal(body.payer.first_name, 'APRO');
   assert.equal(body.external_reference, `sun7-order-${id}`);
   assert.equal(body.external_reference.includes(':'), false);
   assert.equal(calls[0][1].headers['X-Idempotency-Key'], id);
@@ -94,6 +137,59 @@ test('Orders: resposta aprovada exige recebedor, aplicação, moeda, valor e amb
       Response.json({ ...paidOrder, ...change }),
     );
     await assert.rejects(provider.order(orderId), (e) => e.code === 'PAYMENT_MISMATCH');
+  }
+});
+test('Orders: IDs ORDTST e PAYTST do sandbox podem ser criados e recuperados', async () => {
+  const sandbox = {
+    ...paidOrder,
+    id: 'ORDTST' + '0'.repeat(26),
+    transactions: {
+      payments: [{ ...paidOrder.transactions.payments[0], id: 'PAYTST' + '1'.repeat(26) }],
+    },
+  };
+  const calls = [];
+  const provider = createMercadoPago(config, async (url, init) => {
+    calls.push([String(url), init.method]);
+    return String(url).includes('?') ? Response.json({ data: [sandbox] }) : Response.json(sandbox);
+  });
+  const created = await provider.createOrder(id, 18990, {
+    method: 'pix',
+    email: 'buyer@example.invalid',
+  });
+  assert.equal(created.id, sandbox.id);
+  assert.equal(created.paymentId, sandbox.transactions.payments[0].id);
+  const recovered = await provider.findOrder(id, '2026-10-27T12:00:00Z');
+  assert.equal(recovered.id, created.id);
+  assert.equal(calls.filter(([, method]) => method === 'POST').length, 1);
+});
+test('Orders: o dado APRO para simulação do Pix nunca é enviado em produção', async () => {
+  let sent;
+  const provider = createMercadoPago(
+    { ...config, environment: 'production', productionEnabled: true },
+    async (_, init) => {
+      if (init.body) sent = JSON.parse(init.body);
+      return Response.json({ ...paidOrder, live_mode: true });
+    },
+  );
+  await provider.createOrder(id, 18990, { method: 'pix', email: 'buyer@example.invalid' });
+  assert.equal(sent.payer.first_name, undefined);
+});
+test('Orders: prefixos de sandbox são recusados em produção mesmo sem live_mode', async () => {
+  for (const [oid, pid] of [
+    ['ORDTST' + '0'.repeat(26), paymentId],
+    [orderId, 'PAYTST' + '1'.repeat(26)],
+  ]) {
+    const provider = createMercadoPago(
+      { ...config, environment: 'production', productionEnabled: true },
+      async () =>
+        Response.json({
+          ...paidOrder,
+          id: oid,
+          live_mode: undefined,
+          transactions: { payments: [{ ...paidOrder.transactions.payments[0], id: pid }] },
+        }),
+    );
+    await assert.rejects(provider.order(oid), (error) => error.code === 'PAYMENT_MISMATCH');
   }
 });
 test('Orders: autorização sem crédito e processamento assíncrono não aprovam o recebimento', async () => {
@@ -174,6 +270,7 @@ test('Orders: cartão envia somente token e documento, com uma parcela determina
   );
   assert.equal(sent.transactions.payments[0].payment_method.installments, 1);
   assert.equal(sent.transactions.payments[0].payment_method.token, 'fixture-token');
+  assert.equal(sent.payer.first_name, undefined);
   assert.equal('card_number' in sent, false);
 });
 test('Orders: mesma tentativa e outra solicitação enquanto pendente recuperam sem criar nova order', async () => {
@@ -244,6 +341,52 @@ test('Orders: somente rejeição definitiva libera a tentativa; timeout continua
     assert.equal(calls.includes('crm_edge_reject_order_input'), rejects);
   }
 });
+for (const [httpStatus, expectedCode] of [
+  [401, 'PROVIDER_CREDENTIALS'],
+  [403, 'PROVIDER_FORBIDDEN'],
+]) {
+  test(`Orders: HTTP ${httpStatus} tem diagnóstico seguro e recuperação sem nova cobrança`, async () => {
+    const methods = [],
+      commands = [];
+    const provider = createMercadoPago(config, async (_, init) => {
+      methods.push(init.method);
+      return new Response('private-provider-payload', { status: httpStatus });
+    });
+    const attempt = { id, status: 'creating', created_at: '2026-10-27T12:00:00Z' };
+    const db = actor(async (name) => {
+      commands.push(name);
+      if (name === 'crm_edge_billing_context') return { is_admin: false };
+      if (name === 'crm_edge_prepare_order') return { created: true, amount_cents: 18990, attempt };
+      if (name === 'crm_edge_order_context') return { amount_cents: 18990, attempt };
+      throw new Error('Não deve confirmar nem liberar a tentativa.');
+    });
+    const checkout = billingCheckout(provider);
+    const denied = (error) => {
+      assert.equal(error.code, expectedCode);
+      assert.equal(error.status, 502);
+      assert.equal(error.message.includes('private-provider-payload'), false);
+      assert.equal(error.message.includes(config.accessToken), false);
+      return true;
+    };
+    await assert.rejects(
+      checkout({
+        ...context({
+          action: 'create_order',
+          payment: { method: 'pix', email: 'buyer@example.invalid' },
+        }),
+        backend: db,
+      }),
+      denied,
+    );
+    await assert.rejects(
+      checkout({ ...context({ action: 'order_status', attempt_id: id }), backend: db }),
+      denied,
+    );
+    assert.deepEqual(methods, ['POST', 'GET']);
+    assert.equal(commands.includes('crm_edge_reject_order_input'), false);
+    assert.equal(commands.includes('crm_edge_record_order'), false);
+  });
+}
 test('Orders: webhook verifica HMAC e consulta API, ignorando aprovação e valor enviados no corpo', async () => {
   const ts = '1793110000',
     requestId = 'fixture-request';
