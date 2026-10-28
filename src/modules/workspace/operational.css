@@ -497,3 +497,6 @@
     max-width: 100%;
   }
 }
+
+.page:has(.dashboard-tabs) .operational-dashboard-grid{gap:14px}
+.page:has(.dashboard-tabs) .operational-dashboard-grid>.panel{min-width:0}
