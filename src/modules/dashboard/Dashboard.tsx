@@ -48,6 +48,7 @@ function ChartEmpty() {
 export function CompanyDashboard() {
   const { data, session } = useCrm();
   const [days, setDays] = useState('30');
+  const [dashboardTab, setDashboardTab] = useState<'overview'|'commercial'|'achievements'>('overview');
   const date = today();
   const from = shiftDate(date, -Number(days) + 1);
   const company = data.companies.find((c) => c.id === session.companyId)!;
@@ -109,6 +110,10 @@ export function CompanyDashboard() {
           <option value="90">Últimos 90 dias</option>
         </select>
       </Heading>
+      <div className="dashboard-tabs" role="tablist" aria-label="Áreas do dashboard">
+        {([['overview','Visão geral'],['commercial','Comercial'],['achievements','Conquistas']] as const).filter(([key])=>key!=='achievements'||session.role==='manager'||(data.members.find(m=>m.id===session.memberId)?.permissions||legacyPermissions(session.role)).keys.includes('goals.view')).map(([key,label])=><button key={key} type="button" role="tab" aria-selected={dashboardTab===key} className={dashboardTab===key?'active':''} onClick={()=>setDashboardTab(key)}>{label}</button>)}
+      </div>
+      {dashboardTab==='overview'&&<>
       <div className="kpis">
         <Kpi
           label="Novos contatos"
@@ -141,7 +146,10 @@ export function CompanyDashboard() {
           icon={<ListTodo size={19} />}
         />
       </div>
-      {(session.role==='manager'||(data.members.find(m=>m.id===session.memberId)?.permissions||legacyPermissions(session.role)).keys.includes('goals.view'))&&<DemoGoalFunnel />}
+      </>}
+      {dashboardTab==='commercial'&&<>
+      {(session.role==='manager'||(data.members.find(m=>m.id===session.memberId)?.permissions||legacyPermissions(session.role)).keys.includes('goals.view'))&&<DemoGoalFunnel view="commercial" />}
+      
       <div className="dashboard-grid">
         <Panel
           title="Novos contatos ao longo do tempo"
@@ -300,7 +308,9 @@ export function CompanyDashboard() {
           )}
         </Panel>
       </div>
-      <div className="insight-strip">
+      </>}
+      {dashboardTab==='achievements'&&(session.role==='manager'||(data.members.find(m=>m.id===session.memberId)?.permissions||legacyPermissions(session.role)).keys.includes('goals.view'))&&<DemoGoalFunnel view="medals" />}
+            {dashboardTab==='overview'&&<div className="insight-strip">
         <CheckCircle2 size={20} />
         <p>
           <strong>Um próximo passo para cada conversa.</strong>
@@ -312,7 +322,7 @@ export function CompanyDashboard() {
             <ArrowUpRight size={14} />
           </Link>
         </Button>
-      </div>
+      </div>}
     </>
   );
 }
