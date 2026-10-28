@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Bell } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '../../components/ui/button';
 import { Modal } from '../../components/ui/modal';
 import { getSupabaseClient } from '../../lib/supabase';
 import './notifications.css';
+import { useLiveQuery } from '../../hooks/useLiveQuery';
 
 export interface Notification {
   id: string;
@@ -52,18 +53,22 @@ export function NotificationBell({
   onRecheck: () => void;
 }) {
   const [open, setOpen] = useState(false);
-  const [items, setItems] = useState<Notification[]>([]);
-  const [count, setCount] = useState<number | null>(null);
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [actionError, setError] = useState('');
   const [marking, setMarking] = useState(false);
-  const alive = useRef(false),
-    inFlight = useRef(false);
-  const refresh = useCallback(async () => {
-    if (inFlight.current) return;
-    inFlight.current = true;
-    if (alive.current) setLoading(true);
-    try {
+  const alive = useRef(true);
+  useEffect(() => {
+    alive.current = true;
+    return () => {
+      alive.current = false;
+    };
+  }, []);
+  const {
+    data,
+    error: queryError,
+    loading,
+    refresh,
+  } = useLiveQuery(
+    async (signal) => {
       const client = getSupabaseClient();
       let list = client
         .from('crm_notifications')
@@ -87,41 +92,20 @@ export function NotificationBell({
       const [rows, total] = await Promise.all([list, unread]);
       const failure = rows.error || total.error;
       if (failure && ['42501', 'PGRST301', 'PGRST302'].includes(failure.code)) {
-        onRecheck();
-        return;
+        if (!signal.aborted) onRecheck();
+        throw Error('Seu acesso precisa ser verificado novamente.');
       }
       if (rows.error || total.error || total.count === null)
         throw rows.error || total.error || Error('Contagem indisponível');
-      if (alive.current) {
-        setItems(rows.data as Notification[]);
-        setCount(total.count);
-        setError('');
-      }
-    } catch {
-      if (alive.current)
-        setError('Não foi possível consultar os avisos. Tentaremos novamente automaticamente.');
-    } finally {
-      inFlight.current = false;
-      if (alive.current) setLoading(false);
-    }
-  }, [userId, companyId, onRecheck]);
 
-  useEffect(() => {
-    alive.current = true;
-    void refresh();
-    const focusedRefresh = () => {
-      if (document.visibilityState === 'visible') void refresh();
-    };
-    const timer = window.setInterval(focusedRefresh, 60_000);
-    window.addEventListener('focus', focusedRefresh);
-    document.addEventListener('visibilitychange', focusedRefresh);
-    return () => {
-      alive.current = false;
-      window.clearInterval(timer);
-      window.removeEventListener('focus', focusedRefresh);
-      document.removeEventListener('visibilitychange', focusedRefresh);
-    };
-  }, [refresh]);
+      return { items: rows.data as Notification[], count: total.count };
+    },
+    [userId, companyId],
+    { group: `notifications:${userId}` },
+  );
+  const items = data?.items || [];
+  const count = data?.count ?? null;
+  const error = queryError || actionError;
 
   async function markRead(ids: string[]) {
     if (!ids.length || marking) return;
@@ -167,7 +151,7 @@ export function NotificationBell({
       >
         <div className="notification-toolbar">
           <p className="small-note" role="status" aria-live="polite">
-            {loading ? 'Consultando avisos…' : 'Atualização automática a cada minuto.'}
+            {loading ? 'Consultando avisos…' : 'Seus avisos são atualizados automaticamente.'}
           </p>
           {!!unreadShown.length && (
             <Button

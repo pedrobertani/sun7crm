@@ -3,16 +3,15 @@ import { type EmployeePermissions } from '../permissions/model';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Plus, Users, ListTodo, KanbanSquare, Wallet, History, Clock3 } from 'lucide-react';
-import { Bar, BarChart, CartesianGrid, ResponsiveContainer, XAxis, YAxis } from 'recharts';
+import { ContactIntakeChart } from '../dashboard/ContactIntakeChart';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Modal } from '../../components/ui/modal';
 import { Empty, Kpi, Panel } from '../../components/shared';
 import { RecordTitle } from '../../components/RecordTitle';
 import type { TeamRow, CardActivity } from '../../data/backend';
-import { currency, dateLabel, today, uid } from '../../lib/format';
+import { currency, today, uid } from '../../lib/format';
 import { CRM_THEMES } from '../../lib/themes';
-import { ThemeTooltip } from '../../components/ThemeTooltip';
 import { ThemePreview } from '../../components/ThemePreview';
 import { RealContactHistory } from '../contacts/RealContactHistory';
 import { RealActivityReport } from '../reports/RealActivityReport';
@@ -81,45 +80,7 @@ export function RealDashboard() {
             />
           </div>
           <div className="operational-dashboard-grid">
-            <Panel
-              title="Entrada de contatos"
-              description="Cadastros por dia no período selecionado"
-            >
-              {query.data.metrics.contacts_by_day.length ? (
-                <div className="operational-chart">
-                  <ResponsiveContainer width="100%" height={260}>
-                    <BarChart data={query.data.metrics.contacts_by_day}>
-                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--line)" />
-                      <XAxis
-                        dataKey="day"
-                        tick={{ fill: 'var(--muted)' }}
-                        axisLine={{ stroke: 'var(--line)' }}
-                        tickLine={{ stroke: 'var(--line)' }}
-                        tickFormatter={(v) => String(v).slice(5).split('-').reverse().join('/')}
-                      />
-                      <YAxis
-                        allowDecimals={false}
-                        tick={{ fill: 'var(--muted)' }}
-                        axisLine={{ stroke: 'var(--line)' }}
-                        tickLine={{ stroke: 'var(--line)' }}
-                      />
-                      <ThemeTooltip labelFormatter={(v) => dateLabel(String(v))} />
-                      <Bar
-                        name="Contatos"
-                        dataKey="count"
-                        fill="var(--primary)"
-                        radius={[5, 5, 0, 0]}
-                      />
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              ) : (
-                <Empty
-                  title="Sem cadastros no período"
-                  description="Os novos contatos aparecerão aqui."
-                />
-              )}
-            </Panel>
+            <ContactIntakeChart data={query.data.metrics.contacts_by_day} />
             <Panel title="Cards por etapa" description="Distribuição atual dos cards abertos">
               {query.data.metrics.cards_by_stage.length ? (
                 <div className="operational-summary-list">
@@ -675,7 +636,7 @@ function ResetMember({
 }
 export function RealSettings({ onCompanyChanged }: { onCompanyChanged: () => void }) {
   const { api } = useOperational(),
-    query = useQuery(() => api.company(), [api]);
+    query = useQuery(() => api.company(), [api], { live: false });
   return (
     <>
       <QueryState query={query} />
@@ -708,6 +669,7 @@ function BrandForm({
   const image = useQuery(
     async () => (row.logo_path ? api.downloadLogo(row.logo_path) : null),
     [api, row.logo_path],
+    { live: false },
   );
   useEffect(() => {
     if (!image.data) return;

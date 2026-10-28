@@ -1,6 +1,6 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
-import { CircleCheck, Clock3, TriangleAlert, ReceiptText, RefreshCw } from 'lucide-react';
+import { CircleCheck, Clock3, TriangleAlert, ReceiptText } from 'lucide-react';
 import { Empty, FormError, Kpi } from '../../components/shared';
 import { RecordTitle } from '../../components/RecordTitle';
 import { Button } from '../../components/ui/button';
@@ -32,14 +32,14 @@ export function BillingHistory({
   revision = 0,
   onChanged,
   demoData,
-  showRefresh = true,
+  active = true,
 }: {
   companyId?: string;
   admin?: boolean;
   revision?: number;
   onChanged?: () => void;
   demoData?: ChargeHistory;
-  showRefresh?: boolean;
+  active?: boolean;
 }) {
   const [filters, setFilters] = useState(defaultHistoryFilters);
   const [draftQuery, setDraftQuery] = useState('');
@@ -102,7 +102,7 @@ export function BillingHistory({
     {
       group: billingRefreshGroup(companyId),
       enabled: validHistoryDates(filters.from, filters.to),
-      automatic: !demoData,
+      automatic: active && !demoData,
     },
   );
   useEffect(() => {
@@ -166,11 +166,6 @@ export function BillingHistory({
             {companyId ? ' da empresa' : ' de todas as empresas'}.
           </p>
         </div>
-        {showRefresh && (
-          <Button variant="outline" onClick={() => void refresh()}>
-            <RefreshCw size={16} /> Atualizar cobranças
-          </Button>
-        )}
       </div>
       <div className="card billing-filters">
         {!companyId && (
@@ -243,7 +238,12 @@ export function BillingHistory({
         </p>
       )}
       {error ? (
-        <FormError message={error} />
+        <div role="alert">
+          <FormError message={error} />
+          <Button variant="outline" onClick={() => void refresh()}>
+            Tentar consulta novamente
+          </Button>
+        </div>
       ) : (
         !invalidDates &&
         (!history ? (

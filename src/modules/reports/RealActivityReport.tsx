@@ -1,5 +1,5 @@
-import { useOperational } from '../workspace/operational';
-import { useEffect, useState } from 'react';
+import { useQuery, useOperational } from '../workspace/operational';
+import { useState } from 'react';
 import { getSupabaseClient } from '../../lib/supabase';
 import { Button } from '../../components/ui/button';
 import { ActivityReportView } from './ActivityReport';
@@ -9,87 +9,72 @@ import type { ActivityRow, ActorActivity } from './activity';
 
 export function RealActivityReport({ companyId }: { companyId: string }) {
   const { can } = useOperational();
-  const [rows, setRows] = useState<ActivityRow[] | null>(null),
-    [actors, setActors] = useState<ActorActivity[]>([]),
-    [error, setError] = useState(''),
-    [refresh, setRefresh] = useState(0),
-    [selected, setSelected] = useState<ActivityRow | null>(null);
-  useEffect(() => {
-    let active = true;
-    setError('');
-    async function load() {
-      try {
-        const contacts: ActivityRow[] = [];
-        for (let offset = 0; ; offset += 500) {
-          const r = await getSupabaseClient()
-            .from('crm_contact_activity_report')
-            .select('*')
-            .eq('company_id', companyId)
-            .order('contact_id')
-            .range(offset, offset + 499);
-          if (r.error) throw r.error;
-          contacts.push(
-            ...(r.data || []).map((e) => ({
-              contactId: e.contact_id,
-              name: e.name,
-              phone: e.phone,
-              ownerId: e.owner_membership_id,
-              ownerName: e.owner_name,
-              createdAt: e.created_at,
-              lastActivityAt: e.last_activity_at,
-              lastWhatsappAt: e.last_whatsapp_at,
-              lastMovementAt: e.last_movement_at,
-              whatsappCount: e.whatsapp_count,
-              movementCount: e.movement_count,
-              noteCount: e.note_count,
-            })),
-          );
-          if ((r.data || []).length < 500) break;
-          if (offset >= 49500) throw Error('Limite de relatório excedido');
-        }
-        const members: ActorActivity[] = [];
-        for (let offset = 0; ; offset += 500) {
-          const r = await getSupabaseClient()
-            .from('crm_team_activity_report')
-            .select('*')
-            .eq('company_id', companyId)
-            .order('actor_id')
-            .range(offset, offset + 499);
-          if (r.error) throw r.error;
-          members.push(
-            ...(r.data || []).map((e) => ({
-              id: e.actor_id,
-              name: e.actor_name,
-              total: e.total,
-              whatsappCount: e.whatsapp_count,
-              movementCount: e.movement_count,
-              noteCount: e.note_count,
-              contactsCount: e.contacts_count,
-              lastActivityAt: e.last_activity_at,
-            })),
-          );
-          if ((r.data || []).length < 500) break;
-          if (offset >= 49500) throw Error('Limite de relatório excedido');
-        }
-        if (active) {
-          setRows(contacts);
-          setActors(members.sort((a, b) => b.total - a.total));
-        }
-      } catch {
-        if (active) setError('Não foi possível carregar o relatório completo. Tente novamente.');
-      }
+  const [selected, setSelected] = useState<ActivityRow | null>(null);
+  const [actionError, setError] = useState('');
+  const query = useQuery(async () => {
+    const contacts: ActivityRow[] = [];
+    for (let offset = 0; ; offset += 500) {
+      const r = await getSupabaseClient()
+        .from('crm_contact_activity_report')
+        .select('*')
+        .eq('company_id', companyId)
+        .order('contact_id')
+        .range(offset, offset + 499);
+      if (r.error) throw r.error;
+      contacts.push(
+        ...(r.data || []).map((e) => ({
+          contactId: e.contact_id,
+          name: e.name,
+          phone: e.phone,
+          ownerId: e.owner_membership_id,
+          ownerName: e.owner_name,
+          createdAt: e.created_at,
+          lastActivityAt: e.last_activity_at,
+          lastWhatsappAt: e.last_whatsapp_at,
+          lastMovementAt: e.last_movement_at,
+          whatsappCount: e.whatsapp_count,
+          movementCount: e.movement_count,
+          noteCount: e.note_count,
+        })),
+      );
+      if ((r.data || []).length < 500) break;
+      if (offset >= 49500) throw Error('Limite de relatório excedido');
     }
-    void load();
-    return () => {
-      active = false;
-    };
-  }, [companyId, refresh]);
+    const members: ActorActivity[] = [];
+    for (let offset = 0; ; offset += 500) {
+      const r = await getSupabaseClient()
+        .from('crm_team_activity_report')
+        .select('*')
+        .eq('company_id', companyId)
+        .order('actor_id')
+        .range(offset, offset + 499);
+      if (r.error) throw r.error;
+      members.push(
+        ...(r.data || []).map((e) => ({
+          id: e.actor_id,
+          name: e.actor_name,
+          total: e.total,
+          whatsappCount: e.whatsapp_count,
+          movementCount: e.movement_count,
+          noteCount: e.note_count,
+          contactsCount: e.contacts_count,
+          lastActivityAt: e.last_activity_at,
+        })),
+      );
+      if ((r.data || []).length < 500) break;
+      if (offset >= 49500) throw Error('Limite de relatório excedido');
+    }
+    return { rows: contacts, actors: members.sort((a, b) => b.total - a.total) };
+  }, [companyId]);
+  const rows = query.data?.rows;
+  const actors = query.data?.actors || [];
+  const error = query.error || actionError;
   return (
     <>
       {error ? (
         <div className="card history-empty">
           <p role="alert">{error}</p>
-          <Button variant="outline" onClick={() => setRefresh((n) => n + 1)}>
+          <Button variant="outline" onClick={() => query.retry()}>
             Tentar novamente
           </Button>
         </div>
@@ -101,7 +86,7 @@ export function RealActivityReport({ companyId }: { companyId: string }) {
           onHistory={setSelected}
           onWhatsapp={(r) => {
             void recordRealWhatsapp(getSupabaseClient(), companyId, r.contactId)
-              .then(() => setRefresh((n) => n + 1))
+              .then(() => query.retry())
               .catch((e) => setError(e.message));
           }}
         />
@@ -117,7 +102,7 @@ export function RealActivityReport({ companyId }: { companyId: string }) {
           canWhatsapp={can('history.whatsapp')}
           onClose={() => {
             setSelected(null);
-            setRefresh((n) => n + 1);
+            query.retry();
           }}
         />
       )}

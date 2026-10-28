@@ -14,6 +14,7 @@ import { Button } from '../../components/ui/button';
 import { FormError } from '../../components/shared';
 import { legacyPermissions, type EmployeePermissions } from '../permissions/model';
 import type { AccountUser } from '../auth/access';
+import { useLiveQuery } from '../../hooks/useLiveQuery';
 
 export interface OperationalCompany {
   id: string;
@@ -23,6 +24,7 @@ export interface OperationalCompany {
   permissions?: EmployeePermissions;
 }
 interface Context {
+  page: string;
   can: (key: string) => boolean;
   companyScope: boolean;
   api: OperationalBackend;
@@ -40,12 +42,14 @@ export function OperationalProvider({
   onRecheck,
   children,
   backend,
+  page = 'all',
 }: {
   company: OperationalCompany;
   user: AccountUser;
   onRecheck: () => void;
   children: ReactNode;
   backend?: OperationalBackend;
+  page?: string;
 }) {
   const api = useMemo(
     () => backend || new OperationalBackend(getSupabaseClient(), company.id),
@@ -61,6 +65,7 @@ export function OperationalProvider({
   return (
     <OperationalContext.Provider
       value={{
+        page,
         can: (key) => (company.permissions || legacyPermissions(company.role)).keys.includes(key),
         companyScope: (company.permissions || legacyPermissions(company.role)).scope === 'company',
         api,
@@ -89,40 +94,32 @@ export function useOperational() {
   if (!value) throw Error('Área operacional indisponível.');
   return value;
 }
-export function useQuery<T>(load: () => Promise<T>, deps: DependencyList = []) {
-  const { revision, recheck } = useOperational();
-  const factory = useRef(load);
-  factory.current = load;
-  const recheckRef = useRef(recheck);
-  recheckRef.current = recheck;
-  const [data, setData] = useState<T | null>(null),
-    [loading, setLoading] = useState(true),
-    [error, setError] = useState(''),
-    [retry, setRetry] = useState(0);
-  useEffect(() => {
-    let active = true;
-    setLoading(true);
-    setError('');
-    setData(null);
-    void factory
-      .current()
-      .then((result) => {
-        if (active) setData(result);
-      })
-      .catch((e) => {
-        if (active) {
-          setError(errorMessage(e));
-          if (e instanceof BackendError && e.kind === 'access') recheckRef.current();
-        }
-      })
-      .finally(() => {
-        if (active) setLoading(false);
-      });
-    return () => {
-      active = false;
-    };
-  }, [revision, retry, ...deps]);
-  return { data, loading, error, retry: () => setRetry((n) => n + 1) };
+export function useQuery<T>(
+  load: () => Promise<T>,
+  deps: DependencyList = [],
+  { live = true }: { live?: boolean } = {},
+) {
+  const { revision, recheck, company, page } = useOperational();
+  const query = useLiveQuery(
+    async (signal) => {
+      try {
+        return await load();
+      } catch (cause) {
+        if (!signal.aborted && cause instanceof BackendError && cause.kind === 'access') recheck();
+        throw new Error(errorMessage(cause));
+      }
+    },
+    [revision, ...deps],
+    {
+      group: live ? `workspace:${company.id}:${page}` : `static:${company.id}`,
+      automatic: () => live && !document.querySelector('[role="dialog"]'),
+    },
+  );
+  return {
+    ...query,
+    loading: query.loading && query.data === null,
+    retry: () => void query.refresh(),
+  };
 }
 export function errorMessage(e: unknown) {
   return e instanceof BackendError

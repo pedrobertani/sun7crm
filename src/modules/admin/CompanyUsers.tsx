@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 import { Users, ShieldCheck, UserRound, UserRoundX } from 'lucide-react';
 import { Kpi } from '../../components/shared';
 import { Button } from '../../components/ui/button';
@@ -7,6 +7,7 @@ import { Modal } from '../../components/ui/modal';
 import { getSupabaseClient } from '../../lib/supabase';
 import { uid } from '../../lib/format';
 import { AccessChangedError } from '../auth/access';
+import { useLiveQuery } from '../../hooks/useLiveQuery';
 import {
   AdminCommandError,
   loadAdminCompanyUsers,
@@ -25,34 +26,30 @@ export function CompanyUsers({
   onRecheck: () => void;
   onNotice: (message: string) => void;
 }) {
-  const [rows, setRows] = useState<AdminCompanyUser[] | null>(null);
-  const [error, setError] = useState('');
-  const [revision, setRevision] = useState(0);
   const [target, setTarget] = useState<AdminCompanyUser | null>(null);
-  useEffect(() => {
-    let active = true;
-    setRows(null);
-    setError('');
-    void loadAdminCompanyUsers(getSupabaseClient(), userId, companyId)
-      .then((data) => {
-        if (active) setRows(data);
-      })
-      .catch((err) => {
-        if (!active) return;
-        if (err instanceof AccessChangedError) onRecheck();
-        setError('Não foi possível carregar os usuários desta empresa.');
-      });
-    return () => {
-      active = false;
-    };
-  }, [companyId, userId, revision, onRecheck]);
+  const {
+    data: rows,
+    error,
+    refresh,
+  } = useLiveQuery(
+    async (signal) => {
+      try {
+        return await loadAdminCompanyUsers(getSupabaseClient(), userId, companyId);
+      } catch (cause) {
+        if (!signal.aborted && cause instanceof AccessChangedError) onRecheck();
+        throw new Error('Não foi possível carregar os usuários desta empresa.');
+      }
+    },
+    [companyId, userId],
+    { group: 'admin:company-users', automatic: () => !target },
+  );
   return (
     <section className="admin-company-users" aria-label="Usuários da empresa">
       <h3>Usuários da empresa</h3>
       {error && (
         <div role="alert">
           <p>{error}</p>
-          <Button variant="outline" onClick={() => setRevision((v) => v + 1)}>
+          <Button variant="outline" onClick={() => void refresh()}>
             Tentar novamente
           </Button>
         </div>
@@ -69,7 +66,7 @@ export function CompanyUsers({
           onClose={() => setTarget(null)}
           onSaved={() => {
             setTarget(null);
-            setRevision((v) => v + 1);
+            void refresh();
             onNotice(
               'Senha temporária redefinida. O usuário deverá definir uma nova senha pessoal ao entrar.',
             );

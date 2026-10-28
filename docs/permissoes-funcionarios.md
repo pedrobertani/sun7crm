@@ -19,7 +19,7 @@ A demo apresenta todas as funcionalidades com dados fictícios e permite experim
 - Contas novas de funcionários são provisionadas atomicamente com acesso vazio. O frontend salva as permissões após a provisão; se essa segunda etapa falhar, a conta continua sem acesso. O mesmo identificador de solicitação evita uma segunda conta na repetição.
 - Administradores delegados concedem somente as ações e o alcance que possuem. Não alteram o próprio acesso, o gestor principal ou um administrador da plataforma. Não redefinem a senha de um funcionário com permissões superiores nem alteram perfis legados para ampliar acesso.
 - Mudanças são versionadas e registradas em auditoria privada com autor, horário, valores anteriores e seguintes. Não há senhas no registro.
-- Notificações usam as permissões atuais na geração e na leitura. A remoção de um módulo corta a leitura dos seus avisos imediatamente; o cron reconcilia os registros no próximo minuto.
+- Notificações usam as permissões atuais na geração e na leitura. A remoção de um módulo corta a leitura dos seus avisos imediatamente; o cron reconcilia os registros em até 15 minutos.
 - Consultas de plano continuam possíveis durante o bloqueio para quem tem permissão financeira; os demais módulos seguem a suspensão da assinatura.
 
 ## Ações especiais
@@ -35,3 +35,4 @@ O catálogo oferece somente ações existentes: recursos sem exclusão implement
 Testes de banco cobrem isolamento, leitura/escrita direta, RPCs, criar sem editar, retirada imediata de acesso, delegação, versão concorrente, etapas e exclusão com histórico. Testes do frontend verificam seleção por grupo e dependências. A interface foi conferida em larguras de 320 e 390 pixels, além do desktop, com fixtures locais que bloqueiam a rede.
 
 A homologação com contas reais de gestor e funcionários continua sendo uma etapa separada. Não foram criadas contas, empresas, aceites legais ou dados pessoais remotos para testar a funcionalidade. MFA, e-mail e API de pagamentos continuam no escopo das etapas já previstas.
+
