@@ -9,7 +9,7 @@ import {Input} from '../../components/ui/input';
 import {CurrencyInput} from '../../components/currency-input';
 import {Modal} from '../../components/ui/modal';
 import type {DemoGoalPlan,DemoEmployeeGoal} from '../../domain/types';
-import {buildGoalFunnel,medalUnlocked,validateGoalConfig,numberInputToCents,starterStages,starterMedals} from './model';
+import {buildGoalFunnel,medalUnlocked,medalIcons,medalSymbol,validateGoalConfig,numberInputToCents,starterStages,starterMedals} from './model';
 import type {GoalStep,GoalMedal} from './model';
 import './goals.css';
 
@@ -66,7 +66,7 @@ export function DemoGoalFunnel(){
               {plan.medals.map((medal,i)=>{
                 const earned=medalUnlocked(medal,progress(m.id));
                 return <div className={'goal-medal'+(earned?' earned':'')} key={i}>
-                  {earned?<Award size={22}/>:<LockKeyhole size={22}/>}
+                  <span className="goal-medal-icon" aria-hidden="true">{medalSymbol(medal)}</span>{!earned&&<LockKeyhole size={15} aria-label="Bloqueada"/>}
                   <strong>{medal.label}</strong>
                   <small>{earned?'Desbloqueada':medal.kind==='sales'?medal.threshold+' venda(s)':medal.threshold+'% da meta'}</small>
                 </div>;
@@ -138,12 +138,12 @@ function DemoGoalSettings({month,plan,members,individual,onClose,onSave}:{
     {tab==='medals'&&<div className="goal-edit-list">
       <p className="small-note">Critérios são calculados automaticamente a partir das vendas confirmadas no Kanban.</p>
       {medals.map((m,i)=><div className="goal-edit-step" key={i}>
-        <label className="form-row">Medalha<Input value={m.label} maxLength={60} onChange={e=>changeMedal(i,{label:e.target.value})}/></label>
+        <label className="form-row">Medalha<Input value={m.label} maxLength={60} onChange={e=>changeMedal(i,{label:e.target.value})}/></label><label className="form-row">Ícone<select aria-label={'Ícone de '+m.label} value={m.icon||'trophy'} onChange={e=>changeMedal(i,{icon:e.target.value as keyof typeof medalIcons})}>{Object.entries(medalIcons).map(([key,emoji])=><option key={key} value={key}>{emoji} {key}</option>)}</select></label>
         <label className="form-row">Regra<select value={m.kind} onChange={e=>changeMedal(i,{kind:e.target.value as GoalMedal['kind']})}><option value="sales">Vendas</option><option value="percent">% da meta</option></select></label>
         <label className="form-row">Limite<Input type="number" min="1" max="1000" value={m.threshold} onChange={e=>changeMedal(i,{threshold:Number(e.target.value)})}/></label>
         <Button type="button" variant="ghost" onClick={()=>setMedals(x=>x.filter((_,j)=>j!==i))}>Remover</Button>
       </div>)}
-      {medals.length<8&&<Button type="button" variant="outline" onClick={()=>setMedals(x=>[...x,{label:'Nova medalha',kind:'percent',threshold:100}])}>Adicionar medalha</Button>}
+      {medals.length<8&&<Button type="button" variant="outline" onClick={()=>setMedals(x=>[...x,{label:'Nova medalha',kind:'percent',threshold:100,icon:'trophy'}])}>Adicionar medalha</Button>}
     </div>}
     {tab==='employees'&&<div className="goal-edit-list">
       <p className="small-note">O gestor configura somente as metas; as vendas são confirmadas nos cards.</p>
