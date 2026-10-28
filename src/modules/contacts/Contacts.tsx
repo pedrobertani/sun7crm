@@ -1,3 +1,4 @@
+import { Eye } from 'lucide-react';
 import { recordWhatsappOpen } from '../../domain/contact-history';
 import { WhatsAppButton } from '../../components/WhatsAppButton';
 import { DemoContactHistory } from './ContactHistory';
@@ -11,7 +12,7 @@ import { dateLabel } from '../../lib/format';
 import { Input } from '../../components/ui/input';
 import { useState, type FormEvent } from 'react';
 import { RecordTitle } from '../../components/RecordTitle';
-import { Plus, Pencil, ArrowUpRight, Users } from 'lucide-react';
+import { Plus, Pencil, Users } from 'lucide-react';
 import { useCrm } from '../../app/context';
 import type { Contact, Temperature } from '../../domain/types';
 import { temperatureLabels } from '../../domain/config';
@@ -237,27 +238,29 @@ export function Contacts() {
                         />
                         <Button
                           variant="outline"
-                          size="sm"
+                          size="icon"
                           aria-label={'Histórico de ' + c.name}
                           onClick={() => setHistoryId(c.id)}
                         >
-                          <History size={15} />
-                          Histórico
+                          <History size={16} aria-hidden="true" />
                         </Button>
                         {canEdit ? (
                           <Button
                             variant="ghost"
-                            size="sm"
+                            size="icon"
                             onClick={() => open(c)}
                             aria-label={'Editar ' + c.name}
                           >
-                            <Pencil size={14} />
-                            Editar
+                            <Pencil size={16} aria-hidden="true" />
                           </Button>
                         ) : (
-                          <Button variant="ghost" size="sm" onClick={() => open(c)}>
-                            <ArrowUpRight size={14} />
-                            Ver
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => open(c)}
+                            aria-label="Ver"
+                          >
+                            <Eye size={16} aria-hidden="true" />
                           </Button>
                         )}
                       </div>

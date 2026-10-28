@@ -1,3 +1,4 @@
+import { KeyRound } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import { Users, ShieldCheck, UserRound, UserRoundX } from 'lucide-react';
 import { Kpi } from '../../components/shared';
@@ -163,8 +164,9 @@ export function CompanyUsersView({
                         disabled={!row.can_reset}
                         aria-label={'Redefinir senha de ' + row.display_name}
                         onClick={() => onReset(row)}
+                        size="icon"
                       >
-                        Redefinir senha
+                        <KeyRound size={16} aria-hidden="true" />
                       </Button>
                       {!row.can_reset && (
                         <small>Conta protegida ou vinculada a mais de uma empresa.</small>

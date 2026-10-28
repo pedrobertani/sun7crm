@@ -3,11 +3,11 @@
   gap: 4px;
   margin-left: auto;
 }
-.chart-format-picker > .btn {
+.chart-format-picker .btn {
   color: var(--muted);
   border-color: var(--line);
 }
-.chart-format-picker > .btn[aria-pressed='true'] {
+.chart-format-picker .btn[aria-pressed='true'] {
   color: var(--primary);
   border-color: var(--primary);
   background: var(--primary-soft);

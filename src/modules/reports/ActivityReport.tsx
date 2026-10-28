@@ -53,11 +53,11 @@ export function ActivityReportView({
           <strong>{rows.length}</strong>
         </div>
         <div className="card">
-          <span>Sem atividade há 7 dias ou mais</span>
+          <span>Sem atividade há 7+ dias</span>
           <strong>{rows.filter((r) => idleDays(r) >= 7).length}</strong>
         </div>
         <div className="card">
-          <span>WhatsApp acionado · últimos 30 dias</span>
+          <span>WhatsApp · últimos 30 dias</span>
           <strong>{actors.reduce((n, a) => n + a.whatsappCount, 0)}</strong>
         </div>
       </div>
@@ -89,20 +89,18 @@ export function ActivityReportView({
         </div>
         <div className="activity-description">
           <strong>{shown.length} clientes encontrados</strong>
-          <p>
-            Tempo desde o último registro no CRM ou, se não houver registros, desde o cadastro. Os
-            contadores por cliente mostram todo o histórico disponível.
-          </p>
         </div>
         <div className="table-wrap">
-          <table>
+          <table className="activity-table">
             <thead>
               <tr>
-                <th>Cliente / responsável atual</th>
+                <th>Cliente / responsável</th>
                 <th>Última atividade</th>
-                <th>Tempo sem atividade</th>
-                <th>Último WhatsApp acionado</th>
-                <th>Registros</th>
+                <th>Sem atividade</th>
+                <th>Último WhatsApp</th>
+                <th className="numeric">WhatsApp</th>
+                <th className="numeric">Movimentos</th>
+                <th className="numeric">Notas</th>
                 <th>Ações</th>
               </tr>
             </thead>
@@ -131,12 +129,9 @@ export function ActivityReportView({
                     </span>
                   </td>
                   <td>{activityDate(r.lastWhatsappAt)}</td>
-                  <td>
-                    <small className="growth-note">
-                      {r.whatsappCount} WhatsApp · {r.movementCount} movimentos · {r.noteCount}{' '}
-                      anotações
-                    </small>
-                  </td>
+                  <td className="numeric">{r.whatsappCount}</td>
+                  <td className="numeric">{r.movementCount}</td>
+                  <td className="numeric">{r.noteCount}</td>
                   <td>
                     <div className="actions">
                       <WhatsAppButton
@@ -146,9 +141,13 @@ export function ActivityReportView({
                         compact
                         onOpen={() => onWhatsapp(r)}
                       />
-                      <Button size="sm" variant="outline" onClick={() => onHistory(r)}>
-                        <History size={15} />
-                        Histórico
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        onClick={() => onHistory(r)}
+                        aria-label="Histórico"
+                      >
+                        <History size={16} aria-hidden="true" />
                       </Button>
                     </div>
                   </td>
@@ -156,7 +155,7 @@ export function ActivityReportView({
               ))}
               {!shown.length && (
                 <tr>
-                  <td colSpan={6} className="growth-empty">
+                  <td colSpan={8} className="growth-empty">
                     Nenhum cliente neste filtro. Ajuste o responsável ou o tempo sem atividade.
                   </td>
                 </tr>
@@ -208,10 +207,15 @@ export function ActivityReportView({
           </table>
         </div>
       </section>
-      <p className="small-note">
-        O relatório mede registros no CRM. Acionar o WhatsApp não confirma envio, resposta ou
-        atendimento. Atividades anteriores sem registro não são estimadas.
-      </p>
+      <details className="report-help">
+        <summary>Como os dados são contados</summary>
+        <p className="small-note">
+          O relatório mede registros no CRM. Acionar o WhatsApp não confirma envio, resposta ou
+          atendimento. Atividades anteriores sem registro não são estimadas. O tempo sem atividade
+          parte do último registro ou do cadastro. Os contadores por cliente incluem todo o
+          histórico disponível.
+        </p>
+      </details>
     </>
   );
 }

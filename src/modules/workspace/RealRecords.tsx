@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Plus, Pencil, History } from 'lucide-react';
+import { Plus, Pencil, History, KanbanSquare } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
 import { Modal } from '../../components/ui/modal';
@@ -134,21 +134,32 @@ export function RealContacts() {
                         <Button
                           disabled={!can('history.view')}
                           variant="ghost"
-                          size="sm"
+                          size="icon"
                           onClick={() => setHistory(c)}
+                          aria-label="Histórico"
                         >
-                          <History size={15} />
-                          Histórico
+                          <History size={16} aria-hidden="true" />
                         </Button>
                         {can('contacts.edit') && (
-                          <Button variant="outline" size="sm" onClick={() => setEditing(c)}>
-                            <Pencil size={14} />
-                            Editar
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => setEditing(c)}
+                            aria-label="Editar"
+                          >
+                            <Pencil size={16} aria-hidden="true" />
                           </Button>
                         )}
-                        <Link className="operational-text-link" to={'/app/funil?contato=' + c.id}>
-                          Ver cards
-                        </Link>
+                        <Button
+                          asChild
+                          size="icon"
+                          variant="outline"
+                          aria-label={'Ver cards de ' + c.name}
+                        >
+                          <Link to={'/app/funil?contato=' + c.id}>
+                            <KanbanSquare size={16} aria-hidden="true" />
+                          </Link>
+                        </Button>
                       </div>
                     </td>
                   </tr>
@@ -270,8 +281,13 @@ export function RealCatalog({ labels = false }: { labels?: boolean }) {
                     </td>
                     {can(labels ? 'labels.edit' : 'catalog.edit') && (
                       <td>
-                        <Button variant="outline" size="sm" onClick={() => setEditing(row)}>
-                          Editar
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => setEditing(row)}
+                          aria-label="Editar"
+                        >
+                          <Pencil size={16} aria-hidden="true" />
                         </Button>
                       </td>
                     )}
@@ -377,8 +393,13 @@ export function RealStrategies() {
                     </td>
                     {can('strategies.edit') && (
                       <td>
-                        <Button variant="outline" size="sm" onClick={() => setEditing(row)}>
-                          Editar
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => setEditing(row)}
+                          aria-label="Editar"
+                        >
+                          <Pencil size={16} aria-hidden="true" />
                         </Button>
                       </td>
                     )}
@@ -632,10 +653,11 @@ export function RealTasks() {
                       <Button
                         disabled={!can('tasks.edit')}
                         variant="outline"
-                        size="sm"
+                        size="icon"
                         onClick={() => setEditing(row)}
+                        aria-label="Editar tarefa"
                       >
-                        Editar tarefa
+                        <Pencil size={16} aria-hidden="true" />
                       </Button>
                     </td>
                   </tr>

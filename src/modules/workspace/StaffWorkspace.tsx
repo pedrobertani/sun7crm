@@ -260,10 +260,11 @@ export function StaffWorkspace({
     allowed = access?.companyId === company.id ? access.access_allowed : null;
   // An inaccessible dashboard must never become an empty landing page.
   // Also handle revoked access to routes already open after permissions refresh.
-  const currentAllowed = granted(sectionPermission[section.to]) &&
+  const currentAllowed =
+    granted(sectionPermission[section.to]) &&
     (section.to !== '/app/plano' || company.role === 'manager');
   if (allowed && !currentAllowed && links.length) {
-    const next = links.find(n=>n.to!==section.to);
+    const next = links.find((n) => n.to !== section.to);
     if (next) return <Navigate to={next.to} replace />;
   }
   return (
@@ -284,7 +285,7 @@ export function StaffWorkspace({
         )}
         <aside className={'sidebar ' + (mobile ? 'is-open' : '')}>
           <div className="sidebar-head">
-            <Link className="logo workspace-logo" to={links[0]?.to||"/app"}>
+            <Link className="logo workspace-logo" to={links[0]?.to || '/app'}>
               <WorkspaceLogo path={allowed ? company.logoPath : null} name={company.name} />
               <span className="brand">
                 <strong>{company.name}</strong>
@@ -374,7 +375,6 @@ export function StaffWorkspace({
           <main className="workspace" id="main">
             <div className="page">
               <Heading
-                eyebrow="ÁREA DE TRABALHO"
                 title={
                   section.to === '/app' ? `Olá, ${user.displayName.split(' ')[0]}` : section.label
                 }
@@ -383,7 +383,7 @@ export function StaffWorkspace({
                     ? 'Organize os atendimentos e acompanhe o próximo passo de cada oportunidade.'
                     : section.to === '/app/plano'
                       ? 'Acompanhe seu plano, pague a mensalidade e consulte o histórico.'
-                      : 'Sua rotina e os registros disponíveis para o seu perfil.'
+                      : undefined
                 }
               />
               {error && (

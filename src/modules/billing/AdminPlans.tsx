@@ -1,3 +1,4 @@
+import { ViewSwitcher } from '../../components/ui/view-switcher';
 import { useState, type FormEvent } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { CreditCard, Gift } from 'lucide-react';
@@ -143,24 +144,17 @@ export function AdminPlans({
         title="Planos e cobranças"
         description="Acompanhe os recebimentos da plataforma e gerencie o acesso de cada empresa."
       />
-      <div className="billing-tabs" role="group" aria-label="Visão financeira">
-        <Button
-          variant={showPlans ? 'ghost' : 'outline'}
-          aria-pressed={!showPlans}
-          onClick={() => setParams({ visao: 'cobrancas' })}
-        >
-          Todas as cobranças
-        </Button>
-        <Button
-          variant={showPlans ? 'outline' : 'ghost'}
-          aria-pressed={showPlans}
-          onClick={() =>
-            setParams({ visao: 'planos', ...(selectedId ? { empresa: selectedId } : {}) })
-          }
-        >
-          Planos por empresa
-        </Button>
-      </div>
+      <ViewSwitcher
+        label="Visão financeira"
+        value={showPlans ? 'planos' : 'cobrancas'}
+        onValueChange={(visao) =>
+          setParams({ visao, ...(visao === 'planos' && selectedId ? { empresa: selectedId } : {}) })
+        }
+        items={[
+          { value: 'cobrancas', label: 'Cobranças' },
+          { value: 'planos', label: 'Planos por empresa' },
+        ]}
+      />
       {companies[0] && <OnlineBilling key={companies[0].id} companyId={companies[0].id} admin />}
       {!companies.length ? (
         <div className="card panel">

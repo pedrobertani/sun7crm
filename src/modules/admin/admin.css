@@ -41,23 +41,8 @@
 .admin-live .user-block {
   border-color: var(--line);
 }
-.admin-live .card {
-  border-radius: 12px;
-}
 .admin-live .kpi-value {
   font-variant-numeric: tabular-nums;
-}
-.admin-live th {
-  font-size: 10px;
-}
-.admin-live td {
-  font-size: 13px;
-}
-.admin-live td strong {
-  font-size: 13px;
-}
-.admin-live td small {
-  font-size: 11px;
 }
 .admin-live .table-wrap tbody tr:hover {
   background: var(--raised);
@@ -89,14 +74,13 @@
   display: block;
   margin-top: 4px;
 }
-.admin-live .btn,
 .admin-live .icon-button,
 .admin-live .logout-button {
-  min-height: 44px;
+  min-height: var(--control-height);
 }
 .admin-live .logout-button,
 .admin-live .icon-button {
-  min-width: 44px;
+  min-width: var(--control-height);
 }
 .admin-live .table-wrap {
   max-width: 100%;
@@ -203,7 +187,7 @@
   overflow-wrap: anywhere;
 }
 .company-user-table .btn {
-  min-height: 44px;
+  min-height: var(--control-height);
   max-width: 100%;
   white-space: normal;
 }

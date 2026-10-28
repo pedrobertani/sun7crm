@@ -1,19 +1,11 @@
+import { ViewSwitcher } from '../../components/ui/view-switcher';
 import { useCardDrag } from '../../hooks/useCardDrag';
 import { RecordTitle } from '../../components/RecordTitle';
 import type { Task } from '../../domain/types';
 import { useSearchParams } from 'react-router-dom';
 import { Input } from '../../components/ui/input';
 import { useState, type FormEvent } from 'react';
-import {
-  Plus,
-  CalendarDays,
-  Check,
-  Circle,
-  List,
-  KanbanSquare,
-  GripVertical,
-  UserRound,
-} from 'lucide-react';
+import { Plus, CalendarDays, Check, Circle, GripVertical, UserRound } from 'lucide-react';
 import { useCrm } from '../../app/context';
 import { visibleContacts } from '../../domain/operations';
 import {
@@ -130,44 +122,30 @@ export function Tasks() {
         </Button>
       </Heading>
       <div className="tasks-view-toolbar">
-        <div className="segmented" aria-label="Visualização das tarefas">
-          <button
-            className={view === 'quadro' ? 'active' : ''}
-            aria-pressed={view === 'quadro'}
-            onClick={() => changeParam('visualizacao', 'quadro')}
-          >
-            <KanbanSquare size={15} />
-            Quadro Kanban
-          </button>
-          <button
-            className={view === 'lista' ? 'active' : ''}
-            aria-pressed={view === 'lista'}
-            onClick={() => changeParam('visualizacao', 'lista')}
-          >
-            <List size={15} />
-            Lista
-          </button>
-        </div>
+        <ViewSwitcher
+          label="Visualização das tarefas"
+          value={view}
+          onValueChange={(value) => changeParam('visualizacao', value)}
+          items={[
+            { value: 'quadro', label: 'Quadro' },
+            { value: 'lista', label: 'Lista' },
+          ]}
+        />
         <span className="muted result-count">{tasks.length} tarefas</span>
       </div>
       <div className={view === 'lista' ? 'card' : 'tasks-board-area'}>
         <div className={'toolbar ' + (view === 'quadro' ? 'tasks-filterbar' : '')}>
-          <div className="segmented">
-            {[
-              ['all', 'Todas'],
-              ['pending', 'Pendentes'],
-              ['overdue', 'Atrasadas'],
-              ['done', 'Concluídas'],
-            ].map(([value, label]) => (
-              <button
-                key={value}
-                className={filter === value ? 'active' : ''}
-                onClick={() => changeParam('status', value)}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
+          <ViewSwitcher
+            label="Situação das tarefas"
+            value={filter}
+            onValueChange={(value) => changeParam('status', value)}
+            items={[
+              { value: 'all', label: 'Todas' },
+              { value: 'pending', label: 'Pendentes' },
+              { value: 'overdue', label: 'Atrasadas' },
+              { value: 'done', label: 'Concluídas' },
+            ]}
+          />
           <SearchInput value={query} onChange={setQuery} placeholder="Buscar tarefa" />
         </div>
         {view === 'quadro' ? (

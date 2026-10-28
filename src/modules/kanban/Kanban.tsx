@@ -1,3 +1,4 @@
+import '../../components/ui/tabs.css';
 import { useStageDrag } from '../../hooks/useStageDrag';
 import { RecordTitle } from '../../components/RecordTitle';
 import { recordWhatsappOpen } from '../../domain/contact-history';
@@ -74,7 +75,11 @@ export function Kanban() {
   const [deleteId, setDeleteId] = useState('');
   const [targetId, setTargetId] = useState('');
   const [selected, setSelected] = useState<Opportunity | null>(null);
-  const [pendingMove,setPendingMove]=useState<{card:Opportunity;targetId:string;kind:'sale'|'other'}|null>(null);
+  const [pendingMove, setPendingMove] = useState<{
+    card: Opportunity;
+    targetId: string;
+    kind: 'sale' | 'other';
+  } | null>(null);
   const contacts = visibleContacts(data, session);
   const opps = data.opportunities
     .filter(
@@ -92,27 +97,42 @@ export function Kanban() {
   const manager = session.role === 'manager';
   const movable = manager || session.role === 'seller';
   function move(id: string, stage: string) {
-    const source=data.opportunities.find(o=>o.id===id&&o.companyId===session.companyId);
-    const dest=board.stages.find(s=>s.id===stage);
-    if(!source||!dest||source.stageId===stage)return;
-    const kind=highImpactStage(dest.name);
-    if(kind){setPendingMove({card:source,targetId:stage,kind});return;}
+    const source = data.opportunities.find((o) => o.id === id && o.companyId === session.companyId);
+    const dest = board.stages.find((s) => s.id === stage);
+    if (!source || !dest || source.stageId === stage) return;
+    const kind = highImpactStage(dest.name);
+    if (kind) {
+      setPendingMove({ card: source, targetId: stage, kind });
+      return;
+    }
     if (update((d) => moveOpportunity(d, session, id, stage))) notice('Oportunidade movida.');
   }
-  function confirmMove(result:ConfirmedMove) {
-    if(!pendingMove)return;
-    const {card,targetId}=pendingMove;
-    const moved=update(d=>{
-      const now=moveOpportunity(d,session,card.id,targetId);
-      return {...now,opportunities:now.opportunities.map(o=>o.id!==card.id?o:{
-        ...o,
-        confirmedSaleAt:result.confirmed?new Date().toISOString():undefined,
-        confirmedSaleOwnerId:result.confirmed?data.contacts.find(c=>c.id===o.contactId)?.ownerId:undefined,
-        confirmedSaleCents:result.confirmed?result.amountCents:undefined,
-        value:result.confirmed?result.amountCents:o.value,
-      })};
+  function confirmMove(result: ConfirmedMove) {
+    if (!pendingMove) return;
+    const { card, targetId } = pendingMove;
+    const moved = update((d) => {
+      const now = moveOpportunity(d, session, card.id, targetId);
+      return {
+        ...now,
+        opportunities: now.opportunities.map((o) =>
+          o.id !== card.id
+            ? o
+            : {
+                ...o,
+                confirmedSaleAt: result.confirmed ? new Date().toISOString() : undefined,
+                confirmedSaleOwnerId: result.confirmed
+                  ? data.contacts.find((c) => c.id === o.contactId)?.ownerId
+                  : undefined,
+                confirmedSaleCents: result.confirmed ? result.amountCents : undefined,
+                value: result.confirmed ? result.amountCents : o.value,
+              },
+        ),
+      };
     });
-    if(moved) { setPendingMove(null);notice(result.confirmed?'Venda confirmada e medalhas atualizadas.':'Card movido.'); }
+    if (moved) {
+      setPendingMove(null);
+      notice(result.confirmed ? 'Venda confirmada e medalhas atualizadas.' : 'Card movido.');
+    }
   }
   const startDrag = useCardDrag(move);
   function saveStage(e: FormEvent) {
@@ -243,11 +263,12 @@ export function Kanban() {
         />
       )}
       <div className="kanban-toolbar">
-        <div className="segmented">
+        <div className="ui-tabs-list board-navigation">
           {boards.map((b) => (
             <Link
               key={b.id}
-              className={b.id === board.id ? 'active' : ''}
+              className="btn btn-ghost"
+              aria-current={b.id === board.id ? 'page' : undefined}
               to={'/demo/funil/' + (b.kind === 'custom' ? b.id : b.kind)}
             >
               <LayoutGrid size={15} />
@@ -257,6 +278,7 @@ export function Kanban() {
           {manager && (
             <Button
               variant="ghost"
+              size="icon"
               aria-label="Adicionar funil"
               onClick={() => {
                 setBoardEditing(false);
@@ -334,14 +356,16 @@ export function Kanban() {
                         </p>
                         <strong className="opportunity-value">{currency(o.value)}</strong>
                         <div className="opportunity-quick-actions">
-                          <button
+                          <Button
+                            size="icon"
+                            variant="outline"
                             type="button"
                             aria-label={'Histórico de ' + c.name}
                             title="Histórico do cliente"
                             onClick={() => setHistoryId(c.id)}
                           >
                             <History size={17} />
-                          </button>
+                          </Button>
                           <WhatsAppButton
                             phone={c.phone}
                             name={c.name}
@@ -400,16 +424,22 @@ export function Kanban() {
       <p className="small-note">
         Etapas e movimentações desta prévia não disparam mensagens, vendas ou automações.
       </p>
-      {pendingMove && <ConfirmKanbanMove
-        key={pendingMove.card.id+'-'+pendingMove.targetId}
-        contactName={data.contacts.find(c=>c.id===pendingMove.card.contactId)?.name||'Cliente'}
-        fromStage={board.stages.find(x=>x.id===pendingMove.card.stageId)?.name||'Etapa anterior'}
-        toStage={board.stages.find(x=>x.id===pendingMove.targetId)?.name||'Conclusão'}
-        kind={pendingMove.kind}
-        amountCents={pendingMove.card.value}
-        onCancel={()=>setPendingMove(null)}
-        onConfirm={confirmMove}
-      />}
+      {pendingMove && (
+        <ConfirmKanbanMove
+          key={pendingMove.card.id + '-' + pendingMove.targetId}
+          contactName={
+            data.contacts.find((c) => c.id === pendingMove.card.contactId)?.name || 'Cliente'
+          }
+          fromStage={
+            board.stages.find((x) => x.id === pendingMove.card.stageId)?.name || 'Etapa anterior'
+          }
+          toStage={board.stages.find((x) => x.id === pendingMove.targetId)?.name || 'Conclusão'}
+          kind={pendingMove.kind}
+          amountCents={pendingMove.card.value}
+          onCancel={() => setPendingMove(null)}
+          onConfirm={confirmMove}
+        />
+      )}
       {historyId && <DemoContactHistory contactId={historyId} onClose={() => setHistoryId('')} />}
       <Modal
         open={managing}

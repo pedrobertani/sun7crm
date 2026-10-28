@@ -85,11 +85,11 @@ body .themed-workspace[data-theme] .page {
   max-width: 1440px;
   padding: 28px 32px 44px;
 }
-body .themed-workspace[data-theme] :is(.btn, .icon-button, .notification-bell) {
-  min-height: 44px;
+body .themed-workspace[data-theme] :is(.icon-button, .notification-bell) {
+  min-height: var(--control-height);
 }
 body .themed-workspace[data-theme] .icon-button {
-  min-width: 44px;
+  min-width: var(--control-height);
 }
 body .themed-workspace[data-theme] .brand strong {
   font-size: 18px;

@@ -1,3 +1,5 @@
+import { ViewSwitcher } from '../../components/ui/view-switcher';
+import { Pencil } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { RecordTitle } from '../../components/RecordTitle';
 import { Link } from 'react-router-dom';
@@ -101,38 +103,19 @@ export function RealAmbassadors() {
   return (
     <>
       <div className="operational-toolbar">
-        <div className="tabs">
-          <button
-            type="button"
-            className={tab === 'campaigns' ? 'active' : ''}
-            onClick={() => {
-              setTab('campaigns');
-              setPage(0);
-            }}
-          >
-            Campanhas
-          </button>
-          <button
-            type="button"
-            className={tab === 'people' ? 'active' : ''}
-            onClick={() => {
-              setTab('people');
-              setPage(0);
-            }}
-          >
-            Embaixadores
-          </button>
-          <button
-            type="button"
-            className={tab === 'metrics' ? 'active' : ''}
-            onClick={() => {
-              setTab('metrics');
-              setPage(0);
-            }}
-          >
-            Métricas manuais
-          </button>
-        </div>
+        <ViewSwitcher
+          label="Embaixadores"
+          value={tab}
+          onValueChange={(value) => {
+            setTab(value);
+            setPage(0);
+          }}
+          items={[
+            { value: 'campaigns', label: 'Campanhas' },
+            { value: 'people', label: 'Embaixadores' },
+            { value: 'metrics', label: 'Métricas' },
+          ]}
+        />
         <div className="actions">
           <Button
             variant="outline"
@@ -184,11 +167,12 @@ export function RealAmbassadors() {
                       <td>
                         <Button
                           variant="outline"
-                          size="sm"
+                          size="icon"
                           disabled={!can('ambassadors.edit')}
                           onClick={() => setAmbassador(a)}
+                          aria-label="Editar"
                         >
-                          Editar
+                          <Pencil size={16} aria-hidden="true" />
                         </Button>
                       </td>
                     </tr>
@@ -253,12 +237,13 @@ export function RealAmbassadors() {
                             <td>{dateLabel(m.measured_on)}</td>
                             <td>
                               <Button
-                                size="sm"
+                                size="icon"
                                 variant="outline"
                                 disabled={!can('ambassadors.edit')}
                                 onClick={() => setMetric(m)}
+                                aria-label="Editar"
                               >
-                                Editar
+                                <Pencil size={16} aria-hidden="true" />
                               </Button>
                             </td>
                           </tr>
@@ -554,11 +539,12 @@ export function RealAmbassadors() {
                                   {current.status === 'active' && (
                                     <Button
                                       variant="outline"
-                                      size="sm"
+                                      size="icon"
                                       disabled={!can('referrals.edit')}
                                       onClick={() => setReferral(r)}
+                                      aria-label="Editar"
                                     >
-                                      Editar
+                                      <Pencil size={16} aria-hidden="true" />
                                     </Button>
                                   )}
                                   <Button

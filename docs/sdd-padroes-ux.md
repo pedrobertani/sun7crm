@@ -1,0 +1,89 @@
+# SDD — padrões globais de UX do SUN7CRM
+
+## Objetivo e escopo
+
+Revisar demo, aplicativo de gestor/funcionário e administração. Centralizar aparência e comportamento de ações, títulos, abas, tabelas, cards e modais. Não alterar regras financeiras, permissões ou persistência de negócio nesta revisão. A validação funcional final do produto será retomada depois desta etapa.
+
+Base auditada: main `ba47976b3121679707962f10a7ca151d932d4f25` (28/10/2026). PR #29 está aberto e converte históricos de embaixadores da demo em tabelas; preservar essa alteração em vez de sobrescrevê-la.
+
+## Diagnóstico dos PRs recentes
+
+- #21: Tabs compartilhado para Plano, formatos de gráfico e atualização automática.
+- #22–24: metas, funil, conquistas e permissões; novas abas locais duplicaram a navegação compartilhada.
+- #25: permissões agrupadas por área; manter chaves e autorização.
+- #26: Dashboard dividido por assunto, porém com mais um estilo de abas.
+- #27–28: compactação local do Dashboard; regras acumuladas e `!important` tratam sintomas.
+- #29: histórico tabular da demo; mudança adequada para dados comparáveis.
+- Regra de workspace/admin impõe 44px a todos os botões e anula tamanhos compactos.
+- Ações de tabela misturam ícones e botões textuais grandes; quebra de linha aumenta desnecessariamente a altura.
+- Demo, app e admin usam escalas diferentes de célula e título.
+
+## Contrato visual e de interação
+
+1. Botão principal com verbo e objeto curto (Novo contato, Salvar, Pagar mensalidade). Uma ação principal por contexto.
+2. Ações repetidas de linha: ícone de 16px, controle de 32px no desktop, nome acessível e tooltip em hover/foco. Ações que exigem clareza financeira permanecem textuais.
+3. Botão normal 36px; pequeno/ícone 32px. Em dispositivo de ponteiro grosso, mínimo 44px. Nunca reduzir só a fonte para esconder overflow.
+4. Ações da linha permanecem agrupadas e alinhadas; dados longos quebram em suas células. Rolagem horizontal fica no contêiner da tabela, nunca na página.
+5. Tooltips usam tokens do tema, funcionam por foco e Escape e não são o único nome acessível. Ação desabilitada explica o motivo.
+6. Título do registro abre o detalhe/edição permitido. Não transformar a linha inteira em botão nem interferir em seleção de texto.
+7. Tabelas para comparar registros repetidos; cards para indicadores e unidades visuais (Kanban, medalhas, gráficos). Detalhes singulares usam pares rótulo/valor.
+8. Mesma escala de títulos: página 26px, seção/modal 18px, subseção 14px. Descrição só quando explica tarefa, filtro ou consequência; remover frases genéricas repetidas.
+9. Abas/seletores reutilizam componentes compartilhados. Não esticar poucas opções por toda a tela. Overflow local em telas pequenas; preservar formulários e permissões.
+10. Cor vem da identidade selecionada. Sem cores fixas novas para botões, tooltips ou seleção.
+11. Erros, confirmações financeiras, restrições de acesso e informações necessárias não são removidos por concisão.
+
+## Organização e prioridade de uso
+
+Sem telemetria disponível, frequência é uma hipótese de UX: operações de contatos, funil e tarefas são frequentes; configurações, permissões e redefinição de senha são ocasionais. Ações frequentes ficam visíveis. Ações administrativas não disputam destaque com criação/atendimento. Não esconder operações essenciais apenas para diminuir a tela.
+
+| Área                 | Estrutura escolhida                         | Revisão                                                        |
+| -------------------- | ------------------------------------------- | -------------------------------------------------------------- |
+| Dashboard            | KPIs compactos, gráficos e abas por assunto | Unificar navegação; preservar compactação recente              |
+| Contatos             | Tabela com título clicável, ações compactas | Demo e app; WhatsApp/histórico/editar/cards                    |
+| Funil                | Kanban com cartões                          | Título legível, ações compactas; não converter fluxo em tabela |
+| Tarefas              | Lista/tabela e calendário quando aplicável  | Editar compacto; criação textual                               |
+| Relatórios           | Tabelas de carteira e equipe                | Separar contagens em colunas, eliminar parágrafo por linha     |
+| Estratégias          | Lista/tabela de campanhas e detalhes        | Preservar métricas; encurtar ações repetidas                   |
+| Embaixadores         | Cadastro e históricos tabulares             | Aproveitar PR #29; pagamentos/indicações comparáveis           |
+| Catálogo e etiquetas | Tabelas                                     | Edição consistente; cores de etiquetas são dados               |
+| Equipe/permissões    | Tabela de pessoas e árvore de permissões    | Ações secundárias compactas; não mudar autorização             |
+| Metas/conquistas     | Funil e medalhas; configuração em abas      | Unificar abas e remoção de itens                               |
+| Plano/cobrança       | Resumo + abas + tabela de histórico         | Manter pagamento explícito, erros e valores                    |
+| Empresas/admin       | Tabela de empresas; detalhes por assunto    | Usuários tabulares; ações e abas compartilhadas                |
+| Configurações/conta  | Formulários e pares rótulo/valor            | Preservar clareza de escolhas                                  |
+
+## Checklist executável
+
+- [x] Inspecionar imagens enviadas e localizar relatório correspondente.
+- [x] Ler PRs recentes e atualizar fonte local sem perder alterações posteriores.
+- [x] Definir contrato visual, critérios de tabela/card e prioridades de uso.
+- [x] Centralizar tokens de tamanho, espaçamento, títulos e células.
+- [x] Remover overrides que anulam variantes compactas.
+- [x] Implementar tooltip compartilhado acessível e resistente a clipping.
+- [x] Padronizar ações de linha da demo, app e admin.
+- [x] Corrigir relatório de atividade: ações alinhadas e contagens tabulares.
+- [x] Unificar seletores de Dashboard, metas, relatórios e cobrança.
+- [x] Revisar textos genéricos e excesso de instruções por linha.
+- [x] Incorporar histórico tabular de embaixadores sem conflitar com PR #29.
+- [ ] Revisar modais, estados vazios, overflow e responsividade.
+- [ ] Remover CSS substituído e componentes/importações sem uso.
+- [x] Executar TypeScript, testes pertinentes e build.
+- [ ] Conferir visualmente desktop e viewport estreito, foco/tooltip e troca de abas.
+- [ ] Registrar evidências e limites de validação por perfil/tema.
+- [ ] Preparar PR com escopo final e verificação; não declarar produção atualizada antes do deploy.
+
+## Critérios de aceite
+
+- Ações do relatório enviado ficam na mesma linha, com o mesmo tamanho.
+- Tooltips não ficam cortados por cards/tabelas/modais e têm nome acessível independente.
+- Não há nova cor fora dos tokens; contraste deve ser conferido em cada identidade.
+- Não há scroll horizontal da página a 390px; tabelas extensas podem rolar localmente.
+- Redimensionar não esconde ação, valor ou mensagem de erro.
+- Componentes têm documentação e verificação de regressão de seus contratos.
+- Checklist distingue revisão de código, teste automatizado e teste real autenticado.
+
+## Evidências e pendências
+
+Build e TypeScript aprovados; 199 testes frontend passaram (34 arquivos), incluindo 4 cenários novos de nomes acessíveis, links, não submissão ao trocar visualização e contagens do relatório. Contrato de cores existente passou. Nenhuma alteração de banco/backend.
+
+Revisão visual ainda pendente: o navegador remoto recusou conexão ao servidor local (ERR_CONNECTION_REFUSED). Será usada prévia Cloudflare. Testes autenticados de cada perfil não foram executados nesta rodada. O trabalho não será considerado validação completa do sistema enquanto houver essas pendências.

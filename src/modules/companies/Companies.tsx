@@ -221,12 +221,11 @@ export function Companies() {
                     <td>
                       <Button
                         variant="ghost"
-                        size="sm"
+                        size="icon"
                         onClick={() => open(c)}
                         aria-label={'Editar ' + c.name}
                       >
-                        <Pencil size={14} />
-                        Editar
+                        <Pencil size={16} aria-hidden="true" />
                       </Button>
                     </td>
                   </tr>

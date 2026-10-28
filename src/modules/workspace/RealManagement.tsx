@@ -1,3 +1,5 @@
+import { ShieldCheck, Pencil, KeyRound } from 'lucide-react';
+import { ViewSwitcher } from '../../components/ui/view-switcher';
 import { PermissionTree } from '../permissions/PermissionTree';
 import { type EmployeePermissions } from '../permissions/model';
 import { useEffect, useState } from 'react';
@@ -22,10 +24,16 @@ export function RealDashboard() {
   const { api, can } = useOperational(),
     [from, setFrom] = useState(today().slice(0, 7) + '-01'),
     [to, setTo] = useState(today()),
-    [dashboardTab, setDashboardTab] = useState<'overview'|'commercial'|'achievements'>('overview');
-  const commercialAllowed=can('cards.view');
-  const availableTabs=[['overview','Visão geral'], ...(commercialAllowed?[['commercial','Comercial']]:[]), ...(can('goals.view')?[['achievements','Conquistas']]:[])];
-  const activeTab=availableTabs.some(([key])=>key===dashboardTab)?dashboardTab:'overview';
+    [dashboardTab, setDashboardTab] = useState<'overview' | 'commercial' | 'achievements'>(
+      'overview',
+    );
+  const commercialAllowed = can('cards.view');
+  const availableTabs = [
+    ['overview', 'Visão geral'],
+    ...(commercialAllowed ? [['commercial', 'Comercial']] : []),
+    ...(can('goals.view') ? [['achievements', 'Conquistas']] : []),
+  ];
+  const activeTab = availableTabs.some(([key]) => key === dashboardTab) ? dashboardTab : 'overview';
   const query = useQuery(async () => {
     const [metrics, boards, stages, strategies] = await Promise.all([
       api.metrics(from, to),
@@ -53,103 +61,116 @@ export function RealDashboard() {
         </Link>
       </div>
       <QueryState query={query} />
-      <div className="dashboard-tabs" role="tablist" aria-label="Áreas do dashboard">
-        {availableTabs.map(([key,label])=><button type="button" key={key} role="tab" aria-selected={activeTab===key} className={activeTab===key?'active':''} onClick={()=>setDashboardTab(key as 'overview'|'commercial'|'achievements')}>{label}</button>)}
-      </div>
+      <ViewSwitcher
+        className="dashboard-tabs"
+        label="Áreas do dashboard"
+        value={activeTab}
+        onValueChange={setDashboardTab}
+        items={availableTabs.map(([value, label]) => ({
+          value: value as 'overview' | 'commercial' | 'achievements',
+          label,
+        }))}
+      />
       {query.data && (
         <>
-          {activeTab==='overview'&&<div className="kpis">
-            <Kpi
-              label="Novos contatos"
-              value={query.data.metrics.contacts}
-              foot="Cadastros no período selecionado"
-              icon={<Users size={19} />}
-              to="/app/contatos"
-            />
-            <Kpi
-              label="Cards abertos"
-              value={query.data.metrics.open_cards}
-              foot="Todos os cards em andamento"
-              icon={<KanbanSquare size={19} />}
-              to="/app/funil"
-            />
-            <Kpi
-              label="Pipeline estimado"
-              value={currency(query.data.metrics.estimated_pipeline_cents)}
-              foot="Valor estimado dos cards abertos"
-              icon={<Wallet size={19} />}
-            />
-            <Kpi
-              label="Tarefas pendentes"
-              value={query.data.metrics.pending_tasks}
-              foot={`${query.data.metrics.overdue_tasks} com prazo vencido`}
-              icon={<ListTodo size={19} />}
-              to="/app/tarefas"
-            />
-          </div>}
-          {activeTab==='commercial'&&can('goals.view')&&<GoalFunnel view="commercial" />}
-          {activeTab==='achievements'&&can('goals.view')&&<GoalFunnel view="medals" />}
-          {activeTab==='commercial'&&<>
-          <div className="operational-dashboard-grid">
-            <ContactIntakeChart data={query.data.metrics.contacts_by_day} />
-            <Panel title="Cards por etapa" description="Distribuição atual dos cards abertos">
-              {query.data.metrics.cards_by_stage.length ? (
-                <div className="operational-summary-list">
-                  {query.data.metrics.cards_by_stage.map((s) => (
-                    <div key={s.stage_id}>
-                      <span>
-                        <strong>
-                          {query.data!.stages.find((x) => x.id === s.stage_id)?.name || 'Etapa'}
-                        </strong>
-                        <small>{query.data!.boards.find((x) => x.id === s.board_id)?.name}</small>
-                      </span>
-                      <span>
-                        <strong>{s.count} cards</strong>
-                        <small>{currency(s.estimated_cents)} estimados</small>
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <Empty
-                  title="Nenhum card aberto"
-                  description="Crie cards no funil para acompanhar a distribuição."
-                />
-              )}
-            </Panel>
-          </div>
-          <Panel
-            title="Origem das oportunidades"
-            description="Cards criados no período, agrupados pela estratégia informada"
-          >
-            <div className="operational-table">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Estratégia</th>
-                    <th>Cards</th>
-                    <th>Valor estimado</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {query.data.metrics.cards_by_strategy.map((s) => (
-                    <tr key={s.strategy_id || 'none'}>
-                      <td>
-                        {query.data!.strategies.find((x) => x.id === s.strategy_id)?.name ||
-                          'Sem estratégia'}
-                      </td>
-                      <td>{s.count}</td>
-                      <td>{currency(s.estimated_cents)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              {!query.data.metrics.cards_by_strategy.length && (
-                <p className="small-note">Nenhuma oportunidade criada neste período.</p>
-              )}
+          {activeTab === 'overview' && (
+            <div className="kpis">
+              <Kpi
+                label="Novos contatos"
+                value={query.data.metrics.contacts}
+                foot="Cadastros no período selecionado"
+                icon={<Users size={19} />}
+                to="/app/contatos"
+              />
+              <Kpi
+                label="Cards abertos"
+                value={query.data.metrics.open_cards}
+                foot="Todos os cards em andamento"
+                icon={<KanbanSquare size={19} />}
+                to="/app/funil"
+              />
+              <Kpi
+                label="Pipeline estimado"
+                value={currency(query.data.metrics.estimated_pipeline_cents)}
+                foot="Valor estimado dos cards abertos"
+                icon={<Wallet size={19} />}
+              />
+              <Kpi
+                label="Tarefas pendentes"
+                value={query.data.metrics.pending_tasks}
+                foot={`${query.data.metrics.overdue_tasks} com prazo vencido`}
+                icon={<ListTodo size={19} />}
+                to="/app/tarefas"
+              />
             </div>
-          </Panel>
-          </>}
+          )}
+          {activeTab === 'commercial' && can('goals.view') && <GoalFunnel view="commercial" />}
+          {activeTab === 'achievements' && can('goals.view') && <GoalFunnel view="medals" />}
+          {activeTab === 'commercial' && (
+            <>
+              <div className="operational-dashboard-grid">
+                <ContactIntakeChart data={query.data.metrics.contacts_by_day} />
+                <Panel title="Cards por etapa" description="Distribuição atual dos cards abertos">
+                  {query.data.metrics.cards_by_stage.length ? (
+                    <div className="operational-summary-list">
+                      {query.data.metrics.cards_by_stage.map((s) => (
+                        <div key={s.stage_id}>
+                          <span>
+                            <strong>
+                              {query.data!.stages.find((x) => x.id === s.stage_id)?.name || 'Etapa'}
+                            </strong>
+                            <small>
+                              {query.data!.boards.find((x) => x.id === s.board_id)?.name}
+                            </small>
+                          </span>
+                          <span>
+                            <strong>{s.count} cards</strong>
+                            <small>{currency(s.estimated_cents)} estimados</small>
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <Empty
+                      title="Nenhum card aberto"
+                      description="Crie cards no funil para acompanhar a distribuição."
+                    />
+                  )}
+                </Panel>
+              </div>
+              <Panel
+                title="Origem das oportunidades"
+                description="Cards criados no período, agrupados pela estratégia informada"
+              >
+                <div className="operational-table">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>Estratégia</th>
+                        <th>Cards</th>
+                        <th>Valor estimado</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {query.data.metrics.cards_by_strategy.map((s) => (
+                        <tr key={s.strategy_id || 'none'}>
+                          <td>
+                            {query.data!.strategies.find((x) => x.id === s.strategy_id)?.name ||
+                              'Sem estratégia'}
+                          </td>
+                          <td>{s.count}</td>
+                          <td>{currency(s.estimated_cents)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {!query.data.metrics.cards_by_strategy.length && (
+                    <p className="small-note">Nenhuma oportunidade criada neste período.</p>
+                  )}
+                </div>
+              </Panel>
+            </>
+          )}
         </>
       )}
     </>
@@ -163,22 +184,15 @@ export function RealReports() {
   const query = useQuery(() => api.cardActivity(page, 50, true), [api, page]);
   return (
     <>
-      <div className="tabs">
-        <button
-          type="button"
-          className={tab === 'cards' ? 'active' : ''}
-          onClick={() => setTab('cards')}
-        >
-          Acompanhamento por card
-        </button>
-        <button
-          type="button"
-          className={tab === 'contacts' ? 'active' : ''}
-          onClick={() => setTab('contacts')}
-        >
-          Clientes e equipe
-        </button>
-      </div>
+      <ViewSwitcher
+        label="Relatórios"
+        value={tab}
+        onValueChange={setTab}
+        items={[
+          { value: 'cards', label: 'Por card' },
+          { value: 'contacts', label: 'Clientes e equipe' },
+        ]}
+      />
       {tab === 'contacts' ? (
         <RealActivityReport key={company.id + revision} companyId={company.id} />
       ) : (
@@ -251,16 +265,24 @@ export function RealReports() {
                           </td>
                           <td>
                             <div className="actions">
-                              <Button variant="ghost" size="sm" onClick={() => setHistory(c)}>
-                                <History size={15} />
-                                Histórico
-                              </Button>
-                              <Link
-                                className="operational-text-link"
-                                to={'/app/funil?card=' + c.opportunity_id}
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => setHistory(c)}
+                                aria-label="Histórico"
                               >
-                                Abrir card
-                              </Link>
+                                <History size={16} aria-hidden="true" />
+                              </Button>
+                              <Button
+                                asChild
+                                size="icon"
+                                variant="outline"
+                                aria-label={'Abrir card ' + c.title}
+                              >
+                                <Link to={'/app/funil?card=' + c.opportunity_id}>
+                                  <KanbanSquare size={16} aria-hidden="true" />
+                                </Link>
+                              </Button>
                             </div>
                           </td>
                         </tr>
@@ -342,19 +364,34 @@ export function RealTeam() {
                     />
                     <small className="operational-cell-note">{row.email}</small>
                   </td>
-                  <td>{row.role === 'manager' ? 'Gestor' : 'Permissões individuais'}</td>
+                  <td>{row.role === 'manager' ? 'Gestor' : 'Funcionário'}</td>
                   <td>{row.active ? 'Ativo' : 'Inativo'}</td>
                   <td>
                     {can('team.manage') && row.role !== 'manager' && row.user_id !== user.id ? (
                       <div className="actions">
-                        <Button variant="outline" size="sm" onClick={() => setPermissionsFor(row)}>
-                          Permissões
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => setPermissionsFor(row)}
+                          aria-label="Permissões"
+                        >
+                          <ShieldCheck size={16} aria-hidden="true" />
                         </Button>
-                        <Button variant="outline" size="sm" onClick={() => setEditing(row)}>
-                          Editar
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => setEditing(row)}
+                          aria-label="Editar"
+                        >
+                          <Pencil size={16} aria-hidden="true" />
                         </Button>
-                        <Button variant="ghost" size="sm" onClick={() => setResetting(row)}>
-                          Redefinir senha
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setResetting(row)}
+                          aria-label="Redefinir senha"
+                        >
+                          <KeyRound size={16} aria-hidden="true" />
                         </Button>
                       </div>
                     ) : (
@@ -429,7 +466,9 @@ function MemberDialog({
   const { api, company, companyScope } = useOperational(),
     save = useSave(),
     permissionSave = useSave(),
-    permissionQuery = useQuery(() => api.employeePermissions(row.id), [api, row.id], {live:false}),
+    permissionQuery = useQuery(() => api.employeePermissions(row.id), [api, row.id], {
+      live: false,
+    }),
     [permissions, setPermissions] = useState<EmployeePermissions | null>(null),
     [form, setForm] = useState({
       display_name: row.display_name,
@@ -494,21 +533,32 @@ function MemberDialog({
       </form>
       <div className="goal-medals">
         <h3>Permissões de acesso</h3>
-        <p className="small-note">Controle o que este funcionário poderá visualizar. Em Metas e conquistas, a opção Minhas metas e medalhas libera somente os próprios resultados.</p>
+        <p className="small-note">
+          Controle o que este funcionário poderá visualizar. Em Metas e conquistas, a opção Minhas
+          metas e medalhas libera somente os próprios resultados.
+        </p>
         <QueryState query={permissionQuery} />
-        {permissions && <form onSubmit={e=>{
-          e.preventDefault();
-          void permissionSave.run(async()=>{
-            await api.saveEmployeePermissions(row.id,permissions);
-            onSaved();
-          });
-        }}>
-          <fieldset disabled={permissionSave.busy || permissionSave.uncertain}>
-            <PermissionTree value={permissions} availableKeys={company.permissions?.keys}
-              allowCompanyScope={companyScope} onChange={setPermissions} />
-          </fieldset>
-          <SaveActions save={permissionSave} onClose={onClose} label="Salvar permissões" />
-        </form>}
+        {permissions && (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              void permissionSave.run(async () => {
+                await api.saveEmployeePermissions(row.id, permissions);
+                onSaved();
+              });
+            }}
+          >
+            <fieldset disabled={permissionSave.busy || permissionSave.uncertain}>
+              <PermissionTree
+                value={permissions}
+                availableKeys={company.permissions?.keys}
+                allowCompanyScope={companyScope}
+                onChange={setPermissions}
+              />
+            </fieldset>
+            <SaveActions save={permissionSave} onClose={onClose} label="Salvar permissões" />
+          </form>
+        )}
       </div>
     </Modal>
   );

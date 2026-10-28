@@ -1,0 +1,22 @@
+.ui-tooltip-anchor {
+  display: inline-flex;
+  flex: 0 0 auto;
+  vertical-align: middle;
+}
+.ui-tooltip {
+  position: fixed;
+  z-index: 200;
+  width: max-content;
+  max-width: min(224px, calc(100vw - 24px));
+  padding: 7px 10px;
+  border: 1px solid var(--control-border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 4px 16px var(--shadow-color);
+  font-size: 12px;
+  line-height: 1.4;
+  text-align: center;
+  pointer-events: auto;
+  overflow-wrap: anywhere;
+}

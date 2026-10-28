@@ -1,3 +1,4 @@
+import { ViewSwitcher } from '../../components/ui/view-switcher';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
@@ -131,14 +132,21 @@ export function RealKanban() {
       );
   }
   const moving = useSave();
-  const [pendingMove,setPendingMove]=useState<{card:CardRow;stage:StageRow;kind:'sale'|'other'}|null>(null);
+  const [pendingMove, setPendingMove] = useState<{
+    card: CardRow;
+    stage: StageRow;
+    kind: 'sale' | 'other';
+  } | null>(null);
   async function move(id: string, stage: string) {
     const card = cards.data?.rows.find((c) => c.id === id);
     if (!card || !writable || card.stage_id === stage || moving.busy || moving.uncertain) return;
-    const dest=stages.find(x=>x.id===stage);
-    if(!dest)return;
-    const kind=highImpactStage(dest.name);
-    if(kind) { setPendingMove({card,stage:dest,kind});return; }
+    const dest = stages.find((x) => x.id === stage);
+    if (!dest) return;
+    const kind = highImpactStage(dest.name);
+    if (kind) {
+      setPendingMove({ card, stage: dest, kind });
+      return;
+    }
     await moving.run(async () => {
       await api.saveCard({ stage_id: stage }, card.id, card.row_version);
       refresh();
@@ -183,24 +191,20 @@ export function RealKanban() {
       {refs.data && (
         <>
           <div className="section-bar operational-toolbar">
-            <div className="tabs" aria-label="Funis">
-              {refs.data.boards.map((b) => (
-                <button
-                  type="button"
-                  key={b.id}
-                  className={b.id === board?.id ? 'active' : ''}
-                  onClick={() => {
-                    setParams({ funil: b.id, ...(contactId ? { contato: contactId } : {}) });
-                    setPage(0);
-                  }}
-                >
-                  {b.name}
-                </button>
-              ))}
+            <div className="actions board-navigation">
+              <ViewSwitcher
+                label="Funis"
+                value={board?.id || ''}
+                onValueChange={(id) => {
+                  setParams({ funil: id, ...(contactId ? { contato: contactId } : {}) });
+                  setPage(0);
+                }}
+                items={refs.data.boards.map((b) => ({ value: b.id, label: b.name }))}
+              />
               {can('boards.create') && (
                 <Button
                   variant="ghost"
-                  size="sm"
+                  size="icon"
                   aria-label="Adicionar funil"
                   onClick={() => setNewBoard(true)}
                 >
@@ -299,7 +303,9 @@ export function RealKanban() {
                                       onOpen={() => setEditing(card)}
                                     />
                                     {can('cards.delete') && (
-                                      <button
+                                      <Button
+                                        size="icon"
+                                        variant="outline"
                                         type="button"
                                         className="icon-button"
                                         aria-label={
@@ -308,10 +314,12 @@ export function RealKanban() {
                                         onClick={() => setDeleting(card)}
                                       >
                                         <Trash2 size={15} />
-                                      </button>
+                                      </Button>
                                     )}
                                     {writable && (
-                                      <button
+                                      <Button
+                                        size="icon"
+                                        variant="outline"
                                         className="icon-button"
                                         aria-label={
                                           'Editar ' + (card.title || contact?.name || 'card')
@@ -319,7 +327,7 @@ export function RealKanban() {
                                         onClick={() => setEditing(card)}
                                       >
                                         <Pencil size={15} />
-                                      </button>
+                                      </Button>
                                     )}
                                   </div>
                                   <p>{contact?.name || 'Contato indisponível'}</p>
@@ -464,26 +472,49 @@ export function RealKanban() {
           }}
         />
       )}
-      {pendingMove && <ConfirmKanbanMove
-        key={pendingMove.card.id+'-'+pendingMove.stage.id}
-        contactName={cards.data?.contacts.find(c=>c.id===pendingMove.card.contact_id)?.name||pendingMove.card.title||'Cliente'}
-        fromStage={stages.find(x=>x.id===pendingMove.card.stage_id)?.name||'Etapa anterior'}
-        toStage={pendingMove.stage.name}
-        kind={pendingMove.kind}
-        amountCents={pendingMove.card.value_cents}
-        busy={moving.busy}
-        onCancel={()=>setPendingMove(null)}
-        onConfirm={(result:ConfirmedMove)=>void moving.run(async()=>{
-          if(result.confirmed){
-            await api.confirmCardSale(pendingMove.card.id,pendingMove.stage.id,pendingMove.card.row_version,result.amountCents);
-          }else{
-            await api.saveCard({stage_id:pendingMove.stage.id},pendingMove.card.id,pendingMove.card.row_version);
+      {pendingMove && (
+        <ConfirmKanbanMove
+          key={pendingMove.card.id + '-' + pendingMove.stage.id}
+          contactName={
+            cards.data?.contacts.find((c) => c.id === pendingMove.card.contact_id)?.name ||
+            pendingMove.card.title ||
+            'Cliente'
           }
-          setPendingMove(null);
-          refresh();
-          notice(result.confirmed?'Venda confirmada e registrada nas metas.':'Movimentação confirmada.');
-        })}
-      />}
+          fromStage={
+            stages.find((x) => x.id === pendingMove.card.stage_id)?.name || 'Etapa anterior'
+          }
+          toStage={pendingMove.stage.name}
+          kind={pendingMove.kind}
+          amountCents={pendingMove.card.value_cents}
+          busy={moving.busy}
+          onCancel={() => setPendingMove(null)}
+          onConfirm={(result: ConfirmedMove) =>
+            void moving.run(async () => {
+              if (result.confirmed) {
+                await api.confirmCardSale(
+                  pendingMove.card.id,
+                  pendingMove.stage.id,
+                  pendingMove.card.row_version,
+                  result.amountCents,
+                );
+              } else {
+                await api.saveCard(
+                  { stage_id: pendingMove.stage.id },
+                  pendingMove.card.id,
+                  pendingMove.card.row_version,
+                );
+              }
+              setPendingMove(null);
+              refresh();
+              notice(
+                result.confirmed
+                  ? 'Venda confirmada e registrada nas metas.'
+                  : 'Movimentação confirmada.',
+              );
+            })
+          }
+        />
+      )}
       {deleting && (
         <DeleteCardDialog
           card={deleting}
@@ -620,7 +651,9 @@ function StageEditor({
                     )
                   }
                 />
-                <button
+                <Button
+                  size="icon"
+                  variant="outline"
                   type="button"
                   className="icon-button"
                   aria-label={'Subir ' + s.name}
@@ -628,8 +661,10 @@ function StageEditor({
                   onClick={() => reorder(index, index - 1)}
                 >
                   <ArrowUp size={15} />
-                </button>
-                <button
+                </Button>
+                <Button
+                  size="icon"
+                  variant="outline"
                   type="button"
                   className="icon-button"
                   aria-label={'Descer ' + s.name}
@@ -637,8 +672,10 @@ function StageEditor({
                   onClick={() => reorder(index, index + 1)}
                 >
                   <ArrowDown size={15} />
-                </button>
-                <button
+                </Button>
+                <Button
+                  size="icon"
+                  variant="outline"
                   type="button"
                   className="icon-button"
                   aria-label={'Excluir etapa ' + s.name}
@@ -646,7 +683,7 @@ function StageEditor({
                   onClick={() => setRemove(s.id)}
                 >
                   <Trash2 size={15} />
-                </button>
+                </Button>
               </div>
             ))}
           </div>

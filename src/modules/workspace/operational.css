@@ -93,25 +93,6 @@
   white-space: normal;
   min-width: 600px;
 }
-.operational-table th {
-  text-align: left;
-  padding: 14px 16px;
-  font-size: 11px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  background: var(--surface);
-  color: var(--muted);
-}
-.operational-table td {
-  padding: 17px 16px;
-  border-bottom: 1px solid var(--line);
-  font-size: 13px;
-  vertical-align: middle;
-  line-height: 1.5;
-}
-.operational-table tr:last-child td {
-  border-bottom: 0;
-}
 .operational-cell-note {
   display: block;
   font-size: 11px;
@@ -406,29 +387,6 @@
   font-size: 12px;
   margin-bottom: 0;
 }
-.official-member .tabs {
-  display: flex;
-  gap: 4px;
-  flex-wrap: wrap;
-  margin-bottom: 14px;
-}
-.official-member .tabs > button {
-  padding: 9px 13px;
-  border: 1px solid transparent;
-  border-radius: 8px;
-  background: transparent;
-  font-size: 12px;
-  color: var(--muted);
-  cursor: pointer;
-  white-space: nowrap;
-}
-.official-member .tabs > button.active {
-  background: var(--raised);
-  color: var(--primary);
-  border-color: var(--line);
-  box-shadow: 0 2px 5px var(--shadow-color);
-  font-weight: 600;
-}
 .official-member .contact-picker-popup {
   max-width: 100%;
   z-index: 10;
@@ -491,12 +449,11 @@
   .operational-toolbar .form-row {
     min-width: 130px;
   }
-  .official-member .tabs {
-    overflow: auto;
-    flex-wrap: nowrap;
-    max-width: 100%;
-  }
 }
 
-.page:has(.dashboard-tabs) .operational-dashboard-grid{gap:14px}
-.page:has(.dashboard-tabs) .operational-dashboard-grid>.panel{min-width:0}
+.page:has(.dashboard-tabs) .operational-dashboard-grid {
+  gap: 14px;
+}
+.page:has(.dashboard-tabs) .operational-dashboard-grid > .panel {
+  min-width: 0;
+}

@@ -1,9 +1,10 @@
+import { KeyRound } from 'lucide-react';
 import { PermissionTree } from '../permissions/PermissionTree';
 import { RecordTitle } from '../../components/RecordTitle';
 import { legacyPermissions, type EmployeePermissions } from '../permissions/model';
 import { Input } from '../../components/ui/input';
 import { useState, type FormEvent } from 'react';
-import { Plus, Pencil, UserRound, ShieldCheck } from 'lucide-react';
+import { Plus, Pencil, UserRound } from 'lucide-react';
 import { useCrm } from '../../app/context';
 import type { Member } from '../../domain/types';
 import { initials, uid } from '../../lib/format';
@@ -149,17 +150,20 @@ export function Team() {
                     <div className="actions">
                       <Button
                         variant="ghost"
-                        size="sm"
+                        size="icon"
                         onClick={() => open(m)}
                         aria-label={'Editar ' + m.name}
                       >
-                        <Pencil size={14} />
-                        Editar
+                        <Pencil size={16} aria-hidden="true" />
                       </Button>
                       {m.role !== 'manager' && (
-                        <Button variant="outline" size="sm" onClick={() => setResetMember(m)}>
-                          <ShieldCheck size={14} />
-                          Redefinir senha
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => setResetMember(m)}
+                          aria-label="Redefinir senha"
+                        >
+                          <KeyRound size={16} aria-hidden="true" />
                         </Button>
                       )}
                     </div>

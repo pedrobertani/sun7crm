@@ -1,3 +1,5 @@
+import { Eye } from 'lucide-react';
+import { ViewSwitcher } from '../../components/ui/view-switcher';
 import { useState, type FormEvent } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Link } from 'react-router-dom';
@@ -360,12 +362,12 @@ export function AdminCompanies({
                           Plano
                         </Link>
                         <Button
-                          size="sm"
+                          size="icon"
                           variant="ghost"
                           onClick={() => openDetails(company.id)}
                           aria-label={`Ver detalhes de ${company.name}`}
                         >
-                          Detalhes
+                          <Eye size={16} aria-hidden="true" />
                         </Button>
                         {!company.managers.length && (
                           <Button
@@ -616,22 +618,15 @@ export function AdminCompanies({
       >
         {selected && (
           <>
-            <div className="billing-tabs" role="group" aria-label="Detalhes da empresa">
-              <Button
-                variant={detailsTab === 'company' ? 'outline' : 'ghost'}
-                aria-pressed={detailsTab === 'company'}
-                onClick={() => setDetailsTab('company')}
-              >
-                Dados e usuários
-              </Button>
-              <Button
-                variant={detailsTab === 'billing' ? 'outline' : 'ghost'}
-                aria-pressed={detailsTab === 'billing'}
-                onClick={() => setDetailsTab('billing')}
-              >
-                Cobranças
-              </Button>
-            </div>
+            <ViewSwitcher
+              label="Detalhes da empresa"
+              value={detailsTab}
+              onValueChange={setDetailsTab}
+              items={[
+                { value: 'company', label: 'Dados e usuários' },
+                { value: 'billing', label: 'Cobranças' },
+              ]}
+            />
             {detailsTab === 'billing' ? (
               <>
                 <BillingHistory

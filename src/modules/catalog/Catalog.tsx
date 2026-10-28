@@ -1,3 +1,4 @@
+import { Pencil } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import { RecordTitle } from '../../components/RecordTitle';
 import { useCrm } from '../../app/context';
@@ -80,8 +81,13 @@ export function Catalog() {
                   <td>{i.active ? 'Ativo' : 'Inativo'}</td>
                   <td>
                     {manager && (
-                      <Button variant="outline" onClick={() => open(i)}>
-                        Editar
+                      <Button
+                        variant="outline"
+                        onClick={() => open(i)}
+                        size="icon"
+                        aria-label="Editar"
+                      >
+                        <Pencil size={16} aria-hidden="true" />
                       </Button>
                     )}
                   </td>
