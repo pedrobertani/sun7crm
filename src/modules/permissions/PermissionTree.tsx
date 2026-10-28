@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState } from 'react';
-import { Plus, Minus } from 'lucide-react';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 import {
   actionLabels,
   allPermissionKeys,
@@ -9,6 +9,14 @@ import {
   type EmployeePermissions,
 } from './model';
 import './permissions.css';
+const groups = [
+ {label:'Dia a dia',id:'daily',resources:['dashboard','cards','boards','stages','contacts','history','tasks']},
+ {label:'Crescimento',id:'growth',resources:['strategies','ambassadors','campaigns','referrals','goals']},
+ {label:'Cadastros',id:'records',resources:['catalog','labels']},
+ {label:'Gestão',id:'management',resources:['reports','team','settings']},
+];
+const resources = new Map(permissionModules.flatMap(m=>m.resources).map(r=>[r.id,r]));
+
 function Check({
   label,
   selected,
@@ -52,7 +60,7 @@ export function PermissionTree({
   availableKeys?: string[];
   allowCompanyScope?: boolean;
 }) {
-  const [open, setOpen] = useState<string[]>([]);
+  const [open, setOpen] = useState<string[]>(['daily']);
   const expand = (id: string) =>
     setOpen((v) => (v.includes(id) ? v.filter((x) => x !== id) : [...v, id]));
   const change = (keys: string[], enabled: boolean) =>
@@ -74,14 +82,14 @@ export function PermissionTree({
         </span>
       </div>
       <Check
-        label="Ativar todas as funcionalidades"
+        label="Selecionar tudo"
         selected={count(availableKeys)}
         total={availableKeys.length || 1}
         onChange={(v) => change(allPermissionKeys, v)}
         disabled={disabled}
       />
       <p className="small-note">
-        Escolha as ações em cada grupo. As consultas necessárias são ativadas junto com as ações.
+        Organizadas como o menu do CRM. Expanda apenas o que precisar configurar. As consultas necessárias são ativadas automaticamente.
         Administrar funcionários permite criar contas e definir acessos apenas nesta empresa.
       </p>
       <label className="form-row">
@@ -99,78 +107,44 @@ export function PermissionTree({
           </option>
         </select>
       </label>
-      {permissionModules.map((m) => {
-        const keys = m.resources.flatMap(resourceKeys),
-          expanded = open.includes(m.id);
-        return (
-          <div className="permission-module" key={m.id}>
-            <div className="permission-row">
-              <button
-                type="button"
-                className="permission-expand"
-                onClick={() => expand(m.id)}
-                aria-expanded={expanded}
-                aria-controls={`permission-${m.id}`}
-              >
-                <strong>{m.label}</strong>
-                {expanded ? <Minus size={16} /> : <Plus size={16} />}
-              </button>
-              <Check
-                label={`Todos de ${m.label}`}
-                selected={count(keys)}
-                total={keys.length}
-                onChange={(v) => change(keys, v)}
-                disabled={disabled}
-              />
-            </div>
-            {expanded && (
-              <div id={`permission-${m.id}`} className="permission-resources">
-                {m.resources.map((r) => {
-                  const rk = resourceKeys(r),
-                    id = `${m.id}-${r.id}`,
-                    re = open.includes(id);
-                  return (
-                    <div key={r.id} className="permission-resource">
-                      <div className="permission-row">
-                        <button
-                          type="button"
-                          className="permission-expand"
-                          onClick={() => expand(id)}
-                          aria-expanded={re}
-                          aria-controls={`permission-${id}`}
-                        >
-                          {r.label}
-                          {re ? <Minus size={15} /> : <Plus size={15} />}
-                        </button>
-                        <Check
-                          label={`Todos de ${r.label}`}
-                          selected={count(rk)}
-                          total={rk.length}
-                          onChange={(v) => change(rk, v)}
-                          disabled={disabled}
-                        />
-                      </div>
-                      {re && (
-                        <div id={`permission-${id}`} className="permission-actions">
-                          {r.actions.map((a) => (
-                            <Check
-                              key={a}
-                              label={actionLabels[a]}
-                              selected={Number(value.keys.includes(`${r.id}.${a}`))}
-                              total={1}
-                              onChange={(v) => change([`${r.id}.${a}`], v)}
-                              disabled={disabled || !availableKeys.includes(`${r.id}.${a}`)}
-                            />
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+      {groups.map(g => {
+        const items=g.resources.map(id=>resources.get(id)).filter((r):r is NonNullable<typeof r>=>Boolean(r));
+        const groupKeys=items.flatMap(resourceKeys);
+        const expanded=open.includes(g.id);
+        return <div className="permission-module" key={g.id}>
+          <div className="permission-row permission-group-row">
+            <button type="button" className="permission-expand" onClick={()=>expand(g.id)}
+              aria-expanded={expanded} aria-controls={'permission-'+g.id}>
+              {expanded?<ChevronDown size={16}/>:<ChevronRight size={16}/>}
+              <strong>{g.label}</strong><small>{count(groupKeys)}/{groupKeys.length}</small>
+            </button>
+            <Check label="Selecionar grupo" selected={count(groupKeys)} total={groupKeys.length}
+              onChange={v=>change(groupKeys,v)} disabled={disabled}/>
           </div>
-        );
+          {expanded&&<div className="permission-resources" id={'permission-'+g.id}>
+            {items.map(r=>{
+              const rk=resourceKeys(r),isSingle=rk.length===1,id='resource-'+r.id,re=open.includes(id);
+              return <div key={r.id} className="permission-resource">
+                <div className="permission-row">
+                  {isSingle?<span className="permission-resource-title">{r.label}</span>:
+                    <button type="button" className="permission-expand" onClick={()=>expand(id)}
+                      aria-expanded={re} aria-controls={'permission-'+id}>
+                      {re?<ChevronDown size={15}/>:<ChevronRight size={15}/>}
+                      {r.label}<small>{count(rk)}/{rk.length}</small>
+                    </button>}
+                  <Check label={isSingle?'Visualizar':'Todos'} selected={count(rk)} total={rk.length}
+                    onChange={v=>change(rk,v)} disabled={disabled}/>
+                </div>
+                {!isSingle&&re&&<div className="permission-actions" id={'permission-'+id}>
+                  {r.actions.map(a=><Check key={a} label={actionLabels[a]}
+                    selected={Number(value.keys.includes(r.id+'.'+a))} total={1}
+                    onChange={v=>change([r.id+'.'+a],v)}
+                    disabled={disabled||!availableKeys.includes(r.id+'.'+a)}/>)}
+                </div>}
+              </div>;
+            })}
+          </div>}
+        </div>;
       })}
     </section>
   );
