@@ -1,7 +1,7 @@
 import { Pencil } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import { ViewSwitcher } from '../../components/ui/view-switcher';
-import { Pagination, CAMPAIGN_PAGE_SIZE } from '../../components/ui/pagination';
+import { Pagination, type PageSize } from '../../components/ui/pagination';
 import { campaignViews, type CampaignView } from './campaign-views';
 import { RecordTitle } from '../../components/RecordTitle';
 import { useCrm } from '../../app/context';
@@ -33,6 +33,10 @@ export function Ambassadors() {
   const [referralsPage, setReferralsPage] = useState(0);
   const [legacyPage, setLegacyPage] = useState(0);
   const [paymentsPage, setPaymentsPage] = useState(0);
+  const [size, setSizeState] = useState<PageSize>(10);
+  const setSize = (next: PageSize) => {
+    setSizeState(next); setOverviewPage(0); setReferralsPage(0); setLegacyPage(0); setPaymentsPage(0);
+  };
   const campaign = campaigns.find((c) => c.id === selected) || campaigns[0];
   const [campaignForm, setCampaignForm] = useState<AmbassadorCampaign | null>(null);
   const [person, setPerson] = useState<Ambassador | null>(null);
@@ -315,7 +319,7 @@ export function Ambassadors() {
               </tr>
             </thead>
             <tbody>
-              {people.slice(overviewPage * CAMPAIGN_PAGE_SIZE, (overviewPage + 1) * CAMPAIGN_PAGE_SIZE).map((a) => {
+              {people.slice(overviewPage * size, (overviewPage + 1) * size).map((a) => {
                 const t = campaign ? campaignTotals(data, campaign, a.id) : null;
                 return (
                   <tr key={a.id}>
@@ -382,7 +386,7 @@ export function Ambassadors() {
             </tbody>
           </table>
         </div>
-        <Pagination page={overviewPage} total={people.length} onChange={setOverviewPage} label="participantes" size={CAMPAIGN_PAGE_SIZE} />
+        <Pagination page={overviewPage} total={people.length} onChange={setOverviewPage} label="participantes" size={size} onSizeChange={setSize} />
         </section>
       )}
       {campaignTab === 'referrals' && campaign && (
@@ -402,7 +406,7 @@ export function Ambassadors() {
                 </tr>
               </thead>
               <tbody>
-                {sales.slice(referralsPage * CAMPAIGN_PAGE_SIZE, (referralsPage + 1) * CAMPAIGN_PAGE_SIZE).map((s) => (
+                {sales.slice(referralsPage * size, (referralsPage + 1) * size).map((s) => (
                   <tr key={s.id}>
                     <td>
                       {s.customer}
@@ -468,7 +472,7 @@ export function Ambassadors() {
               </tbody>
             </table>
           </div>
-          <Pagination page={referralsPage} total={sales.length} onChange={setReferralsPage} label="indicações" size={CAMPAIGN_PAGE_SIZE} />
+          <Pagination page={referralsPage} total={sales.length} onChange={setReferralsPage} label="indicações" size={size} onSizeChange={setSize} />
         </section>
       )}
       {campaignTab === 'history' && !!legacy.length && (
@@ -487,7 +491,7 @@ export function Ambassadors() {
                 </tr>
               </thead>
               <tbody>
-                {legacy.slice(legacyPage * CAMPAIGN_PAGE_SIZE, (legacyPage + 1) * CAMPAIGN_PAGE_SIZE).map((s) => (
+                {legacy.slice(legacyPage * size, (legacyPage + 1) * size).map((s) => (
                   <tr key={s.id}>
                     <td>{s.customer}</td>
                     <td>{currency(s.value)}</td>
@@ -501,7 +505,7 @@ export function Ambassadors() {
               </tbody>
             </table>
           </div>
-          <Pagination page={legacyPage} total={legacy.length} onChange={setLegacyPage} label="registros anteriores" size={CAMPAIGN_PAGE_SIZE} />
+          <Pagination page={legacyPage} total={legacy.length} onChange={setLegacyPage} label="registros anteriores" size={size} onSizeChange={setSize} />
         </section>
       )}
       {campaignTab === 'history' && (
@@ -525,7 +529,7 @@ export function Ambassadors() {
                   </tr>
                 </thead>
                 <tbody>
-                  {payments.slice(paymentsPage * CAMPAIGN_PAGE_SIZE, (paymentsPage + 1) * CAMPAIGN_PAGE_SIZE).map((p) => (
+                  {payments.slice(paymentsPage * size, (paymentsPage + 1) * size).map((p) => (
                     <tr key={p.id}>
                       <td>
                         {people.find((a) => a.id === p.ambassadorId)?.name ||
@@ -542,7 +546,7 @@ export function Ambassadors() {
                 </tbody>
               </table>
               </div>
-              <Pagination page={paymentsPage} total={payments.length} onChange={setPaymentsPage} label="pagamentos" size={CAMPAIGN_PAGE_SIZE} />
+              <Pagination page={paymentsPage} total={payments.length} onChange={setPaymentsPage} label="pagamentos" size={size} onSizeChange={setSize} />
             </>
           ) : (
             <p className="small-note">Nenhum pagamento registrado até o momento.</p>
