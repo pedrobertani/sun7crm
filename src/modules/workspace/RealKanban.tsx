@@ -1,6 +1,7 @@
 import { ViewSwitcher } from '../../components/ui/view-switcher';
 import { KanbanScroll } from '../../components/ui/kanban-scroll';
 import { Pagination, PAGE_SIZES, type PageSize } from '../../components/ui/pagination';
+import { KanbanPeriodFilter, initialKanbanPeriod, kanbanDateRange, type KanbanPeriod } from '../kanban/period-filter';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
@@ -70,7 +71,9 @@ export function RealKanban() {
     boardId = params.get('funil') || '',
     contactId = params.get('contato') || '',
     cardId = params.get('card') || '';
+  const [dateFilter, setDateFilter] = useState<KanbanPeriod>(initialKanbanPeriod);
   const [stagePages, setStagePages] = useState<Record<string, number>>({});
+  const updateDateFilter = (next: KanbanPeriod) => { setDateFilter(next); setStagePages({}); };
   const [pageSize, setPageSize] = useState<PageSize>(10);
   const changePageSize = (size: PageSize) => { setPageSize(size); setStagePages({}); };
   const [search, setSearch] = useState(''),
@@ -93,15 +96,23 @@ export function RealKanban() {
         .filter((s) => s.board_id === board?.id)
         .sort((a, b) => a.position - b.position) || [];
   const stageIds = stages.map((stage) => stage.id).join(',');
+  const dateRange = kanbanDateRange(dateFilter);
+  const invalidDate = dateFilter.mode !== 'all' && !dateRange;
   // Load each stage independently: one global page hides cards from other columns.
   const cards = useQuery(async () => {
     if (!board) return null;
+    if (invalidDate) return {
+      rows: [] as CardRow[], stageTotals: Object.fromEntries(stages.map((stage) => [stage.id, 0])),
+      total: 0, contacts: [] as ContactRow[], activity: [] as Awaited<ReturnType<typeof api.activityByIds>>,
+      labels: [] as Awaited<ReturnType<typeof api.labelsByCardIds>>,
+    };
     const groups = await Promise.all(stages.map(async (stage) => ({
       id: stage.id,
       data: await api.list(
         'cards', stagePages[stage.id] || 0, pageSize,
         { board_id: board.id, stage_id: stage.id, ...(contactId ? { contact_id: contactId } : {}) },
         search,
+        dateRange || undefined,
       ),
     })));
     const rows = groups.flatMap((group) => group.data.rows);
@@ -112,7 +123,7 @@ export function RealKanban() {
     ]);
     const stageTotals = Object.fromEntries(groups.map((group) => [group.id, group.data.total]));
     return { rows, stageTotals, total: groups.reduce((sum, group) => sum + group.data.total, 0), contacts, activity, labels };
-  }, [api, board?.id, stageIds, stagePages, pageSize, search, contactId]);
+  }, [api, board?.id, stageIds, stagePages, pageSize, search, contactId, dateRange?.from, dateRange?.until, invalidDate]);
   // If a card was removed from the last page of a stage, don't leave an empty page.
   useEffect(() => {
     const totals = cards.data?.stageTotals;
@@ -251,26 +262,22 @@ export function RealKanban() {
           </div>
           {board ? (
             <>
-              <div className="operational-toolbar">
+              <div className="operational-toolbar kanban-filterbar">
                 <SearchInput
                   value={search}
-                  onChange={(v) => {
-                    setSearch(v);
-                    setStagePages({});
-                  }}
+                  onChange={(value) => { setSearch(value); setStagePages({}); }}
                   placeholder="Buscar pelo título do card..."
                 />
+                <KanbanPeriodFilter value={dateFilter} onChange={updateDateFilter} />
                 <label className="kanban-board-size">
                   Exibir
-                  <select value={pageSize} aria-label="Cards por etapa" onChange={(event) => changePageSize(Number(event.target.value) as PageSize)}>
+                  <select value={pageSize} aria-label="Cards por etapa"
+                    onChange={(event) => changePageSize(Number(event.target.value) as PageSize)}>
                     {PAGE_SIZES.map((size) => <option key={size} value={size}>{size}</option>)}
                   </select>
                   por etapa
                 </label>
-                <p className="small-note">
-                  Alertas fixos: 24h sem primeiro acompanhamento · 3 dias para o responsável · 7
-                  dias para o gestor.
-                </p>
+                <span className="muted result-count">{cards.data?.total ?? 0} oportunidades</span>
               </div>
               <QueryState query={cards} />
               {cards.data && (
