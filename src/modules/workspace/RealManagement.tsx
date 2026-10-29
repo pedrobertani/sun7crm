@@ -330,6 +330,7 @@ export function RealReports() {
   );
 }
 export function RealTeam() {
+  const pages = usePagination();
   const { api, user, can, refresh, notice } = useOperational(),
     query = useQuery(() => api.team(), [api]),
     [permissionsFor, setPermissionsFor] = useState<TeamRow | null>(null),
@@ -361,7 +362,7 @@ export function RealTeam() {
               </tr>
             </thead>
             <tbody>
-              {query.data.map((row) => (
+              {paginatedRows(query.data, pages.page, pages.size).map((row) => (
                 <tr key={row.id}>
                   <td>
                     <RecordTitle
@@ -412,6 +413,7 @@ export function RealTeam() {
               ))}
             </tbody>
           </table>
+          <Pagination page={pages.page} size={pages.size} total={query.data.length} onChange={pages.setPage} onSizeChange={pages.setSize} label="integrantes" />
         </div>
       )}
       {permissionsFor && (
