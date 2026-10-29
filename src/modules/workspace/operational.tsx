@@ -206,29 +206,21 @@ export function SaveActions({
           Cancelar
         </Button>
         <Button type="submit" disabled={save.busy || save.uncertain}>
-          {save.export function Pager({
-  page,
-  total,
-  size = 10,
-  onChange,
-  onSizeChange,
-  loading = false,
+          {save.busy ? 'Salvando...' : label}
+        </Button>
+      </div>
+    </>
+  );
+}
+export function Pager({
+  page, total, size = 10, onChange, onSizeChange, loading = false,
 }: {
-  page: number;
-  total: number;
-  size?: number;
+  page: number; total: number; size?: number;
   onChange: (page: number) => void;
   onSizeChange?: (size: PageSize) => void;
   loading?: boolean;
 }) {
   return <Pagination page={page} total={total} size={size} onChange={onChange} onSizeChange={onSizeChange} loading={loading} />;
-}
-Change(page + 1)}
-      >
-        Próxima
-      </Button>
-    </div>
-  );
 }
 export function useTeam() {
   const { api, company, user, can } = useOperational();
