@@ -2,7 +2,7 @@ import { ViewSwitcher } from '../../components/ui/view-switcher';
 import { useState, type FormEvent } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { CreditCard, Gift } from 'lucide-react';
-import { Empty, FormError, Heading, SearchInput } from '../../components/shared';
+import { Empty, FormError, Heading } from '../../components/shared';
 import { Button } from '../../components/ui/button';
 import { Modal } from '../../components/ui/modal';
 import { getSupabaseClient } from '../../lib/supabase';
@@ -44,8 +44,7 @@ export function AdminPlans({
     params.get('visao') === 'planos' || (!params.has('visao') && params.has('empresa'));
   const selectedId = params.get('empresa') || companies[0]?.id || '';
   const company = companies.find((item) => item.id === selectedId);
-  const [query, setQuery] = useState(''),
-    [error, setError] = useState('');
+  const [error, setError] = useState('');
   const [revision, setRevision] = useState(0),
     [action, setAction] = useState<'payment' | 'complimentary' | 'charge' | null>(null);
   const [days, setDays] = useState(7),
@@ -66,9 +65,6 @@ export function AdminPlans({
       enabled: !!company && showPlans,
       automatic: () => !action,
     },
-  );
-  const planCompanies = companies.filter((item) =>
-    item.name.toLocaleLowerCase('pt-BR').includes(query.trim().toLocaleLowerCase('pt-BR')),
   );
   function open(kind: 'payment' | 'complimentary' | 'charge') {
     setAction(kind);
@@ -192,21 +188,7 @@ export function AdminPlans({
                 {companies.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
               </select>
             </label>
-            <label className="form-row">
-              Buscar empresa
-              <SearchInput value={query} onChange={setQuery} placeholder="Filtrar empresas..." />
-            </label>
-            {query.trim() && (
-              <div className="billing-company-matches" aria-label="Resultados da busca">
-                {planCompanies.length ? planCompanies.map((item) => (
-                  <Button key={item.id} variant="outline" size="sm" onClick={() => {
-                    setCompanyTab('overview');
-                    setParams({ empresa: item.id, visao: 'planos' });
-                    setQuery('');
-                  }}>{item.name}</Button>
-                )) : <span className="muted">Nenhuma empresa encontrada.</span>}
-              </div>
-            )}
+
           </div>
           <div className="billing-admin-main">
             {company ? (
