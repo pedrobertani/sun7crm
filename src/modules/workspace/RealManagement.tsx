@@ -1,5 +1,6 @@
 import { ShieldCheck, Pencil, KeyRound } from 'lucide-react';
 import { ViewSwitcher } from '../../components/ui/view-switcher';
+import { Pagination, paginatedRows, usePagination } from '../../components/ui/pagination';
 import { PermissionTree } from '../permissions/PermissionTree';
 import { type EmployeePermissions } from '../permissions/model';
 import { useEffect, useState } from 'react';
@@ -186,17 +187,17 @@ export function RealDashboard() {
   );
 }
 export function RealReports() {
+  const { page, size, setPage, setSize } = usePagination();
   const { api, company, can, revision } = useOperational(),
     [tab, setTab] = useState<'cards' | 'contacts'>('cards'),
-    [page, setPage] = useState(0),
     [history, setHistory] = useState<CardActivity | null>(null);
-  const query = useQuery(() => api.cardActivity(page, 50, true), [api, page]);
+  const query = useQuery(() => api.cardActivity(page, size, true), [api, page, size]);
   return (
     <>
       <ViewSwitcher
         label="Relatórios"
         value={tab}
-        onValueChange={setTab}
+        onValueChange={(value) => { setTab(value); setPage(0); }}
         items={[
           { value: 'cards', label: 'Por card' },
           { value: 'contacts', label: 'Clientes e equipe' },
@@ -306,7 +307,7 @@ export function RealReports() {
                   />
                 )}
               </div>
-              <Pager page={page} total={query.data.total} onChange={setPage} />
+              <Pager page={page} size={size} onSizeChange={setSize} total={query.data.total} onChange={setPage} />
             </>
           )}
         </>
