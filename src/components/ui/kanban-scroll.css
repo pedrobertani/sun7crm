@@ -1,0 +1,46 @@
+.kanban-scroll-shell {
+  min-width: 0;
+  max-width: 100%;
+}
+.kanban-scroll-top {
+  overflow-x: auto;
+  overflow-y: hidden;
+  height: 18px;
+  margin: 0 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--control-border) transparent;
+}
+.kanban-scroll-top:focus-visible,
+.kanban-scroll:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.kanban-scroll { max-width: 100%; scrollbar-width: thin; scrollbar-color: var(--control-border) transparent; }
+.kanban-scroll-top::-webkit-scrollbar, .kanban-scroll::-webkit-scrollbar { height: 10px; }
+.kanban-scroll-top::-webkit-scrollbar-thumb, .kanban-scroll::-webkit-scrollbar-thumb { background: var(--control-border); border-radius: 6px; }
+.kanban-scroll-top::-webkit-scrollbar-track, .kanban-scroll::-webkit-scrollbar-track { background: var(--raised); border-radius: 6px; }
+/* Keep stage headings in place while the cards themselves are scrolled. */
+.kanban-scroll-shell .kanban-column { display: flex; flex-direction: column; height: min(670px, max(370px, calc(100dvh - 235px))); min-height: 0; }
+.kanban-scroll-shell .column-head,
+.kanban-scroll-shell .kanban-column-head { flex: 0 0 auto; }
+.kanban-scroll-shell .column-body,
+.kanban-scroll-shell .kanban-cards {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior-y: contain;
+  scrollbar-width: thin;
+  padding-right: 5px;
+}
+.kanban-scroll-shell .kanban-cards { align-items: stretch; }
+.kanban-column-pagination { flex: 0 0 auto; padding-top: 8px; margin-top: 8px; border-top: 1px solid var(--line); }
+.kanban-column-pagination .ui-pagination { margin: 0; padding: 6px 0 0; border: 0; gap: 6px; justify-content: space-between; }
+.kanban-column-pagination .ui-pagination > span { margin-left: 0; }
+.kanban-column-pagination .ui-pagination-page { display: none; }
+.kanban-column-pagination .ui-pagination .btn { padding: 6px 9px; }
+.kanban-board-size { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); white-space: nowrap; }
+.kanban-board-size select { min-width: 70px; padding: 7px 9px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink); }
+@media (max-width: 600px) {
+  .kanban-scroll-shell .kanban-column { height: min(570px, max(360px, calc(100dvh - 280px))); }
+  .kanban-scroll-top { margin-bottom: 8px; }
+}
