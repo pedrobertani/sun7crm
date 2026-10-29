@@ -16,7 +16,8 @@ import { KanbanPeriodFilter, initialKanbanPeriod, matchesKanbanPeriod, type Kanb
 import { Input } from '../../components/ui/input';
 import { useState, type FormEvent } from 'react';
 import { KanbanScroll } from '../../components/ui/kanban-scroll';
-import { Pagination, type PageSize, PAGE_SIZES } from '../../components/ui/pagination';
+import { Pagination } from '../../components/ui/pagination';
+import { KanbanSizeControl, type KanbanPageSize } from './page-size';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import {
   SlidersHorizontal,
@@ -88,8 +89,8 @@ export function Kanban() {
   const strategies = data.strategies.filter((s) => s.companyId === session.companyId);
   const [query, setQuery] = useState('');
   const [stagePages, setStagePages] = useState<Record<string, number>>({});
-  const [pageSize, setPageSize] = useState<PageSize>(10);
-  const changePageSize = (size: PageSize) => { setPageSize(size); setStagePages({}); };
+  const [pageSize, setPageSize] = useState<KanbanPageSize>(10);
+  const changePageSize = (size: KanbanPageSize) => { setPageSize(size); setStagePages({}); };
   const [historyId, setHistoryId] = useState('');
   const [managing, setManaging] = useState(false);
   const [stageName, setStageName] = useState('');
@@ -316,7 +317,7 @@ export function Kanban() {
         <div className="kanban-board">
           {board.stages.map((stage) => {
             const rows = opps.filter((o) => o.stageId === stage.id);
-            const lastPage = Math.max(0, Math.ceil(rows.length / pageSize) - 1);
+            const lastPage = pageSize === 'all' ? 0 : Math.max(0, Math.ceil(rows.length / pageSize) - 1);
             const stagePage = Math.min(stagePages[stage.id] || 0, lastPage);
             return (
               <section
@@ -334,7 +335,7 @@ export function Kanban() {
                   <small>{currency(rows.reduce((s, o) => s + o.value, 0))}</small>
                 </div>
                 <div className="column-body">
-                  {rows.slice(stagePage * pageSize, (stagePage + 1) * pageSize).map((o) => {
+                  {(pageSize === 'all' ? rows : rows.slice(stagePage * pageSize, (stagePage + 1) * pageSize)).map((o) => {
                     const c = contacts.find((c) => c.id === o.contactId)!;
                     return (
                       <article key={o.id} className="opportunity-card" draggable={false}>
@@ -435,26 +436,22 @@ export function Kanban() {
                     </div>
                   )}
                 </div>
-                <div className="kanban-column-pagination">
-                  <Pagination
-                    page={stagePage} size={pageSize} total={rows.length}
-                    onChange={(next) => setStagePages((old) => ({ ...old, [stage.id]: next }))}
-                    label={'cards de ' + stage.name}
-                  />
-                </div>
+                {pageSize !== 'all' && (
+                  <div className="kanban-column-pagination">
+                    <Pagination
+                      page={stagePage} size={pageSize} total={rows.length}
+                      onChange={(next) => setStagePages((old) => ({ ...old, [stage.id]: next }))}
+                      label={'cards de ' + stage.name}
+                    />
+                  </div>
+                )}
               </section>
             );
           })}
         </div>
       </KanbanScroll>
       <div className="kanban-board-footer">
-          <label className="kanban-board-size">
-            Exibir
-            <select value={pageSize} aria-label="Cards por etapa" onChange={(event) => changePageSize(Number(event.target.value) as PageSize)}>
-              {PAGE_SIZES.map((size) => <option key={size} value={size}>{size}</option>)}
-            </select>
-            por etapa
-          </label>
+          <KanbanSizeControl size={pageSize} onChange={changePageSize} />
           <span className="muted result-count">
             {opps.length} oportunidades · {currency(opps.reduce((sum, opportunity) => sum + opportunity.value, 0))}
           </span>
