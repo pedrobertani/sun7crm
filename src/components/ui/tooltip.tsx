@@ -50,6 +50,9 @@ export function Tooltip({ label, children }: { label: string; children: ReactNod
       below,
     });
   };
+  // Native disabled buttons cannot receive focus. Allow keyboard users to inspect the reason.
+  const isDisabledControl =
+    isValidElement(children) && Boolean((children as ReactElement<{ disabled?: boolean }>).props.disabled);
   const control = isValidElement(children)
     ? cloneElement(children as ReactElement<{ 'aria-describedby'?: string }>, {
         'aria-describedby': position ? id : undefined,
@@ -59,6 +62,10 @@ export function Tooltip({ label, children }: { label: string; children: ReactNod
     <span
       ref={anchor}
       className="ui-tooltip-anchor"
+      tabIndex={isDisabledControl ? 0 : undefined}
+      role={isDisabledControl ? 'group' : undefined}
+      aria-disabled={isDisabledControl ? true : undefined}
+      aria-label={isDisabledControl ? label : undefined}
       onMouseEnter={show}
       onMouseLeave={hide}
       onFocus={show}
