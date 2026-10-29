@@ -385,3 +385,16 @@ O print de Nova estratégia revelou que `position: sticky` no rodapé compartilh
 - [ ] Confirmar o CI do commit desta correção antes de merge.
 
 **Critério de aceite:** ações não cobrem campos nem mensagens de erro e não aparentam flutuar; o usuário alcança os botões rolando o próprio modal.
+
+## Auditoria SDD — rodapés administrativos e financeiros (29/10/2026)
+
+- [x] Manter o padrão aprovado: rodapé em fluxo normal, sem `sticky`, centralização vertical e separador discreto.
+- [x] Migrar quatro áreas de ações em `admin/Companies.tsx` para `ModalFooter`, incluindo cadastro/edição de empresa, gestor e detalhes.
+- [x] Migrar confirmação de redefinição de senha em `admin/CompanyUsers.tsx` para `ModalFooter`.
+- [x] Migrar dois grupos de ações de `billing/BillingHistory.tsx` para `ModalFooter`, sem alterar as confirmações ou estados de cobrança.
+- [x] Preservar rótulos, permissões, bloqueios de ações em progresso e regras de pagamento existentes.
+- [ ] Inventariar demais modais com botões personalizados fora de `form-actions`; o CSS global ainda não cobre elementos que não usam o contrato.
+- [ ] Validar foco, fechamento, mensagens de erro e rolagem dos modais migrados no navegador, desktop/mobile e claro/escuro.
+- [ ] Confirmar CI no HEAD e não integrar PR #30 antes da homologação.
+
+**Validação já comunicada pelo usuário:** Relatórios/filtros e Estratégias aprovados visualmente; não refazer o layout aprovado para resolver outros módulos.
