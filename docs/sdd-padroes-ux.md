@@ -373,3 +373,15 @@ As capturas abaixo são evidência **visual** em tamanhos reais de viewport, por
 - [ ] Executar CI final e inspeção no HEAD em desktop/mobile e temas claro/escuro.
 
 **Importante:** herança visual global está implementada nos rodapés que usam `.form-actions`, mas a cobertura estrutural por `ModalFooter` ainda não foi comprovada em 100% dos modais especiais. Não declarar a auditoria terminada antes desse inventário.
+
+## Correção regressiva — rodapé flutuante dos modais (29/10/2026)
+
+O print de Nova estratégia revelou que `position: sticky` no rodapé compartilhado sobrepunha os últimos campos e parecia uma barra solta no meio da área rolável. A geometria anterior do SDD foi substituída: **o rodapé de ações deve integrar o fluxo normal do conteúdo do modal**, sem sobreposição.
+
+- [x] Remover `position: sticky`, offset, sombra e plano opaco da regra global `.dialog-body .form-actions`.
+- [x] Manter alinhamento à direita e centralização vertical das ações na linha; usar separador discreto, sem flutuação.
+- [ ] Homologar Nova estratégia e demais formulários longos no navegador, incluindo a rolagem até o último campo e até os botões em 390px/desktop.
+- [ ] Considerar um rodapé verdadeiramente externo à área rolável apenas se validado como nova estrutura do `Modal`, preservando associação dos botões ao formulário.
+- [ ] Confirmar o CI do commit desta correção antes de merge.
+
+**Critério de aceite:** ações não cobrem campos nem mensagens de erro e não aparentam flutuar; o usuário alcança os botões rolando o próprio modal.
