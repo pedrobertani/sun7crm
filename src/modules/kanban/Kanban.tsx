@@ -15,6 +15,8 @@ import { readPeriod, inPeriod } from '../../domain/filters';
 import { dateLabel } from '../../lib/format';
 import { Input } from '../../components/ui/input';
 import { useState, type FormEvent } from 'react';
+import { KanbanScroll } from '../../components/ui/kanban-scroll';
+import { Pagination, type PageSize, PAGE_SIZES } from '../../components/ui/pagination';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import {
   SlidersHorizontal,
@@ -67,6 +69,9 @@ export function Kanban() {
   const labels = (data.labels || []).filter((l) => l.companyId === session.companyId);
   const strategies = data.strategies.filter((s) => s.companyId === session.companyId);
   const [query, setQuery] = useState('');
+  const [stagePages, setStagePages] = useState<Record<string, number>>({});
+  const [pageSize, setPageSize] = useState<PageSize>(10);
+  const changePageSize = (size: PageSize) => { setPageSize(size); setStagePages({}); };
   const [historyId, setHistoryId] = useState('');
   const [managing, setManaging] = useState(false);
   const [stageName, setStageName] = useState('');
@@ -290,15 +295,24 @@ export function Kanban() {
             </Button>
           )}
         </div>
-        <SearchInput value={query} onChange={setQuery} placeholder="Buscar no quadro" />
+        <SearchInput value={query} onChange={(value) => { setQuery(value); setStagePages({}); }} placeholder="Buscar no quadro" />
+        <label className="kanban-board-size">
+          Exibir
+          <select value={pageSize} aria-label="Cards por etapa" onChange={(e) => changePageSize(Number(e.target.value) as PageSize)}>
+            {PAGE_SIZES.map((n) => <option key={n} value={n}>{n}</option>)}
+          </select>
+          por etapa
+        </label>
         <span className="muted result-count">
           {opps.length} oportunidades · {currency(opps.reduce((s, o) => s + o.value, 0))}
         </span>
       </div>
-      <div className="kanban-scroll" key={board.id}>
+      <KanbanScroll key={board.id} label="Colunas do funil">
         <div className="kanban-board">
           {board.stages.map((stage) => {
             const rows = opps.filter((o) => o.stageId === stage.id);
+            const lastPage = Math.max(0, Math.ceil(rows.length / pageSize) - 1);
+            const stagePage = Math.min(stagePages[stage.id] || 0, lastPage);
             return (
               <section
                 key={stage.id}
@@ -315,7 +329,7 @@ export function Kanban() {
                   <small>{currency(rows.reduce((s, o) => s + o.value, 0))}</small>
                 </div>
                 <div className="column-body">
-                  {rows.map((o) => {
+                  {rows.slice(stagePage * pageSize, (stagePage + 1) * pageSize).map((o) => {
                     const c = contacts.find((c) => c.id === o.contactId)!;
                     return (
                       <article key={o.id} className="opportunity-card" draggable={false}>
@@ -416,11 +430,18 @@ export function Kanban() {
                     </div>
                   )}
                 </div>
+                <div className="kanban-column-pagination">
+                  <Pagination
+                    page={stagePage} size={pageSize} total={rows.length}
+                    onChange={(next) => setStagePages((old) => ({ ...old, [stage.id]: next }))}
+                    label={'cards de ' + stage.name}
+                  />
+                </div>
               </section>
             );
           })}
         </div>
-      </div>
+      </KanbanScroll>
       <p className="small-note">
         Etapas e movimentações desta prévia não disparam mensagens, vendas ou automações.
       </p>
