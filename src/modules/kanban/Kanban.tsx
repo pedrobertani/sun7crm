@@ -17,7 +17,7 @@ import { Input } from '../../components/ui/input';
 import { useState, type FormEvent } from 'react';
 import { KanbanScroll } from '../../components/ui/kanban-scroll';
 import { Pagination } from '../../components/ui/pagination';
-import { KanbanSizeControl, type KanbanPageSize } from './page-size';
+import { KanbanSizeControl, visibleKanbanRows, type KanbanPageSize } from './page-size';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import {
   SlidersHorizontal,
@@ -317,8 +317,8 @@ export function Kanban() {
         <div className="kanban-board">
           {board.stages.map((stage) => {
             const rows = opps.filter((o) => o.stageId === stage.id);
-            const lastPage = pageSize === 'all' ? 0 : Math.max(0, Math.ceil(rows.length / pageSize) - 1);
-            const stagePage = Math.min(stagePages[stage.id] || 0, lastPage);
+            const visible = visibleKanbanRows(rows, pageSize, stagePages[stage.id] || 0);
+            const stagePage = visible.page;
             return (
               <section
                 key={stage.id}
@@ -335,7 +335,7 @@ export function Kanban() {
                   <small>{currency(rows.reduce((s, o) => s + o.value, 0))}</small>
                 </div>
                 <div className="column-body">
-                  {(pageSize === 'all' ? rows : rows.slice(stagePage * pageSize, (stagePage + 1) * pageSize)).map((o) => {
+                  {visible.rows.map((o) => {
                     const c = contacts.find((c) => c.id === o.contactId)!;
                     return (
                       <article key={o.id} className="opportunity-card" draggable={false}>
