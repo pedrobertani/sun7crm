@@ -11,8 +11,8 @@ import { ContactPicker } from '../contacts/ContactPicker';
 import { saveCard } from '../../domain/operations';
 import { useNavigate } from 'react-router-dom';
 import { useCardDrag } from '../../hooks/useCardDrag';
-import { readPeriod, inPeriod } from '../../domain/filters';
-import { dateLabel } from '../../lib/format';
+import { readPeriod } from '../../domain/filters';
+import { KanbanPeriodFilter, initialKanbanPeriod, matchesKanbanPeriod, type KanbanPeriod } from './period-filter';
 import { Input } from '../../components/ui/input';
 import { useState, type FormEvent } from 'react';
 import { KanbanScroll } from '../../components/ui/kanban-scroll';
@@ -40,7 +40,6 @@ import { currency, initials, uid } from '../../lib/format';
 import type { BoardKind, Opportunity } from '../../domain/types';
 import {
   Heading,
-  AppliedFilter,
   SearchInput,
   Empty,
   FormError,
@@ -53,7 +52,26 @@ import { highImpactStage } from '../goals/stageOutcome';
 export function Kanban() {
   const { kind } = useParams();
   const [params, setParams] = useSearchParams();
-  const period = readPeriod(params);
+  const [dateFilter, setDateFilter] = useState<KanbanPeriod>(() => {
+    const initial = initialKanbanPeriod();
+    const linked = readPeriod(params);
+    return linked.from || linked.to
+      ? { ...initial, mode: 'custom', from: linked.from || initial.from, to: linked.to || initial.to }
+      : initial;
+  });
+  const updateDateFilter = (next: KanbanPeriod) => {
+    setDateFilter(next);
+    setStagePages({});
+    // A new filter replaces any old deep-link dates.
+    if (params.has('de') || params.has('ate')) {
+      setParams((previous) => {
+        const updated = new URLSearchParams(previous);
+        updated.delete('de');
+        updated.delete('ate');
+        return updated;
+      }, { replace: true });
+    }
+  };
   const navigate = useNavigate();
   const boardKind: BoardKind =
     kind === 'clients' ? 'clients' : kind === 'leads' ? 'leads' : 'custom';
@@ -89,7 +107,7 @@ export function Kanban() {
   const opps = data.opportunities
     .filter(
       (o) =>
-        inPeriod(o.createdAt, period) &&
+        matchesKanbanPeriod(o.createdAt, dateFilter) &&
         o.boardId === board.id &&
         contacts.some((c) => c.id === o.contactId),
     )
@@ -261,12 +279,6 @@ export function Kanban() {
           </Button>
         )}
       </Heading>
-      {(period.from || period.to) && (
-        <AppliedFilter
-          label={`Oportunidades criadas de ${period.from ? dateLabel(period.from) : 'qualquer data'} até ${period.to ? dateLabel(period.to) : 'hoje'}`}
-          onClear={() => setParams({})}
-        />
-      )}
       <div className="kanban-toolbar">
         <div className="ui-tabs-list board-navigation">
           {boards.map((b) => (
@@ -295,17 +307,20 @@ export function Kanban() {
             </Button>
           )}
         </div>
-        <SearchInput value={query} onChange={(value) => { setQuery(value); setStagePages({}); }} placeholder="Buscar no quadro" />
-        <label className="kanban-board-size">
-          Exibir
-          <select value={pageSize} aria-label="Cards por etapa" onChange={(e) => changePageSize(Number(e.target.value) as PageSize)}>
-            {PAGE_SIZES.map((n) => <option key={n} value={n}>{n}</option>)}
-          </select>
-          por etapa
-        </label>
-        <span className="muted result-count">
-          {opps.length} oportunidades · {currency(opps.reduce((s, o) => s + o.value, 0))}
-        </span>
+        <div className="kanban-filterbar">
+          <SearchInput value={query} onChange={(value) => { setQuery(value); setStagePages({}); }} placeholder="Buscar no quadro" />
+          <KanbanPeriodFilter value={dateFilter} onChange={updateDateFilter} />
+          <label className="kanban-board-size">
+            Exibir
+            <select value={pageSize} aria-label="Cards por etapa" onChange={(event) => changePageSize(Number(event.target.value) as PageSize)}>
+              {PAGE_SIZES.map((size) => <option key={size} value={size}>{size}</option>)}
+            </select>
+            por etapa
+          </label>
+          <span className="muted result-count">
+            {opps.length} oportunidades · {currency(opps.reduce((sum, opportunity) => sum + opportunity.value, 0))}
+          </span>
+        </div>
       </div>
       <KanbanScroll key={board.id} label="Colunas do funil">
         <div className="kanban-board">
