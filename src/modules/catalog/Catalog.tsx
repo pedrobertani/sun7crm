@@ -1,5 +1,6 @@
 import { Pencil } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
+import { Pagination, paginatedRows, usePagination } from '../../components/ui/pagination';
 import { RecordTitle } from '../../components/RecordTitle';
 import { useCrm } from '../../app/context';
 import { Heading, FormActions, FormError } from '../../components/shared';
@@ -10,6 +11,7 @@ import { uid, currency } from '../../lib/format';
 import type { CatalogItem, Label } from '../../domain/types';
 
 export function Catalog() {
+  const pages = usePagination();
   const { data, session, update } = useCrm();
   const manager = session.role === 'manager';
   const [editing, setEditing] = useState<CatalogItem | null | undefined>();
@@ -70,7 +72,7 @@ export function Catalog() {
               </tr>
             </thead>
             <tbody>
-              {items.map((i) => (
+              {paginatedRows(items, pages.page, pages.size).map((i) => (
                 <tr key={i.id}>
                   <td>
                     <RecordTitle title={i.name} onOpen={manager ? () => open(i) : undefined} />
@@ -101,6 +103,7 @@ export function Catalog() {
             </tbody>
           </table>
         </div>
+        <Pagination page={pages.page} total={items.length} size={pages.size} onChange={pages.setPage} onSizeChange={pages.setSize} label="serviços e produtos" />
       </section>
       <Modal
         open={!!editing}
@@ -170,6 +173,7 @@ export function Catalog() {
   );
 }
 export function Labels() {
+  const pages = usePagination();
   const { data, session, update } = useCrm();
   const manager = session.role === 'manager';
   const [editing, setEditing] = useState<Label | null>(null);
@@ -228,7 +232,7 @@ export function Labels() {
               </tr>
             </thead>
             <tbody>
-              {labels.map((l) => (
+              {paginatedRows(labels, pages.page, pages.size).map((l) => (
                 <tr key={l.id}>
                   <td>
                     <RecordTitle
@@ -271,6 +275,7 @@ export function Labels() {
             </tbody>
           </table>
         </div>
+        <Pagination page={pages.page} total={labels.length} size={pages.size} onChange={pages.setPage} onSizeChange={pages.setSize} label="etiquetas" />
       </section>
       <Modal open={!!editing} onOpenChange={(v) => !v && setEditing(null)} title="Etiqueta">
         {editing && (
