@@ -1,4 +1,5 @@
 import { ViewSwitcher } from '../../components/ui/view-switcher';
+import { campaignViews, type CampaignView } from '../growth/campaign-views';
 import { Pencil } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { RecordTitle } from '../../components/RecordTitle';
@@ -49,6 +50,7 @@ function useIntent<T>() {
 export function RealAmbassadors() {
   const { api, can, refresh, notice } = useOperational(),
     [tab, setTab] = useState<'campaigns' | 'people' | 'metrics'>('campaigns'),
+    [campaignTab, setCampaignTab] = useState<CampaignView>('overview'),
     [selected, setSelected] = useState(''),
     [ambassador, setAmbassador] = useState<AmbassadorRow | 'new' | null>(null),
     [campaign, setCampaign] = useState<CampaignRow | 'new' | null>(null),
@@ -283,6 +285,7 @@ export function RealAmbassadors() {
                     onChange={(e) => {
                       setSelected(e.target.value);
                       setPage(0);
+                      setCampaignTab('overview');
                     }}
                   >
                     {refs.data.campaigns.map((c) => (
@@ -341,6 +344,17 @@ export function RealAmbassadors() {
                   )}
                 </div>
               </div>
+              <ViewSwitcher
+                label="Seções da campanha"
+                value={campaignTab}
+                onValueChange={(value) => {
+                  setCampaignTab(value);
+                  setPage(0);
+                }}
+                items={campaignViews}
+              />
+              {campaignTab === 'overview' && (
+                <>
               <QueryState query={totals} />
               {totals.data && (
                 <>
@@ -447,7 +461,15 @@ export function RealAmbassadors() {
                       )}
                     </div>
                   </Panel>
-                  {totals.data.payments.length > 0 && (
+                </>
+              )}
+                </>
+              )}
+              {campaignTab === 'history' && (
+                <>
+                  <QueryState query={totals} />
+                  {totals.data && (
+                    totals.data.payments.length > 0 ? (
                     <Panel title="Histórico de quitações">
                       <div className="operational-table">
                         <table>
@@ -480,9 +502,15 @@ export function RealAmbassadors() {
                         </table>
                       </div>
                     </Panel>
+                    ) : (
+                      <div className="card panel">
+                        <Empty title="Nenhuma quitação registrada" description="Os pagamentos confirmados das campanhas serão exibidos aqui." />
+                      </div>
+                    )
                   )}
                 </>
               )}
+              {campaignTab === 'referrals' && (
               <Panel
                 title="Indicações da campanha"
                 description="A confirmação de pagamento e comparecimento é registrada manualmente pelo gestor."
@@ -572,6 +600,8 @@ export function RealAmbassadors() {
                   </>
                 )}
               </Panel>
+              )}
+
             </>
           )}
           {ambassador && (
@@ -592,6 +622,7 @@ export function RealAmbassadors() {
               onClose={() => setCampaign(null)}
               onSaved={(row) => {
                 setSelected(row.id);
+                setCampaignTab('overview');
                 saved('Campanha salva.');
               }}
             />
