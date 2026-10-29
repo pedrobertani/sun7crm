@@ -1,4 +1,5 @@
 import { ViewSwitcher } from '../../components/ui/view-switcher';
+import { Pagination, paginatedRows, usePagination } from '../../components/ui/pagination';
 import { useState, type FormEvent } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { CreditCard, Gift } from 'lucide-react';
@@ -40,6 +41,7 @@ export function AdminPlans({
   onRecheck: () => void;
   onNotice: (message: string) => void;
 }) {
+  const pages = usePagination();
   const [params, setParams] = useSearchParams();
   const showPlans =
     params.get('visao') === 'planos' || (!params.has('visao') && params.has('empresa'));
@@ -67,6 +69,9 @@ export function AdminPlans({
       enabled: !!company && showPlans,
       automatic: () => !action,
     },
+  );
+  const planCompanies = companies.filter((item) =>
+    item.name.toLocaleLowerCase('pt-BR').includes(query.trim().toLocaleLowerCase('pt-BR')),
   );
   function open(kind: 'payment' | 'complimentary' | 'charge') {
     setAction(kind);
@@ -178,14 +183,8 @@ export function AdminPlans({
       ) : (
         <div className="billing-admin-layout">
           <aside className="card billing-companies" aria-label="Empresas e planos">
-            <SearchInput value={query} onChange={setQuery} placeholder="Buscar empresa..." />
-            {companies
-              .filter((item) =>
-                item.name
-                  .toLocaleLowerCase('pt-BR')
-                  .includes(query.trim().toLocaleLowerCase('pt-BR')),
-              )
-              .map((item) => {
+            <SearchInput value={query} onChange={(value) => { setQuery(value); pages.setPage(0); }} placeholder="Buscar empresa..." />
+            {paginatedRows(planCompanies, pages.page, pages.size).map((item) => {
                 const state = subscriptionState(item.dueDate, item.cycleKind || 'monthly', today());
                 return (
                   <button
@@ -199,6 +198,7 @@ export function AdminPlans({
                   </button>
                 );
               })}
+            <Pagination page={pages.page} size={pages.size} total={planCompanies.length} onChange={pages.setPage} onSizeChange={pages.setSize} label="planos de empresas" />
           </aside>
           <div className="billing-admin-main">
             {company ? (
