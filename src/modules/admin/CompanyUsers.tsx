@@ -1,5 +1,6 @@
 import { KeyRound } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
+import { Pagination, paginatedRows, usePagination } from '../../components/ui/pagination';
 import { Users, ShieldCheck, UserRound, UserRoundX } from 'lucide-react';
 import { Kpi } from '../../components/shared';
 import { Button } from '../../components/ui/button';
@@ -85,13 +86,16 @@ export function CompanyUsersView({
   rows: AdminCompanyUser[];
   onReset: (row: AdminCompanyUser) => void;
 }) {
+  const pages = usePagination();
   const managers = rows.filter((row) => row.role === 'manager');
   const employees = rows.filter((row) => row.role !== 'manager');
+  const displayed = paginatedRows([...rows].sort((a,b) => a.display_name.localeCompare(b.display_name, 'pt-BR')), pages.page, pages.size);
   const groups = [
-    { title: 'Gestores', rows: managers, empty: 'Nenhum gestor cadastrado nesta empresa.' },
+    { title: 'Gestores', rows: displayed.filter((row) => row.role === 'manager'), total: managers.length, empty: 'Nenhum gestor cadastrado nesta empresa.' },
     {
       title: 'Funcionários',
-      rows: employees,
+      rows: displayed.filter((row) => row.role !== 'manager'),
+      total: employees.length,
       empty: 'Nenhum funcionário cadastrado nesta empresa.',
     },
   ];
@@ -141,7 +145,7 @@ export function CompanyUsersView({
             <tbody key={group.title} aria-label={group.title}>
               <tr className="company-user-group">
                 <th scope="rowgroup" colSpan={3}>
-                  {group.title} <span>({group.rows.length})</span>
+                  {group.title} <span>({group.total})</span>
                 </th>
               </tr>
               {[...group.rows]
@@ -174,7 +178,7 @@ export function CompanyUsersView({
                     </td>
                   </tr>
                 ))}
-              {!group.rows.length && (
+              {group.total === 0 && (
                 <tr className="company-users-empty">
                   <td colSpan={3}>{group.empty}</td>
                 </tr>
@@ -183,6 +187,7 @@ export function CompanyUsersView({
           ))}
         </table>
       </div>
+      <Pagination page={pages.page} size={pages.size} total={rows.length} onChange={pages.setPage} onSizeChange={pages.setSize} label="usuários" />
     </>
   );
 }
