@@ -1,3 +1,4 @@
+import { ModalFooter } from '../../components/ui/modal-footer';
 import { KeyRound } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import { Pagination, paginatedRows, usePagination } from '../../components/ui/pagination';
@@ -280,14 +281,14 @@ function ResetCompanyUser({
             {error}
           </p>
         )}
-        <div className="form-actions">
+        <ModalFooter>
           <Button type="button" variant="outline" disabled={busy} onClick={onClose}>
             Cancelar
           </Button>
           <Button type="submit" disabled={busy || uncertain || !confirmation}>
             {busy ? 'Redefinindo...' : 'Confirmar redefinição'}
           </Button>
-        </div>
+        </ModalFooter>
       </form>
     </Modal>
   );
