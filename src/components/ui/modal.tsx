@@ -2,7 +2,7 @@ import { Button } from './button';
 import { useThemeStyle } from '../theme-provider';
 import * as Dialog from '@radix-ui/react-dialog';
 import { X } from 'lucide-react';
-import type { ReactNode } from 'react';
+import { useRef, type ReactNode } from 'react';
 export function Modal({
   title,
   description,
@@ -19,18 +19,19 @@ export function Modal({
   size?: 'default' | 'wide';
 }) {
   const colors = useThemeStyle();
+  const contentRef = useRef<HTMLDivElement>(null);
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       <Dialog.Portal>
         <Dialog.Overlay className="dialog-overlay" data-color-scheme={colors.colorScheme} />
         <Dialog.Content
+          ref={contentRef}
           className={'dialog-content' + (size === 'wide' ? ' dialog-content-wide' : '')}
           data-color-scheme={colors.colorScheme}
           style={colors}
           onOpenAutoFocus={(event) => {
             // Radix otherwise focuses the close icon, showing its tooltip immediately.
-            const dialog = event.currentTarget;
-            const firstField = dialog.querySelector<HTMLElement>(
+            const firstField = contentRef.current?.querySelector<HTMLElement>(
               '.dialog-body input:not([type="hidden"]):not(:disabled), .dialog-body select:not(:disabled), .dialog-body textarea:not(:disabled), .dialog-body button:not(:disabled)',
             );
             if (firstField) {
