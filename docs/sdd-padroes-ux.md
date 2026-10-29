@@ -137,3 +137,22 @@ Revisão visual ainda pendente: o navegador remoto recusou conexão ao servidor 
 **Exceções:** Kanban e gráficos não são tabelas de registros, e portanto não recebem paginação. O histórico de acesso carrega apenas os eventos recentes expostos pela API atual, não o histórico ilimitado; valores maiores no seletor não criam eventos adicionais. A apuração de comissão não muda quando a tabela é paginada.
 
 **Critérios de aceite visual adicionais:** controles de paginação visíveis mesmo com menos de 10 itens; após mudar 10/50/100 não se deve exibir página vazia nem usar totais parciais; filtros e botões não devem quebrar as tabelas ou provocar scroll horizontal da página; estados vazios e permissão de usuário mantidos; sem merge até CI e testes visuais.
+
+## Kanban com muitos cards — 29/10/2026
+
+Decisão de UX baseada na arquitetura de quadros Jira 2026: a altura do quadro não cresce proporcionalmente à quantidade de cards; rolagem vertical por etapa, rolagem horizontal com acesso no topo e no rodapé, e paginação segmentada. Referência: anúncio oficial de julho de 2026, "A faster, more flexible board for software teams" da Atlassian. Rolagens aninhadas têm um custo, então só a lista de cards de cada etapa recebe rolagem vertical; cabeçalho, total da etapa e paginação permanecem fixos.
+
+- [x] Aplicar `KanbanScroll` reutilizável na demo e no app real: rolagem horizontal superior e inferior sincronizadas.
+- [x] Limitar altura das colunas de forma responsiva, com rolagem vertical dentro de cada lista.
+- [x] Mostrar título e quantidade real da etapa sem rolar junto com os cards.
+- [x] Selecionar 10/50/100 cards por etapa; paginação Anterior/Próxima independente em cada coluna.
+- [x] Demo: paginar o conjunto já disponível de cards por etapa, sem alterar regras de arraste, venda ou filtros.
+- [x] App real: trocar paginação global de 50 cards por consultas filtradas por `board_id` e `stage_id` com paginação independente, mantendo RLS no backend e metadados de contatos/histórico.
+- [x] Arraste próximo ao topo/rodapé de cada coluna ativa rolagem vertical; arraste nas bordas do quadro mantém rolagem horizontal.
+- [x] Corrigir condição de última página vazia após movimento entre etapas e manter totais reais visíveis.
+- [x] Testar renderização do componente compartilhado de rolagem e acesso via teclado.
+- [ ] Testar no navegador com 300+ cards distribuídos em etapas, em 390px/desktop e com perfis/permissões reais; confirmar movimentação, rolagens simultâneas e se o filtro retorna os cards esperados.
+
+**Trade-off:** etapa com muitos cards faz uma consulta própria ao backend quando muda a página. Isso custa mais chamadas iniciais do que a antiga página global, mas impede que colunas pareçam vazias por os cards estarem em outra página. Monitorar desempenho em instalações com 10 etapas, e considerar cache de páginas se necessário.
+
+**Aviso de liberação:** o PR #30 continua sem merge até o CI final e a homologação visual/manual. Não confundir preview da Cloudflare com publicação de produção.
