@@ -33,11 +33,14 @@ export function KanbanScroll({
     const observer = new ResizeObserver(measure);
     observer.observe(board);
     if (board.firstElementChild) observer.observe(board.firstElementChild);
+    const changes = new MutationObserver(measure);
+    changes.observe(board, { childList: true, subtree: true });
     board.addEventListener('scroll', syncTop, { passive: true });
     top.addEventListener('scroll', syncBoard, { passive: true });
     measure();
     return () => {
       observer.disconnect();
+      changes.disconnect();
       board.removeEventListener('scroll', syncTop);
       top.removeEventListener('scroll', syncBoard);
     };
