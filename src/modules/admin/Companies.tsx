@@ -1,3 +1,4 @@
+import { ModalFooter } from '../../components/ui/modal-footer';
 import { Eye } from 'lucide-react';
 import { ViewSwitcher } from '../../components/ui/view-switcher';
 import { Pagination, paginatedRows, usePagination } from '../../components/ui/pagination';
@@ -512,7 +513,7 @@ export function AdminCompanies({
               Mantenha esta janela aberta e confirme a mesma solicitação para evitar duplicidade.
             </p>
           )}
-          <div className="form-actions">
+          <ModalFooter>
             <Button
               type="button"
               variant="outline"
@@ -532,7 +533,7 @@ export function AdminCompanies({
                       : 'Cadastrar e continuar'}
               </Button>
             )}
-          </div>
+          </ModalFooter>
         </form>
       </Modal>
 
@@ -590,7 +591,7 @@ export function AdminCompanies({
               cadastro.
             </p>
           )}
-          <div className="form-actions">
+          <ModalFooter>
             <Button
               type="button"
               variant="outline"
@@ -608,7 +609,7 @@ export function AdminCompanies({
                     : 'Cadastrar gestor'}
               </Button>
             )}
-          </div>
+          </ModalFooter>
         </form>
       </Modal>
 
@@ -638,13 +639,13 @@ export function AdminCompanies({
                   admin
                   onChanged={onReload}
                 />
-                <div className="form-actions">
+                <ModalFooter>
                   <Button asChild variant="outline">
                     <Link to={`/admin/planos?empresa=${selected.id}&visao=planos`}>
                       Gerenciar plano e cobranças
                     </Link>
                   </Button>
-                </div>
+                </ModalFooter>
               </>
             ) : (
               <>
@@ -686,14 +687,14 @@ export function AdminCompanies({
                   onRecheck={onRecheck}
                   onNotice={onNotice}
                 />
-                <div className="form-actions">
+                <ModalFooter>
                   <Button variant="outline" onClick={() => editCompany(selected)}>
                     Editar empresa
                   </Button>
                   {!selected.managers.length && (
                     <Button onClick={() => openManager(selected)}>Cadastrar gestor</Button>
                   )}
-                </div>
+                </ModalFooter>
               </>
             )}
           </>
