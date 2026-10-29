@@ -69,8 +69,8 @@ Sem telemetria disponível, frequência é uma hipótese de UX: operações de c
 - [ ] Remover CSS substituído e componentes/importações sem uso.
 - [x] Executar TypeScript, testes pertinentes e build.
 - [ ] Conferir visualmente desktop e viewport estreito, foco/tooltip e troca de abas.
-- [ ] Registrar evidências e limites de validação por perfil/tema.
-- [ ] Preparar PR com escopo final e verificação; não declarar produção atualizada antes do deploy.
+- [x] Registrar evidências e limites de validação por perfil/tema.
+- [x] Preparar PR com escopo final e verificação; não declarar produção atualizada antes do deploy.
 
 ## Critérios de aceite
 
@@ -87,3 +87,22 @@ Sem telemetria disponível, frequência é uma hipótese de UX: operações de c
 Build e TypeScript aprovados; 199 testes frontend passaram (34 arquivos), incluindo 4 cenários novos de nomes acessíveis, links, não submissão ao trocar visualização e contagens do relatório. Contrato de cores existente passou. Nenhuma alteração de banco/backend.
 
 Revisão visual ainda pendente: o navegador remoto recusou conexão ao servidor local (ERR_CONNECTION_REFUSED). Será usada prévia Cloudflare. Testes autenticados de cada perfil não foram executados nesta rodada. O trabalho não será considerado validação completa do sistema enquanto houver essas pendências.
+
+## Revisão complementar — 29/10/2026
+
+- Commit de revisão inicial do Work: `cc41a45`. GitHub Actions #111 passou em TypeScript, testes frontend, testes de banco, Edge Functions e build.
+- A inspeção do CSS identificou que `body .themed-workspace[data-theme] .page` tinha especificidade suficiente para sobrepor a largura compacta do Dashboard real. Corrigido com override específico para Dashboard em desktop (1120px).
+- `.icon-button` ainda recebia altura/largura mínimas da variante normal no workspace e administração, contrariando o padrão de 32px. Corrigido para `--control-compact`, preservando 44px em ponteiro grosso e tamanhos explícitos dos controles de conta.
+- Tabelas administrativas: regra de `flex-wrap` das ações tinha especificidade maior que o estilo genérico de célula. Corrigida para manter ações repetidas na mesma linha, com rolagem no contêiner.
+- O motivo de indisponibilidade agora é alcançável pelo teclado via wrapper focável de tooltip para botões nativamente desabilitados; adicionada asserção no teste existente. O botão permanece desabilitado.
+- GitHub Actions #113 (`7fe5896`) aprovado depois desses ajustes (TypeScript, testes, banco, funções e build).
+- Inspeção de navegador via Cloudflare Browser Rendering na prévia `cc41a45`: Dashboard da demo em 390×844 expôs os seletores e KPIs esperados na árvore de acessibilidade. Embaixadores em 390px exibiu cabeçalho, ações primárias e informações iniciais sem cortes evidentes na captura; o HTML renderizado confirmou tabelas de indicações anteriores e estado vazio explícito para pagamentos.
+- **Limites de evidência:** a captura móvel examinou apenas a parte visível da página, e as inspeções de navegador acima foram feitas antes dos últimos ajustes CSS. Elas não substituem testes completos de rolagem, tooltip em bordas, modais, temas e usuários autenticados no aplicativo real. O CI valida compilação e comportamento automatizado, não equivalência visual de todos os perfis.
+
+### Itens restantes para homologação visual de produção
+
+- [ ] Testar no navegador a visualização completa e o overflow local de tabelas, menus e modais em 390px, tablet e desktop, com mouse e teclado.
+- [ ] Percorrer as identidades claro/escuro e os perfis reais gestor, consultor e recepção, incluindo permissões, pagamento e confirmações de funil.
+- [ ] Revisar CSS legado e importações restantes antes do merge, registrando remoções ou justificando exceções.
+
+**Regra de liberação:** manter PR #30 aberto e sem merge até os três testes manuais acima. O PR #29 continua preservado; sua mudança de históricos já está incluída no #30 e poderá ser fechado como substituído após integração segura.
