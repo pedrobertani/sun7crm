@@ -4,6 +4,7 @@ import { MemoryRouter, Link } from 'react-router-dom';
 import { History } from 'lucide-react';
 import { Button } from './button';
 import { ViewSwitcher } from './view-switcher';
+import { campaignViews } from '../../modules/growth/campaign-views';
 import { WhatsAppButton } from '../WhatsAppButton';
 import { ActivityReportView } from '../../modules/reports/ActivityReport';
 
@@ -39,6 +40,22 @@ describe('Controles compartilhados', () => {
     expect(html.match(/type="button"/g)).toHaveLength(2);
     expect(html.match(/aria-pressed="true"/g)).toHaveLength(1);
     expect(html).toContain('role="group"');
+  });
+  it('mantém as abas da campanha no padrão compartilhado da demo e do app real', () => {
+    const html = renderToStaticMarkup(
+      <ViewSwitcher
+        label="Seções da campanha"
+        value="overview"
+        onValueChange={() => {}}
+        items={campaignViews}
+      />,
+    );
+    expect(html).toContain('aria-label="Seções da campanha"');
+    expect(html).toContain('Resumo');
+    expect(html).toContain('Indicações');
+    expect(html).toContain('Histórico');
+    expect(html.match(/type="button"/g)).toHaveLength(3);
+    expect(html.match(/aria-pressed="true"/g)).toHaveLength(1);
   });
   it('explica WhatsApp desabilitado sem atribuir falta de telefone a quem não tem permissão', () => {
     const blocked = renderToStaticMarkup(
