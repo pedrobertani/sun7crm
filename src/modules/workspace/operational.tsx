@@ -1,3 +1,4 @@
+import { ModalFooter } from '../../components/ui/modal-footer';
 import {
   createContext,
   useContext,
@@ -201,14 +202,14 @@ export function SaveActions({
           continuam neste formulário.
         </p>
       )}
-      <div className="form-actions">
+      <ModalFooter>
         <Button type="button" variant="outline" disabled={save.busy} onClick={onClose}>
           Cancelar
         </Button>
         <Button type="submit" disabled={save.busy || save.uncertain}>
           {save.busy ? 'Salvando...' : label}
         </Button>
-      </div>
+      </ModalFooter>
     </>
   );
 }
