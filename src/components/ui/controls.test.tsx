@@ -42,6 +42,22 @@ describe('Controles compartilhados', () => {
     expect(html.match(/aria-pressed="true"/g)).toHaveLength(1);
     expect(html).toContain('role="group"');
   });
+  it('oferece 10, 50 e 100 registros e mantém o seletor na última página', () => {
+    const markup = renderToStaticMarkup(
+      <Pagination page={4} size={50} total={211} onChange={() => {}} onSizeChange={() => {}} label="contatos" />,
+    );
+    expect(markup).toContain('aria-label="Registros por página"');
+    expect(markup).toContain('value="10"');
+    expect(markup).toContain('value="50" selected');
+    expect(markup).toContain('value="100"');
+    expect(markup).toContain('201–211 de 211');
+    expect(markup).toContain('Página 5 de 5');
+    const empty = renderToStaticMarkup(
+      <Pagination page={0} size={100} total={0} onChange={() => {}} onSizeChange={() => {}} />,
+    );
+    expect(empty).toContain('Nenhum registro');
+    expect(empty).toContain('Registros por página');
+  });
   it('pagina em blocos de dez sem controles desnecessários para listas pequenas', () => {
     const firstPage = renderToStaticMarkup(
       <Pagination page={0} total={24} onChange={() => {}} label="indicações" />,
