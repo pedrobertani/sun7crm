@@ -55,23 +55,21 @@ export function RealDashboard() {
   }, [api, from, to]);
   return (
     <>
-      <div className="operational-toolbar">
+      <div className="operational-toolbar dashboard-compact-toolbar">
         <div className="actions">
           <label className="form-row">
-            Cadastros e origens de
+            Período de
             <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
           </label>
           <label className="form-row">
-            Até
+            até
             <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
           </label>
         </div>
-        <Link className="operational-text-link" to="/app/funil">
-          Abrir funil →
-        </Link>
       </div>
       <QueryState query={query} />
-      <ViewSwitcher
+      <div className="dashboard-tabs-row">
+        <ViewSwitcher
         className="dashboard-tabs"
         label="Áreas do dashboard"
         value={activeTab}
@@ -80,7 +78,9 @@ export function RealDashboard() {
           value: value as 'overview' | 'commercial' | 'achievements',
           label,
         }))}
-      />
+        />
+        <Link className="operational-text-link" to="/app/funil">Abrir funil →</Link>
+      </div>
       {query.data && (
         <>
           {activeTab === 'overview' && (
