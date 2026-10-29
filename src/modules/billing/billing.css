@@ -548,3 +548,33 @@
 .billing-filters > .btn { align-self: end; }
 .billing-admin-main > .ui-view-switcher,
 .billing-admin-main > .view-switcher { margin-bottom: 16px; }
+
+/* Compact per-company finance view; keeps company switching without a second side panel. */
+.billing-admin-compact { min-width: 0; }
+.billing-company-toolbar {
+  display: flex;
+  align-items: end;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 8px 0 18px;
+}
+.billing-company-toolbar > .form-row { min-width: 210px; flex: 0 1 300px; }
+.billing-company-toolbar .form-row :is(input, select) { min-height: 42px; width: 100%; }
+.billing-company-matches { display: flex; flex-wrap: wrap; gap: 8px; width: 100%; }
+.billing-admin-overview { max-width: 920px; padding: 20px 24px; }
+.billing-overview-heading { display: flex; align-items: start; justify-content: space-between; gap: 12px; }
+.billing-overview-heading h3 { font-size: 17px; margin: 0 0 8px; }
+.billing-overview-heading strong { font-size: 25px; }
+.billing-overview-heading strong small { font-size: 13px; color: var(--muted); font-weight: normal; }
+.billing-overview-facts { display: flex; flex-wrap: wrap; gap: 12px 32px; margin: 18px 0 0; padding: 14px 0; border-top: 1px solid var(--line); }
+.billing-overview-facts div { display: grid; gap: 4px; }
+.billing-overview-facts dt { color: var(--muted); font-size: 12px; }
+.billing-overview-facts dd { font-size: 14px; font-weight: 600; margin: 0; }
+.billing-overview-events { padding-left: 20px; }
+.billing-overview-events li { margin: 10px 0; }
+.billing-overview-events p { margin: 4px 0 0; color: var(--muted); overflow-wrap: anywhere; }
+@media (max-width: 650px) {
+  .billing-company-toolbar > .form-row { flex: 1 1 100%; }
+  .billing-admin-overview { padding: 16px; }
+  .billing-overview-heading { flex-wrap: wrap; }
+}
