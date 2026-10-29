@@ -1,4 +1,6 @@
 import { ViewSwitcher } from '../../components/ui/view-switcher';
+import { KanbanScroll } from '../../components/ui/kanban-scroll';
+import { Pagination, PAGE_SIZES, type PageSize } from '../../components/ui/pagination';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
@@ -39,7 +41,6 @@ import {
   cents,
   datetimeLocal,
   fromLocal,
-  Pager,
   QueryState,
   SaveActions,
   useOperational,
@@ -69,8 +70,10 @@ export function RealKanban() {
     boardId = params.get('funil') || '',
     contactId = params.get('contato') || '',
     cardId = params.get('card') || '';
-  const [page, setPage] = useState(0),
-    [search, setSearch] = useState(''),
+  const [stagePages, setStagePages] = useState<Record<string, number>>({});
+  const [pageSize, setPageSize] = useState<PageSize>(10);
+  const changePageSize = (size: PageSize) => { setPageSize(size); setStagePages({}); };
+  const [search, setSearch] = useState(''),
     [editing, setEditing] = useState<CardRow | 'new' | null>(null),
     [deleting, setDeleting] = useState<CardRow | null>(null),
     [newBoard, setNewBoard] = useState(false),
@@ -89,22 +92,27 @@ export function RealKanban() {
       refs.data?.stages
         .filter((s) => s.board_id === board?.id)
         .sort((a, b) => a.position - b.position) || [];
+  const stageIds = stages.map((stage) => stage.id).join(',');
+  // Load each stage independently: one global page hides cards from other columns.
   const cards = useQuery(async () => {
     if (!board) return null;
-    const list = await api.list(
-      'cards',
-      page,
-      50,
-      { board_id: board.id, ...(contactId ? { contact_id: contactId } : {}) },
-      search,
-    );
+    const groups = await Promise.all(stages.map(async (stage) => ({
+      id: stage.id,
+      data: await api.list(
+        'cards', stagePages[stage.id] || 0, pageSize,
+        { board_id: board.id, stage_id: stage.id, ...(contactId ? { contact_id: contactId } : {}) },
+        search,
+      ),
+    })));
+    const rows = groups.flatMap((group) => group.data.rows);
     const [contacts, activity, labels] = await Promise.all([
-      api.contactsByIds(list.rows.map((c) => c.contact_id)),
-      api.activityByIds(list.rows.map((c) => c.id)),
-      api.labelsByCardIds(list.rows.map((c) => c.id)),
+      api.contactsByIds(rows.map((c) => c.contact_id)),
+      api.activityByIds(rows.map((c) => c.id)),
+      api.labelsByCardIds(rows.map((c) => c.id)),
     ]);
-    return { ...list, contacts, activity, labels };
-  }, [api, board?.id, page, search, contactId]);
+    const stageTotals = Object.fromEntries(groups.map((group) => [group.id, group.data.total]));
+    return { rows, stageTotals, total: groups.reduce((sum, group) => sum + group.data.total, 0), contacts, activity, labels };
+  }, [api, board?.id, stageIds, stagePages, pageSize, search, contactId]);
   const deepLink = useQuery(async () => (cardId ? api.cardDetails(cardId) : null), [api, cardId]);
   useEffect(() => {
     if (deepLink.data) {
@@ -181,7 +189,7 @@ export function RealKanban() {
                 p.delete('contato');
                 return p;
               });
-              setPage(0);
+              setStagePages({});
             }}
           >
             Limpar filtro de contato
@@ -197,7 +205,7 @@ export function RealKanban() {
                 value={board?.id || ''}
                 onValueChange={(id) => {
                   setParams({ funil: id, ...(contactId ? { contato: contactId } : {}) });
-                  setPage(0);
+                  setStagePages({});
                 }}
                 items={refs.data.boards.map((b) => ({ value: b.id, label: b.name }))}
               />
@@ -234,10 +242,17 @@ export function RealKanban() {
                   value={search}
                   onChange={(v) => {
                     setSearch(v);
-                    setPage(0);
+                    setStagePages({});
                   }}
                   placeholder="Buscar pelo título do card..."
                 />
+                <label className="kanban-board-size">
+                  Exibir
+                  <select value={pageSize} aria-label="Cards por etapa" onChange={(event) => changePageSize(Number(event.target.value) as PageSize)}>
+                    {PAGE_SIZES.map((size) => <option key={size} value={size}>{size}</option>)}
+                  </select>
+                  por etapa
+                </label>
                 <p className="small-note">
                   Alertas fixos: 24h sem primeiro acompanhamento · 3 dias para o responsável · 7
                   dias para o gestor.
@@ -246,15 +261,12 @@ export function RealKanban() {
               <QueryState query={cards} />
               {cards.data && (
                 <>
-                  <div className="kanban-scroll" aria-busy={moving.busy || cards.loading}>
+                  <KanbanScroll label="Colunas do funil">
                     {stages.map((stage) => (
                       <section className="kanban-column" data-drop-stage={stage.id} key={stage.id}>
                         <div className="kanban-column-head">
                           <h2>{stage.name}</h2>
-                          <span>
-                            {cards.data!.rows.filter((c) => c.stage_id === stage.id).length} nesta
-                            página
-                          </span>
+                          <span>{cards.data!.stageTotals[stage.id] || 0} cards</span>
                         </div>
                         <div className="kanban-cards">
                           {cards
@@ -415,15 +427,19 @@ export function RealKanban() {
                             <p className="kanban-empty">Nenhum card nesta página.</p>
                           )}
                         </div>
+                        <div className="kanban-column-pagination">
+                          <Pagination
+                            page={stagePages[stage.id] || 0}
+                            size={pageSize}
+                            total={cards.data.stageTotals[stage.id] || 0}
+                            onChange={(next) => setStagePages((previous) => ({ ...previous, [stage.id]: next }))}
+                            label={'cards de ' + stage.name}
+                            loading={moving.busy || cards.loading}
+                          />
+                        </div>
                       </section>
                     ))}
-                  </div>
-                  <Pager
-                    page={page}
-                    total={cards.data.total}
-                    onChange={setPage}
-                    loading={cards.loading}
-                  />
+                  </KanbanScroll>
                 </>
               )}
             </>
