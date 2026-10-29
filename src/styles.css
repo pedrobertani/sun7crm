@@ -5513,10 +5513,15 @@ input:is([type='checkbox'], [type='radio']):focus-visible {
 }
 .dialog-body .form-actions {
   position: sticky;
-  bottom: -23px;
+  bottom: 0;
   z-index: 6;
   background: var(--surface);
-  padding: 16px 0 6px;
+  min-height: 68px;
+  padding: 12px 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  box-sizing: border-box;
   box-shadow: 0 -8px 12px var(--shadow-color);
 }
 .dialog-body > form > .form-actions {
@@ -5533,9 +5538,6 @@ input:is([type='checkbox'], [type='radio']):focus-visible {
   opacity: 0.5;
 }
 @media (max-width: 600px) {
-  .dialog-body .form-actions {
-    bottom: -19px;
-  }
   .dialog-head {
     padding-bottom: 15px;
   }
@@ -5855,17 +5857,3 @@ td:has(> .admin-row-actions) {
   }
 }
 
-/* Campaign and ambassador actions: visually center controls inside the sticky footer. */
-.dialog-body .ambassador-dialog-form .form-actions {
-  bottom: 0;
-  min-height: 68px;
-  padding: 12px 0;
-  margin-top: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  box-sizing: border-box;
-}
-@media (max-width: 600px) {
-  .dialog-body .ambassador-dialog-form .form-actions { bottom: 0; }
-}
