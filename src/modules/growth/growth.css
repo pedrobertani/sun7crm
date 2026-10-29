@@ -313,3 +313,14 @@
   .strategy-summary > .card { flex-direction: column; align-items: flex-start; gap: 4px; }
   .strategy-summary > .card:last-child { grid-column: 1 / -1; }
 }
+
+/* Demo forms use the same compact field rhythm as the authenticated workspace. */
+.ambassador-dialog-form { display: grid; gap: 12px; }
+.ambassador-dialog-form > .form-row,
+.ambassador-dialog-form .ambassador-demo-fields > .form-row { margin: 0; min-width: 0; }
+.ambassador-demo-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.ambassador-dialog-form .check-row { margin: 0; }
+.ambassador-dialog-form .form-actions { margin-top: 4px; padding-top: 12px; }
+@media (max-width: 600px) {
+  .ambassador-demo-fields { grid-template-columns: minmax(0, 1fr); }
+}
