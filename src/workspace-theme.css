@@ -179,3 +179,14 @@ body .themed-workspace[data-theme] .brand strong {
     max-width: 1120px;
   }
 }
+
+/* SDD: authenticated dashboard should begin near the topbar, not below an empty band. */
+body .themed-workspace[data-theme] .page:has(.dashboard-tabs) {
+  padding-top: 14px;
+}
+body .themed-workspace[data-theme] .page:has(.dashboard-tabs) > .heading {
+  margin-bottom: 12px;
+}
+@media (max-width: 900px) {
+  body .themed-workspace[data-theme] .page:has(.dashboard-tabs) { padding-top: 12px; }
+}
