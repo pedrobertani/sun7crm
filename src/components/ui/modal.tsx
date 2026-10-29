@@ -27,6 +27,17 @@ export function Modal({
           className={'dialog-content' + (size === 'wide' ? ' dialog-content-wide' : '')}
           data-color-scheme={colors.colorScheme}
           style={colors}
+          onOpenAutoFocus={(event) => {
+            // Radix otherwise focuses the close icon, showing its tooltip immediately.
+            const dialog = event.currentTarget;
+            const firstField = dialog.querySelector<HTMLElement>(
+              '.dialog-body input:not([type="hidden"]):not(:disabled), .dialog-body select:not(:disabled), .dialog-body textarea:not(:disabled), .dialog-body button:not(:disabled)',
+            );
+            if (firstField) {
+              event.preventDefault();
+              firstField.focus();
+            }
+          }}
           onEscapeKeyDown={(event) => {
             if (event.target instanceof Element && event.target.closest('.contact-picker-popup'))
               event.preventDefault();
