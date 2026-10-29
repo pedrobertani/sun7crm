@@ -1324,72 +1324,6 @@ td small {
 .detail-grid strong {
   font-size: 12px;
 }
-.task-list {
-  padding: 0 20px;
-}
-.task-row {
-  display: flex;
-  align-items: center;
-  gap: 13px;
-  border-bottom: 1px solid var(--line);
-  padding: 21px 0;
-}
-.task-row:last-child {
-  border: 0;
-}
-.check-button {
-  width: 25px;
-  height: 25px;
-  display: grid;
-  place-items: center;
-  background: transparent;
-  border: 0;
-  color: var(--muted);
-  padding: 0;
-}
-.check-button.checked {
-  background: var(--primary);
-  color: var(--primary-foreground);
-  border-radius: 50%;
-  width: 21px;
-  height: 21px;
-  margin: 2px;
-}
-.task-content {
-  flex: 1;
-  min-width: 0;
-}
-.task-content > .record-title {
-  font-size: 12px;
-  font-weight: 600;
-  display: block;
-  overflow-wrap: anywhere;
-}
-.task-content small {
-  display: block;
-  color: var(--muted);
-  font-size: 10px;
-  margin-top: 7px;
-}
-.task-content small > span {
-  margin: 0 6px;
-  color: var(--muted);
-}
-.task-row.done .record-title {
-  text-decoration: line-through;
-  color: var(--ink);
-}
-.task-date {
-  font-size: 11px;
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  color: var(--muted);
-  white-space: nowrap;
-}
-.task-date.overdue {
-  color: var(--primary);
-}
 .settings-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -1805,27 +1739,6 @@ td small {
   }
   .kanban-board {
     gap: 12px;
-  }
-  .task-list {
-    padding: 0 14px;
-  }
-  .task-row {
-    gap: 9px;
-    flex-wrap: wrap;
-    padding: 18px 0;
-  }
-  .task-date {
-    margin-left: 34px;
-    font-size: 10px;
-  }
-  .task-content {
-    flex-basis: calc(100% - 40px);
-  }
-  .task-content .record-title {
-    font-size: 12px;
-  }
-  .task-content small {
-    line-height: 1.7;
   }
   .form-grid {
     grid-template-columns: 1fr;
@@ -5909,4 +5822,13 @@ td:has(> .admin-row-actions) {
   cursor: pointer;
   width: fit-content;
   color: var(--primary);
+}
+
+.label-color {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  vertical-align: middle;
+  border: 1px solid var(--line);
 }

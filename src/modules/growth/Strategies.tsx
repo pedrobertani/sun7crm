@@ -1,3 +1,4 @@
+import { Pencil, Eye } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import { RecordTitle } from '../../components/RecordTitle';
 import { useCrm } from '../../app/context';
@@ -145,7 +146,7 @@ export function Strategies() {
                 <tr key={s.id}>
                   <td>
                     <RecordTitle title={s.name} onOpen={() => open(s)} />
-                    <small className="growth-note">{s.notes || 'Sem observações'}</small>
+                    {s.notes && <small className="growth-note">{s.notes}</small>}
                   </td>
                   <td>{s.channel}</td>
                   <td>{members.find((m) => m.id === s.ownerId)?.name || 'Não atribuído'}</td>
@@ -156,8 +157,13 @@ export function Strategies() {
                     </span>
                   </td>
                   <td>
-                    <Button size="sm" variant="outline" onClick={() => open(s)}>
-                      {canEdit ? 'Editar' : 'Detalhes'}
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      aria-label={(canEdit ? 'Editar ' : 'Detalhes de ') + s.name}
+                      onClick={() => open(s)}
+                    >
+                      {canEdit ? <Pencil size={16} /> : <Eye size={16} />}
                     </Button>
                   </td>
                 </tr>

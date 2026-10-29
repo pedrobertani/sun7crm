@@ -4,7 +4,16 @@ import { PermissionTree } from '../permissions/PermissionTree';
 import { type EmployeePermissions } from '../permissions/model';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Users, ListTodo, KanbanSquare, Wallet, History, Clock3 } from 'lucide-react';
+import {
+  Plus,
+  Users,
+  ListTodo,
+  Filter as Funnel,
+  KanbanSquare,
+  Wallet,
+  History,
+  Clock3,
+} from 'lucide-react';
 import { ContactIntakeChart } from '../dashboard/ContactIntakeChart';
 import { GoalFunnel } from '../goals/GoalFunnel';
 import { Button } from '../../components/ui/button';
@@ -86,7 +95,7 @@ export function RealDashboard() {
                 label="Cards abertos"
                 value={query.data.metrics.open_cards}
                 foot="Todos os cards em andamento"
-                icon={<KanbanSquare size={19} />}
+                icon={<Funnel size={19} />}
                 to="/app/funil"
               />
               <Kpi

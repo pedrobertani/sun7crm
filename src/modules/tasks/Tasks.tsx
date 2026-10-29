@@ -5,7 +5,7 @@ import type { Task } from '../../domain/types';
 import { useSearchParams } from 'react-router-dom';
 import { Input } from '../../components/ui/input';
 import { useState, type FormEvent } from 'react';
-import { Plus, CalendarDays, Check, Circle, GripVertical, UserRound } from 'lucide-react';
+import { Pencil, Plus, CalendarDays, Check, Circle, GripVertical, UserRound } from 'lucide-react';
 import { useCrm } from '../../app/context';
 import { visibleContacts } from '../../domain/operations';
 import {
@@ -270,38 +270,62 @@ export function Tasks() {
             </p>
           </>
         ) : tasks.length ? (
-          <div className="task-list">
-            {tasks.map((t) => (
-              <div className={'task-row ' + (t.done ? 'done' : '')} key={t.id}>
-                <button
-                  className={'check-button ' + (t.done ? 'checked' : '')}
-                  aria-label={(t.done ? 'Reabrir ' : 'Concluir ') + t.title}
-                  onClick={() => move(t.id, t.done ? 'todo' : 'done')}
-                >
-                  {t.done ? <Check size={16} /> : <Circle size={19} />}
-                </button>
-                <div className="task-content">
-                  <RecordTitle title={t.title} onOpen={() => openTask(t)} />
-                  <small>
-                    {data.contacts.find((c) => c.id === t.contactId)?.name ||
-                      'Sem contato vinculado'}{' '}
-                    <span>·</span>{' '}
-                    {members.find((m) => m.id === t.ownerId)?.name || 'Sem responsável'}
-                  </small>
-                </div>
-                <span
-                  className={
-                    'badge ' + (t.done ? 'good' : taskStatus(t) === 'in_progress' ? 'warn' : 'gray')
-                  }
-                >
-                  {TASK_STAGES.find((s) => s.id === taskStatus(t))?.label}
-                </span>
-                <span className={'task-date ' + (!t.done && t.dueDate < today() ? 'overdue' : '')}>
-                  <CalendarDays size={14} />
-                  {t.dueDate === today() ? 'Hoje' : dateLabel(t.dueDate)}
-                </span>
-              </div>
-            ))}
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Tarefa</th>
+                  <th>Responsável</th>
+                  <th>Prazo</th>
+                  <th>Situação</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {tasks.map((t) => (
+                  <tr key={t.id}>
+                    <td>
+                      <RecordTitle title={t.title} onOpen={() => openTask(t)} />
+                      <small>
+                        {data.contacts.find((c) => c.id === t.contactId)?.name || 'Sem contato'}
+                      </small>
+                    </td>
+                    <td>{members.find((m) => m.id === t.ownerId)?.name || 'Sem responsável'}</td>
+                    <td>{t.dueDate === today() ? 'Hoje' : dateLabel(t.dueDate)}</td>
+                    <td>
+                      <span
+                        className={
+                          'badge ' +
+                          (t.done ? 'good' : taskStatus(t) === 'in_progress' ? 'warn' : 'gray')
+                        }
+                      >
+                        {TASK_STAGES.find((s) => s.id === taskStatus(t))?.label}
+                      </span>
+                    </td>
+                    <td>
+                      <div className="actions">
+                        <Button
+                          size="icon"
+                          variant="outline"
+                          aria-label={(t.done ? 'Reabrir ' : 'Concluir ') + t.title}
+                          onClick={() => move(t.id, t.done ? 'todo' : 'done')}
+                        >
+                          {t.done ? <Circle size={16} /> : <Check size={16} />}
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="outline"
+                          aria-label={'Editar ' + t.title}
+                          onClick={() => openTask(t)}
+                        >
+                          <Pencil size={16} />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         ) : (
           <Empty
@@ -310,12 +334,7 @@ export function Tasks() {
           />
         )}
       </div>
-      <Modal
-        open={open}
-        onOpenChange={setOpen}
-        title={editingId ? 'Editar tarefa' : 'Nova tarefa'}
-        description="Cadastro manual. Cadências automáticas serão definidas em outra etapa."
-      >
+      <Modal open={open} onOpenChange={setOpen} title={editingId ? 'Editar tarefa' : 'Nova tarefa'}>
         <form onSubmit={save}>
           <div className="form-grid">
             <label className="form-row span2">

@@ -123,7 +123,10 @@ export function NotificationBell({
   const unreadShown = items.filter((item) => !item.read_at).map((item) => item.id);
   return (
     <>
-      <button
+      <Button
+        size="icon"
+        variant="outline"
+        type="button"
         className="notification-bell"
         aria-label={
           error
@@ -142,7 +145,7 @@ export function NotificationBell({
         ) : (
           !!count && <span className="notification-count">{count > 99 ? '99+' : count}</span>
         )}
-      </button>
+      </Button>
       <Modal
         open={open}
         onOpenChange={setOpen}

@@ -1,3 +1,4 @@
+import { Button } from './button';
 import { useThemeStyle } from '../theme-provider';
 import * as Dialog from '@radix-ui/react-dialog';
 import { X } from 'lucide-react';
@@ -38,8 +39,10 @@ export function Modal({
                 {description || title}
               </Dialog.Description>
             </div>
-            <Dialog.Close className="icon-button" aria-label="Fechar">
-              <X size={18} />
+            <Dialog.Close asChild>
+              <Button size="icon" variant="outline" aria-label="Fechar">
+                <X size={16} />
+              </Button>
             </Dialog.Close>
           </div>
           <div className="dialog-body">{children}</div>

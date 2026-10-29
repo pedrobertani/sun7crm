@@ -439,6 +439,7 @@ function GoalSettings({
                 <Button
                   type="button"
                   variant="ghost"
+                  size="icon"
                   aria-label={'Remover etapa ' + s.label}
                   onClick={() => setStages((x) => x.filter((_, j) => j !== i))}
                 >
@@ -527,6 +528,7 @@ function GoalSettings({
               <Button
                 type="button"
                 variant="ghost"
+                size="icon"
                 aria-label={'Remover medalha ' + m.label}
                 onClick={() => setMedals((a) => a.filter((_, j) => j !== i))}
               >

@@ -1,6 +1,6 @@
 import { ViewSwitcher } from '../../components/ui/view-switcher';
 import { useState } from 'react';
-import { LockKeyhole, Settings2, Trophy } from 'lucide-react';
+import { LockKeyhole, Settings2, Trophy, Trash2 } from 'lucide-react';
 import { useCrm } from '../../app/context';
 import { today, currency } from '../../lib/format';
 import { CHART_COLORS } from '../../lib/themes';
@@ -370,9 +370,11 @@ function DemoGoalSettings({
                 <Button
                   type="button"
                   variant="ghost"
+                  size="icon"
+                  aria-label={'Remover etapa ' + s.label}
                   onClick={() => setStages((x) => x.filter((_, j) => j !== i))}
                 >
-                  Remover
+                  <Trash2 size={16} />
                 </Button>
               )}
             </div>
@@ -448,9 +450,11 @@ function DemoGoalSettings({
               <Button
                 type="button"
                 variant="ghost"
+                size="icon"
+                aria-label={'Remover medalha ' + m.label}
                 onClick={() => setMedals((x) => x.filter((_, j) => j !== i))}
               >
-                Remover
+                <Trash2 size={16} />
               </Button>
             </div>
           ))}

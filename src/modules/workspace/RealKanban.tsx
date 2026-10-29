@@ -307,7 +307,6 @@ export function RealKanban() {
                                         size="icon"
                                         variant="outline"
                                         type="button"
-                                        className="icon-button"
                                         aria-label={
                                           'Excluir ' + (card.title || contact?.name || 'card')
                                         }
@@ -320,7 +319,6 @@ export function RealKanban() {
                                       <Button
                                         size="icon"
                                         variant="outline"
-                                        className="icon-button"
                                         aria-label={
                                           'Editar ' + (card.title || contact?.name || 'card')
                                         }

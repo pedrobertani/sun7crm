@@ -218,23 +218,58 @@ export function Labels() {
         )}
       </Heading>
       <section className="card">
-        <div className="toolbar">
-          {labels.map((l) => (
-            <Button
-              key={l.id}
-              variant="outline"
-              onClick={() => {
-                if (manager) {
-                  setError('');
-                  setEditing(l);
-                }
-              }}
-            >
-              <span style={{ background: l.color, width: 12, height: 12, borderRadius: 6 }} />
-              {l.name}
-            </Button>
-          ))}
-          {!labels.length && <p>Nenhuma etiqueta cadastrada.</p>}
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Etiqueta</th>
+                <th>Cor</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {labels.map((l) => (
+                <tr key={l.id}>
+                  <td>
+                    <RecordTitle
+                      title={l.name}
+                      onOpen={
+                        manager
+                          ? () => {
+                              setError('');
+                              setEditing(l);
+                            }
+                          : undefined
+                      }
+                    />
+                  </td>
+                  <td>
+                    <span className="label-color" style={{ background: l.color }} /> {l.color}
+                  </td>
+                  <td>
+                    {manager && (
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        aria-label={'Editar ' + l.name}
+                        onClick={() => {
+                          setError('');
+                          setEditing(l);
+                        }}
+                      >
+                        <Pencil size={16} />
+                      </Button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+              {!labels.length && (
+                <tr>
+                  <td colSpan={3}>Nenhuma etiqueta cadastrada.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </section>
       <Modal open={!!editing} onOpenChange={(v) => !v && setEditing(null)} title="Etiqueta">

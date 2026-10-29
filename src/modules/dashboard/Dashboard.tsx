@@ -21,7 +21,7 @@ import {
   Users,
   Flame,
   ListTodo,
-  TrendingUp,
+  Filter as Funnel,
   Building2,
   CalendarClock,
   UserPlus,
@@ -156,7 +156,7 @@ export function CompanyDashboard() {
                 opps.filter((o) => o.boardId === leadBoard.id).reduce((s, o) => s + o.value, 0),
               )}
               foot="Estimado · não representa receita"
-              icon={<TrendingUp size={19} />}
+              icon={<Funnel size={19} />}
             />
             <Kpi
               label="Tarefas pendentes"

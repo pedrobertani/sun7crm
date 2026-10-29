@@ -6,7 +6,7 @@ import {
   Menu,
   Users,
   X,
-  KanbanSquare,
+  Filter as Funnel,
   Tags,
   Package,
   Megaphone,
@@ -50,7 +50,7 @@ interface Workspace extends OperationalCompany {
 }
 export const operationalNavigation = [
   { to: '/app', label: 'Dashboard', icon: LayoutDashboard, group: 'Dia a dia' },
-  { to: '/app/funil', label: 'Funil', icon: KanbanSquare, group: 'Dia a dia' },
+  { to: '/app/funil', label: 'Funil', icon: Funnel, group: 'Dia a dia' },
   { to: '/app/contatos', label: 'Contatos', icon: Users, group: 'Dia a dia' },
   { to: '/app/tarefas', label: 'Tarefas', icon: ListTodo, group: 'Dia a dia' },
   { to: '/app/estrategias', label: 'Estratégias', icon: Megaphone, group: 'Crescimento' },
