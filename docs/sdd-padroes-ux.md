@@ -439,3 +439,11 @@ O print de Nova estratégia revelou que `position: sticky` no rodapé compartilh
 - [ ] Avaliar unificação da segunda faixa de abas caso a navegação ainda pareça excessiva após o compacto; não fazer alteração radical na arquitetura sem teste da primeira revisão.
 
 **Regra:** histórico de acesso não é histórico de cobranças; preservar ambos, mas apresentar histórico de acesso sob demanda.
+
+## Regressão visual — seletor de empresas (29/10/2026)
+
+- [x] Screenshot do usuário mostrou campo de busca separado por grande área vazia e seletor de empresa deslocado para baixo.
+- [x] Remover a busca redundante do painel de Planos por empresa: o seletor já permite escolher entre todas as empresas disponíveis.
+- [x] Compactar faixa de seleção e remover dependência de filtros de busca desnecessários.
+- [ ] Validar o HEAD em desktop/mobile e garantir que as abas e o resumo fiquem imediatamente abaixo da seleção.
+- [ ] Confirmar CI do commit novo e avaliar busca novamente apenas se a escala real de empresas justificar uma solução de seleção pesquisável integrada ao mesmo controle.
