@@ -202,3 +202,13 @@ Decisão de UX baseada na arquitetura de quadros Jira 2026: a altura do quadro n
 - [ ] Homologar a barra e o quadro com viewport 390px, 1366px e 1920px a 100% de zoom em tema claro/escuro e arraste entre etapas.
 
 **Critério visual:** não deixar faixas vazias ou botões flutuando entre a navegação e o topo do quadro; nenhuma configuração de compactação/altura deve aparecer no sistema.
+
+## Posição dos controles no funil — aprovação de layout (29/10/2026)
+
+- [x] Preservar integralmente a navegação **Leads / Clientes / +** acima do Kanban.
+- [x] Manter busca e filtro **Período** acima do Kanban; alinhar Período à **direita** no desktop, quebrando responsivamente no mobile.
+- [x] Mover o seletor **10/50/100 cards por etapa** e o total de oportunidades para **abaixo do quadro**, como no padrão de paginação das listas.
+- [x] Aplicar o mesmo posicionamento na demo e no app real sem alterar consulta, filtros ou regras de movimentação.
+- [ ] Homologar visualmente a nova disposição em zoom 100%, desktop e mobile, após prévia Cloudflare do commit correspondente.
+
+**Nota:** não mover o seletor de funil, suas abas ou o botão +. A paginação por etapa permanece dentro do rodapé de cada coluna, como já implementado; o controle global de quantidade fica abaixo do quadro.
