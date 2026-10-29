@@ -74,12 +74,12 @@
   display: block;
   margin-top: 4px;
 }
-.admin-live .icon-button,
+.admin-live .icon-button {
+  min-height: var(--control-compact);
+  min-width: var(--control-compact);
+}
 .admin-live .logout-button {
   min-height: var(--control-height);
-}
-.admin-live .logout-button,
-.admin-live .icon-button {
   min-width: var(--control-height);
 }
 .admin-live .table-wrap {
@@ -363,4 +363,10 @@
   font-size: 12px;
   font-weight: 550;
   line-height: 1.5;
+}
+
+/* Table actions stay on one row; horizontal scrolling belongs to the table wrapper. */
+.admin-live td .admin-row-actions {
+  flex-wrap: nowrap;
+  width: max-content;
 }
