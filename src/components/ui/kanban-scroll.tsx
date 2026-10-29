@@ -1,8 +1,5 @@
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import './kanban-scroll.css';
-
-type BoardHeight = 'auto' | '560' | '720' | '900';
-type CardDensity = 'compact' | 'full';
 
 /** Azure-like board: one shared vertical scroll, horizontal access above and below. */
 export function KanbanScroll({
@@ -16,8 +13,6 @@ export function KanbanScroll({
   const topRef = useRef<HTMLDivElement>(null);
   const [width, setWidth] = useState(0);
   const [hasHorizontalScroll, setHasHorizontalScroll] = useState(false);
-  const [height, setHeight] = useState<BoardHeight>('auto');
-  const [density, setDensity] = useState<CardDensity>('compact');
 
   useEffect(() => {
     const board = boardRef.current;
@@ -47,33 +42,7 @@ export function KanbanScroll({
   }, []);
 
   return (
-    <div
-      className="kanban-scroll-shell"
-      data-card-density={density}
-      style={{ '--kanban-max-height': height === 'auto'
-        ? 'min(760px, max(490px, calc(100dvh - 310px)))'
-        : height + 'px' } as CSSProperties}
-    >
-      <div className="kanban-display-settings">
-        <label>
-          Cards
-          <select aria-label="Visualização dos cards" value={density}
-            onChange={(event) => setDensity(event.target.value as CardDensity)}>
-            <option value="compact">Compactos</option>
-            <option value="full">Completos</option>
-          </select>
-        </label>
-        <label>
-          Altura
-          <select aria-label="Altura do quadro" value={height}
-            onChange={(event) => setHeight(event.target.value as BoardHeight)}>
-            <option value="auto">Automática</option>
-            <option value="560">560 px</option>
-            <option value="720">720 px</option>
-            <option value="900">900 px</option>
-          </select>
-        </label>
-      </div>
+    <div className="kanban-scroll-shell">
       <div
         className="kanban-scroll-top"
         ref={topRef}
