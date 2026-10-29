@@ -236,12 +236,13 @@ export function Companies() {
             </table>
           </div>
 
-        <Pagination page={pages.page} size={pages.size} total={companies.length} onChange={pages.setPage} onSizeChange={pages.setSize} label="empresas" />        ) : (
+        ) : (
           <Empty
             title="Nenhuma empresa encontrada"
             description="Ajuste a busca ou cadastre uma empresa."
           />
         )}
+        <Pagination page={pages.page} size={pages.size} total={companies.length} onChange={pages.setPage} onSizeChange={pages.setSize} label="empresas" />
       </div>
       <Modal
         open={editing !== undefined}
