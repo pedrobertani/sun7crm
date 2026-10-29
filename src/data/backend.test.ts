@@ -101,6 +101,48 @@ describe('Contrato do ambiente real', () => {
     expect((await api.contactsByIds([...ids, ids[0]])).map((r) => r.id)).toEqual(ids);
     expect(seen.map((batch) => batch.length)).toEqual([100, 100, 5]);
   });
+  it('consulta todos os cards filtrados em lotes de 200 sem limitar o resultado', async () => {
+    const items = Array.from({ length: 305 }, (_, n) => ({ id: id(n + 1), stage_id: id(9) }));
+    const ranges: number[][] = [], filters: unknown[][] = [];
+    const query = {
+      select: () => query,
+      eq: (...args: unknown[]) => { filters.push(args); return query; },
+      order: () => query,
+      range: async (from: number, to: number) => {
+        ranges.push([from, to]);
+        return { data: items.slice(from, to + 1), count: items.length, error: null };
+      },
+    };
+    const api = new OperationalBackend({ from: () => query } as unknown as SupabaseClient, id(100));
+    const result = await api.listAllMatching('cards', { stage_id: id(9) });
+    expect(result.total).toBe(305);
+    expect(result.rows).toEqual(items);
+    expect(ranges).toEqual([[0, 199], [200, 399]]);
+    expect(filters).toContainEqual(['company_id', id(100)]);
+    expect(filters).toContainEqual(['stage_id', id(9)]);
+  });
+  it('busca histórico e etiquetas de todos os cards em lotes seguros', async () => {
+    const batches: { table: string; ids: string[] }[] = [];
+    let table = '';
+    const query = {
+      select: () => query,
+      eq: () => query,
+      in: async (_column: string, batch: string[]) => {
+        batches.push({ table, ids: batch });
+        return {
+          data: batch.map((opportunity_id) => ({ opportunity_id, label_id: id(1) })),
+          error: null,
+        };
+      },
+    };
+    const from = (name: string) => { table = name; return query; };
+    const api = new OperationalBackend({ from } as unknown as SupabaseClient, id(100));
+    const ids = Array.from({ length: 305 }, (_, n) => id(n + 1));
+    expect((await api.activityByIds(ids)).length).toBe(305);
+    expect((await api.labelsByCardIds(ids)).length).toBe(305);
+    expect(batches.filter((entry) => entry.table === 'crm_card_activity').map((entry) => entry.ids.length)).toEqual([100, 100, 100, 5]);
+    expect(batches.filter((entry) => entry.table === 'crm_card_labels').map((entry) => entry.ids.length)).toEqual([100, 100, 100, 5]);
+  });
   it('envia a criação de integrante à função autorizada e não expõe o erro interno', async () => {
     const invoke = vi.fn().mockResolvedValue({
       data: null,
