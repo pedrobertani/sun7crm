@@ -3,6 +3,7 @@ import { CalendarDays, CreditCard, Gift, ShieldCheck } from 'lucide-react';
 import { Heading } from '../../components/shared';
 import { Button } from '../../components/ui/button';
 import { Tabs } from '../../components/ui/tabs';
+import { Pagination, paginatedRows, usePagination } from '../../components/ui/pagination';
 import { currency, dateLabel, shiftDate, today } from '../../lib/format';
 import { getSupabaseClient } from '../../lib/supabase';
 import { useCrm } from '../../app/context';
@@ -107,6 +108,7 @@ function PlanSummary({ plan, demo = false }: { plan: Subscription; demo?: boolea
 }
 
 function PlanAccessHistory({ plan }: { plan: Subscription }) {
+  const pages = usePagination();
   return (
     <section className="card billing-history">
       <h3>Movimentações de acesso</h3>
@@ -115,7 +117,7 @@ function PlanAccessHistory({ plan }: { plan: Subscription }) {
         <div className="billing-empty">Nenhum pagamento ou gratuidade registrado.</div>
       ) : (
         <ol>
-          {plan.events.map((event) => (
+          {paginatedRows(plan.events, pages.page, pages.size).map((event) => (
             <li key={event.id}>
               <div className="billing-event-icon">
                 {event.kind === 'payment' ? <CreditCard size={18} /> : <Gift size={18} />}
@@ -145,6 +147,7 @@ function PlanAccessHistory({ plan }: { plan: Subscription }) {
           ))}
         </ol>
       )}
+      <Pagination page={pages.page} size={pages.size} total={plan.events.length} onChange={pages.setPage} onSizeChange={pages.setSize} label="movimentações de acesso" />
     </section>
   );
 }
