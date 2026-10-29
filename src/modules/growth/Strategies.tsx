@@ -109,7 +109,7 @@ export function Strategies() {
       >
         {canEdit && <Button onClick={() => open(null)}>Nova estratégia</Button>}
       </Heading>
-      <div className="growth-summary">
+      <div className="growth-summary strategy-summary">
         <div className="card">
           <span>Ações no mês</span>
           <strong>{all.length}</strong>
@@ -148,7 +148,6 @@ export function Strategies() {
                 <tr key={s.id}>
                   <td>
                     <RecordTitle title={s.name} onOpen={() => open(s)} />
-                    {s.notes && <small className="growth-note">{s.notes}</small>}
                   </td>
                   <td>{s.channel}</td>
                   <td>{members.find((m) => m.id === s.ownerId)?.name || 'Não atribuído'}</td>
