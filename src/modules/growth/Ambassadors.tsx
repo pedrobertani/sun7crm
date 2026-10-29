@@ -512,7 +512,8 @@ export function Ambassadors() {
             (p) => p.companyId === session.companyId,
           );
           return payments.length ? (
-            <div className="table-wrap">
+            <>
+              <div className="table-wrap">
               <table>
                 <thead>
                   <tr>
@@ -540,8 +541,9 @@ export function Ambassadors() {
                   ))}
                 </tbody>
               </table>
+              </div>
               <Pagination page={paymentsPage} total={payments.length} onChange={setPaymentsPage} label="pagamentos" size={CAMPAIGN_PAGE_SIZE} />
-            </div>
+            </>
           ) : (
             <p className="small-note">Nenhum pagamento registrado até o momento.</p>
           );
