@@ -1,5 +1,6 @@
 import { Eye } from 'lucide-react';
 import { ViewSwitcher } from '../../components/ui/view-switcher';
+import { Pagination, paginatedRows, usePagination } from '../../components/ui/pagination';
 import { useState, type FormEvent } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Link } from 'react-router-dom';
@@ -59,6 +60,7 @@ export function AdminCompanies({
   onRecheck: () => void;
   onNotice: (message: string) => void;
 }) {
+  const pages = usePagination();
   const [params, setParams] = useSearchParams();
   const [query, setQuery] = useState('');
   const [details, setDetails] = useState<string | null>(null);
@@ -288,7 +290,7 @@ export function AdminCompanies({
       )}
       <div className="card">
         <div className="toolbar">
-          <SearchInput value={query} onChange={setQuery} placeholder="Buscar empresa ou segmento" />
+          <SearchInput value={query} onChange={(v) => { setQuery(v); pages.setPage(0); }} placeholder="Buscar empresa ou segmento" />
           <select
             aria-label="Situação das empresas"
             value={status}
@@ -322,7 +324,7 @@ export function AdminCompanies({
                 </tr>
               </thead>
               <tbody>
-                {rows.map((company) => (
+                {paginatedRows(rows, pages.page, pages.size).map((company) => (
                   <tr key={company.id}>
                     <td>
                       <RecordTitle title={company.name} onOpen={() => openDetails(company.id)} />
@@ -396,6 +398,7 @@ export function AdminCompanies({
             }
           />
         )}
+        <Pagination page={pages.page} size={pages.size} total={rows.length} onChange={pages.setPage} onSizeChange={pages.setSize} label="empresas" />
       </div>
 
       <Modal
