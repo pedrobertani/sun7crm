@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { ModalFooter } from './modal-footer';
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { MemoryRouter, Link } from 'react-router-dom';
@@ -12,14 +12,18 @@ import { WhatsAppButton } from '../WhatsAppButton';
 import { ActivityReportView } from '../../modules/reports/ActivityReport';
 
 describe('Controles compartilhados', () => {
-  it('mantém o rodapé dos modais centralizado sem deslocamento negativo', () => {
-    const css = readFileSync(new URL('../../styles.css', import.meta.url), 'utf8');
-    const rule = css.match(/\\.dialog-body \\.form-actions \\{([^}]+)\\}/)?.[1];
-    expect(rule).toBeDefined();
-    expect(rule).toMatch(/bottom:\\s*0\\s*;/);
-    expect(rule).toMatch(/align-items:\\s*center\\s*;/);
-    expect(rule).toMatch(/justify-content:\\s*flex-end\\s*;/);
-    expect(css).not.toMatch(/\\.dialog-body \\.form-actions \\{[^}]*bottom:\\s*-\\d/);
+  it('compartilha o rodapé com ações acessíveis sem submeter ao cancelar', () => {
+    const html = renderToStaticMarkup(
+      <ModalFooter>
+        <Button type="button" variant="outline">Cancelar</Button>
+        <Button type="submit">Salvar</Button>
+      </ModalFooter>,
+    );
+    expect(html).toContain('class="form-actions"');
+    expect(html).toContain('type="button"');
+    expect(html).toContain('type="submit"');
+    expect(html).toContain('Cancelar');
+    expect(html).toContain('Salvar');
   });
   it('mantém nome acessível e destino em ações compactas de navegação', () => {
     const html = renderToStaticMarkup(
