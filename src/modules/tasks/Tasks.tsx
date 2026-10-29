@@ -1,4 +1,5 @@
 import { ViewSwitcher } from '../../components/ui/view-switcher';
+import { Pagination, paginatedRows, usePagination } from '../../components/ui/pagination';
 import { useCardDrag } from '../../hooks/useCardDrag';
 import { RecordTitle } from '../../components/RecordTitle';
 import type { Task } from '../../domain/types';
@@ -20,6 +21,7 @@ import { Heading, SearchInput, Empty, FormActions, FormError } from '../../compo
 import { Button } from '../../components/ui/button';
 import { Modal } from '../../components/ui/modal';
 export function Tasks() {
+  const pages = usePagination();
   const { data, session, update, notice } = useCrm();
   const [params, setParams] = useSearchParams();
   const view = params.get('visualizacao') === 'lista' ? 'lista' : 'quadro';
@@ -146,7 +148,7 @@ export function Tasks() {
               { value: 'done', label: 'Concluídas' },
             ]}
           />
-          <SearchInput value={query} onChange={setQuery} placeholder="Buscar tarefa" />
+          <SearchInput value={query} onChange={(v) => { setQuery(v); pages.setPage(0); }} placeholder="Buscar tarefa" />
         </div>
         {view === 'quadro' ? (
           <>
@@ -282,7 +284,7 @@ export function Tasks() {
                 </tr>
               </thead>
               <tbody>
-                {tasks.map((t) => (
+                {paginatedRows(tasks, pages.page, pages.size).map((t) => (
                   <tr key={t.id}>
                     <td>
                       <RecordTitle title={t.title} onOpen={() => openTask(t)} />
@@ -333,6 +335,7 @@ export function Tasks() {
             description="Nenhuma tarefa para os filtros selecionados."
           />
         )}
+        {view === 'lista' && <Pagination page={pages.page} total={tasks.length} size={pages.size} onChange={pages.setPage} onSizeChange={pages.setSize} label="tarefas" />}
       </div>
       <Modal open={open} onOpenChange={setOpen} title={editingId ? 'Editar tarefa' : 'Nova tarefa'}>
         <form onSubmit={save}>
