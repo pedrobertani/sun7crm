@@ -425,3 +425,17 @@ O print de Nova estratégia revelou que `position: sticky` no rodapé compartilh
 - [ ] Verificar fluxo de pagamento do gestor com contas de teste, sem realizar cobrança real durante a auditoria UX.
 
 **Escopo:** revisão do código e CI não confirmam que credenciais, webhooks e pagamentos reais estão operacionalmente corretos. A configuração do provedor pode ser global, enquanto os dados exibidos e operações são vinculados à empresa selecionada; não confundir os dois conceitos.
+
+## Simplificação de Planos por empresa — 29/10/2026
+
+**Evidência:** print com painel lateral de seleção/paginação para apenas 3 empresas, duas barras de abas, três botões de ação, card de resumo alto e outro card com uma única movimentação.
+
+- [x] Remover a coluna lateral permanente de empresas (mantendo a troca rápida via seletor e a busca).
+- [x] Manter ações financeiras em contexto da empresa escolhida: criar cobrança, registrar pagamento, conceder gratuidade.
+- [x] Substituir resumo e histórico simultaneamente abertos por um cartão de resumo compacto e detalhe expansível de regras/movimentações.
+- [x] Preservar as abas da área financeira (Cobranças / Planos por empresa; dentro de cada empresa: Plano e acesso / Cobranças / Integração), sem alterar APIs e persistência.
+- [ ] Verificar CI/typecheck e build exatos após a nova estrutura.
+- [ ] Homologar a navegação por empresa, busca, estados vazio/erro, valores e datas, acessibilidade de details, mobile e desktop.
+- [ ] Avaliar unificação da segunda faixa de abas caso a navegação ainda pareça excessiva após o compacto; não fazer alteração radical na arquitetura sem teste da primeira revisão.
+
+**Regra:** histórico de acesso não é histórico de cobranças; preservar ambos, mas apresentar histórico de acesso sob demanda.
