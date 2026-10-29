@@ -362,3 +362,14 @@ As capturas abaixo são evidência **visual** em tamanhos reais de viewport, por
 - [ ] Confirmar CI do commit final e verificar que o rodapé não se sobrepõe aos últimos campos ou mensagens de erro.
 
 **Critério:** ações visivelmente centralizadas na barra inferior, completamente acessíveis com teclado, sem corte nem deslocamento, inclusive em modal com conteúdo rolável. Sem merge antes da homologação.
+
+## Padronização estrutural do rodapé — continuidade (29/10/2026)
+
+- [x] Criar `ModalFooter`, componente único para ações no rodapé com classe global `.form-actions`.
+- [x] Migrar `FormActions` da demo e `SaveActions` do aplicativo real para o mesmo componente, herdando centralização vertical e posicionamento global do CSS.
+- [x] CSS de `.dialog-body .form-actions` permanece global, cobrindo também ações especiais de Administração e Cobrança que ainda usam a classe diretamente; não alterar suas confirmações.
+- [x] Adicionar teste estático de regressão para alinhamento CSS compartilhado.
+- [ ] Migrar gradualmente os rodapés personalizados restantes para `ModalFooter` e homologar acessibilidade, estados ocupados, ações destrutivas e rolagem em todos os perfis.
+- [ ] Executar CI final e inspeção no HEAD em desktop/mobile e temas claro/escuro.
+
+**Importante:** herança visual global está implementada nos rodapés que usam `.form-actions`, mas a cobertura estrutural por `ModalFooter` ainda não foi comprovada em 100% dos modais especiais. Não declarar a auditoria terminada antes desse inventário.
