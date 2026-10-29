@@ -212,3 +212,14 @@ Decisão de UX baseada na arquitetura de quadros Jira 2026: a altura do quadro n
 - [ ] Homologar visualmente a nova disposição em zoom 100%, desktop e mobile, após prévia Cloudflare do commit correspondente.
 
 **Nota:** não mover o seletor de funil, suas abas ou o botão +. A paginação por etapa permanece dentro do rodapé de cada coluna, como já implementado; o controle global de quantidade fica abaixo do quadro.
+
+## Filtro explícito por data — correção UX (29/10/2026)
+
+- [x] Substituir o rótulo ambíguo `Período` por `Data` e opções `Todas as datas / Dia / Mês / Ano / Intervalo`.
+- [x] Exibir campo nativo de calendário mesmo no estado `Todas as datas` (vazio, sem restringir resultados); escolher uma data ativa automaticamente o filtro por dia.
+- [x] Manter seleção de mês, ano e intervalo, com suas respectivas entradas de data; não confundir período dos cards com paginação.
+- [x] Reutilizar o mesmo componente em demo e app real; manter filtro à direita em cima, com controle de quantidade e total embaixo.
+- [x] Adicionar teste de markup para verificar a presença direta do calendário e acessibilidade.
+- [ ] Homologar visualmente a prévia publicada e os diferentes modos em desktop e celular.
+
+**Sem alterar regra de negócio:** o filtro existente atua na data de criação do card. Mudanças de critério para data de movimentação/fechamento devem ser tratadas separadamente para não alterar totais silenciosamente.
