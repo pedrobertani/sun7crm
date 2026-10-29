@@ -290,7 +290,7 @@
 .report-table-section .activity-table td:last-child .actions { flex-wrap: nowrap; }
 .report-table-section .toolbar:has(h2) { padding: 0 0 14px; }
 .report-table-section .toolbar h2 { margin-bottom: 6px; }
-.growth-rule + .campaign-panel { margin-top: 18px; }
+.growth-rule + .campaign-panel { margin-top: 0; }
 .campaign-panel + .ui-tabs-list { margin-top: 18px; }
 .campaign-panel + .ui-tabs-list + .campaign-panel,
 .campaign-panel + .ui-tabs-list + .growth-section { margin-top: 18px; }
