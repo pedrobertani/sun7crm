@@ -97,6 +97,29 @@
 .kanban-board-size { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); white-space: nowrap; }
 .kanban-board-size select { min-width: 70px; padding: 7px 9px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink); }
 
+/* Azure-style compact layout: main value and frequent actions share a row. */
+.kanban-scroll-shell[data-card-density='compact'] .kanban-board .opportunity-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 7px;
+  row-gap: 5px;
+}
+.kanban-scroll-shell[data-card-density='compact'] .kanban-board .opportunity-top,
+.kanban-scroll-shell[data-card-density='compact'] .kanban-board .opportunity-card > .record-title,
+.kanban-scroll-shell[data-card-density='compact'] .kanban-board .opportunity-card > p,
+.kanban-scroll-shell[data-card-density='compact'] .kanban-board .opportunity-footer,
+.kanban-scroll-shell[data-card-density='compact'] .kanban-board .move-select {
+  grid-column: 1 / -1;
+}
+.kanban-scroll-shell[data-card-density='compact'] .kanban-board .opportunity-value {
+  grid-column: 1;
+  margin: 0;
+}
+.kanban-scroll-shell[data-card-density='compact'] .kanban-board .opportunity-quick-actions {
+  grid-column: 2;
+  margin: 0;
+}
 /* Condensed cards follow the Azure Boards idea: more cards visible without browser zoom. */
 .kanban-scroll-shell[data-card-density='compact'] .kanban-column,
 .official-member .kanban-scroll-shell[data-card-density='compact'] .kanban-column { padding: 10px; }
