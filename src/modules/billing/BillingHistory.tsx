@@ -1,3 +1,4 @@
+import { ModalFooter } from '../../components/ui/modal-footer';
 import { useEffect, useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
 import { CircleCheck, Clock3, TriangleAlert, ReceiptText } from 'lucide-react';
@@ -568,7 +569,7 @@ export function BillingHistory({
                   </label>
                 </fieldset>
                 <FormError message={formError} />
-                <div className="form-actions">
+                <ModalFooter>
                   <Button
                     type="button"
                     variant="outline"
@@ -588,10 +589,10 @@ export function BillingHistory({
                             ? 'Confirmar recebimento'
                             : 'Cancelar cobrança'}
                   </Button>
-                </div>
+                </ModalFooter>
               </form>
             ) : (
-              <div className="form-actions">
+              <ModalFooter>
                 {admin && (
                   <Button asChild variant="outline">
                     <Link
@@ -616,7 +617,7 @@ export function BillingHistory({
                 <Button variant="outline" onClick={close}>
                   Fechar
                 </Button>
-              </div>
+              </ModalFooter>
             )}
           </>
         )}
