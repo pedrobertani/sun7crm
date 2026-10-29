@@ -414,3 +414,14 @@ O print de Nova estratégia revelou que `position: sticky` no rodapé compartilh
 - [ ] Retomar auditoria de importação Excel e telas autenticadas por perfil.
 
 **Regra:** avisos de teste devem ser exibidos apenas quando o sistema estiver de fato em modo de teste. Nunca ocultar alertas financeiros ou dados operacionais relevantes apenas para compactar a tela.
+
+## Verificação complementar — Mercado Pago e CI (29/10/2026)
+
+- [x] GitHub Actions #238, commit `8a3bfb38`: sucesso após corrigir o uso de `event.currentTarget` no foco inicial do modal com uma referência tipada.
+- [x] Conferir código de `OnlineBilling`: status da integração, ambiente test/production, webhook, redirecionamento para Developers e fluxos do gestor permanecem implementados.
+- [x] Remover o painel administrativo isolado que usava sempre `companies[0].id`; agora a aba Integração de Planos por empresa utiliza `company.id` da empresa selecionada.
+- [ ] Validar visualmente as abas Plano e acesso / Cobranças / Integração e a troca de empresa sem expor informações da anterior.
+- [ ] Confirmar na sessão administrativa real o status do Mercado Pago, ambiente correto, URL de webhook e ausência de consultas indevidas durante a troca de abas.
+- [ ] Verificar fluxo de pagamento do gestor com contas de teste, sem realizar cobrança real durante a auditoria UX.
+
+**Escopo:** revisão do código e CI não confirmam que credenciais, webhooks e pagamentos reais estão operacionalmente corretos. A configuração do provedor pode ser global, enquanto os dados exibidos e operações são vinculados à empresa selecionada; não confundir os dois conceitos.
