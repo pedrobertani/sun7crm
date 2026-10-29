@@ -310,16 +310,6 @@ export function Kanban() {
         <div className="kanban-filterbar">
           <SearchInput value={query} onChange={(value) => { setQuery(value); setStagePages({}); }} placeholder="Buscar no quadro" />
           <KanbanPeriodFilter value={dateFilter} onChange={updateDateFilter} />
-          <label className="kanban-board-size">
-            Exibir
-            <select value={pageSize} aria-label="Cards por etapa" onChange={(event) => changePageSize(Number(event.target.value) as PageSize)}>
-              {PAGE_SIZES.map((size) => <option key={size} value={size}>{size}</option>)}
-            </select>
-            por etapa
-          </label>
-          <span className="muted result-count">
-            {opps.length} oportunidades · {currency(opps.reduce((sum, opportunity) => sum + opportunity.value, 0))}
-          </span>
         </div>
       </div>
       <KanbanScroll key={board.id} label="Colunas do funil">
@@ -457,6 +447,18 @@ export function Kanban() {
           })}
         </div>
       </KanbanScroll>
+      <div className="kanban-board-footer">
+          <label className="kanban-board-size">
+            Exibir
+            <select value={pageSize} aria-label="Cards por etapa" onChange={(event) => changePageSize(Number(event.target.value) as PageSize)}>
+              {PAGE_SIZES.map((size) => <option key={size} value={size}>{size}</option>)}
+            </select>
+            por etapa
+          </label>
+          <span className="muted result-count">
+            {opps.length} oportunidades · {currency(opps.reduce((sum, opportunity) => sum + opportunity.value, 0))}
+          </span>
+      </div>
       <p className="small-note">
         Etapas e movimentações desta prévia não disparam mensagens, vendas ou automações.
       </p>
