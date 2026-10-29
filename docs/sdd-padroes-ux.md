@@ -188,3 +188,17 @@ Decisão de UX baseada na arquitetura de quadros Jira 2026: a altura do quadro n
 - [ ] Testar filtros combinados a 10/50/100 e movimentações com grande volume de dados reais.
 
 **Sem alteração do significado financeiro:** o período filtra cards pela **criação**, não pela data do fechamento ou pagamento. Não alterar apuração de vendas nem regras de confirmação.
+
+## Correção de densidade e alinhamento — revisão do usuário (29/10/2026)
+
+**Decisão final de UX:** responsividade é de responsabilidade do CSS; **não apresentar controles de Cards compactos/completos nem de Altura automática/manual no sistema**. Os seletores adicionados anteriormente foram rejeitados pelo usuário e removidos. A configuração permanente é cards compactos e altura máxima responsiva por CSS. Preservar as duas rolagens horizontais sincronizadas e a rolagem vertical única do quadro.
+
+- [x] Remover estados, seletores e propriedades da tela de altura/densidade do componente `KanbanScroll`.
+- [x] Converter as regras condicionais `data-card-density` em estilos compactos permanentes.
+- [x] Deixar altura automática por `clamp(460px, calc(100dvh - 260px), 840px)`, sem opção de configurar pelo usuário.
+- [x] Deixar abas Leads/Clientes, botão +, busca, filtro temporal, quantidade por etapa e total na mesma faixa visual, alinhados pela borda inferior, com quebra responsiva apenas quando necessário.
+- [x] Aplicar o mesmo alinhamento na demo e no workspace real, preservando os controles de administração do funil e o botão de adicionar funil mesmo sem quadros cadastrados.
+- [x] Atualizar teste de renderização para garantir a ausência dos seletores removidos.
+- [ ] Homologar a barra e o quadro com viewport 390px, 1366px e 1920px a 100% de zoom em tema claro/escuro e arraste entre etapas.
+
+**Critério visual:** não deixar faixas vazias ou botões flutuando entre a navegação e o topo do quadro; nenhuma configuração de compactação/altura deve aparecer no sistema.
