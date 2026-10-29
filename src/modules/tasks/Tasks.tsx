@@ -1,5 +1,6 @@
 import { KanbanSizeControl, visibleKanbanRows, type KanbanPageSize } from '../kanban/page-size';
 import './tasks-layout.css';
+import { TasksSegmented } from './tasks-segmented';
 import { Pagination, paginatedRows, usePagination } from '../../components/ui/pagination';
 import { useCardDrag } from '../../hooks/useCardDrag';
 import { RecordTitle } from '../../components/RecordTitle';
@@ -130,33 +131,30 @@ export function Tasks() {
         </Button>
       </Heading>
       <div className="tasks-view-toolbar">
-        <div className="tasks-segmented" role="group" aria-label="Visualização das tarefas">
-          <button type="button" className={view === 'quadro' ? 'active' : ''}
-            aria-pressed={view === 'quadro'} onClick={() => changeParam('visualizacao', 'quadro')}>
-            <KanbanSquare size={15} /> Quadro Kanban
-          </button>
-          <button type="button" className={view === 'lista' ? 'active' : ''}
-            aria-pressed={view === 'lista'} onClick={() => changeParam('visualizacao', 'lista')}>
-            <List size={15} /> Lista
-          </button>
-        </div>
+        <TasksSegmented
+          label="Visualização das tarefas"
+          value={view}
+          onValueChange={(value) => changeParam('visualizacao', value)}
+          items={[
+            { value: 'quadro', label: 'Quadro Kanban', icon: <KanbanSquare size={15} /> },
+            { value: 'lista', label: 'Lista', icon: <List size={15} /> },
+          ]}
+        />
         <span className="muted result-count">{tasks.length} tarefas</span>
       </div>
       <div className={view === 'lista' ? 'card' : 'tasks-board-area'}>
         <div className={'toolbar ' + (view === 'quadro' ? 'tasks-filterbar' : 'tasks-list-filterbar')}>
-          <div className="tasks-segmented" role="group" aria-label="Situação das tarefas">
-            {[
-              ['all', 'Todas'],
-              ['pending', 'Pendentes'],
-              ['overdue', 'Atrasadas'],
-              ['done', 'Concluídas'],
-            ].map(([value, label]) => (
-              <button key={value} type="button" className={filter === value ? 'active' : ''}
-                aria-pressed={filter === value} onClick={() => changeParam('status', value)}>
-                {label}
-              </button>
-            ))}
-          </div>
+          <TasksSegmented
+            label="Situação das tarefas"
+            value={filter}
+            onValueChange={(value) => changeParam('status', value)}
+            items={[
+              { value: 'all', label: 'Todas' },
+              { value: 'pending', label: 'Pendentes' },
+              { value: 'overdue', label: 'Atrasadas' },
+              { value: 'done', label: 'Concluídas' },
+            ]}
+          />
           <SearchInput value={query} onChange={(v) => { setQuery(v); pages.setPage(0); setBoardPages({}); }} placeholder="Buscar tarefa" />
         </div>
         {view === 'quadro' ? (
