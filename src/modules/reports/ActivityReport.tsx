@@ -8,6 +8,8 @@ import { DemoContactHistory } from '../contacts/ContactHistory';
 import { recordWhatsappOpen } from '../../domain/contact-history';
 import { WhatsAppButton } from '../../components/WhatsAppButton';
 import { Button } from '../../components/ui/button';
+import { ViewSwitcher } from '../../components/ui/view-switcher';
+import { Pagination, paginatedRows, usePagination } from '../../components/ui/pagination';
 import { Heading, SearchInput } from '../../components/shared';
 import { demoActivityReport, idleDays, type ActivityRow, type ActorActivity } from './activity';
 export function activityDate(value: string | null) {
@@ -33,6 +35,9 @@ export function ActivityReportView({
   onWhatsapp: (row: ActivityRow) => void;
   canWhatsapp?: boolean;
 }) {
+  const [tab, setTab] = useState<'contacts' | 'team'>('contacts');
+  const list = usePagination();
+  const teamList = usePagination();
   const [query, setQuery] = useState(''),
     [owner, setOwner] = useState(''),
     [days, setDays] = useState('7');
@@ -61,12 +66,19 @@ export function ActivityReportView({
           <strong>{actors.reduce((n, a) => n + a.whatsappCount, 0)}</strong>
         </div>
       </div>
-      <section className="card">
+      <ViewSwitcher
+        label="Seções dos relatórios"
+        value={tab}
+        onValueChange={setTab}
+        items={[{ value: 'contacts', label: 'Carteira de clientes' }, { value: 'team', label: 'Atividade da equipe' }]}
+      />
+      {tab === 'contacts' && (
+      <section className="card report-table-section">
         <div className="toolbar activity-toolbar">
-          <SearchInput value={query} onChange={setQuery} placeholder="Buscar cliente ou telefone" />
+          <SearchInput value={query} onChange={(v) => { setQuery(v); list.setPage(0); }} placeholder="Buscar cliente ou telefone" />
           <label>
             Responsável
-            <select value={owner} onChange={(e) => setOwner(e.target.value)}>
+            <select value={owner} onChange={(e) => { setOwner(e.target.value); list.setPage(0); }}>
               <option value="">Toda a equipe</option>
               {owners.map(([id, name]) => (
                 <option key={id} value={id}>
@@ -77,7 +89,7 @@ export function ActivityReportView({
           </label>
           <label>
             Sem atividade há
-            <select value={days} onChange={(e) => setDays(e.target.value)}>
+            <select value={days} onChange={(e) => { setDays(e.target.value); list.setPage(0); }}>
               <option value="">Todos os clientes</option>
               {[3, 7, 15, 30].map((d) => (
                 <option key={d} value={d}>
@@ -105,7 +117,7 @@ export function ActivityReportView({
               </tr>
             </thead>
             <tbody>
-              {shown.map((r) => (
+              {paginatedRows(shown, list.page, list.size).map((r) => (
                 <tr key={r.contactId}>
                   <td>
                     <RecordTitle
@@ -163,8 +175,11 @@ export function ActivityReportView({
             </tbody>
           </table>
         </div>
+        <Pagination page={list.page} size={list.size} total={shown.length} onChange={list.setPage} onSizeChange={list.setSize} label="clientes" />
       </section>
-      <section className="card growth-section">
+      )}
+      {tab === 'team' && (
+      <section className="card growth-section report-table-section">
         <div className="toolbar">
           <div>
             <h2>Atuação registrada por colaborador</h2>
@@ -185,7 +200,7 @@ export function ActivityReportView({
               </tr>
             </thead>
             <tbody>
-              {actors.map((a) => (
+              {paginatedRows(actors, teamList.page, teamList.size).map((a) => (
                 <tr key={a.id}>
                   <td>{a.name}</td>
                   <td>{a.contactsCount}</td>
@@ -206,7 +221,9 @@ export function ActivityReportView({
             </tbody>
           </table>
         </div>
+        <Pagination page={teamList.page} size={teamList.size} total={actors.length} onChange={teamList.setPage} onSizeChange={teamList.setSize} label="colaboradores" />
       </section>
+      )}
       <details className="report-help">
         <summary>Como os dados são contados</summary>
         <p className="small-note">
