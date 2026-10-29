@@ -53,6 +53,13 @@ describe('Controles compartilhados', () => {
     expect(html).toContain('Rolagem superior: Etapas do funil');
     expect(html).toContain('aria-label="Etapas do funil"');
     expect(html).toContain('kanban-scroll-shell');
+    expect(html).toContain('aria-label="Altura do quadro"');
+    expect(html).toContain('aria-label="Visualização dos cards"');
+    expect(html).toContain('Compactos');
+    expect(html).toContain('Completos');
+    expect(html).toContain('900 px');
+    expect(html).toContain('data-card-density="compact"');
+
   });
   it('oferece 10, 50 e 100 registros e mantém o seletor na última página', () => {
     const markup = renderToStaticMarkup(
