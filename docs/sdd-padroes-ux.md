@@ -156,3 +156,20 @@ Decisão de UX baseada na arquitetura de quadros Jira 2026: a altura do quadro n
 **Trade-off:** etapa com muitos cards faz uma consulta própria ao backend quando muda a página. Isso custa mais chamadas iniciais do que a antiga página global, mas impede que colunas pareçam vazias por os cards estarem em outra página. Monitorar desempenho em instalações com 10 etapas, e considerar cache de páginas se necessário.
 
 **Aviso de liberação:** o PR #30 continua sem merge até o CI final e a homologação visual/manual. Não confundir preview da Cloudflare com publicação de produção.
+
+## Kanban — revisão Azure Boards após avaliação visual (29/10/2026)
+
+**A versão anterior, com rolagem vertical por coluna e altura forçada de até 670px, foi rejeitada após inspeção da prévia em zoom 90%. Este item substitui as regras visuais anteriores de rolagem vertical independente.** Referência de produto: Azure DevOps Blog, *Condensed views on Kanban and Sprint boards* (16/02/2026), que introduziu alternância entre cards completos/condensados para mostrar mais itens por viewport; documentação oficial Azure Boards de personalização de cards.
+
+- [x] Remover rolagem vertical de dentro de cada coluna e usar **uma rolagem vertical única na lateral do quadro** quando o conteúdo exceder a altura escolhida.
+- [x] Manter rolagem horizontal superior sincronizada com a barra nativa inferior do quadro (somente duas horizontais).
+- [x] Evitar colunas artificiais do tamanho da coluna mais longa; altura natural por quantidade de cards exibidos.
+- [x] Mostrar por padrão cards compactos com espaçamentos reduzidos; alternância Compactos/Completos no cabeçalho do quadro.
+- [x] Permitir altura máxima ajustável do quadro: Automática (responsiva), 560, 720 e 900px.
+- [x] Preservar paginação independente 10/50/100 por etapa, permitindo navegar por conjuntos grandes sem renderizar 300 cards.
+- [x] Adaptar autoscroll do arraste para a única área vertical do quadro.
+- [x] Manter título, contagem e totais por etapa e regras de confirmação de venda.
+- [ ] Homologação visual em navegador **100% zoom**, 390px, desktop médio, monitor amplo, temas claro/escuro e colunas com 1, 3, 10 e 300 cards, inclusive arraste e paginação.
+- [ ] Ajustar dimensões finais conforme inspeção visual real, se necessário.
+
+**Não confundir** resultados automatizados com homologação visual completa; nenhum merge de #30 enquanto esses casos estiverem pendentes.
