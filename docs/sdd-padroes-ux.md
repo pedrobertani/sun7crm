@@ -120,3 +120,20 @@ Revisão visual ainda pendente: o navegador remoto recusou conexão ao servidor 
 - [ ] Conferir visualmente troca de abas e páginas no desktop e celular, demo e perfis reais.
 
 **Observação de homologação:** a paginação de indicações no app real é feita pela API com tamanho de página 10; os totais e quitações já retornam coleções completas e são paginados para exibição no cliente. Para volumes muito grandes, avaliar paginação backend específica também para essas coleções sem afetar a apuração financeira.
+
+## UX transversal — listas, filtros e relatórios (29/10/2026)
+
+**Contrato de paginação:** listas tabulares usam `Pagination`, com seletor 10/50/100, indicador de página/total e anterior/próxima. Padrão inicial: 10. A escolha do tamanho volta para a primeira página; filtros de texto implementados na tela fazem o mesmo. Em telas com consulta por página (contatos, catálogo, estratégias, tarefas, card activity, indicações, métricas), o limite é enviado ao backend. Em listas já carregadas, o corte é apenas de apresentação. Os totais agregados sempre representam a coleção completa.
+
+**Cobertura implementada no PR #30:**
+- [x] Demo — contatos, tarefas em lista, estratégias, catálogo, etiquetas, integrantes, empresas, campanhas (participantes, indicações, registros legados e pagamentos), relatórios de carteira e equipe.
+- [x] App real — contatos, tarefas, estratégias, catálogo, etiquetas, relatórios de cards, carteira e equipe, integrantes, embaixadores, métricas, campanhas (apuração, indicações e quitações).
+- [x] Admin — lista de empresas, contas de usuários da empresa e lista lateral de planos.
+- [x] Cobrança — histórico de cobranças e movimentações de acesso. O RPC existente do histórico de cobranças entrega janelas de 20; para seleção de 50/100, são combinadas janelas de leitura sem alterar as funções que registram pagamentos.
+- [x] Relatórios — `ViewSwitcher` com Carteira de clientes e Atividade da equipe (dentro da opção superior Clientes e equipe no app real); espaçamento de filtros, tabelas e paginação revisado.
+- [x] Testes de renderização para abas e seletor de 10/50/100.
+- [ ] Homologar alteração de tamanho e mudança de páginas em ambiente real e demo, com volume acima de 100 itens, mobile/desktop, temas e permissões.
+
+**Exceções:** Kanban e gráficos não são tabelas de registros, e portanto não recebem paginação. O histórico de acesso carrega apenas os eventos recentes expostos pela API atual, não o histórico ilimitado; valores maiores no seletor não criam eventos adicionais. A apuração de comissão não muda quando a tabela é paginada.
+
+**Critérios de aceite visual adicionais:** controles de paginação visíveis mesmo com menos de 10 itens; após mudar 10/50/100 não se deve exibir página vazia nem usar totais parciais; filtros e botões não devem quebrar as tabelas ou provocar scroll horizontal da página; estados vazios e permissão de usuário mantidos; sem merge até CI e testes visuais.
