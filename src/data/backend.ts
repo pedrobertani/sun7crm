@@ -515,24 +515,32 @@ export class OperationalBackend {
     return rows;
   }
   async activityByIds(ids: string[]): Promise<CardActivity[]> {
-    if (!ids.length) return [];
-    const result = await this.client
-      .from('crm_card_activity')
-      .select('*')
-      .eq('company_id', this.companyId)
-      .in('opportunity_id', [...new Set(ids)].map(uuid));
-    if (result.error || !result.data) throw failure(result.error);
-    return result.data as CardActivity[];
+    const keys = [...new Set(ids)].map(uuid);
+    const rows: CardActivity[] = [];
+    for (let offset = 0; offset < keys.length; offset += 100) {
+      const result = await this.client
+        .from('crm_card_activity')
+        .select('*')
+        .eq('company_id', this.companyId)
+        .in('opportunity_id', keys.slice(offset, offset + 100));
+      if (result.error || !result.data) throw failure(result.error);
+      rows.push(...(result.data as CardActivity[]));
+    }
+    return rows;
   }
   async labelsByCardIds(ids: string[]): Promise<{ opportunity_id: string; label_id: string }[]> {
-    if (!ids.length) return [];
-    const result = await this.client
-      .from('crm_card_labels')
-      .select('opportunity_id,label_id')
-      .eq('company_id', this.companyId)
-      .in('opportunity_id', [...new Set(ids)].map(uuid));
-    if (result.error || !result.data) throw failure(result.error);
-    return result.data;
+    const keys = [...new Set(ids)].map(uuid);
+    const rows: { opportunity_id: string; label_id: string }[] = [];
+    for (let offset = 0; offset < keys.length; offset += 100) {
+      const result = await this.client
+        .from('crm_card_labels')
+        .select('opportunity_id,label_id')
+        .eq('company_id', this.companyId)
+        .in('opportunity_id', keys.slice(offset, offset + 100));
+      if (result.error || !result.data) throw failure(result.error);
+      rows.push(...result.data);
+    }
+    return rows;
   }
   async contactDetails(id: string) {
     const contact = await this.get('contacts', id);
