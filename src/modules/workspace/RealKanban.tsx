@@ -431,7 +431,7 @@ export function RealKanban() {
                           <Pagination
                             page={stagePages[stage.id] || 0}
                             size={pageSize}
-                            total={cards.data.stageTotals[stage.id] || 0}
+                            total={cards.data!.stageTotals[stage.id] || 0}
                             onChange={(next) => setStagePages((previous) => ({ ...previous, [stage.id]: next }))}
                             label={'cards de ' + stage.name}
                             loading={moving.busy || cards.loading}
