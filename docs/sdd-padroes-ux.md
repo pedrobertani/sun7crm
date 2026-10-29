@@ -327,3 +327,11 @@ As capturas abaixo são evidência **visual** em tamanhos reais de viewport, por
 - [ ] Revisar ainda as telas completas de administração, importação de Excel e formulários públicos antes de marcar a auditoria como encerrada.
 
 **Resultado desta rodada:** mudanças já aplicadas em Relatórios (busca, largura de colunas, Ações e padding), Equipe real (paginação fora da rolagem), Histórico de Cobranças (filtros sem card redundante), Embaixadores demo (regras recolhíveis), Configurações (largura responsiva alinhada). A documentação e o CI não substituem a inspeção da nova prévia: este checklist continua aberto.
+
+## Continuação — estratégias da demo (29/10/2026)
+
+- [x] Compactar exclusivamente os indicadores de Estratégias (sem alterar Embaixadores ou outros módulos que reutilizam `growth-summary`): menos padding e separação; em 390px, duas métricas lado a lado e orçamento abaixo.
+- [x] Remover o texto integral de observações de cada linha da tabela de Estratégias. A observação continua disponível no modal de detalhes/edição; isto evita altura irregular e preserva o dado.
+- [ ] Comparar em navegador a versão alterada em 390/768/1366/1920px, claro/escuro e zoom 100%.
+- [ ] Verificar paridade do módulo real de Estratégias; esta alteração é visual e restrita à demo.
+- [ ] Confirmar CI do novo commit e não integrar na main antes dos testes autenticados e da homologação da prévia.
