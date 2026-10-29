@@ -1,5 +1,7 @@
 import { Pencil } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
+import { ViewSwitcher } from '../../components/ui/view-switcher';
+import { campaignViews, type CampaignView } from './campaign-views';
 import { RecordTitle } from '../../components/RecordTitle';
 import { useCrm } from '../../app/context';
 import type { Ambassador, AmbassadorCampaign } from '../../domain/types';
@@ -25,6 +27,7 @@ export function Ambassadors() {
     (c) => c.companyId === session.companyId,
   );
   const [selected, setSelected] = useState('');
+  const [campaignTab, setCampaignTab] = useState<CampaignView>('overview');
   const campaign = campaigns.find((c) => c.id === selected) || campaigns[0];
   const [campaignForm, setCampaignForm] = useState<AmbassadorCampaign | null>(null);
   const [person, setPerson] = useState<Ambassador | null>(null);
@@ -199,7 +202,7 @@ export function Ambassadors() {
         <div className="campaign-panel-toolbar">
           <label className="form-row campaign-selector">
             Campanha
-            <select value={campaign?.id || ''} onChange={(e) => setSelected(e.target.value)}>
+            <select value={campaign?.id || ''} onChange={(e) => { setSelected(e.target.value); setCampaignTab('overview'); }}>
               <option value="" disabled>
                 Selecione uma campanha
               </option>
@@ -274,7 +277,16 @@ export function Ambassadors() {
             </Button>
           </div>
         )}
-        <div className="campaign-participant-title">
+      </section>
+      <ViewSwitcher
+        label="Seções da campanha"
+        value={campaignTab}
+        onValueChange={setCampaignTab}
+        items={campaign ? campaignViews : campaignViews.filter((view) => view.value !== 'referrals')}
+      />
+      {campaignTab === 'overview' && (
+        <section className="card campaign-panel">
+          <div className="campaign-participant-title">
           <h2>{campaign ? 'Apuração por participante' : 'Participantes cadastrados'}</h2>
           <span>{people.length} participantes</span>
         </div>
@@ -362,8 +374,9 @@ export function Ambassadors() {
             </tbody>
           </table>
         </div>
-      </section>
-      {campaign && (
+        </section>
+      )}
+      {campaignTab === 'referrals' && campaign && (
         <section className="card growth-section">
           <div className="toolbar">
             <h2>Indicações da campanha</h2>
@@ -448,7 +461,7 @@ export function Ambassadors() {
           </div>
         </section>
       )}
-      {!!legacy.length && (
+      {campaignTab === 'history' && !!legacy.length && (
         <section className="card growth-section">
           <h2>Histórico anterior às campanhas</h2>
           <p className="small-note">
@@ -480,8 +493,9 @@ export function Ambassadors() {
           </div>
         </section>
       )}
-      <section className="card growth-section">
-        <h2>Histórico de pagamentos</h2>
+      {campaignTab === 'history' && (
+        <section className="card growth-section">
+          <h2>Histórico de pagamentos</h2>
         {(() => {
           const payments = (data.ambassadorPayments || []).filter(
             (p) => p.companyId === session.companyId,
@@ -520,7 +534,8 @@ export function Ambassadors() {
             <p className="small-note">Nenhum pagamento registrado até o momento.</p>
           );
         })()}
-      </section>
+        </section>
+      )}
       <Modal
         open={!!person}
         onOpenChange={(v) => !v && setPerson(null)}
