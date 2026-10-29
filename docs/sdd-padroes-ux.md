@@ -458,3 +458,14 @@ O print de Nova estratégia revelou que `position: sticky` no rodapé compartilh
 - [ ] Validar visualmente a prévia com arquivo de 1, 50 e 1.000 linhas, erros e duplicados, desktop/mobile.
 - [ ] Executar typecheck/testes/build e CI do novo commit.
 - [ ] Continuar revisão de exportação, arquivos inválidos, seleção por perfil e consistência de controles sem sobrescrever dados existentes.
+
+## Retomada do SDD — 29/10/2026: Dashboard e banco
+
+- [x] Usuário aprovou o layout atualizado de Planos por empresa; não refazer.
+- [x] Confirmada migration `crm_goals_visibility_and_icons` aplicada; permissão `goals.view` do gestor da QA SUN7 — Empresa B validada no banco.
+- [x] Inserido planejamento fictício de outubro na Empresa B e quatro medalhas inicialmente bloqueadas, sem inventar vendas.
+- [x] Migration `crm_data_change_events` aplicada e registrada no Supabase; 33 triggers, política e funções presentes. Propagação entre sessões ainda exige teste funcional.
+- [x] Dashboard real: aproximar filtros de período das abas; alinhar 'Abrir funil' na faixa de navegação e reduzir espaçamento vertical.
+- [ ] Testar o layout revisado no preview, desktop/mobile, e os 3 perfis operacionais.
+- [ ] Validar carregamento da aba Conquistas da Empresa B, incluindo medalhas bloqueadas, após atualizar a sessão.
+- [ ] Verificar CI/typecheck/build do HEAD antes do merge.
