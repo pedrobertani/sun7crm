@@ -34,21 +34,9 @@
   max-width: 360px;
   align-self: flex-end;
 }
-.kanban-toolbar .result-count {
+.kanban-toolbar .kanban-period-filter {
+  /* Right-aligned date filter; the funnel tabs and search keep their current placement. */
   margin-left: auto;
-  align-self: flex-end;
-  padding-bottom: 10px;
-  white-space: nowrap;
-  font-size: 12px;
-  color: var(--muted);
-}
-.kanban-toolbar .kanban-board-size {
-  display: inline-flex;
-  align-items: center;
-  align-self: flex-end;
-  gap: 7px;
-  min-height: 36px;
-  white-space: nowrap;
 }
 .kanban-period-filter {
   display: flex;
@@ -81,16 +69,44 @@
 }
 .kanban-filter-field input[type='number'] { width: 94px; min-width: 94px; }
 .kanban-filter-error { color: var(--danger); font-size: 11px; align-self: flex-end; }
+.kanban-board-footer {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 10px 16px;
+  padding: 14px clamp(14px, 1.7vw, 24px) 12px;
+  margin-top: 12px;
+  border-top: 1px solid var(--line);
+  min-width: 0;
+}
+.kanban-board-footer .kanban-board-size {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  white-space: nowrap;
+}
+.kanban-board-footer .kanban-board-size select {
+  min-height: 34px;
+}
+.kanban-board-footer .result-count {
+  margin-left: auto;
+  color: var(--muted);
+  white-space: nowrap;
+  font-size: 12px;
+}
 .kanban-primary-actions { justify-content: flex-end; margin-bottom: 8px; }
 @media (max-width: 850px) {
+  .kanban-toolbar .kanban-period-filter { margin-left: auto; }
   .kanban-toolbar .search { flex: 1 1 250px; max-width: none; }
-  .kanban-toolbar .result-count { margin-left: 0; padding-bottom: 8px; }
 }
 @media (max-width: 500px) {
   .kanban-toolbar { gap: 8px; }
   .kanban-toolbar .board-navigation { width: 100%; }
   .kanban-toolbar .search { flex-basis: 100%; min-width: 0; }
-  .kanban-toolbar .result-count { width: 100%; }
+  .kanban-toolbar .kanban-period-filter { margin-left: 0; }
+  .kanban-board-footer .result-count { margin-left: 0; }
   .kanban-filter-field select, .kanban-filter-field input { min-width: 110px; max-width: 170px; }
   .kanban-period-filter { width: 100%; }
 }
