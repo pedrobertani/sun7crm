@@ -11,6 +11,7 @@ import { readPeriod, inPeriod } from '../../domain/filters';
 import { dateLabel } from '../../lib/format';
 import { Input } from '../../components/ui/input';
 import { useState, type FormEvent } from 'react';
+import { Pagination, paginatedRows, usePagination } from '../../components/ui/pagination';
 import { RecordTitle } from '../../components/RecordTitle';
 import { Plus, Pencil, Users } from 'lucide-react';
 import { useCrm } from '../../app/context';
@@ -40,6 +41,7 @@ const blank = {
   notes: '',
 };
 export function Contacts() {
+  const pages = usePagination();
   const { data, session, update, notice } = useCrm();
   const [query, setQuery] = useState('');
   const [historyId, setHistoryId] = useState('');
@@ -179,7 +181,7 @@ export function Contacts() {
         <div className="toolbar">
           <SearchInput
             value={query}
-            onChange={setQuery}
+            onChange={(v) => { setQuery(v); pages.setPage(0); }}
             placeholder="Buscar nome, telefone ou interesse"
           />
           <select
@@ -212,7 +214,7 @@ export function Contacts() {
                 </tr>
               </thead>
               <tbody>
-                {contacts.map((c) => (
+                {paginatedRows(contacts, pages.page, pages.size).map((c) => (
                   <tr key={c.id}>
                     <td>
                       <div className="person-cell">
@@ -276,6 +278,7 @@ export function Contacts() {
             description="Ajuste os filtros ou cadastre o primeiro contato."
           />
         )}
+        <Pagination page={pages.page} total={contacts.length} size={pages.size} onChange={pages.setPage} onSizeChange={pages.setSize} label="contatos" />
       </div>
       {historyId && <DemoContactHistory contactId={historyId} onClose={() => setHistoryId('')} />}
       <Modal
