@@ -181,7 +181,7 @@ export function BillingHistory({
           </p>
         </div>
       </div>
-      <div className="card billing-filters">
+      <div className="billing-filters">
         {!companyId && (
           <form
             className="billing-company-search"
