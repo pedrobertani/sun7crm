@@ -42,6 +42,7 @@ export function AdminPlans({
   onNotice: (message: string) => void;
 }) {
   const pages = usePagination();
+  const [companyTab, setCompanyTab] = useState<'overview' | 'history' | 'integration'>('overview');
   const [params, setParams] = useSearchParams();
   const showPlans =
     params.get('visao') === 'planos' || (!params.has('visao') && params.has('empresa'));
@@ -160,7 +161,6 @@ export function AdminPlans({
           { value: 'planos', label: 'Planos por empresa' },
         ]}
       />
-      {companies[0] && <OnlineBilling key={companies[0].id} companyId={companies[0].id} admin />}
       {!companies.length ? (
         <div className="card panel">
           <Empty
@@ -191,7 +191,7 @@ export function AdminPlans({
                     key={item.id}
                     className="billing-company"
                     aria-pressed={item.id === selectedId}
-                    onClick={() => setParams({ empresa: item.id, visao: 'planos' })}
+                    onClick={() => { setCompanyTab('overview'); setParams({ empresa: item.id, visao: 'planos' }); }}
                   >
                     <strong>{item.name}</strong>
                     <small>{!item.enabled ? 'Empresa desativada' : stateLabels[state]}</small>
@@ -228,28 +228,47 @@ export function AdminPlans({
                 )}
                 {plan ? (
                   <>
-                    <div className="billing-admin-actions">
-                      <Button variant="outline" onClick={() => open('charge')}>
-                        <CreditCard size={16} /> Criar cobrança
-                      </Button>
-                      <Button onClick={() => open('payment')}>
-                        <CreditCard size={16} /> Registrar pagamento
-                      </Button>
-                      <Button variant="outline" onClick={() => open('complimentary')}>
-                        <Gift size={16} /> Liberar dias gratuitos
-                      </Button>
-                    </div>
-                    <PlanPanel plan={plan} />
-                    <BillingHistory
-                      key={company.id}
-                      companyId={company.id}
-                      admin
-                      revision={revision}
-                      onChanged={() => {
-                        setRevision((n) => n + 1);
-                        onReload();
-                      }}
+                    <ViewSwitcher
+                      label="Gestão financeira da empresa"
+                      value={companyTab}
+                      onValueChange={setCompanyTab}
+                      items={[
+                        { value: 'overview', label: 'Plano e acesso' },
+                        { value: 'history', label: 'Cobranças' },
+                        { value: 'integration', label: 'Integração' },
+                      ]}
                     />
+                    {companyTab === 'overview' && (
+                      <>
+                        <div className="billing-admin-actions">
+                          <Button variant="outline" onClick={() => open('charge')}>
+                            <CreditCard size={16} /> Criar cobrança
+                          </Button>
+                          <Button onClick={() => open('payment')}>
+                            <CreditCard size={16} /> Registrar pagamento
+                          </Button>
+                          <Button variant="outline" onClick={() => open('complimentary')}>
+                            <Gift size={16} /> Liberar dias gratuitos
+                          </Button>
+                        </div>
+                        <PlanPanel plan={plan} />
+                      </>
+                    )}
+                    {companyTab === 'history' && (
+                      <BillingHistory
+                        key={company.id}
+                        companyId={company.id}
+                        admin
+                        revision={revision}
+                        onChanged={() => {
+                          setRevision((n) => n + 1);
+                          onReload();
+                        }}
+                      />
+                    )}
+                    {companyTab === 'integration' && (
+                      <OnlineBilling key={company.id} companyId={company.id} admin />
+                    )}
                   </>
                 ) : (
                   !error && !planError && <p role="status">Consultando o plano...</p>
