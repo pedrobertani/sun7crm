@@ -44,3 +44,6 @@
   .kanban-scroll-shell .kanban-column { height: min(570px, max(360px, calc(100dvh - 280px))); }
   .kanban-scroll-top { margin-bottom: 8px; }
 }
+
+/* Column navigation is intentionally denser than the global table paginator. */
+.kanban-column-pagination .ui-pagination::before { display: none; }
