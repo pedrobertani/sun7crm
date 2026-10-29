@@ -3,13 +3,38 @@
   align-items: center;
   justify-content: flex-end;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 12px;
+  gap: 10px;
+  margin-top: 18px;
+  padding: 14px 0 2px;
+  border-top: 1px solid var(--line);
   color: var(--muted);
   font-size: 12px;
 }
-.ui-pagination > span { margin-right: auto; font-variant-numeric: tabular-nums; }
-@media (max-width: 420px) {
-  .ui-pagination { gap: 6px; }
+.ui-pagination-size {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+.ui-pagination-size select {
+  width: auto;
+  min-width: 66px;
+  min-height: 32px;
+  padding: 5px 24px 5px 9px;
+  border: 1px solid var(--control-border);
+  border-radius: 7px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+}
+.ui-pagination > span:not(.ui-pagination-page) {
+  margin-left: auto;
+  font-variant-numeric: tabular-nums;
+}
+.ui-pagination-page { white-space: nowrap; }
+@media (max-width: 520px) {
+  .ui-pagination { gap: 9px; justify-content: space-between; }
+  .ui-pagination-size { width: 100%; }
+  .ui-pagination > span:not(.ui-pagination-page) { margin: 0; }
   .ui-pagination .btn { padding: 7px 10px; }
 }
