@@ -269,15 +269,6 @@ export function RealKanban() {
                   placeholder="Buscar pelo título do card..."
                 />
                 <KanbanPeriodFilter value={dateFilter} onChange={updateDateFilter} />
-                <label className="kanban-board-size">
-                  Exibir
-                  <select value={pageSize} aria-label="Cards por etapa"
-                    onChange={(event) => changePageSize(Number(event.target.value) as PageSize)}>
-                    {PAGE_SIZES.map((size) => <option key={size} value={size}>{size}</option>)}
-                  </select>
-                  por etapa
-                </label>
-                <span className="muted result-count">{cards.data?.total ?? 0} oportunidades</span>
               </div>
             )}
           </div>
@@ -465,6 +456,17 @@ export function RealKanban() {
                       </section>
                     ))}
                   </KanbanScroll>
+                  <div className="kanban-board-footer">
+                <label className="kanban-board-size">
+                  Exibir
+                  <select value={pageSize} aria-label="Cards por etapa"
+                    onChange={(event) => changePageSize(Number(event.target.value) as PageSize)}>
+                    {PAGE_SIZES.map((size) => <option key={size} value={size}>{size}</option>)}
+                  </select>
+                  por etapa
+                </label>
+                <span className="muted result-count">{cards.data?.total ?? 0} oportunidades</span>
+                  </div>
                 </>
               )}
             </>
