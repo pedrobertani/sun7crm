@@ -147,6 +147,11 @@ describe('Controles compartilhados', () => {
         />
       </MemoryRouter>,
     );
+    expect(html).toContain('class="report-search-field"');
+    expect(html).toContain('class="report-filter-caption">Buscar</span>');
+    expect(html).toContain('Buscar cliente ou telefone');
+    expect(html).toContain('Responsável');
+    expect(html).toContain('Sem atividade há');
     expect(html).toContain('Abrir histórico de QA Cliente');
     expect(html).toContain('class="numeric">3</td>');
     expect(html).toContain('class="numeric">2</td>');
