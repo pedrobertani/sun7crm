@@ -205,11 +205,14 @@ export function Ambassadors() {
           Nova campanha
         </Button>
       </Heading>
-      <div className="card growth-rule">
-        Cada <strong>R$ 1.000 completos = 1 ponto</strong>, somando indicações pagas e com
-        comparecimento confirmado. R$ 1.500 = 1 ponto. O encerramento apura a comissão; a
-        confirmação de pagamento quita os pontos. Valores e pagamentos desta demo são simulados.
-      </div>
+      <details className="growth-rule">
+        <summary>Como funcionam pontos e comissões</summary>
+        <p>
+          Cada <strong>R$ 1.000 completos = 1 ponto</strong>, somando indicações pagas e com
+          comparecimento confirmado. R$ 1.500 = 1 ponto. O encerramento apura a comissão; a
+          confirmação de pagamento quita os pontos. Valores e pagamentos desta demo são simulados.
+        </p>
+      </details>
       <section className="card campaign-panel">
         <div className="campaign-panel-toolbar">
           <label className="form-row campaign-selector">
