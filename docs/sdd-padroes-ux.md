@@ -236,3 +236,17 @@ Decisão de UX baseada na arquitetura de quadros Jira 2026: a altura do quadro n
 - [ ] Homologar visualmente e testar arraste em Todos com 300+ cards e zoom de 100% no desktop e celular.
 
 **Trade-off consciente:** Todos pode exigir mais consultas e renderizar centenas de cards; altura e rolagem continuam automáticas por CSS, sem qualquer configuração visual no aplicativo. Não alterar paginação global de tabelas fora do Kanban.
+
+## Tarefas — restauração do layout aprovado e paginação no quadro (29/10/2026)
+
+Contexto: a substituição geral de grupos segmentados por `ViewSwitcher` com sublinhado prejudicou a hierarquia desta tela. Os prints de comparação mostram que o formato anterior, com **Quadro Kanban / Lista** e **Todas / Pendentes / Atrasadas / Concluídas** como botões segmentados compactos, era mais claro. Evitar aplicar padrões globais sem considerar a função do componente.
+
+- [x] Recriar o seletor segmentado original de Quadro Kanban/Lista com ícones, sem alterar seus destinos e mantendo estados `aria-pressed`.
+- [x] Recriar o filtro de situações em grupo segmentado compacto, junto da busca no painel, com padding e bordas alinhados.
+- [x] Corrigir a barra superior do módulo para manter contador junto da visualização e manter o botão Nova tarefa no cabeçalho.
+- [x] Preservar paginação da lista (10/50/100) e adicionar no quadro por etapa (10/50/100/Todos), sem truncar cards.
+- [x] Testes de markup do seletor original, estados e página com 305 tarefas.
+- [ ] Conferir a prévia Cloudflare com zoom 100% em desktop e mobile e validar scroll/arraste.
+- [ ] Conferir paridade entre demo e app real: o app real permanece com lista operacional e paginação; o quadro de tarefas da demo ainda demanda decisão separada sobre implementação real. Não afirmar equivalência funcional sem essa validação.
+
+Regra: **restauração de layout não implica regressão de acessibilidade nem eliminação de paginação**. Não substituir seletores segmentados por abas sublinhadas em Tarefas.
