@@ -5,6 +5,7 @@ import { History } from 'lucide-react';
 import { Button } from './button';
 import { ViewSwitcher } from './view-switcher';
 import { campaignViews } from '../../modules/growth/campaign-views';
+import { Pagination } from './pagination';
 import { WhatsAppButton } from '../WhatsAppButton';
 import { ActivityReportView } from '../../modules/reports/ActivityReport';
 
@@ -40,6 +41,23 @@ describe('Controles compartilhados', () => {
     expect(html.match(/type="button"/g)).toHaveLength(2);
     expect(html.match(/aria-pressed="true"/g)).toHaveLength(1);
     expect(html).toContain('role="group"');
+  });
+  it('pagina em blocos de dez sem controles desnecessários para listas pequenas', () => {
+    const firstPage = renderToStaticMarkup(
+      <Pagination page={0} total={24} onChange={() => {}} label="indicações" />,
+    );
+    expect(firstPage).toContain('1–10 de 24');
+    expect(firstPage).toContain('Paginação de indicações');
+    expect(firstPage).toContain('Anterior');
+    expect(firstPage).toContain('Próxima');
+    const thirdPage = renderToStaticMarkup(
+      <Pagination page={2} total={24} onChange={() => {}} label="indicações" />,
+    );
+    expect(thirdPage).toContain('21–24 de 24');
+    const small = renderToStaticMarkup(
+      <Pagination page={0} total={3} onChange={() => {}} />,
+    );
+    expect(small).toBe('');
   });
   it('mantém as abas da campanha no padrão compartilhado da demo e do app real', () => {
     const html = renderToStaticMarkup(
