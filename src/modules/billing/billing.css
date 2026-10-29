@@ -533,3 +533,18 @@
     font-size: 30px;
   }
 }
+
+/* Billing toolbar: the search submit and filters share a 42px baseline. */
+.billing-filters { align-items: end; }
+.billing-filters input,
+.billing-filters select,
+.billing-filters > .btn,
+.billing-company-search > .btn {
+  height: 42px;
+  min-height: 42px;
+  box-sizing: border-box;
+}
+.billing-company-search > .btn { flex: none; }
+.billing-filters > .btn { align-self: end; }
+.billing-admin-main > .ui-view-switcher,
+.billing-admin-main > .view-switcher { margin-bottom: 16px; }
