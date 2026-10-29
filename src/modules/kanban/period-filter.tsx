@@ -92,19 +92,32 @@ export function KanbanPeriodFilter({
     />
   );
   return (
-    <div className="kanban-period-filter">
+    <div className="kanban-period-filter" role="group" aria-label="Filtrar cards por data de criação">
       <label className="kanban-filter-field">
-        Período
-        <select aria-label="Período de criação dos cards" value={value.mode}
+        Data
+        <select aria-label="Tipo de filtro de data" value={value.mode}
           onChange={(event) => set({ mode: event.target.value as KanbanPeriodMode })}>
-          <option value="all">Todo o período</option>
+          <option value="all">Todas as datas</option>
           <option value="day">Dia</option>
           <option value="month">Mês</option>
           <option value="year">Ano</option>
           <option value="custom">Intervalo</option>
         </select>
       </label>
-      {value.mode === 'day' && <label className="kanban-filter-field">Data{input('date', 'day', 'Selecionar dia')}</label>}
+      {(value.mode === 'all' || value.mode === 'day') && (
+        <label className="kanban-filter-field">
+          Selecionar data
+          <input
+            type="date"
+            aria-label="Escolher data do card"
+            value={value.mode === 'day' ? value.day : ''}
+            onChange={(event) => {
+              const day = event.target.value;
+              set(day ? { mode: 'day', day } : { mode: 'all' });
+            }}
+          />
+        </label>
+      )}
       {value.mode === 'month' && <label className="kanban-filter-field">Mês{input('month', 'month', 'Selecionar mês')}</label>}
       {value.mode === 'year' && <label className="kanban-filter-field">Ano{input('number', 'year', 'Selecionar ano')}</label>}
       {value.mode === 'custom' && (
