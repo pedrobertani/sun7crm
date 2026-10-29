@@ -447,3 +447,14 @@ O print de Nova estratégia revelou que `position: sticky` no rodapé compartilh
 - [x] Compactar faixa de seleção e remover dependência de filtros de busca desnecessários.
 - [ ] Validar o HEAD em desktop/mobile e garantir que as abas e o resumo fiquem imediatamente abaixo da seleção.
 - [ ] Confirmar CI do commit novo e avaliar busca novamente apenas se a escala real de empresas justificar uma solução de seleção pesquisável integrada ao mesmo controle.
+
+## Homologação de Planos e início da auditoria de importação — 29/10/2026
+
+- [x] Usuário aprovou a disposição atual de **Planos por empresa** após correção do espaço vazio. Manter esta versão sem reabrir decisões já validadas.
+- [x] Classificar o erro de consulta do Mercado Pago na URL de preview como **ORIGIN_DENIED (OPTIONS 403)** da função de homologação, não como falha comprovada do provedor. Manter a política de origens restrita; homologar integração em ambiente autorizado futuramente.
+- [x] Importação Excel: compactar instruções e colocar regras opcionais em seção expansível.
+- [x] Importação Excel: paginar a prévia de até 1.000 linhas com tamanho 10/50/100, sem reduzir o conjunto completo analisado ou importado.
+- [x] Importação Excel: utilizar rodapé compartilhado para ações, preservando bloqueios durante processamento.
+- [ ] Validar visualmente a prévia com arquivo de 1, 50 e 1.000 linhas, erros e duplicados, desktop/mobile.
+- [ ] Executar typecheck/testes/build e CI do novo commit.
+- [ ] Continuar revisão de exportação, arquivos inválidos, seleção por perfil e consistência de controles sem sobrescrever dados existentes.
