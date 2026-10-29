@@ -349,3 +349,16 @@ As capturas abaixo são evidência **visual** em tamanhos reais de viewport, por
 - [ ] Revisar em seguida campanha selecionada, indicadores, histórico e registro de indicação em demo/real.
 
 **Regra de liberação:** não fazer merge do PR #30 até completar as homologações restantes.
+
+## Contrato global — rodapé de modais (29/10/2026)
+
+**Problema transversal identificado:** o CSS compartilhado usava `bottom: -23px` (e `-19px` no mobile) com padding assimétrico, deslocando visualmente os botões para baixo. A primeira correção só alcançava Campanhas/Embaixadores, mas o defeito era global.
+
+- [x] Corrigir a regra compartilhada `.dialog-body .form-actions` para `bottom: 0`, altura mínima de 68px, padding simétrico de 12px e alinhamento vertical centralizado.
+- [x] Manter ações alinhadas à direita e espaçamento horizontal consistente; não trocar rótulos ou ordens de ações.
+- [x] Remover override duplicado de Campanhas/Embaixadores após promover a correção ao padrão compartilhado.
+- [ ] Inventariar modais com ações personalizadas fora de `.form-actions` e avaliar sua adequação caso a caso (especialmente pagamento, confirmação e seleção).
+- [ ] Validar em navegador os modais de contato, tarefa, campanha, embaixador, equipe, importação, administração e cobrança, desktop/mobile, rolagem, foco e telas claro/escuro.
+- [ ] Confirmar CI do commit final e verificar que o rodapé não se sobrepõe aos últimos campos ou mensagens de erro.
+
+**Critério:** ações visivelmente centralizadas na barra inferior, completamente acessíveis com teclado, sem corte nem deslocamento, inclusive em modal com conteúdo rolável. Sem merge antes da homologação.
