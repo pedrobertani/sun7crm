@@ -24,7 +24,6 @@ import { RecordPicker } from './RecordPicker';
 import { ContactDialog } from './RecordForms';
 import {
   cents,
-  Pager,
   QueryState,
   SaveActions,
   useOperational,
@@ -89,7 +88,7 @@ export function RealAmbassadors() {
     [api, current?.id, page],
   );
   const metrics = useQuery(
-    () => (tab === 'metrics' ? api.list('metrics', page, 50) : Promise.resolve(null)),
+    () => (tab === 'metrics' ? api.list('metrics', page, CAMPAIGN_PAGE_SIZE) : Promise.resolve(null)),
     [api, tab, page],
   );
   function saved(message: string) {
@@ -150,7 +149,7 @@ export function RealAmbassadors() {
                   </tr>
                 </thead>
                 <tbody>
-                  {refs.data.ambassadors.map((a) => (
+                  {refs.data.ambassadors.slice(page * CAMPAIGN_PAGE_SIZE, (page + 1) * CAMPAIGN_PAGE_SIZE).map((a) => (
                     <tr key={a.id}>
                       <td>
                         <RecordTitle
@@ -188,6 +187,7 @@ export function RealAmbassadors() {
                   description="Escolha uma pessoa da lista de contatos ou cadastre uma nova."
                 />
               )}
+              <Pagination page={page} total={refs.data.ambassadors.length} onChange={setPage} label="embaixadores" size={CAMPAIGN_PAGE_SIZE} />
             </div>
           ) : tab === 'metrics' ? (
             <>
@@ -260,7 +260,7 @@ export function RealAmbassadors() {
                       />
                     )}
                   </div>
-                  <Pager page={page} total={metrics.data.total} onChange={setPage} />
+                  <Pagination page={page} total={metrics.data.total} onChange={setPage} label="métricas" size={CAMPAIGN_PAGE_SIZE} />
                 </>
               )}
             </>
