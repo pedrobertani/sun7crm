@@ -223,7 +223,23 @@ export function RealKanban() {
       )}
       {refs.data && (
         <>
-          <div className="section-bar operational-toolbar">
+          <div className="section-bar operational-toolbar kanban-primary-actions">
+            <div className="actions">
+              {manager && board && (
+                <Button variant="outline" onClick={() => setStagesOpen(true)}>
+                  <SlidersHorizontal size={16} />
+                  Personalizar etapas
+                </Button>
+              )}
+              {can('cards.create') && board && (
+                <Button onClick={() => setEditing('new')}>
+                  <Plus size={16} />
+                  Novo card
+                </Button>
+              )}
+            </div>
+          </div>
+          <div className="kanban-toolbar">
             <div className="actions board-navigation">
               <ViewSwitcher
                 label="Funis"
@@ -245,24 +261,8 @@ export function RealKanban() {
                 </Button>
               )}
             </div>
-            <div className="actions">
-              {manager && board && (
-                <Button variant="outline" onClick={() => setStagesOpen(true)}>
-                  <SlidersHorizontal size={16} />
-                  Personalizar etapas
-                </Button>
-              )}
-              {can('cards.create') && board && (
-                <Button onClick={() => setEditing('new')}>
-                  <Plus size={16} />
-                  Novo card
-                </Button>
-              )}
-            </div>
-          </div>
-          {board ? (
-            <>
-              <div className="operational-toolbar kanban-filterbar">
+            {board && (
+              <div className="kanban-filterbar">
                 <SearchInput
                   value={search}
                   onChange={(value) => { setSearch(value); setStagePages({}); }}
@@ -279,6 +279,10 @@ export function RealKanban() {
                 </label>
                 <span className="muted result-count">{cards.data?.total ?? 0} oportunidades</span>
               </div>
+            )}
+          </div>
+          {board ? (
+            <>
               <QueryState query={cards} />
               {cards.data && (
                 <>
