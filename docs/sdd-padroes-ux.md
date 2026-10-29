@@ -469,3 +469,12 @@ O print de Nova estratégia revelou que `position: sticky` no rodapé compartilh
 - [ ] Testar o layout revisado no preview, desktop/mobile, e os 3 perfis operacionais.
 - [ ] Validar carregamento da aba Conquistas da Empresa B, incluindo medalhas bloqueadas, após atualizar a sessão.
 - [ ] Verificar CI/typecheck/build do HEAD antes do merge.
+
+## Dashboard real — remover banner e espaços excedentes (29/10/2026)
+
+- [x] Remover o banner permanente `HOMOLOGAÇÃO INTERNA` do shell autenticado do gestor/funcionários; manter mecanismos reais de proteção, RLS e sinalização de erros.
+- [x] Reduzir `padding-top` da página Dashboard e margem inferior do título, em CSS específico sem afetar modais nem outras páginas.
+- [x] Preservar agrupamento aprovado de filtros, abas e KPIs.
+- [ ] Conferir visualmente no preview desktop/mobile, temas claro/escuro, inclusive navegação de Conquistas na Empresa B.
+- [ ] Confirmar execução do CI com commits de ajuste e revisar qualquer falha.
+- [ ] Seguir por Kanban e listas operacionais para localizar excesso de card/controles e gargalos de rolagem.
