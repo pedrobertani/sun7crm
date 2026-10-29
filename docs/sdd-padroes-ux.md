@@ -173,3 +173,18 @@ Decisão de UX baseada na arquitetura de quadros Jira 2026: a altura do quadro n
 - [ ] Ajustar dimensões finais conforme inspeção visual real, se necessário.
 
 **Não confundir** resultados automatizados com homologação visual completa; nenhum merge de #30 enquanto esses casos estiverem pendentes.
+
+## Filtro temporal e barra de ferramentas do funil — 29/10/2026
+
+- [x] Alinhar a navegação por funis em uma faixa e os filtros em outra, com largura flexível e quebra organizada em mobile.
+- [x] Reaproveitar `KanbanPeriodFilter` na demo e no aplicativo real.
+- [x] Oferecer filtro da **data de criação do card**: Todo o período (padrão), Dia, Mês, Ano e Intervalo personalizado.
+- [x] Tratar a data final como inclusiva por meio do limite superior exclusivo do dia seguinte; respeitar viradas de mês/ano.
+- [x] Fazer o filtro do app real na consulta ao banco, antes de paginar as etapas; respeitar RLS e manter os totais por etapa consistentes.
+- [x] Limpar as páginas de cada etapa ao mudar busca, período ou quantidade por página.
+- [x] Reconhecer links existentes com parâmetros `de` e `ate` na demo, sem impor filtragem por data à navegação padrão.
+- [x] Testar faixas de dia, mês bissexto, ano, intervalo e estados inválidos.
+- [ ] Validar visualmente as duas versões em 100% de zoom, desktop e celular, com filtro preenchido e sem filtro.
+- [ ] Testar filtros combinados a 10/50/100 e movimentações com grande volume de dados reais.
+
+**Sem alteração do significado financeiro:** o período filtra cards pela **criação**, não pela data do fechamento ou pagamento. Não alterar apuração de vendas nem regras de confirmação.
