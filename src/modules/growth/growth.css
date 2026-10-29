@@ -190,3 +190,21 @@
     width: 100%;
   }
 }
+
+/* Shared report and campaign spacing: selectors sit outside the data card. */
+.report-table-section { margin-top: 18px; padding: 22px 24px; }
+.report-table-section .activity-toolbar { gap: 18px; padding: 10px 0 20px; flex-wrap: wrap; }
+.report-table-section .activity-toolbar > .search { flex: 1 1 290px; min-width: 220px; max-width: 520px; }
+.report-table-section .activity-description { padding: 13px 0; margin-bottom: 12px; border-top: 1px solid var(--line); }
+.report-table-section .table-wrap { max-width: 100%; }
+.report-table-section .toolbar:has(h2) { padding: 0 0 14px; }
+.report-table-section .toolbar h2 { margin-bottom: 6px; }
+.growth-rule + .campaign-panel { margin-top: 18px; }
+.campaign-panel + .ui-tabs-list { margin-top: 18px; }
+.campaign-panel + .ui-tabs-list + .campaign-panel,
+.campaign-panel + .ui-tabs-list + .growth-section { margin-top: 18px; }
+@media (max-width: 600px) {
+  .report-table-section { padding: 16px; }
+  .report-table-section .activity-toolbar { gap: 12px; }
+  .report-table-section .activity-toolbar > .search { flex-basis: 100%; min-width: 0; max-width: none; }
+}
