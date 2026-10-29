@@ -1,5 +1,4 @@
 import { ViewSwitcher } from '../../components/ui/view-switcher';
-import { Pagination, paginatedRows, usePagination } from '../../components/ui/pagination';
 import { useState, type FormEvent } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { CreditCard, Gift } from 'lucide-react';
@@ -10,7 +9,6 @@ import { getSupabaseClient } from '../../lib/supabase';
 import { currency, dateLabel, shiftDate, today, uid } from '../../lib/format';
 import type { AdminCompany } from '../admin/repository';
 import { AccessChangedError } from '../auth/access';
-import { PlanPanel } from './Plan';
 import { BillingHistory } from './BillingHistory';
 import { createCharge } from './charges';
 import { OnlineBilling } from './OnlineBilling';
@@ -41,7 +39,6 @@ export function AdminPlans({
   onRecheck: () => void;
   onNotice: (message: string) => void;
 }) {
-  const pages = usePagination();
   const [companyTab, setCompanyTab] = useState<'overview' | 'history' | 'integration'>('overview');
   const [params, setParams] = useSearchParams();
   const showPlans =
@@ -181,31 +178,40 @@ export function AdminPlans({
           }}
         />
       ) : (
-        <div className="billing-admin-layout">
-          <aside className="card billing-companies" aria-label="Empresas e planos">
-            <SearchInput value={query} onChange={(value) => { setQuery(value); pages.setPage(0); }} placeholder="Buscar empresa..." />
-            {paginatedRows(planCompanies, pages.page, pages.size).map((item) => {
-                const state = subscriptionState(item.dueDate, item.cycleKind || 'monthly', today());
-                return (
-                  <button
-                    key={item.id}
-                    className="billing-company"
-                    aria-pressed={item.id === selectedId}
-                    onClick={() => { setCompanyTab('overview'); setParams({ empresa: item.id, visao: 'planos' }); }}
-                  >
-                    <strong>{item.name}</strong>
-                    <small>{!item.enabled ? 'Empresa desativada' : stateLabels[state]}</small>
-                  </button>
-                );
-              })}
-            <Pagination page={pages.page} size={pages.size} total={planCompanies.length} onChange={pages.setPage} onSizeChange={pages.setSize} label="planos de empresas" />
-          </aside>
+        <div className="billing-admin-compact">
+          <div className="billing-company-toolbar">
+            <label className="form-row">
+              Empresa
+              <select
+                aria-label="Empresa para gerenciar"
+                value={selectedId}
+                onChange={(event) => {
+                  setCompanyTab('overview');
+                  setParams({ empresa: event.target.value, visao: 'planos' });
+                }}
+              >
+                {companies.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+              </select>
+            </label>
+            <label className="form-row">
+              Buscar empresa
+              <SearchInput value={query} onChange={setQuery} placeholder="Filtrar empresas..." />
+            </label>
+            {query.trim() && (
+              <div className="billing-company-matches" aria-label="Resultados da busca">
+                {planCompanies.length ? planCompanies.map((item) => (
+                  <Button key={item.id} variant="outline" size="sm" onClick={() => {
+                    setCompanyTab('overview');
+                    setParams({ empresa: item.id, visao: 'planos' });
+                    setQuery('');
+                  }}>{item.name}</Button>
+                )) : <span className="muted">Nenhuma empresa encontrada.</span>}
+              </div>
+            )}
+          </div>
           <div className="billing-admin-main">
             {company ? (
               <>
-                <div className="billing-toolbar">
-                  <h2>{company.name}</h2>
-                </div>
                 {!company.enabled && (
                   <p className="billing-alert">
                     A empresa está desativada. A liberação de dias ou o pagamento não substitui a
@@ -251,7 +257,35 @@ export function AdminPlans({
                             <Gift size={16} /> Liberar dias gratuitos
                           </Button>
                         </div>
-                        <PlanPanel plan={plan} />
+                        <section className="card billing-admin-overview" aria-label="Resumo do plano">
+                          <div className="billing-overview-heading">
+                            <div>
+                              <h3>{plan.plan_name}</h3>
+                              <strong>{currency(plan.monthly_amount_cents)} <small>/ mês</small></strong>
+                            </div>
+                            <span className="badge">{stateLabels[plan.status]}</span>
+                          </div>
+                          <dl className="billing-overview-facts">
+                            <div><dt>{plan.cycle_kind === 'complimentary' ? 'Gratuito até' : 'Vencimento'}</dt><dd>{dateLabel(plan.cycle_kind === 'complimentary' ? shiftDate(plan.due_date, -1) : plan.due_date)}</dd></div>
+                            <div><dt>Carência</dt><dd>Até 7 dias</dd></div>
+                          </dl>
+                          <details className="billing-renewal-rules">
+                            <summary>Regras e movimentações de acesso ({plan.events.length})</summary>
+                            <p className="small-note">A renovação depende do pagamento confirmado. Até 7 dias de carência utilizados são descontados do próximo ciclo pago.</p>
+                            {plan.events.length ? (
+                              <ul className="billing-overview-events">
+                                {plan.events.map((event) => (
+                                  <li key={event.id}>
+                                    <strong>{event.kind === 'payment' ? 'Pagamento' : 'Gratuidade'}</strong>
+                                    {' · '}{event.kind === 'payment' ? currency(event.amount_cents) : `${event.free_days} dias`}
+                                    {' · '}Vencimento: {dateLabel(event.next_due_date)}
+                                    {event.note && <p>{event.note}</p>}
+                                  </li>
+                                ))}
+                              </ul>
+                            ) : <p className="small-note">Sem movimentações registradas.</p>}
+                          </details>
+                        </section>
                       </>
                     )}
                     {companyTab === 'history' && (
