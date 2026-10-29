@@ -20,3 +20,10 @@
   pointer-events: auto;
   overflow-wrap: anywhere;
 }
+
+/* Focusable wrapper explains disabled actions without re-enabling the button. */
+.ui-tooltip-anchor[aria-disabled='true']:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
