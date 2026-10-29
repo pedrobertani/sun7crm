@@ -1,24 +1,96 @@
-/* One shared toolbar contract for demo and authenticated Kanban. */
-.kanban-toolbar { display: flex; flex-direction: column; align-items: stretch; gap: 12px; margin-bottom: 16px; }
-.kanban-toolbar .board-navigation { align-self: flex-start; max-width: 100%; }
-.kanban-filterbar { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 12px; width: 100%; min-width: 0; }
-.kanban-filterbar > .search { flex: 1 1 225px; min-width: 180px; max-width: 390px; }
-.kanban-filterbar .result-count { margin-left: auto; white-space: nowrap; align-self: center; }
-.kanban-filterbar .kanban-board-size { align-self: flex-end; min-height: 34px; }
-.kanban-period-filter { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 8px; min-width: 0; }
-.kanban-filter-field { display: flex; flex-direction: column; gap: 5px; font-size: 11px; color: var(--muted); white-space: nowrap; }
-.kanban-filter-field select, .kanban-filter-field input { 
-  width: auto; min-width: 116px; max-width: 195px; height: 36px; border-radius: 8px;
-  border: 1px solid var(--control-border); background: var(--surface); color: var(--ink);
-  padding: 6px 9px; font: inherit; font-size: 12px;
+/* One compact, baseline-aligned command row for demo and authenticated Kanban. */
+.kanban-toolbar {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin: 0 0 10px;
+  min-width: 0;
+}
+.kanban-toolbar .board-navigation {
+  display: flex;
+  align-items: flex-end;
+  gap: 4px;
+  flex: 0 0 auto;
+  align-self: flex-end;
+  max-width: 100%;
+  margin: 0;
+}
+.kanban-toolbar .board-navigation.ui-tabs-list,
+.kanban-toolbar .board-navigation .ui-tabs-list { margin: 0; }
+.kanban-toolbar .board-navigation > .btn-icon,
+.kanban-toolbar .board-navigation > .btn[size='icon'] {
+  align-self: stretch;
+  min-height: 39px;
+}
+.kanban-toolbar .kanban-filterbar {
+  /* The filters belong on the same baseline as Leads / Clientes / +. */
+  display: contents;
+}
+.kanban-toolbar .search,
+.kanban-toolbar .kanban-filterbar > .search {
+  flex: 1 1 210px;
+  min-width: 180px;
+  max-width: 360px;
+  align-self: flex-end;
+}
+.kanban-toolbar .result-count {
+  margin-left: auto;
+  align-self: flex-end;
+  padding-bottom: 10px;
+  white-space: nowrap;
+  font-size: 12px;
+  color: var(--muted);
+}
+.kanban-toolbar .kanban-board-size {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-end;
+  gap: 7px;
+  min-height: 36px;
+  white-space: nowrap;
+}
+.kanban-period-filter {
+  display: flex;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 8px;
+  min-width: 0;
+}
+.kanban-filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.kanban-filter-field select,
+.kanban-filter-field input {
+  width: auto;
+  min-width: 116px;
+  max-width: 195px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid var(--control-border);
+  background: var(--surface);
+  color: var(--ink);
+  padding: 6px 9px;
+  font: inherit;
+  font-size: 12px;
 }
 .kanban-filter-field input[type='number'] { width: 94px; min-width: 94px; }
-.kanban-filter-error { color: var(--danger); font-size: 11px; align-self: center; }
+.kanban-filter-error { color: var(--danger); font-size: 11px; align-self: flex-end; }
+.kanban-primary-actions { justify-content: flex-end; margin-bottom: 8px; }
 @media (max-width: 850px) {
-  .kanban-filterbar > .search { flex: 1 1 100%; max-width: none; }
-  .kanban-filterbar .result-count { margin-left: 0; width: 100%; }
+  .kanban-toolbar .search { flex: 1 1 250px; max-width: none; }
+  .kanban-toolbar .result-count { margin-left: 0; padding-bottom: 8px; }
 }
-@media (max-width: 450px) {
+@media (max-width: 500px) {
+  .kanban-toolbar { gap: 8px; }
+  .kanban-toolbar .board-navigation { width: 100%; }
+  .kanban-toolbar .search { flex-basis: 100%; min-width: 0; }
+  .kanban-toolbar .result-count { width: 100%; }
   .kanban-filter-field select, .kanban-filter-field input { min-width: 110px; max-width: 170px; }
   .kanban-period-filter { width: 100%; }
 }
