@@ -113,6 +113,20 @@ export function RealKanban() {
     const stageTotals = Object.fromEntries(groups.map((group) => [group.id, group.data.total]));
     return { rows, stageTotals, total: groups.reduce((sum, group) => sum + group.data.total, 0), contacts, activity, labels };
   }, [api, board?.id, stageIds, stagePages, pageSize, search, contactId]);
+  // If a card was removed from the last page of a stage, don't leave an empty page.
+  useEffect(() => {
+    const totals = cards.data?.stageTotals;
+    if (!totals) return;
+    setStagePages((previous) => {
+      let changed = false;
+      const next = { ...previous };
+      for (const [id, page] of Object.entries(previous)) {
+        const last = Math.max(0, Math.ceil((totals[id] || 0) / pageSize) - 1);
+        if (page > last) { next[id] = last; changed = true; }
+      }
+      return changed ? next : previous;
+    });
+  }, [cards.data?.stageTotals, pageSize]);
   const deepLink = useQuery(async () => (cardId ? api.cardDetails(cardId) : null), [api, cardId]);
   useEffect(() => {
     if (deepLink.data) {
