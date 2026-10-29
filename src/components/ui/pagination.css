@@ -4,9 +4,11 @@
   justify-content: flex-end;
   flex-wrap: wrap;
   gap: 10px;
+  --pagination-gutter: clamp(14px, 1.7vw, 24px);
+  position: relative;
   margin-top: 18px;
-  padding: 14px 0 2px;
-  border-top: 1px solid var(--line);
+  padding: 16px var(--pagination-gutter) 12px;
+  border-top: 0;
   color: var(--muted);
   font-size: 12px;
 }
@@ -37,4 +39,15 @@
   .ui-pagination-size { width: 100%; }
   .ui-pagination > span:not(.ui-pagination-page) { margin: 0; }
   .ui-pagination .btn { padding: 7px 10px; }
+}
+
+/* The separator and controls share the same inset even when a table is edge-to-edge. */
+.ui-pagination::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: var(--pagination-gutter);
+  right: var(--pagination-gutter);
+  border-top: 1px solid var(--line);
+  pointer-events: none;
 }
