@@ -261,3 +261,51 @@ Regra: **restauração de layout não implica regressão de acessibilidade nem e
 - [ ] Inspeção visual da prévia Cloudflare a zoom 100%, temas claro/escuro e mobile/tablet/desktop; confirmar a posição da busca ao lado dos selects e a tabela com paginação.
 
 Não modificar outras abas e controles globais para corrigir este componente. Todos os ajustes são escopados à classe `report-table-section`.
+
+## Auditoria sistêmica de densidade visual e alinhamento — rodada 29/10/2026
+
+**Objetivo:** eliminar ajustes isolados repetitivos e validar o CRM de ponta a ponta em termos de espaços, hierarquia, painéis, controles, largura de tabelas e paridade demo/real. *Não significa redesenhar todos os módulos: manter o que funciona e só reduzir contêineres cuja única função seja criar uma borda/padding duplicado.*
+
+### Regras globais verificáveis por pixels
+
+- [x] Definir espaçamento de conteúdo com unidades de 4px e variações de 8/12/16/20/24px. Evitar margem extra entre painel, toolbar e tabela.
+- [x] Padronizar filtros no mesmo plano: rótulos de altura consistente e campos de 42px no Relatório de Atividade. A busca não pode ficar flutuando sem rótulo, e nenhum controle deve deslocar o vizinho.
+- [x] Evitar barrinhas, caixas e cards dentro de outro card sem uma função semântica: no Histórico de Cobranças retirar card de filtros; em Embaixadores substituir banner verboso por detalhes expansíveis.
+- [x] Tabelas devem preservar coluna Ações: Relatório de Atividade usa `table-layout:fixed`, distribuição por coluna e cabeçalhos que podem quebrar linha em telas desktop.
+- [x] Paginação não deve ser filha de um elemento com `overflow-x:auto`: corrigido em Equipe real.
+- [ ] Validar com o DOM renderizado/prints a 390, 768, 1366 e 1920px e zoom 100%: label e campo com desvio vertical <= 2px, nenhuma sobreposição, controles com mesma altura, conteúdo horizontal totalmente acessível.
+- [ ] Em tabelas longas no mobile, confirmar rolagem horizontal apenas dentro do contêiner e exibição de Ações quando o usuário rolar; nenhuma rolagem horizontal do *documento*.
+- [ ] Checar tema claro e escuro, modais e acessibilidade do foco na versão publicada de cada perfil.
+
+### Inventário por módulo (verificação estática e inspeção de prévia)
+
+| Área | Inspecionado no código | Inspeção visual | Ajuste/status |
+| --- | --- | --- | --- |
+| Demo Relatórios — Carteira e Atividade | [x] | [x] preview bda5d832 desktop 1440, mobile 390 | [x] filtros, tabela, padding; [ ] revalidar commit novo |
+| Dashboard demo/real | [x] | [ ] | [ ] comparar cards, tabelas, espaçamento e KPIs |
+| Kanban demo/real | [x] | [ ] nova versão | [x] largura/rolagem/paginação/data já no PR; [ ] alto volume + 390px |
+| Contatos demo/real | [x] | [x] demo desktop | [x] paginação já no PR; [ ] mobile e ações |
+| Tarefas demo/real | [x] | [x] demo desktop | [x] restaurado visual segmentado e paginação; [ ] paridade do quadro real |
+| Estratégias demo/real | [x] | [x] demo desktop | [x] barra/tabela avaliadas; [ ] mobile e detalhe |
+| Embaixadores demo/real | [x] | [x] demo desktop | [x] regra longa recolhida, espaçamento; [ ] campanha com dados e mobile |
+| Catálogo / etiquetas demo/real | [x] | [ ] | [x] paginação já no PR; [ ] tabelas e ações no mobile |
+| Equipe demo/real | [x] | [ ] | [x] real: paginador separado da rolagem horizontal; [ ] mobile |
+| Administração — empresas e usuários | [x] | [ ] | [ ] verificar cards de detalhe e tabelas por perfil |
+| Planos / histórico de cobranças | [x] | [ ] | [x] filtros sem card duplicado; [ ] colunas e painel de detalhe |
+| Configurações | [x] | [ ] | [ ] painéis/abas/modais e barra responsiva |
+| Permissões | [x] | [ ] | [ ] densidade de matriz e ações |
+| Shell da demo / workspace / admin | [x] | [ ] | [ ] margens e breadcrumb em 390/768/1366/1920 |
+| Login, landing, páginas públicas | [ ] | [ ] | [ ] verificar coerência do sistema visual fora do CRM |
+
+**Evidência visual inicial:** snapshots do Cloudflare na revisão anterior (`114a2957`) em 1440×850 para Tarefas, Relatórios, Estratégias, Contatos, Embaixadores; Relatórios também em 390×844. Isso verifica a aparência *daquela versão*, **não** constitui homologação do último commit. As alterações posteriores devem passar por uma segunda rodada de captura.
+
+### Checklists de regressão da rodada
+
+- [x] Ler as principais telas da demo, admin e workspace real e classificar se contêm cards, filtros, tabelas, navegação e paginação.
+- [x] Corrigir os três problemas adicionais confirmados por inspeção: filtro duplicado de cobranças, banner permanente de regra em Embaixadores, paginação de Equipe em área rolável.
+- [x] Manter lógica de dados, filtros, busca, RLS e permissões sem mudanças.
+- [ ] Testar build, typecheck, frontend, banco e funções no commit final desta rodada.
+- [ ] Atestar visualmente o commit final no Cloudflare antes do merge.
+- [ ] Revisar operações de importação, dialogs e ações de cada papel com sessão real (gestor, vendedor, recepção, plataforma).
+
+**Critério de bloqueio:** o PR #30 não deve ir à `main` apenas com CI verde. Exigir homologação visual dos pontos marcados como pendentes, sem confundir screenshots de uma prévia anterior com a prévia do HEAD.
