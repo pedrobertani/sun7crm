@@ -477,6 +477,21 @@ export class OperationalBackend {
       );
     return page.rows[0];
   }
+  /** Fetch all matching rows in bounded pages, rather than silently capping at 200. */
+  async listAllMatching<K extends keyof Resources>(
+    resource: K,
+    filters: Partial<Record<keyof Resources[K], string | boolean | null>> = {},
+    search = '',
+    createdBetween?: { from: string; until: string },
+  ): Promise<{ rows: Resources[K][]; total: number }> {
+    const rows: Resources[K][] = [];
+    for (let page = 0; ; page++) {
+      const result = await this.list(resource, page, 200, filters, search, createdBetween);
+      rows.push(...result.rows);
+      if (!result.hasMore) return { rows, total: rows.length };
+    }
+  }
+
   async all<K extends keyof Resources>(resource: K): Promise<Resources[K][]> {
     const rows: Resources[K][] = [];
     for (let page = 0; ; page++) {
