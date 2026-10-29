@@ -45,6 +45,8 @@ describe('Controles compartilhados', () => {
       <WhatsAppButton name="QA" phone="11900000001" compact disabled />,
     );
     expect(blocked).toContain('Sem permissão');
+    expect(blocked).toContain('tabindex="0"');
+    expect(blocked).toContain('aria-disabled="true"');
     expect(blocked).not.toContain('telefone válido');
     const missing = renderToStaticMarkup(<WhatsAppButton name="QA" phone="" compact />);
     expect(missing).toContain('telefone válido com DDD');
