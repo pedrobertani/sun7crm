@@ -469,3 +469,18 @@
   .ambassador-dialog-pair { grid-template-columns: minmax(0, 1fr); }
   .ambassador-dialog-options { flex-direction: column; align-items: flex-start; }
 }
+
+/* Dashboard real: compact filter row and keep secondary navigation in the same band. */
+.dashboard-compact-toolbar { margin-bottom: 10px; align-items: end; }
+.dashboard-compact-toolbar > .actions { display: flex; gap: 10px; align-items: end; flex-wrap: wrap; }
+.dashboard-compact-toolbar .form-row { min-width: 0; gap: 4px; }
+.dashboard-compact-toolbar input[type='date'] { width: 170px; max-width: 100%; }
+.dashboard-tabs-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+.dashboard-tabs-row .dashboard-tabs { margin-bottom: 0; }
+.dashboard-tabs-row .operational-text-link { margin-left: auto; }
+@media (max-width: 640px) {
+  .dashboard-compact-toolbar > .actions { width: 100%; gap: 8px; }
+  .dashboard-compact-toolbar .form-row { flex: 1 1 135px; }
+  .dashboard-compact-toolbar input[type='date'] { width: 100%; }
+  .dashboard-tabs-row .operational-text-link { margin-left: 0; }
+}
