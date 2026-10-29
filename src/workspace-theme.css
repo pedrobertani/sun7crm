@@ -86,10 +86,10 @@ body .themed-workspace[data-theme] .page {
   padding: 28px 32px 44px;
 }
 body .themed-workspace[data-theme] :is(.icon-button, .notification-bell) {
-  min-height: var(--control-height);
+  min-height: var(--control-compact);
 }
 body .themed-workspace[data-theme] .icon-button {
-  min-width: var(--control-height);
+  min-width: var(--control-compact);
 }
 body .themed-workspace[data-theme] .brand strong {
   font-size: 18px;
@@ -170,5 +170,12 @@ body .themed-workspace[data-theme] .brand strong {
   }
   body .themed-workspace[data-theme] .page {
     padding: 18px 16px 30px;
+  }
+}
+
+/* The workspace shell must not override the compact dashboard's narrower width. */
+@media (min-width: 901px) {
+  body .themed-workspace[data-theme] .page:has(.dashboard-tabs) {
+    max-width: 1120px;
   }
 }
