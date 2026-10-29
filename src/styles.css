@@ -5512,17 +5512,17 @@ input:is([type='checkbox'], [type='radio']):focus-visible {
   margin-bottom: 0;
 }
 .dialog-body .form-actions {
-  position: sticky;
-  bottom: 0;
-  z-index: 6;
-  background: var(--surface);
-  min-height: 68px;
-  padding: 12px 0;
+  position: static;
+  min-height: 64px;
+  margin-top: 12px;
+  padding: 12px 0 0;
   display: flex;
   align-items: center;
   justify-content: flex-end;
   box-sizing: border-box;
-  box-shadow: 0 -8px 12px var(--shadow-color);
+  border-top: 1px solid var(--line);
+  background: transparent;
+  box-shadow: none;
 }
 .dialog-body > form > .form-actions {
   margin-top: 4px;
