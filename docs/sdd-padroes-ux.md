@@ -106,3 +106,17 @@ Revisão visual ainda pendente: o navegador remoto recusou conexão ao servidor 
 - [ ] Revisar CSS legado e importações restantes antes do merge, registrando remoções ou justificando exceções.
 
 **Regra de liberação:** manter PR #30 aberto e sem merge até os três testes manuais acima. O PR #29 continua preservado; sua mudança de históricos já está incluída no #30 e poderá ser fechado como substituído após integração segura.
+
+## Campanhas e paginação — 29/10/2026
+
+- [x] Reutilizar `ViewSwitcher` para as seções **Resumo, Indicações e Histórico** da campanha, tanto na demo quanto no aplicativo real.
+- [x] Manter seletor de campanha e ações de gestão fora das abas internas.
+- [x] Restaurar aba Resumo ao selecionar outra campanha; resetar paginação da campanha.
+- [x] Usar `Pagination` compartilhado para limitar tabelas a 10 registros por página; deixar controles fora da rolagem horizontal.
+- [x] Paginar participantes, indicações, registros antigos e pagamentos da demo.
+- [x] Paginar participantes, indicações e quitações da campanha real, além da lista de embaixadores e métricas.
+- [x] Preservar indicadores e totais calculados sobre todo o conjunto, não somente a página visível.
+- [x] Adicionar teste automatizado de opções de abas e faixas de paginação, incluindo última página.
+- [ ] Conferir visualmente troca de abas e páginas no desktop e celular, demo e perfis reais.
+
+**Observação de homologação:** a paginação de indicações no app real é feita pela API com tamanho de página 10; os totais e quitações já retornam coleções completas e são paginados para exibição no cliente. Para volumes muito grandes, avaliar paginação backend específica também para essas coleções sem afetar a apuração financeira.
