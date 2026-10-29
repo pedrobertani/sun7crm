@@ -1,5 +1,24 @@
 # SDD — padrões globais de UX do SUN7CRM
 
+## Situação consolidada — 29/10/2026 (revisão 88740ec)
+
+Esta seção é o estado atual; os checklists abaixo preservam o histórico de cada rodada. **SDD ainda não encerrado:** testes automatizados aprovados não substituem a homologação autenticada, mobile e por volume.
+
+- [x] Preservar as mudanças recentes do PR #30, incluindo paginação, filtros do Kanban, ModalFooter, Planos compactos, importação paginada e Dashboard.
+- [x] Corrigir o acesso às medalhas: o CSS da aba Conquistas ocultava o cabeçalho com o botão do gestor. Agora Conquistas → Configurar medalhas abre diretamente Medalhas; Comercial → Configurar metas continua abrindo Funil e metas. Regra de gestor com settings.edit preservada.
+- [x] Prévia 88740ec: navegar até Conquistas, abrir Configurar medalhas, adicionar uma linha de medalha e cancelar sem persistir dados fictícios. Não equivale a salvar medalha na empresa real.
+- [x] Prévia desktop 88740ec: conferir Embaixadores sem campanha, tabela/paginação de participantes e modal Nova campanha; foco inicial no nome, datas lado a lado e rodapé sem sobreposição.
+- [x] Prévia 88740ec: conferir presença de filtros de criação, rolagem superior e seletor 10/50/100/Todos do Kanban. Arraste em touch e carga de 300+ cards ainda pendentes.
+- [x] Build e TypeScript frontend; 219 testes frontend, 183 de banco local e 64 de funções: 466 aprovados. TypeScript das funções aprovado. Não houve execução desses testes contra dados de produção.
+- [x] CI Verificações do commit 88740ec aprovado: https://github.com/pedrobertani/sun7crm/actions/runs/40958187683 . Deploy de preview concluído: https://97045e12.sun7crm.pages.dev .
+- [ ] Sessão real: Conquistas da Empresa B, inclusão/salvamento de medalha e persistência após recarga; verificar gestor, consultor, recepção e administrador.
+- [ ] Sessões distintas: confirmar propagação de alterações e isolamento entre empresas.
+- [ ] Última revisão em celular/touch e todos os temas, incluindo tabelas, modais longos e Kanban volumoso. Resultados de previews anteriores não certificam este HEAD.
+- [ ] Importação com 1/50/1.000 linhas, erros e duplicados na prévia paginada, sem sobrescrever cadastros.
+- [ ] Completar inventário de rodapés customizados/CSS legado e páginas públicas; registrar exceções justificadas antes de declarar padronização integral.
+
+**Limite da validação atual:** navegador está na demo, sem sessão autenticada. As homologações de Planos relatadas pelo usuário continuam registradas como tal; não foram repetidas nesta sessão. Não aprovar merge com base apenas nesta rodada.
+
 ## Objetivo e escopo
 
 Revisar demo, aplicativo de gestor/funcionário e administração. Centralizar aparência e comportamento de ações, títulos, abas, tabelas, cards e modais. Não alterar regras financeiras, permissões ou persistência de negócio nesta revisão. A validação funcional final do produto será retomada depois desta etapa.
