@@ -6,7 +6,7 @@ import { Empty, FormError, Heading, SearchInput } from '../../components/shared'
 import { Button } from '../../components/ui/button';
 import { Modal } from '../../components/ui/modal';
 import { getSupabaseClient } from '../../lib/supabase';
-import { currency, dateLabel, shiftDate, today, uid } from '../../lib/format';
+import { currency, dateLabel, shiftDate, uid } from '../../lib/format';
 import type { AdminCompany } from '../admin/repository';
 import { AccessChangedError } from '../auth/access';
 import { BillingHistory } from './BillingHistory';
@@ -20,7 +20,6 @@ import {
   loadSubscription,
   paymentPreview,
   stateLabels,
-  subscriptionState,
   type BillingAttempt,
 } from './subscription';
 
