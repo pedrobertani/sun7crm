@@ -75,7 +75,10 @@ export function ActivityReportView({
       {tab === 'contacts' && (
       <section className="card report-table-section">
         <div className="toolbar activity-toolbar">
-          <SearchInput value={query} onChange={(v) => { setQuery(v); list.setPage(0); }} placeholder="Buscar cliente ou telefone" />
+          <div className="report-search-field">
+            <span className="report-filter-caption">Buscar</span>
+            <SearchInput value={query} onChange={(v) => { setQuery(v); list.setPage(0); }} placeholder="Buscar cliente ou telefone" />
+          </div>
           <label>
             Responsável
             <select value={owner} onChange={(e) => { setOwner(e.target.value); list.setPage(0); }}>
