@@ -390,6 +390,7 @@ export class OperationalBackend {
     pageSize = 50,
     filters: Partial<Record<keyof Resources[K], string | boolean | null>> = {},
     search = '',
+    createdBetween?: { from: string; until: string },
   ): Promise<Page<Resources[K]>> {
     if (
       !tables[resource] ||
@@ -427,6 +428,16 @@ export class OperationalBackend {
         uuid(value);
       }
       query = value === null ? query.is(column, null) : query.eq(column, value);
+    }
+    if (createdBetween) {
+      if (
+        resource !== 'cards' ||
+        ![createdBetween.from, createdBetween.until].every(
+          (value) => !Number.isNaN(Date.parse(value)) && /T\d{2}:\d{2}:\d{2}/.test(value),
+        ) ||
+        Date.parse(createdBetween.from) >= Date.parse(createdBetween.until)
+      ) throw new BackendError('Confira o período selecionado.', 'INVALID_FILTER', 'validation');
+      query = query.gte('created_at', createdBetween.from).lt('created_at', createdBetween.until);
     }
     if (search.trim()) {
       const column =
