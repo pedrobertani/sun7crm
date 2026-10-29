@@ -335,3 +335,17 @@ As capturas abaixo são evidência **visual** em tamanhos reais de viewport, por
 - [ ] Comparar em navegador a versão alterada em 390/768/1366/1920px, claro/escuro e zoom 100%.
 - [ ] Verificar paridade do módulo real de Estratégias; esta alteração é visual e restrita à demo.
 - [ ] Confirmar CI do novo commit e não integrar na main antes dos testes autenticados e da homologação da prévia.
+
+## Auditoria de Embaixadores — formulários demo/real (29/10/2026)
+
+**Evidência:** capturas fornecidas de Nova campanha e Novo embaixador na demo, em tema escuro, mostram formulários verticais excessivamente altos e textos de orientação que empurram o rodapé.
+
+- [x] Demo: alinhar datas Início/Encerramento em duas colunas no desktop; regra e valor em duas colunas, responsivas no celular.
+- [x] Demo: alinhar função e benefícios no desktop, reduzir altura e remover dois parágrafos explicativos duplicados, sem esconder os campos ou retirar a lógica de comissão.
+- [x] Real: agrupar função/código, datas, regra/valor e os estados em linhas compactas; manter validação e persistência existentes.
+- [x] Não alterar diálogos de quitação/encerramento nem a apuração de pontos ou permissões.
+- [ ] Verificar no CI TypeScript, build e testes da branch após esta revisão.
+- [ ] Validar visualmente os dois modais na prévia exata do HEAD, tema claro/escuro, 390px e desktop, inclusive foco, rolagem e botões.
+- [ ] Revisar em seguida campanha selecionada, indicadores, histórico e registro de indicação em demo/real.
+
+**Regra de liberação:** não fazer merge do PR #30 até completar as homologações restantes.
