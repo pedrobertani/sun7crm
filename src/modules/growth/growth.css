@@ -191,11 +191,56 @@
   }
 }
 
-/* Shared report and campaign spacing: selectors sit outside the data card. */
-.report-table-section { margin-top: 18px; padding: 22px 24px; }
-.report-table-section .activity-toolbar { gap: 18px; padding: 10px 0 20px; flex-wrap: wrap; }
-.report-table-section .activity-toolbar > .search { flex: 1 1 290px; min-width: 220px; max-width: 520px; }
-.report-table-section .activity-description { padding: 13px 0; margin-bottom: 12px; border-top: 1px solid var(--line); }
+/* Reports: equal field labels, control heights and bottom alignment at every viewport. */
+.report-table-section { margin-top: 18px; padding: 18px 20px; }
+.report-table-section .activity-toolbar {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) minmax(175px, 270px) minmax(175px, 270px);
+  align-items: end;
+  gap: 14px;
+  margin: 0;
+  padding: 0 0 16px;
+  border-bottom: 0;
+}
+.report-table-section .activity-toolbar > .report-search-field,
+.report-table-section .activity-toolbar > label:not(.search) {
+  min-width: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 7px;
+}
+.report-table-section .report-filter-caption,
+.report-table-section .activity-toolbar > label:not(.search) {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 18px;
+}
+.report-table-section .activity-toolbar .search {
+  width: 100%;
+  max-width: none;
+  flex: none;
+  min-width: 0;
+  margin: 0;
+}
+.report-table-section .activity-toolbar .search input,
+.report-table-section .activity-toolbar > label:not(.search) select {
+  display: block;
+  width: 100%;
+  height: 42px;
+  min-height: 42px;
+  max-width: none;
+  margin: 0;
+  padding-block: 8px;
+  font-size: 13px;
+}
+.report-table-section .activity-description {
+  padding: 12px 0;
+  margin: 0 0 12px;
+  border-top: 1px solid var(--line);
+}
 .report-table-section .table-wrap { max-width: 100%; }
 .report-table-section .toolbar:has(h2) { padding: 0 0 14px; }
 .report-table-section .toolbar h2 { margin-bottom: 6px; }
@@ -203,8 +248,15 @@
 .campaign-panel + .ui-tabs-list { margin-top: 18px; }
 .campaign-panel + .ui-tabs-list + .campaign-panel,
 .campaign-panel + .ui-tabs-list + .growth-section { margin-top: 18px; }
+@media (max-width: 900px) {
+  .report-table-section .activity-toolbar {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .report-table-section .report-search-field { grid-column: 1 / -1; }
+}
 @media (max-width: 600px) {
-  .report-table-section { padding: 16px; }
-  .report-table-section .activity-toolbar { gap: 12px; }
-  .report-table-section .activity-toolbar > .search { flex-basis: 100%; min-width: 0; max-width: none; }
+  .report-table-section { padding: 14px; }
+  .report-table-section .activity-toolbar { grid-template-columns: minmax(0, 1fr); gap: 12px; }
+  .report-table-section .report-search-field { grid-column: auto; }
 }
