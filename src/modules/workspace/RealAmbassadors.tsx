@@ -1,4 +1,5 @@
 import { ViewSwitcher } from '../../components/ui/view-switcher';
+import { Pagination, CAMPAIGN_PAGE_SIZE } from '../../components/ui/pagination';
 import { campaignViews, type CampaignView } from '../growth/campaign-views';
 import { Pencil } from 'lucide-react';
 import { useRef, useState } from 'react';
@@ -84,7 +85,7 @@ export function RealAmbassadors() {
   );
   const referrals = useQuery(
     async () =>
-      current ? { ...(await api.list('referrals', page, 50, { campaign_id: current.id })) } : null,
+      current ? { ...(await api.list('referrals', page, CAMPAIGN_PAGE_SIZE, { campaign_id: current.id })) } : null,
     [api, current?.id, page],
   );
   const metrics = useQuery(
@@ -405,7 +406,7 @@ export function RealAmbassadors() {
                           </tr>
                         </thead>
                         <tbody>
-                          {totals.data.totals.map((r) => (
+                          {totals.data.totals.slice(page * CAMPAIGN_PAGE_SIZE, (page + 1) * CAMPAIGN_PAGE_SIZE).map((r) => (
                             <tr key={r.ambassador_id}>
                               <td>
                                 <strong>{r.ambassador_name}</strong>
@@ -460,6 +461,7 @@ export function RealAmbassadors() {
                         />
                       )}
                     </div>
+                    <Pagination page={page} total={totals.data.totals.length} onChange={setPage} label="participantes" size={CAMPAIGN_PAGE_SIZE} />
                   </Panel>
                 </>
               )}
@@ -483,7 +485,7 @@ export function RealAmbassadors() {
                             </tr>
                           </thead>
                           <tbody>
-                            {totals.data.payments.map((p) => (
+                            {totals.data.payments.slice(page * CAMPAIGN_PAGE_SIZE, (page + 1) * CAMPAIGN_PAGE_SIZE).map((p) => (
                               <tr key={p.id}>
                                 <td>{p.ambassador_name}</td>
                                 <td>{currency(p.amount_cents)}</td>
@@ -501,6 +503,7 @@ export function RealAmbassadors() {
                           </tbody>
                         </table>
                       </div>
+                      <Pagination page={page} total={totals.data.payments.length} onChange={setPage} label="quitações" size={CAMPAIGN_PAGE_SIZE} />
                     </Panel>
                     ) : (
                       <div className="card panel">
@@ -596,7 +599,7 @@ export function RealAmbassadors() {
                         />
                       )}
                     </div>
-                    <Pager page={page} total={referrals.data.total} onChange={setPage} />
+                    <Pagination page={page} total={referrals.data.total} onChange={setPage} label="indicações" size={CAMPAIGN_PAGE_SIZE} />
                   </>
                 )}
               </Panel>
