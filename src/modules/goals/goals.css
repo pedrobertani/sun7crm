@@ -256,7 +256,6 @@
 .goal-area[data-view='medals'] .goal-indicators,
 .goal-area[data-view='medals'] .goal-funnel,
 .goal-area[data-view='medals'] .goal-total,
-.goal-area[data-view='medals'] .goal-head,
 .goal-area[data-view='commercial'] .goal-medals {
   display: none;
 }

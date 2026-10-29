@@ -79,7 +79,7 @@ export function GoalFunnel({ view = 'commercial' }: { view?: 'commercial' | 'med
   return (
     <div className="goal-area" data-view={view}>
       <Panel
-        title="Funil de metas"
+        title={view === 'medals' ? 'Conquistas e medalhas' : 'Funil de metas'}
         description="Planejamento mensal configurado pelo gestor — separado dos resultados realizados."
       >
         <div className="goal-head">
@@ -94,7 +94,7 @@ export function GoalFunnel({ view = 'commercial' }: { view?: 'commercial' | 'med
           </label>
           {manager && (
             <Button type="button" variant="outline" onClick={() => setConfigOpen(true)}>
-              <Settings2 size={16} /> Configurar metas
+              <Settings2 size={16} /> {view === 'medals' ? 'Configurar medalhas' : 'Configurar metas'}
             </Button>
           )}
         </div>
@@ -247,6 +247,7 @@ export function GoalFunnel({ view = 'commercial' }: { view?: 'commercial' | 'med
       </Panel>
       {configOpen && manager && (
         <GoalSettings
+          initialSection={view === 'medals' ? 'medals' : 'plan'}
           key={month + '-' + (plan?.target_cents ?? 0)}
           month={month}
           plan={plan || null}
@@ -284,6 +285,7 @@ function Medal({ medal, earned }: { medal: GoalMedal; earned: boolean }) {
   );
 }
 function GoalSettings({
+  initialSection,
   month,
   plan,
   results,
@@ -291,6 +293,7 @@ function GoalSettings({
   onClose,
   onSaved,
 }: {
+  initialSection: 'plan' | 'medals';
   month: string;
   plan: GoalPlan | null;
   results: GoalEmployeeProgress[];
@@ -300,7 +303,7 @@ function GoalSettings({
 }) {
   const { api, notice, refresh } = useOperational();
   const save = useSave(),
-    [section, setSection] = useState<Section>('plan');
+    [section, setSection] = useState<Section>(initialSection);
   const [target, setTarget] = useState(moneyInput(plan?.target_cents || 0));
   const [ticket, setTicket] = useState(moneyInput(plan?.ticket_cents || 0));
   const [stages, setStages] = useState<GoalStep[]>(

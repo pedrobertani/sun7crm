@@ -60,7 +60,7 @@ export function DemoGoalFunnel({ view = 'commercial' }: { view?: 'commercial' | 
   return (
     <div className="goal-area" data-demo="true" data-view={view}>
       <Panel
-        title="Funil de metas e medalhas"
+        title={view === 'medals' ? 'Conquistas e medalhas' : 'Funil de metas'}
         description="Dados fictícios da demonstração — configure metas e conquistas como um gestor."
       >
         <div className="goal-head">
@@ -75,7 +75,7 @@ export function DemoGoalFunnel({ view = 'commercial' }: { view?: 'commercial' | 
           </label>
           {manager && (
             <Button variant="outline" type="button" onClick={() => setOpen(true)}>
-              <Settings2 size={16} /> Configurar metas
+              <Settings2 size={16} /> {view === 'medals' ? 'Configurar medalhas' : 'Configurar metas'}
             </Button>
           )}
         </div>
@@ -202,6 +202,7 @@ export function DemoGoalFunnel({ view = 'commercial' }: { view?: 'commercial' | 
       </Panel>
       {open && manager && (
         <DemoGoalSettings
+          initialSection={view === 'medals' ? 'medals' : 'plan'}
           key={session.companyId + month}
           month={month}
           plan={plan}
@@ -239,6 +240,7 @@ export function DemoGoalFunnel({ view = 'commercial' }: { view?: 'commercial' | 
   );
 }
 function DemoGoalSettings({
+  initialSection,
   month,
   plan,
   members,
@@ -246,6 +248,7 @@ function DemoGoalSettings({
   onClose,
   onSave,
 }: {
+  initialSection: 'plan' | 'medals';
   month: string;
   plan?: DemoGoalPlan;
   members: { id: string; name: string; role: string }[];
@@ -254,7 +257,7 @@ function DemoGoalSettings({
   onSave: (plan: DemoGoalPlan, goals: DemoEmployeeGoal[]) => void;
 }) {
   const { session, notice } = useCrm();
-  const [tab, setTab] = useState<'plan' | 'medals' | 'employees'>('plan');
+  const [tab, setTab] = useState<'plan' | 'medals' | 'employees'>(initialSection);
   const [target, setTarget] = useState(((plan?.targetCents || 0) / 100).toFixed(2));
   const [ticket, setTicket] = useState(((plan?.ticketCents || 0) / 100).toFixed(2));
   const [stages, setStages] = useState<GoalStep[]>(
