@@ -233,11 +233,12 @@
 }
 .billing-filters {
   display: flex;
-  gap: 14px;
+  gap: 12px 14px;
   align-items: end;
   flex-wrap: wrap;
-  padding: 18px;
-  margin-bottom: 18px;
+  padding: 10px 0 14px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid var(--line);
 }
 .billing-filters label,
 .billing-company-search {
