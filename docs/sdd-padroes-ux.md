@@ -223,3 +223,16 @@ Decisão de UX baseada na arquitetura de quadros Jira 2026: a altura do quadro n
 - [ ] Homologar visualmente a prévia publicada e os diferentes modos em desktop e celular.
 
 **Sem alterar regra de negócio:** o filtro existente atua na data de criação do card. Mudanças de critério para data de movimentação/fechamento devem ser tratadas separadamente para não alterar totais silenciosamente.
+
+## Kanban — opção Todos na quantidade por etapa (29/10/2026)
+
+- [x] Oferecer **10, 50, 100 e Todos** exclusivamente no controle do Kanban, no rodapé, sem alterar os seletores padrão de outras listas.
+- [x] Compartilhar o seletor e as opções entre demo e app real.
+- [x] Quando Todos: renderizar a lista inteira de cada etapa e ocultar a paginação individual daquela etapa.
+- [x] No app real: carregar todos os resultados filtrados por empresa, quadro, etapa, busca, contato e datas usando lotes de 200; não truncar no limite de uma consulta.
+- [x] Buscar contatos, histórico e etiquetas de listas longas em lotes de até 100 identificadores, respeitando o isolamento existente por empresa.
+- [x] Ao alternar 10/50/100/Todos, reiniciar a página de cada etapa para não manter índices antigos.
+- [x] Testes: seletor compartilhado; 305 cards reais simulados em duas consultas; histórico e etiquetas em lotes de 100.
+- [ ] Homologar visualmente e testar arraste em Todos com 300+ cards e zoom de 100% no desktop e celular.
+
+**Trade-off consciente:** Todos pode exigir mais consultas e renderizar centenas de cards; altura e rolagem continuam automáticas por CSS, sem qualquer configuração visual no aplicativo. Não alterar paginação global de tabelas fora do Kanban.
