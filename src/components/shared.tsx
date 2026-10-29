@@ -1,3 +1,4 @@
+import { ModalFooter } from './ui/modal-footer';
 import { Link } from 'react-router-dom';
 import { Input } from './ui/input';
 import type { ReactNode } from 'react';
@@ -159,11 +160,11 @@ export function FormActions({
   label?: string;
 }) {
   return (
-    <div className="form-actions">
+    <ModalFooter>
       <Button type="button" variant="outline" onClick={onCancel}>
         Cancelar
       </Button>
       <Button type="submit">{label}</Button>
-    </div>
+    </ModalFooter>
   );
 }
