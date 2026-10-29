@@ -309,3 +309,21 @@ Não modificar outras abas e controles globais para corrigir este componente. To
 - [ ] Revisar operações de importação, dialogs e ações de cada papel com sessão real (gestor, vendedor, recepção, plataforma).
 
 **Critério de bloqueio:** o PR #30 não deve ir à `main` apenas com CI verde. Exigir homologação visual dos pontos marcados como pendentes, sem confundir screenshots de uma prévia anterior com a prévia do HEAD.
+
+### Inspeção adicional de screenshots e correções — rodada 2, 29/10/2026
+
+As capturas abaixo são evidência **visual** em tamanhos reais de viewport, porém de prévias já publicadas **anteriores ao HEAD**; telas autenticadas de outros papéis continuam fora desta validação visual.
+
+- [x] Desktop 1440×850: Dashboard, Tarefas, Relatórios, Contatos, Estratégias, Embaixadores, Configurações, Plano e landing pública.
+- [x] Celular 390×844: Relatórios, Contatos, Tarefas e Embaixadores.
+- [x] Revisão do Relatório de Atividade na prévia do commit `18415440`: labels e campos uniformes, coluna Ações no enquadramento desktop e menor espaço vertical entre filtros e resultados.
+- [x] Identificado por screenshot que a regra de Embaixadores consumia várias linhas no mobile antes da seleção de campanha. Substituída por `details` recolhível, mantendo as informações acessíveis.
+- [x] Identificado por screenshot que Minha conta ocupava um painel muito amplo para poucos controles; abas e painel de Configurações limitados juntos a 940px, sem impor largura fixa no celular.
+- [x] Plano já limita o painel principal a aproximadamente 920px; não criar outra camada nem alterar regra financeira.
+- [x] Contatos e Tarefas apresentam tabela/quadro contidos em 390px. A tabela de Contatos requer rolagem horizontal interna para ver as colunas restantes (condição normal para tabelas densas).
+- [ ] Repetir screenshots de Relatórios, Embaixadores, Configurações e Cobranças **na prévia exata do HEAD**, quando estiver publicada, para confirmar as alterações desta rodada.
+- [ ] Testar arraste em Tarefas e Kanban, navegação de tabelas e ações no touch real, não apenas em captura estática.
+- [ ] Verificar impressão visual e modais no ambiente real autenticado, inclusive perfis de gestor, recepção e vendedor.
+- [ ] Revisar ainda as telas completas de administração, importação de Excel e formulários públicos antes de marcar a auditoria como encerrada.
+
+**Resultado desta rodada:** mudanças já aplicadas em Relatórios (busca, largura de colunas, Ações e padding), Equipe real (paginação fora da rolagem), Histórico de Cobranças (filtros sem card redundante), Embaixadores demo (regras recolhíveis), Configurações (largura responsiva alinhada). A documentação e o CI não substituem a inspeção da nova prévia: este checklist continua aberto.
