@@ -563,11 +563,12 @@ export function Ambassadors() {
         title={people.some((a) => a.id === person?.id) ? 'Editar embaixador' : 'Novo embaixador'}
       >
         {person && (
-          <form onSubmit={savePerson}>
+          <form className="ambassador-dialog-form" onSubmit={savePerson}>
             <ContactPicker
               value={person.contactId || ''}
               onChange={(id) => setPerson({ ...person, contactId: id })}
             />
+            <div className="ambassador-demo-fields">
             <label className="form-row">
               Função no programa
               <Input
@@ -590,6 +591,7 @@ export function Ambassadors() {
                 onChange={(e) => setPerson({ ...person, reward: e.target.value })}
               />
             </label>
+            </div>
             <label className="check-row">
               <input
                 type="checkbox"
@@ -598,10 +600,6 @@ export function Ambassadors() {
               />
               Participa da comissão das campanhas
             </label>
-            <p>
-              Benefícios de acolhimento ou divulgação podem ser diferentes da comissão de vendas. A
-              função não altera permissões de acesso ao sistema.
-            </p>
             <label className="form-row">
               Situação
               <select
@@ -612,7 +610,6 @@ export function Ambassadors() {
                 <option value="false">Inativo</option>
               </select>
             </label>
-            <p>A regra de comissão é definida pelo gestor em cada campanha.</p>
             <FormError message={error} />
             <FormActions onCancel={() => setPerson(null)} />
           </form>
@@ -624,7 +621,7 @@ export function Ambassadors() {
         title="Nova campanha"
       >
         {campaignForm && (
-          <form onSubmit={saveCampaign}>
+          <form className="ambassador-dialog-form" onSubmit={saveCampaign}>
             <label className="form-row">
               Nome
               <Input
@@ -634,6 +631,7 @@ export function Ambassadors() {
                 onChange={(e) => setCampaignForm({ ...campaignForm, name: e.target.value })}
               />
             </label>
+            <div className="ambassador-demo-fields">
             <label className="form-row">
               Início
               <Input
@@ -653,6 +651,8 @@ export function Ambassadors() {
                 onChange={(e) => setCampaignForm({ ...campaignForm, end: e.target.value })}
               />
             </label>
+            </div>
+            <div className="ambassador-demo-fields">
             <label className="form-row">
               Regra de pagamento
               <select
@@ -693,6 +693,7 @@ export function Ambassadors() {
                 }
               />
             </label>
+            </div>
             <FormError message={error} />
             <FormActions onCancel={() => setCampaignForm(null)} />
           </form>
