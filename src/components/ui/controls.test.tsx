@@ -6,6 +6,7 @@ import { Button } from './button';
 import { ViewSwitcher } from './view-switcher';
 import { campaignViews } from '../../modules/growth/campaign-views';
 import { Pagination } from './pagination';
+import { KanbanScroll } from './kanban-scroll';
 import { WhatsAppButton } from '../WhatsAppButton';
 import { ActivityReportView } from '../../modules/reports/ActivityReport';
 
@@ -41,6 +42,17 @@ describe('Controles compartilhados', () => {
     expect(html.match(/type="button"/g)).toHaveLength(2);
     expect(html.match(/aria-pressed="true"/g)).toHaveLength(1);
     expect(html).toContain('role="group"');
+  });
+  it('renderiza a rolagem superior e a região do funil acessível', () => {
+    const html = renderToStaticMarkup(
+      <KanbanScroll label="Etapas do funil">
+        <div className="kanban-board"><section className="kanban-column">Etapa</section></div>
+      </KanbanScroll>,
+    );
+    expect(html).toContain('kanban-scroll-top');
+    expect(html).toContain('Rolagem superior: Etapas do funil');
+    expect(html).toContain('aria-label="Etapas do funil"');
+    expect(html).toContain('kanban-scroll-shell');
   });
   it('oferece 10, 50 e 100 registros e mantém o seletor na última página', () => {
     const markup = renderToStaticMarkup(
