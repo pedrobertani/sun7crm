@@ -1,4 +1,5 @@
-import { ViewSwitcher } from '../../components/ui/view-switcher';
+import { KanbanSizeControl, visibleKanbanRows, type KanbanPageSize } from '../kanban/page-size';
+import './tasks-layout.css';
 import { Pagination, paginatedRows, usePagination } from '../../components/ui/pagination';
 import { useCardDrag } from '../../hooks/useCardDrag';
 import { RecordTitle } from '../../components/RecordTitle';
@@ -6,7 +7,7 @@ import type { Task } from '../../domain/types';
 import { useSearchParams } from 'react-router-dom';
 import { Input } from '../../components/ui/input';
 import { useState, type FormEvent } from 'react';
-import { Pencil, Plus, CalendarDays, Check, Circle, GripVertical, UserRound } from 'lucide-react';
+import { Pencil, Plus, CalendarDays, Check, Circle, GripVertical, UserRound, List, KanbanSquare } from 'lucide-react';
 import { useCrm } from '../../app/context';
 import { visibleContacts } from '../../domain/operations';
 import {
@@ -22,6 +23,9 @@ import { Button } from '../../components/ui/button';
 import { Modal } from '../../components/ui/modal';
 export function Tasks() {
   const pages = usePagination();
+  const [boardSize, setBoardSize] = useState<KanbanPageSize>(10);
+  const [boardPages, setBoardPages] = useState<Record<string, number>>({});
+  const changeBoardSize = (size: KanbanPageSize) => { setBoardSize(size); setBoardPages({}); };
   const { data, session, update, notice } = useCrm();
   const [params, setParams] = useSearchParams();
   const view = params.get('visualizacao') === 'lista' ? 'lista' : 'quadro';
@@ -32,6 +36,8 @@ export function Tasks() {
     const next = new URLSearchParams(params);
     next.set(key, value);
     setParams(next);
+    setBoardPages({});
+    pages.setPage(0);
   }
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
@@ -124,31 +130,34 @@ export function Tasks() {
         </Button>
       </Heading>
       <div className="tasks-view-toolbar">
-        <ViewSwitcher
-          label="Visualização das tarefas"
-          value={view}
-          onValueChange={(value) => changeParam('visualizacao', value)}
-          items={[
-            { value: 'quadro', label: 'Quadro' },
-            { value: 'lista', label: 'Lista' },
-          ]}
-        />
+        <div className="tasks-segmented" role="group" aria-label="Visualização das tarefas">
+          <button type="button" className={view === 'quadro' ? 'active' : ''}
+            aria-pressed={view === 'quadro'} onClick={() => changeParam('visualizacao', 'quadro')}>
+            <KanbanSquare size={15} /> Quadro Kanban
+          </button>
+          <button type="button" className={view === 'lista' ? 'active' : ''}
+            aria-pressed={view === 'lista'} onClick={() => changeParam('visualizacao', 'lista')}>
+            <List size={15} /> Lista
+          </button>
+        </div>
         <span className="muted result-count">{tasks.length} tarefas</span>
       </div>
       <div className={view === 'lista' ? 'card' : 'tasks-board-area'}>
-        <div className={'toolbar ' + (view === 'quadro' ? 'tasks-filterbar' : '')}>
-          <ViewSwitcher
-            label="Situação das tarefas"
-            value={filter}
-            onValueChange={(value) => changeParam('status', value)}
-            items={[
-              { value: 'all', label: 'Todas' },
-              { value: 'pending', label: 'Pendentes' },
-              { value: 'overdue', label: 'Atrasadas' },
-              { value: 'done', label: 'Concluídas' },
-            ]}
-          />
-          <SearchInput value={query} onChange={(v) => { setQuery(v); pages.setPage(0); }} placeholder="Buscar tarefa" />
+        <div className={'toolbar ' + (view === 'quadro' ? 'tasks-filterbar' : 'tasks-list-filterbar')}>
+          <div className="tasks-segmented" role="group" aria-label="Situação das tarefas">
+            {[
+              ['all', 'Todas'],
+              ['pending', 'Pendentes'],
+              ['overdue', 'Atrasadas'],
+              ['done', 'Concluídas'],
+            ].map(([value, label]) => (
+              <button key={value} type="button" className={filter === value ? 'active' : ''}
+                aria-pressed={filter === value} onClick={() => changeParam('status', value)}>
+                {label}
+              </button>
+            ))}
+          </div>
+          <SearchInput value={query} onChange={(v) => { setQuery(v); pages.setPage(0); setBoardPages({}); }} placeholder="Buscar tarefa" />
         </div>
         {view === 'quadro' ? (
           <>
@@ -156,6 +165,7 @@ export function Tasks() {
               <div className="tasks-kanban">
                 {TASK_STAGES.map((stage) => {
                   const rows = tasks.filter((t) => taskStatus(t) === stage.id);
+                  const visible = visibleKanbanRows(rows, boardSize, boardPages[stage.id] || 0);
                   return (
                     <section
                       key={stage.id}
@@ -171,7 +181,7 @@ export function Tasks() {
                         </div>
                       </div>
                       <div className="column-body">
-                        {rows.map((t) => {
+                        {visible.rows.map((t) => {
                           const owner = members.find((m) => m.id === t.ownerId);
                           const contact = data.contacts.find((c) => c.id === t.contactId);
                           return (
@@ -261,10 +271,23 @@ export function Tasks() {
                           Adicionar tarefa
                         </Button>
                       </div>
+                      {boardSize !== 'all' && rows.length > boardSize && (
+                        <div className="kanban-column-pagination">
+                          <Pagination
+                            page={visible.page} size={boardSize} total={rows.length}
+                            onChange={(next) => setBoardPages((previous) => ({ ...previous, [stage.id]: next }))}
+                            label={'tarefas de ' + stage.label}
+                          />
+                        </div>
+                      )}
                     </section>
                   );
                 })}
               </div>
+            </div>
+            <div className="tasks-board-footer">
+              <KanbanSizeControl size={boardSize} onChange={changeBoardSize} />
+              <span className="muted">{tasks.length} tarefas</span>
             </div>
             <p className="small-note">
               Arraste as tarefas entre as etapas ou use o seletor de cada cartão. As visualizações
