@@ -48,6 +48,15 @@ export function useCardDrag(onMove: (id: string, stage: string) => void) {
       }
       const hit = document.elementFromPoint(x, y)?.closest<HTMLElement>('[data-drop-stage]');
       const next = hit && board.contains(hit) ? hit : null;
+      // Scroll the hovered stage vertically while dragging near its upper/lower edge.
+      const list = next?.querySelector<HTMLElement>('.column-body, .kanban-cards');
+      if (list) {
+        const area = list.getBoundingClientRect();
+        if (x >= area.left && x <= area.right) {
+          if (y >= area.top && y < area.top + 44) list.scrollTop -= 9;
+          else if (y <= area.bottom && y > area.bottom - 44) list.scrollTop += 9;
+        }
+      }
       if (next !== target) {
         target?.classList.remove('dragover');
         target = next;
