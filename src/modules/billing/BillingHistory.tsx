@@ -4,6 +4,7 @@ import { CircleCheck, Clock3, TriangleAlert, ReceiptText } from 'lucide-react';
 import { Empty, FormError, Kpi } from '../../components/shared';
 import { RecordTitle } from '../../components/RecordTitle';
 import { Button } from '../../components/ui/button';
+import { Pagination, type PageSize } from '../../components/ui/pagination';
 import { Modal } from '../../components/ui/modal';
 import { currency, dateLabel } from '../../lib/format';
 import { getSupabaseClient } from '../../lib/supabase';
@@ -42,6 +43,7 @@ export function BillingHistory({
   active?: boolean;
 }) {
   const [filters, setFilters] = useState(defaultHistoryFilters);
+  const [pageSize, setPageSize] = useState<PageSize>(10);
   const [draftQuery, setDraftQuery] = useState('');
   const [reload, setReload] = useState(0),
     [selected, setSelected] = useState<Charge | null>(null);
@@ -80,7 +82,7 @@ export function BillingHistory({
           records.filter((r) => r.status === state).reduce((total, r) => total + r.amount_cents, 0);
         return {
           ...demoData,
-          records: visible.slice(filters.offset, filters.offset + 20),
+          records: visible.slice(filters.offset, filters.offset + pageSize),
           total: visible.length,
           totals: {
             ...demoData.totals,
@@ -96,9 +98,21 @@ export function BillingHistory({
           },
         };
       }
-      return loadChargeHistory(getSupabaseClient(), companyId, filters);
+      // The existing RPC returns at most 20 records per request. Combine read-only
+      // windows so 50/100 can be selected without changing payment functions.
+      const client = getSupabaseClient();
+      const first = await loadChargeHistory(client, companyId, filters);
+      if (pageSize <= 20 || first.records.length < 20) {
+        return { ...first, records: first.records.slice(0, pageSize) };
+      }
+      const remaining = await Promise.all(
+        Array.from({ length: Math.ceil(pageSize / 20) - 1 }, (_, i) =>
+          loadChargeHistory(client, companyId, { ...filters, offset: filters.offset + (i + 1) * 20 }),
+        ),
+      );
+      return { ...first, records: [first, ...remaining].flatMap((part) => part.records).slice(0, pageSize) };
     },
-    [companyId, filters, revision, reload, demoData],
+    [companyId, filters, revision, reload, demoData, pageSize],
     {
       group: billingRefreshGroup(companyId),
       enabled: validHistoryDates(filters.from, filters.to),
@@ -109,9 +123,9 @@ export function BillingHistory({
     if (history && filters.offset > 0 && filters.offset >= history.total)
       setFilters((current) => ({
         ...current,
-        offset: history.total ? Math.floor((history.total - 1) / 20) * 20 : 0,
+        offset: history.total ? Math.floor((history.total - 1) / pageSize) * pageSize : 0,
       }));
-  }, [history, filters.offset]);
+  }, [history, filters.offset, pageSize]);
   const updateFilter = (values: Partial<typeof filters>) =>
     setFilters((current) => ({ ...current, ...values, offset: 0 }));
   function open(charge: Charge) {
@@ -350,29 +364,17 @@ export function BillingHistory({
                 </div>
               )}
             </div>
-            <div className="billing-pagination">
-              <span>
-                {history.total
-                  ? `${filters.offset + 1}–${Math.min(filters.offset + 20, history.total)} de ${history.total}`
-                  : 'Nenhum registro'}
-              </span>
-              <div>
-                <Button
-                  variant="outline"
-                  disabled={filters.offset === 0}
-                  onClick={() => setFilters((f) => ({ ...f, offset: Math.max(0, f.offset - 20) }))}
-                >
-                  Anterior
-                </Button>
-                <Button
-                  variant="outline"
-                  disabled={filters.offset + 20 >= history.total}
-                  onClick={() => setFilters((f) => ({ ...f, offset: f.offset + 20 }))}
-                >
-                  Próxima
-                </Button>
-              </div>
-            </div>
+            <Pagination
+              page={Math.floor(filters.offset / pageSize)}
+              size={pageSize}
+              total={history.total}
+              label="cobranças"
+              onChange={(page) => setFilters((previous) => ({ ...previous, offset: page * pageSize }))}
+              onSizeChange={(value) => {
+                setPageSize(value);
+                setFilters((previous) => ({ ...previous, offset: 0 }));
+              }}
+            />
           </>
         ))
       )}
