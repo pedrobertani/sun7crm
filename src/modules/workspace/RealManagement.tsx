@@ -351,7 +351,8 @@ export function RealTeam() {
       </div>
       <QueryState query={query} />
       {query.data && (
-        <div className="card panel operational-table">
+        <div className="card panel">
+          <div className="operational-table">
           <table>
             <thead>
               <tr>
@@ -413,6 +414,7 @@ export function RealTeam() {
               ))}
             </tbody>
           </table>
+          </div>
           <Pagination page={pages.page} size={pages.size} total={query.data.length} onChange={pages.setPage} onSizeChange={pages.setSize} label="integrantes" />
         </div>
       )}
