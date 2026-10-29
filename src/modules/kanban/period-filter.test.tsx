@@ -41,8 +41,12 @@ describe('Filtro temporal do Kanban', () => {
 
   it('renderiza filtro de dia, mês, ano e intervalo com nome acessível', () => {
     const html = renderToStaticMarkup(<KanbanPeriodFilter value={base} onChange={() => {}} />);
-    expect(html).toContain('Período de criação dos cards');
-    for (const label of ['Todo o período', 'Dia', 'Mês', 'Ano', 'Intervalo']) {
+    expect(html).toContain('Filtrar cards por data de criação');
+    expect(html).toContain('Tipo de filtro de data');
+    expect(html).toContain('Escolher data do card');
+    expect(html).toContain('type="date"');
+    expect(html).toContain('value=""');
+    for (const label of ['Todas as datas', 'Dia', 'Mês', 'Ano', 'Intervalo']) {
       expect(html).toContain(label);
     }
     const custom = renderToStaticMarkup(
@@ -50,5 +54,10 @@ describe('Filtro temporal do Kanban', () => {
     );
     expect(custom).toContain('Data inicial');
     expect(custom).toContain('Data final');
+    const month = renderToStaticMarkup(
+      <KanbanPeriodFilter value={{ ...base, mode: 'month' }} onChange={() => {}} />,
+    );
+    expect(month).toContain('type="month"');
+    expect(month).not.toContain('Escolher data do card');
   });
 });
