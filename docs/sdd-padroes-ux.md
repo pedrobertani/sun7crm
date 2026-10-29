@@ -398,3 +398,19 @@ O print de Nova estratégia revelou que `position: sticky` no rodapé compartilh
 - [ ] Confirmar CI no HEAD e não integrar PR #30 antes da homologação.
 
 **Validação já comunicada pelo usuário:** Relatórios/filtros e Estratégias aprovados visualmente; não refazer o layout aprovado para resolver outros módulos.
+
+## Homologação dos rodapés e revisão administrativa — 29/10/2026
+
+**Homologação informada pelo usuário:** os 14 itens de Administração/Empresas, cadastro de gestor, redefinição de senha, cobrança e comportamento global foram aprovados: alinhamento, estados desabilitados, confirmação financeira, rolagem, acesso ao último campo, responsividade desktop/mobile, temas e fechamento pelo X/Cancelar/teclado. Essa evidência é uma validação manual relatada pelo usuário, não um teste automatizado.
+
+- [x] Registrar aprovação dos 14 casos de rodapé reportados.
+- [x] Remover o selo redundante "Conta real" e o banner permanente "HOMOLOGAÇÃO INTERNA" do cabeçalho da Administração, sem alterar ambiente, permissões ou dados.
+- [x] Evitar que o modal foque automaticamente no botão Fechar e abra seu tooltip quando há campo de formulário; manter foco acessível dentro do diálogo.
+- [x] Separar gestão de plano por empresa em abas internas **Plano e acesso**, **Cobranças** e **Integração**, preservando as operações e o histórico.
+- [x] Alinhar a altura dos filtros e dos botões de busca no Histórico de cobranças (42px).
+- [ ] Homologar a nova organização de planos/cobranças e o comportamento do foco/tooltip em modais com e sem formulário no desktop e no mobile.
+- [ ] Conferir se o seletor lateral de empresa é redundante no fluxo principal ou ainda necessário para trocar rapidamente de empresa: não remover sem validação funcional da navegação.
+- [ ] Executar e confirmar CI do HEAD; não liberar o PR #30 apenas com homologação de rodapés.
+- [ ] Retomar auditoria de importação Excel e telas autenticadas por perfil.
+
+**Regra:** avisos de teste devem ser exibidos apenas quando o sistema estiver de fato em modo de teste. Nunca ocultar alertas financeiros ou dados operacionais relevantes apenas para compactar a tela.
