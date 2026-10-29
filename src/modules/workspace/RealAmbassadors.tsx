@@ -709,7 +709,7 @@ function AmbassadorDialog({
       title={row ? 'Editar embaixador' : 'Novo embaixador'}
       onOpenChange={(v) => !v && !save.busy && onClose()}
     >
-      <form
+      <form className="ambassador-dialog-form"
         onSubmit={(e) => {
           e.preventDefault();
           void save.run(async () => {
@@ -733,7 +733,7 @@ function AmbassadorDialog({
           });
         }}
       >
-        <fieldset className="operational-fields" disabled={save.busy || save.uncertain}>
+        <fieldset className="operational-fields ambassador-dialog-fields" disabled={save.busy || save.uncertain}>
           <RecordPicker
             label="Contato"
             disabled={!!row}
@@ -750,6 +750,7 @@ function AmbassadorDialog({
             onCreate={row ? undefined : setAdding}
             createLabel="Cadastrar novo contato"
           />
+          <div className="ambassador-dialog-pair">
           <label className="form-row">
             Função / categoria
             <Input
@@ -767,6 +768,7 @@ function AmbassadorDialog({
               onChange={(e) => setForm({ ...form, referral_code: e.target.value })}
             />
           </label>
+          </div>
           <label className="form-row">
             Benefícios e observações
             <textarea
@@ -775,6 +777,7 @@ function AmbassadorDialog({
               onChange={(e) => setForm({ ...form, benefits: e.target.value })}
             />
           </label>
+          <div className="ambassador-dialog-options">
           <label className="operational-check">
             <input
               type="checkbox"
@@ -791,6 +794,7 @@ function AmbassadorDialog({
             />
             Embaixador ativo
           </label>
+          </div>
         </fieldset>
         <SaveActions save={save} onClose={onClose} />
       </form>
@@ -834,7 +838,7 @@ function CampaignDialog({
       title={row ? 'Editar campanha' : 'Nova campanha'}
       onOpenChange={(v) => !v && !save.busy && onClose()}
     >
-      <form
+      <form className="ambassador-dialog-form"
         onSubmit={(e) => {
           e.preventDefault();
           void save.run(async () => {
@@ -856,7 +860,7 @@ function CampaignDialog({
           });
         }}
       >
-        <fieldset className="operational-fields" disabled={save.busy || save.uncertain}>
+        <fieldset className="operational-fields ambassador-dialog-fields" disabled={save.busy || save.uncertain}>
           <label className="form-row">
             Nome
             <Input
@@ -866,7 +870,7 @@ function CampaignDialog({
               onChange={(e) => setForm({ ...form, name: e.target.value })}
             />
           </label>
-          <div className="form-grid">
+          <div className="form-grid ambassador-dialog-pair">
             <label className="form-row">
               Início
               <Input
@@ -887,6 +891,7 @@ function CampaignDialog({
               />
             </label>
           </div>
+          <div className="ambassador-dialog-pair">
           <label className="form-row">
             Regra de comissão
             <select
@@ -907,7 +912,8 @@ function CampaignDialog({
               onValueChange={(rate) => setForm({ ...form, rate })}
             />
           </label>
-          <p className="small-note">
+          </div>
+          <p className="small-note ambassador-dialog-help">
             Cada R$ 1.000 completos gera 1 ponto. Os valores elegíveis de cada embaixador são
             somados na campanha. A regra fica congelada no encerramento.
           </p>
