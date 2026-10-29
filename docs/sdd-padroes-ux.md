@@ -250,3 +250,14 @@ Contexto: a substituição geral de grupos segmentados por `ViewSwitcher` com su
 - [ ] Conferir paridade entre demo e app real: o app real permanece com lista operacional e paginação; o quadro de tarefas da demo ainda demanda decisão separada sobre implementação real. Não afirmar equivalência funcional sem essa validação.
 
 Regra: **restauração de layout não implica regressão de acessibilidade nem eliminação de paginação**. Não substituir seletores segmentados por abas sublinhadas em Tarefas.
+
+## Relatórios — alinhamento dos filtros da Carteira de clientes (29/10/2026)
+
+- [x] Buscar cliente/telefone, Responsável e Sem atividade há seguem a mesma linha de base, com alturas de controle idênticas (42px) e rótulos com a mesma altura.
+- [x] Remover desalinhamento vertical causado pela mistura entre campo de busca sem cabeçalho e selects rotulados; mostrar o rótulo **Buscar** acima do campo.
+- [x] Aplicar grade responsiva de três colunas no desktop, duas no tablet e uma no celular, sem sobreposição nem largura fixa excessiva.
+- [x] Reduzir padding e espaçamento vertical em `report-table-section`; preservar linha divisória, tabela, ordenação, filtros e paginação.
+- [x] Teste de regressão exige os três controles com estrutura rotulada no componente compartilhado `ActivityReportView`, reutilizado pela demo e pelo app real.
+- [ ] Inspeção visual da prévia Cloudflare a zoom 100%, temas claro/escuro e mobile/tablet/desktop; confirmar a posição da busca ao lado dos selects e a tabela com paginação.
+
+Não modificar outras abas e controles globais para corrigir este componente. Todos os ajustes são escopados à classe `report-table-section`.
