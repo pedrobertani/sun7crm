@@ -1,5 +1,24 @@
 # SDD — padrões globais de UX do SUN7CRM
 
+## Auditoria Kanban — código e regressão automatizada (29/10/2026, PR #30)
+
+**Escopo:** demo e aplicativo autenticado. Não houve movimentação de cards nem criação de vendas no Supabase real nesta rodada. Foram auditados `RealKanban`, `Kanban`, `useCardDrag`, `useStageDrag`, `KanbanScroll`, filtro de criação, paginação e confirmação de venda.
+
+- [x] **Paginação por etapa:** no código, cada coluna tem consulta/página própria no aplicativo real; demo usa paginação local. Seleção 10/50/100/Todos preservada.
+- [x] **Correção funcional:** a navegação para o Kanban real com parâmetros `de`/`ate` agora inicializa o filtro personalizado de data; entradas inválidas não são aplicadas.
+- [x] **Correção funcional:** trocar de funil preserva demais filtros relevantes da URL e limpa o parâmetro `card` para não reabrir um detalhe da etapa anterior.
+- [x] **Correção funcional:** alteração manual do filtro de data elimina os parâmetros de período antigos da URL e reinicia paginação das colunas.
+- [x] **Robustez do arraste:** `useStageDrag` ignora eventos de outro ponteiro, encerra captura/ouvintes e cancela com Escape, blur ou `pointercancel`, sem aplicar ordem no cancelamento.
+- [x] **Teste unitário incluído:** 305 cards por etapa em 10/50/100/Todos, correção do índice final, seleção do último dia do período e intervalo inválido em `kanban-audit.test.ts`.
+- [x] **Inspeção da regra de venda:** etapas de alto impacto continuam abrindo confirmação e `crm_confirm_card_sale` continua sendo chamado apenas com confirmação explícita; mover sem confirmar não contabiliza venda.
+- [ ] **CI do HEAD:** acompanhar TypeScript, build, testes frontend e backend após os commits desta rodada.
+- [ ] **Homologação no navegador:** arraste real no Android/touch e desktop com mouse, rolagem horizontal/vertical, área do drop e cancelamento por Escape; nenhum teste unitário substitui o gesto físico.
+- [ ] **Volume real:** verificar com 300+ cards visíveis por coluna, paginação e movimentação com filtros aplicados, em desktop e viewport 390px.
+- [ ] **Perfil e RLS:** gestor versus consultor versus recepção, incluindo confirmação de venda e leitura de cards de outros responsáveis.
+- [ ] **Demo/real:** confirmar visualmente posição dos filtros, seleção Todos e mensagens de confirmação em tema claro/escuro, zoom 100%, prévia publicada do HEAD.
+
+**Critério de aprovação:** não marcar Kanban integralmente aprovado antes de homologar toque/volume e isolamento de permissões.
+
 ## Homologação mobile do Dashboard — QA SUN7 Empresa B (29/10/2026)
 
 **Evidência:** capturas do usuário no Chrome Android das abas Comercial e Conquistas. Funil de metas, quatro medalhas bloqueadas, cartões e botões aparecem corretamente; usuário aprovou o restante e pediu apenas a eliminação do calendário de competência duplicado e apertado.
