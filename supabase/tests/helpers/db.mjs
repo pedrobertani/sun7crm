@@ -76,14 +76,17 @@ export async function fixture(t, { storage = false, realtime = false } = {}) {
     [3, 100, 'reception'],
     [4, 200, 'manager'],
     [5, 100, 'seller'],
+    // Additional manager identities are retained as inactive fixtures: a second
+    // active manager would violate the production company-seat constraint.
     [6, 100, 'manager'],
     [8, 100, 'manager'],
   ])
-    await q('insert into public.crm_memberships(id,company_id,user_id,role) values($1,$2,$3,$4)', [
+    await q('insert into public.crm_memberships(id,company_id,user_id,role,active) values($1,$2,$3,$4,$5)', [
       id(n + 10),
       id(c),
       id(n),
       role,
+      n !== 6 && n !== 8,
     ]);
   for (const [contact, c, owner] of [
     [1001, 100, 12],
