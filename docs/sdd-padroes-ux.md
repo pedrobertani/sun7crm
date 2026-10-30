@@ -19,8 +19,9 @@
 **Commits de preparação no PR #30:** documentação da decisão JWT, headers HTTP compartilhados, teste de contrato de rotas e testes negativos de origem. Sem alterações no banco, nas configurações remotas do Auth/Cloudflare, nem deploy de Edge Functions nesta rodada. Essas etapas ainda exigem aprovação técnica e execução/CI.
 
 - [x] Adicionado `supabase/tests/api-route-security.node.mjs` ao `test:functions`: inventário obrigatório de nove funções, modo JWT explícito e distinção entre rotas de sessão e webhooks assinados. Execução do HEAD ainda sujeita ao CI.
-- [x] Respostas JSON do middleware compartilhado agora enviam `X-Content-Type-Options: nosniff` e `Referrer-Policy: no-referrer`, além de `Cache-Control: no-store`; testes cobrem sucesso, 401, OPTIONS e origem 403 sem execução privilegiada. Aplicação em Edge Functions publicadas depende de deploy posterior.
-- [ ] Confirmar CI de frontend, banco, funções, TypeScript e build no commit final.
+- [x] Respostas JSON do middleware compartilhado e do webhook assinado agora enviam `X-Content-Type-Options: nosniff` e `Referrer-Policy: no-referrer`, além de `Cache-Control: no-store`; testes cobrem sucesso, 401, OPTIONS, origem 403 e webhook com método 405. Aplicação nas funções remotas depende de deploy posterior.
+- [x] CI #277 aprovado após correção de teste negativo de CORS: TypeScript, build e testes do frontend/banco/funções passaram.
+- [ ] Confirmar CI no HEAD final após a extensão de cabeçalhos aos webhooks e o teste de retorno 405 correspondente.
 - [ ] Testar chamadas HTTP reais com JWT ausente/expirado/manipulado, chave pública fingindo ser sessão, tentativa de acesso a empresa alheia e parâmetros de ator forjados.
 - [ ] Auditar todos os RPCs/funções `SECURITY DEFINER`: conferir grants `EXECUTE`, `search_path`, `auth.uid()`, vínculo ativo e proibição de escalada; 41 funções privilegiadas de `crm_private` permitem execução a `authenticated`, exigindo inspeção caso a caso.
 - [ ] Testar por requisição escrita entre gestor A, vendedor A, gestor B e recepção em criação/edição/exclusão/exportação/Storage e confirmar que 403/404 não vaza dados.
