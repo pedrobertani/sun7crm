@@ -1,5 +1,35 @@
 # SDD — padrões globais de UX do SUN7CRM
 
+## SDD — endurecimento das rotas de API (30/10/2026)
+
+**Decisão arquitetural preservada (23/10/2026):** as chaves modernas `sb_publishable_`/`sb_secret_` não se encaixam na validação legada do gateway JWT das Edge Functions. Por isso, `supabase/config.toml` publica as nove funções com `verify_jwt=false`. Isso NÃO torna operações privadas anônimas: as sete funções de usuário (incluindo ambientes de homologação) usam `serve(createHttpHandler)` e obrigam `Authorization: Bearer <JWT de sessão>` validado por `Supabase Auth.getUser(token)`. Os dois webhooks recebem notificações sem JWT de usuário, verificam HMAC e consultam dados no Mercado Pago. Não ligar `verify_jwt=true` indiscriminadamente; validar em ambiente isolado antes de migrar para outro modo compatível com as chaves modernas. Referência: https://supabase.com/docs/guides/functions/auth
+
+**Fronteiras de confiança:** React/Vite e chave publicável NÃO autorizam operações; Origem/CORS não autentica cliente; autenticação de sessão não significa permissão; `company_id`, `actor_id`, perfil e preços enviados pelo navegador são dados não confiáveis; backend com chave secreta e funções `SECURITY DEFINER` exigem verificação explícita de ator, empresa, vínculo, aceites e operação, além de RLS nas consultas acessíveis.
+
+### Contrato e cobertura
+- [x] Inventariar e manter os nove endpoints Edge no repositório e no `config.toml`: `crm-create-company`, `crm-create-user`, `crm-reset-password`, `crm-first-access`, `crm-update-company`, `crm-billing-checkout`, `crm-billing-checkout-hom`, `crm-billing-webhook`, `crm-billing-webhook-hom`.
+- [x] Confirmar middleware compartilhado `createHttpHandler`: origem autorizada, métodos POST/OPTIONS, JSON limitado a 16 KiB, chave de idempotência UUID, rejeição de `sb_publishable_`/`sb_secret_` como JWT, `getUser(token)`, não incluir JWT/senha nos erros públicos.
+- [x] Confirmar cadastro e reset: SQL autoriza a operação ANTES de chamar `auth.admin`; ao falhar, não alterar usuário/credenciais; operações idempotentes.
+- [x] Confirmar webhook: assinatura do provedor, correspondência do ID e consulta do recurso no provedor; idempotência financeira depende também de controles SQL (homologação de replay ainda pendente).
+- [x] RLS ligado em 35/35 tabelas `public`, 10/10 `crm_private` e 8/8 `storage`; não confundir RLS ligado com correção integral de todas as permissões.
+- [x] Verificar isolamento em simulações de leitura com usuários QA Empresa A e B (gestores e consultor), sem acesso a registros de outra empresa; não extrapolar para rotas de escrita.
+
+### Implementação e regressão — rodada de segurança
+- [ ] Adicionar testes automáticos que falhem caso nova Edge Function seja criada sem contrato de autenticação e configuração de gateway explícitos.
+- [ ] Padronizar cabeçalhos de segurança e respostas das rotas JSON, com testes negativos do HTTP (sem afetar CORS/preflight, webhook ou contratos existentes).
+- [ ] Confirmar CI de frontend, banco, funções, TypeScript e build no commit final.
+- [ ] Testar chamadas HTTP reais com JWT ausente/expirado/manipulado, chave pública fingindo ser sessão, tentativa de acesso a empresa alheia e parâmetros de ator forjados.
+- [ ] Auditar todos os RPCs/funções `SECURITY DEFINER`: conferir grants `EXECUTE`, `search_path`, `auth.uid()`, vínculo ativo e proibição de escalada; 41 funções privilegiadas de `crm_private` permitem execução a `authenticated`, exigindo inspeção caso a caso.
+- [ ] Testar por requisição escrita entre gestor A, vendedor A, gestor B e recepção em criação/edição/exclusão/exportação/Storage e confirmar que 403/404 não vaza dados.
+- [ ] Criar rate limiting **distribuído** (por usuário + endpoint e IP no perímetro que realmente recebe a chamada); escolher armazenamento compartilhado, respostas 429, `Retry-After`, limites por criticidade e testes. Não usar somente `Map` em memória de Edge Functions nem assumir que WAF do domínio Cloudflare filtra chamadas diretas ao Supabase.
+- [ ] Verificar quotas e antibrute force do Supabase Auth para `/auth/v1/token`; rate limit das Edge Functions NÃO protege login direto do Auth.
+- [ ] Endurecer administração: MFA, detecção de sessões revogadas, tempo de expiração JWT, proteção contra senhas vazadas (`auth_leaked_password_protection` consta desativado no Security Advisor).
+- [ ] Rotas de pagamento: repetir notificações válidas, adulteradas, de outro ambiente, atrasadas e duplicadas; confirmar assinatura HMAC, conciliação e cobrança não duplicada.
+- [ ] Configurar/validar cabeçalhos HTTP CSP reais no Cloudflare, `X-Content-Type-Options`, privacidade de logs, rotação de segredos e restauração de backups; o CSP atual via meta HTML não substitui completamente cabeçalhos HTTP.
+- [ ] Não publicar alegação de segurança total ou encerrar o SDD antes dos testes adversariais e revisão do HEAD. Não mesclar PR #30 automaticamente.
+
+**Critério de decisão:** preservar `verify_jwt=false` COM validação interna obrigatória enquanto não houver migração testada. Testes automatizados não constituem pentest. Mudanças de banco/Auth/Cloudflare precisam de implantação planejada e validação em ambiente apropriado; não criar rate limit que interrompa usuários ativos sem avaliar tráfego/limites.
+
 ## Auditoria de segurança do Supabase ativo — 30/10/2026
 
 Inspeção de leitura do banco real, Security Advisors, Storage e código no PR #30. Simulações QA com ROLE authenticated foram executadas em transações read-only revertidas; não substituem pentest ou sessões HTTP reais. Nenhuma política, senha ou dado comercial foi alterado.
