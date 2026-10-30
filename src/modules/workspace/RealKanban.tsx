@@ -72,9 +72,28 @@ export function RealKanban() {
     boardId = params.get('funil') || '',
     contactId = params.get('contato') || '',
     cardId = params.get('card') || '';
-  const [dateFilter, setDateFilter] = useState<KanbanPeriod>(initialKanbanPeriod);
+  const [dateFilter, setDateFilter] = useState<KanbanPeriod>(() => {
+    const initial = initialKanbanPeriod();
+    const from = params.get('de') || '';
+    const to = params.get('ate') || '';
+    if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(from) || !/^\\d{4}-\\d{2}-\\d{2}$/.test(to)) return initial;
+    const linked = { ...initial, mode: 'custom' as const, from, to };
+    return kanbanDateRange(linked) ? linked : initial;
+  });
   const [stagePages, setStagePages] = useState<Record<string, number>>({});
-  const updateDateFilter = (next: KanbanPeriod) => { setDateFilter(next); setStagePages({}); };
+  const updateDateFilter = (next: KanbanPeriod) => {
+    setDateFilter(next);
+    setStagePages({});
+    // An explicit selection supersedes dates passed by a deep link.
+    if (params.has('de') || params.has('ate')) {
+      setParams((previous) => {
+        const updated = new URLSearchParams(previous);
+        updated.delete('de');
+        updated.delete('ate');
+        return updated;
+      }, { replace: true });
+    }
+  };
   const [pageSize, setPageSize] = useState<KanbanPageSize>(10);
   const changePageSize = (size: KanbanPageSize) => { setPageSize(size); setStagePages({}); };
   const [search, setSearch] = useState(''),
@@ -253,7 +272,12 @@ export function RealKanban() {
                 label="Funis"
                 value={board?.id || ''}
                 onValueChange={(id) => {
-                  setParams({ funil: id, ...(contactId ? { contato: contactId } : {}) });
+                  setParams((previous) => {
+                    const updated = new URLSearchParams(previous);
+                    updated.set('funil', id);
+                    updated.delete('card');
+                    return updated;
+                  });
                   setStagePages({});
                 }}
                 items={refs.data.boards.map((b) => ({ value: b.id, label: b.name }))}
