@@ -8,10 +8,12 @@
 - [x] **Correção funcional:** a navegação para o Kanban real com parâmetros `de`/`ate` agora inicializa o filtro personalizado de data; entradas inválidas não são aplicadas.
 - [x] **Correção funcional:** trocar de funil preserva demais filtros relevantes da URL e limpa o parâmetro `card` para não reabrir um detalhe da etapa anterior.
 - [x] **Correção funcional:** alteração manual do filtro de data elimina os parâmetros de período antigos da URL e reinicia paginação das colunas.
+- [x] **Controle por permissão:** a alça de arraste de etapas é desabilitada para quem não tem `stages.reorder` (incluindo operações em andamento), preservando botões/setas com suas próprias permissões.
 - [x] **Robustez do arraste:** `useStageDrag` ignora eventos de outro ponteiro, encerra captura/ouvintes e cancela com Escape, blur ou `pointercancel`, sem aplicar ordem no cancelamento.
 - [x] **Teste unitário incluído:** 305 cards por etapa em 10/50/100/Todos, correção do índice final, seleção do último dia do período e intervalo inválido em `kanban-audit.test.ts`.
 - [x] **Inspeção da regra de venda:** etapas de alto impacto continuam abrindo confirmação e `crm_confirm_card_sale` continua sendo chamado apenas com confirmação explícita; mover sem confirmar não contabiliza venda.
-- [ ] **CI do HEAD:** acompanhar TypeScript, build, testes frontend e backend após os commits desta rodada.
+- [x] **CI da rodada de testes** (`f977bc7b`, execução #266): TypeScript, build, 225 testes frontend, 183 de banco e 64 de funções aprovados; também passaram as verificações do commit anterior.
+- [ ] **CI do último HEAD:** nova correção visual da alça de arraste sem permissão entrou depois do #266; conferir a execução final antes de liberar.
 - [ ] **Homologação no navegador:** arraste real no Android/touch e desktop com mouse, rolagem horizontal/vertical, área do drop e cancelamento por Escape; nenhum teste unitário substitui o gesto físico.
 - [ ] **Volume real:** verificar com 300+ cards visíveis por coluna, paginação e movimentação com filtros aplicados, em desktop e viewport 390px.
 - [ ] **Perfil e RLS:** gestor versus consultor versus recepção, incluindo confirmação de venda e leitura de cards de outros responsáveis.
