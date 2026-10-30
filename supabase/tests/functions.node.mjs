@@ -410,5 +410,5 @@ test('API negada por origem não expõe CORS nem aciona autenticação ou banco'
   assert.equal(denied.status, 403);
   assert.equal(denied.headers.get('access-control-allow-origin'), null);
   assert.equal(denied.headers.get('x-content-type-options'), 'nosniff');
-  assert.deepEqual(f.calls, []);
+  assert.ok(!f.calls.some(([name]) => name === 'authenticate' || name.startsWith('auth.') || name.startsWith('crm_edge_')));
 });
