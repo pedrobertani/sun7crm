@@ -703,6 +703,8 @@ function StageEditor({
                   type="button"
                   className="icon-button stage-drag-handle"
                   aria-label={'Arrastar etapa ' + s.name}
+                  title={can('stages.reorder') ? 'Arrastar para reordenar' : 'Sem permissão para reordenar'}
+                  disabled={!can('stages.reorder') || save.busy || save.uncertain}
                   onPointerDown={(e) => drag(e, index)}
                 >
                   <GripVertical size={18} />
