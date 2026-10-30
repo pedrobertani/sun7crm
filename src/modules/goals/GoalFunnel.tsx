@@ -33,10 +33,15 @@ function percent(value: number, goal: number) {
   return goal > 0 ? Math.round((value / goal) * 100) : 0;
 }
 
-export function GoalFunnel({ view = 'commercial' }: { view?: 'commercial' | 'medals' }) {
+export function GoalFunnel({
+  view = 'commercial',
+  month = today().slice(0, 7),
+}: {
+  view?: 'commercial' | 'medals';
+  month?: string;
+}) {
   const { api, company, can, refresh, revision } = useOperational();
   const manager = company.role === 'manager' && can('settings.edit');
-  const [month, setMonth] = useState(today().slice(0, 7));
   const [configOpen, setConfigOpen] = useState(false);
   const data = useQuery(async () => {
     const [plan, results, confirmed] = await Promise.all([
@@ -83,15 +88,10 @@ export function GoalFunnel({ view = 'commercial' }: { view?: 'commercial' | 'med
         description="Planejamento mensal configurado pelo gestor — separado dos resultados realizados."
       >
         <div className="goal-head">
-          <label className="form-row">
-            Competência
-            <Input
-              type="month"
-              value={month}
-              onChange={(e) => setMonth(e.target.value)}
-              aria-label="Mês das metas"
-            />
-          </label>
+          <span className="goal-competence" title="Mês da data final selecionada no Dashboard">
+            Competência: {new Intl.DateTimeFormat('pt-BR', { month: 'long', year: 'numeric' })
+              .format(new Date(month + '-01T12:00:00'))}
+          </span>
           {manager && (
             <Button type="button" variant="outline" onClick={() => setConfigOpen(true)}>
               <Settings2 size={16} /> {view === 'medals' ? 'Configurar medalhas' : 'Configurar metas'}
