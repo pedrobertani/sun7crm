@@ -30,6 +30,34 @@ import { RealContactHistory } from '../contacts/RealContactHistory';
 import { RealActivityReport } from '../reports/RealActivityReport';
 import { Pager, QueryState, SaveActions, useOperational, useQuery, useSave } from './operational';
 
+/** Date range filters the KPI and dated charts, not the monthly goal plan or medals. */
+function DashboardPeriodFilter({
+  from,
+  to,
+  onFromChange,
+  onToChange,
+}: {
+  from: string;
+  to: string;
+  onFromChange: (value: string) => void;
+  onToChange: (value: string) => void;
+}) {
+  return (
+    <div className="operational-toolbar dashboard-compact-toolbar" role="group" aria-label="Período dos indicadores">
+      <div className="actions">
+        <label className="form-row">
+          Período de
+          <Input type="date" value={from} onChange={(event) => onFromChange(event.target.value)} />
+        </label>
+        <label className="form-row">
+          até
+          <Input type="date" value={to} onChange={(event) => onToChange(event.target.value)} />
+        </label>
+      </div>
+    </div>
+  );
+}
+
 export function RealDashboard() {
   const { api, can } = useOperational(),
     [from, setFrom] = useState(today().slice(0, 7) + '-01'),
@@ -55,19 +83,10 @@ export function RealDashboard() {
   }, [api, from, to]);
   return (
     <>
-      <div className="operational-toolbar dashboard-compact-toolbar">
-        <div className="actions">
-          <label className="form-row">
-            Período de
-            <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
-          </label>
-          <label className="form-row">
-            até
-            <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
-          </label>
-        </div>
-      </div>
-      <QueryState query={query} />
+      {activeTab === 'overview' && (
+        <DashboardPeriodFilter from={from} to={to} onFromChange={setFrom} onToChange={setTo} />
+      )}
+      {activeTab !== 'achievements' && <QueryState query={query} />}
       <div className="dashboard-tabs-row">
         <ViewSwitcher
         className="dashboard-tabs"
@@ -81,6 +100,14 @@ export function RealDashboard() {
         />
         <Link className="operational-text-link" to="/app/funil">Abrir funil →</Link>
       </div>
+      {activeTab === 'commercial' && can('goals.view') && <GoalFunnel view="commercial" />}
+      {activeTab === 'achievements' && can('goals.view') && <GoalFunnel view="medals" />}
+      {activeTab === 'commercial' && (
+        <section className="dashboard-commercial-period" aria-label="Filtros dos gráficos comerciais">
+          <h2>Período dos gráficos</h2>
+          <DashboardPeriodFilter from={from} to={to} onFromChange={setFrom} onToChange={setTo} />
+        </section>
+      )}
       {query.data && (
         <>
           {activeTab === 'overview' && (
@@ -114,8 +141,6 @@ export function RealDashboard() {
               />
             </div>
           )}
-          {activeTab === 'commercial' && can('goals.view') && <GoalFunnel view="commercial" />}
-          {activeTab === 'achievements' && can('goals.view') && <GoalFunnel view="medals" />}
           {activeTab === 'commercial' && (
             <>
               <div className="operational-dashboard-grid">
