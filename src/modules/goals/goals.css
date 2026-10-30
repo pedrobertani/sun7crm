@@ -10,6 +10,12 @@
   flex-wrap: wrap;
   margin: 0 0 18px;
 }
+.goal-competence {
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.5;
+  align-self: center;
+}
 .goal-head .form-row {
   max-width: 185px;
   margin: 0;
