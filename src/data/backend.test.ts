@@ -101,6 +101,84 @@ describe('Contrato do ambiente real', () => {
     expect((await api.contactsByIds([...ids, ids[0]])).map((r) => r.id)).toEqual(ids);
     expect(seen.map((batch) => batch.length)).toEqual([100, 100, 5]);
   });
+  it('consulta todos os cards filtrados em lotes de 200 sem limitar o resultado', async () => {
+    const items = Array.from({ length: 305 }, (_, n) => ({ id: id(n + 1), stage_id: id(9) }));
+    const ranges: number[][] = [], filters: unknown[][] = [];
+    const query = {
+      select: () => query,
+      eq: (...args: unknown[]) => { filters.push(args); return query; },
+      order: () => query,
+      range: async (from: number, to: number) => {
+        ranges.push([from, to]);
+        return { data: items.slice(from, to + 1), count: items.length, error: null };
+      },
+    };
+    const api = new OperationalBackend({ from: () => query } as unknown as SupabaseClient, id(100));
+    const result = await api.listAllMatching('cards', { stage_id: id(9) });
+    expect(result.total).toBe(305);
+    expect(result.rows).toEqual(items);
+    expect(ranges).toEqual([[0, 199], [200, 399]]);
+    expect(filters).toContainEqual(['company_id', id(100)]);
+    expect(filters).toContainEqual(['stage_id', id(9)]);
+  });
+  it('aplica empresa, funil, etapa, busca e intervalo de datas a todas as páginas', async () => {
+    const calls: unknown[][] = [];
+    const query = {
+      select: () => query,
+      eq: (...args: unknown[]) => { calls.push(['eq', ...args]); return query; },
+      gte: (...args: unknown[]) => { calls.push(['gte', ...args]); return query; },
+      lt: (...args: unknown[]) => { calls.push(['lt', ...args]); return query; },
+      ilike: (...args: unknown[]) => { calls.push(['ilike', ...args]); return query; },
+      order: () => query,
+      range: async (from: number, to: number) => {
+        calls.push(['range', from, to]);
+        return { data: [{ id: id(from + 1) }], count: 201, error: null };
+      },
+    };
+    const api = new OperationalBackend({ from: () => query } as unknown as SupabaseClient, id(100));
+    const date = { from: '2026-01-01T00:00:00.000Z', until: '2026-02-01T00:00:00.000Z' };
+    const result = await api.listAllMatching(
+      'cards', { board_id: id(8), stage_id: id(9) }, 'Juliana', date,
+    );
+    expect(result.total).toBe(2);
+    expect(calls.filter((entry) => entry[0] === 'range')).toEqual([
+      ['range', 0, 199], ['range', 200, 399],
+    ]);
+    expect(calls.filter((entry) => entry[0] === 'eq' && entry[1] === 'company_id')).toHaveLength(2);
+    expect(calls.filter((entry) => entry[0] === 'eq' && entry[1] === 'board_id')).toHaveLength(2);
+    expect(calls.filter((entry) => entry[0] === 'eq' && entry[1] === 'stage_id')).toHaveLength(2);
+    expect(calls.filter((entry) => entry[0] === 'ilike')).toEqual([
+      ['ilike', 'title', '%Juliana%'], ['ilike', 'title', '%Juliana%'],
+    ]);
+    expect(calls.filter((entry) => entry[0] === 'gte')).toEqual([
+      ['gte', 'created_at', date.from], ['gte', 'created_at', date.from],
+    ]);
+    expect(calls.filter((entry) => entry[0] === 'lt')).toEqual([
+      ['lt', 'created_at', date.until], ['lt', 'created_at', date.until],
+    ]);
+  });
+  it('busca histórico e etiquetas de todos os cards em lotes seguros', async () => {
+    const batches: { table: string; ids: string[] }[] = [];
+    let table = '';
+    const query = {
+      select: () => query,
+      eq: () => query,
+      in: async (_column: string, batch: string[]) => {
+        batches.push({ table, ids: batch });
+        return {
+          data: batch.map((opportunity_id) => ({ opportunity_id, label_id: id(1) })),
+          error: null,
+        };
+      },
+    };
+    const from = (name: string) => { table = name; return query; };
+    const api = new OperationalBackend({ from } as unknown as SupabaseClient, id(100));
+    const ids = Array.from({ length: 305 }, (_, n) => id(n + 1));
+    expect((await api.activityByIds(ids)).length).toBe(305);
+    expect((await api.labelsByCardIds(ids)).length).toBe(305);
+    expect(batches.filter((entry) => entry.table === 'crm_card_activity').map((entry) => entry.ids.length)).toEqual([100, 100, 100, 5]);
+    expect(batches.filter((entry) => entry.table === 'crm_card_labels').map((entry) => entry.ids.length)).toEqual([100, 100, 100, 5]);
+  });
   it('envia a criação de integrante à função autorizada e não expõe o erro interno', async () => {
     const invoke = vi.fn().mockResolvedValue({
       data: null,

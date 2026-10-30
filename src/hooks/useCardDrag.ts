@@ -48,6 +48,11 @@ export function useCardDrag(onMove: (id: string, stage: string) => void) {
       }
       const hit = document.elementFromPoint(x, y)?.closest<HTMLElement>('[data-drop-stage]');
       const next = hit && board.contains(hit) ? hit : null;
+      // The entire board now owns vertical scrolling; no stage has its own scrollbar.
+      if (x >= bounds.left && x <= bounds.right) {
+        if (y >= bounds.top && y < bounds.top + 48) board.scrollTop -= 10;
+        else if (y <= bounds.bottom && y > bounds.bottom - 48) board.scrollTop += 10;
+      }
       if (next !== target) {
         target?.classList.remove('dragover');
         target = next;

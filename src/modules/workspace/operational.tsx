@@ -1,3 +1,4 @@
+import { ModalFooter } from '../../components/ui/modal-footer';
 import {
   createContext,
   useContext,
@@ -11,6 +12,7 @@ import {
 import { OperationalBackend, BackendError, type TeamRow } from '../../data/backend';
 import { getSupabaseClient } from '../../lib/supabase';
 import { Button } from '../../components/ui/button';
+import { Pagination, type PageSize } from '../../components/ui/pagination';
 import { FormError } from '../../components/shared';
 import { legacyPermissions, type EmployeePermissions } from '../permissions/model';
 import type { AccountUser } from '../auth/access';
@@ -200,55 +202,26 @@ export function SaveActions({
           continuam neste formulário.
         </p>
       )}
-      <div className="form-actions">
+      <ModalFooter>
         <Button type="button" variant="outline" disabled={save.busy} onClick={onClose}>
           Cancelar
         </Button>
         <Button type="submit" disabled={save.busy || save.uncertain}>
           {save.busy ? 'Salvando...' : label}
         </Button>
-      </div>
+      </ModalFooter>
     </>
   );
 }
 export function Pager({
-  page,
-  total,
-  size = 50,
-  onChange,
-  loading = false,
+  page, total, size = 10, onChange, onSizeChange, loading = false,
 }: {
-  page: number;
-  total: number;
-  size?: number;
+  page: number; total: number; size?: number;
   onChange: (page: number) => void;
+  onSizeChange?: (size: PageSize) => void;
   loading?: boolean;
 }) {
-  return (
-    <div className="operational-pager">
-      <span>
-        {total
-          ? `${page * size + 1}–${Math.min((page + 1) * size, total)} de ${total}`
-          : 'Nenhum registro'}
-      </span>
-      <Button
-        variant="outline"
-        size="sm"
-        disabled={!page || loading}
-        onClick={() => onChange(page - 1)}
-      >
-        Anterior
-      </Button>
-      <Button
-        variant="outline"
-        size="sm"
-        disabled={(page + 1) * size >= total || loading}
-        onClick={() => onChange(page + 1)}
-      >
-        Próxima
-      </Button>
-    </div>
-  );
+  return <Pagination page={page} total={total} size={size} onChange={onChange} onSizeChange={onSizeChange} loading={loading} />;
 }
 export function useTeam() {
   const { api, company, user, can } = useOperational();

@@ -384,3 +384,31 @@ test('alteração da empresa usa endpoint próprio, valida campos e não aceita 
   ])
     assert.equal((await fixture(updateCompany).request(body)).status, 400);
 });
+
+test('respostas de sucesso, erro e preflight mantêm controles HTTP de segurança', async () => {
+  const f = fixture(createCompany);
+  const replies = [
+    await f.request(company),
+    await f.request({}, { authorization: '' }),
+    await f.request({}, {}, 'OPTIONS'),
+  ];
+  assert.deepEqual(replies.map((response) => response.status), [201, 401, 204]);
+  for (const response of replies) {
+    assert.equal(response.headers.get('x-content-type-options'), 'nosniff');
+    assert.equal(response.headers.get('referrer-policy'), 'no-referrer');
+    assert.equal(response.headers.get('cache-control'), 'no-store');
+    assert.equal(response.headers.get('vary'), 'Origin');
+  }
+  assert.ok(replies[0].headers.get('x-request-id'));
+  assert.equal(replies[1].headers.get('access-control-allow-origin'), DEFAULT_ORIGIN);
+  assert.equal(replies[2].headers.get('access-control-allow-origin'), DEFAULT_ORIGIN);
+});
+
+test('API negada por origem não expõe CORS nem aciona autenticação ou banco', async () => {
+  const f = fixture(createUser);
+  const denied = await f.request(person, { origin: 'https://terceiro.example.invalid' });
+  assert.equal(denied.status, 403);
+  assert.equal(denied.headers.get('access-control-allow-origin'), null);
+  assert.equal(denied.headers.get('x-content-type-options'), 'nosniff');
+  assert.ok(!f.calls.some(([name]) => name === 'authenticate' || name.startsWith('auth.') || name.startsWith('crm_edge_')));
+});

@@ -1,14 +1,14 @@
+import { ViewSwitcher } from '../../components/ui/view-switcher';
 import { useState, type FormEvent } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { CreditCard, Gift } from 'lucide-react';
-import { Empty, FormError, Heading, SearchInput } from '../../components/shared';
+import { Empty, FormError, Heading } from '../../components/shared';
 import { Button } from '../../components/ui/button';
 import { Modal } from '../../components/ui/modal';
 import { getSupabaseClient } from '../../lib/supabase';
-import { currency, dateLabel, shiftDate, today, uid } from '../../lib/format';
+import { currency, dateLabel, shiftDate, uid } from '../../lib/format';
 import type { AdminCompany } from '../admin/repository';
 import { AccessChangedError } from '../auth/access';
-import { PlanPanel } from './Plan';
 import { BillingHistory } from './BillingHistory';
 import { createCharge } from './charges';
 import { OnlineBilling } from './OnlineBilling';
@@ -20,7 +20,6 @@ import {
   loadSubscription,
   paymentPreview,
   stateLabels,
-  subscriptionState,
   type BillingAttempt,
 } from './subscription';
 
@@ -39,13 +38,13 @@ export function AdminPlans({
   onRecheck: () => void;
   onNotice: (message: string) => void;
 }) {
+  const [companyTab, setCompanyTab] = useState<'overview' | 'history' | 'integration'>('overview');
   const [params, setParams] = useSearchParams();
   const showPlans =
     params.get('visao') === 'planos' || (!params.has('visao') && params.has('empresa'));
   const selectedId = params.get('empresa') || companies[0]?.id || '';
   const company = companies.find((item) => item.id === selectedId);
-  const [query, setQuery] = useState(''),
-    [error, setError] = useState('');
+  const [error, setError] = useState('');
   const [revision, setRevision] = useState(0),
     [action, setAction] = useState<'payment' | 'complimentary' | 'charge' | null>(null);
   const [days, setDays] = useState(7),
@@ -143,25 +142,17 @@ export function AdminPlans({
         title="Planos e cobranças"
         description="Acompanhe os recebimentos da plataforma e gerencie o acesso de cada empresa."
       />
-      <div className="billing-tabs" role="group" aria-label="Visão financeira">
-        <Button
-          variant={showPlans ? 'ghost' : 'outline'}
-          aria-pressed={!showPlans}
-          onClick={() => setParams({ visao: 'cobrancas' })}
-        >
-          Todas as cobranças
-        </Button>
-        <Button
-          variant={showPlans ? 'outline' : 'ghost'}
-          aria-pressed={showPlans}
-          onClick={() =>
-            setParams({ visao: 'planos', ...(selectedId ? { empresa: selectedId } : {}) })
-          }
-        >
-          Planos por empresa
-        </Button>
-      </div>
-      {companies[0] && <OnlineBilling key={companies[0].id} companyId={companies[0].id} admin />}
+      <ViewSwitcher
+        label="Visão financeira"
+        value={showPlans ? 'planos' : 'cobrancas'}
+        onValueChange={(visao) =>
+          setParams({ visao, ...(visao === 'planos' && selectedId ? { empresa: selectedId } : {}) })
+        }
+        items={[
+          { value: 'cobrancas', label: 'Cobranças' },
+          { value: 'planos', label: 'Planos por empresa' },
+        ]}
+      />
       {!companies.length ? (
         <div className="card panel">
           <Empty
@@ -182,36 +173,26 @@ export function AdminPlans({
           }}
         />
       ) : (
-        <div className="billing-admin-layout">
-          <aside className="card billing-companies" aria-label="Empresas e planos">
-            <SearchInput value={query} onChange={setQuery} placeholder="Buscar empresa..." />
-            {companies
-              .filter((item) =>
-                item.name
-                  .toLocaleLowerCase('pt-BR')
-                  .includes(query.trim().toLocaleLowerCase('pt-BR')),
-              )
-              .map((item) => {
-                const state = subscriptionState(item.dueDate, item.cycleKind || 'monthly', today());
-                return (
-                  <button
-                    key={item.id}
-                    className="billing-company"
-                    aria-pressed={item.id === selectedId}
-                    onClick={() => setParams({ empresa: item.id, visao: 'planos' })}
-                  >
-                    <strong>{item.name}</strong>
-                    <small>{!item.enabled ? 'Empresa desativada' : stateLabels[state]}</small>
-                  </button>
-                );
-              })}
-          </aside>
+        <div className="billing-admin-compact">
+          <div className="billing-company-toolbar">
+            <label className="form-row">
+              Empresa
+              <select
+                aria-label="Empresa para gerenciar"
+                value={selectedId}
+                onChange={(event) => {
+                  setCompanyTab('overview');
+                  setParams({ empresa: event.target.value, visao: 'planos' });
+                }}
+              >
+                {companies.map((item) => <option key={item.id} value={item.id}>{item.name}</option>)}
+              </select>
+            </label>
+
+          </div>
           <div className="billing-admin-main">
             {company ? (
               <>
-                <div className="billing-toolbar">
-                  <h2>{company.name}</h2>
-                </div>
                 {!company.enabled && (
                   <p className="billing-alert">
                     A empresa está desativada. A liberação de dias ou o pagamento não substitui a
@@ -234,28 +215,75 @@ export function AdminPlans({
                 )}
                 {plan ? (
                   <>
-                    <div className="billing-admin-actions">
-                      <Button variant="outline" onClick={() => open('charge')}>
-                        <CreditCard size={16} /> Criar cobrança
-                      </Button>
-                      <Button onClick={() => open('payment')}>
-                        <CreditCard size={16} /> Registrar pagamento
-                      </Button>
-                      <Button variant="outline" onClick={() => open('complimentary')}>
-                        <Gift size={16} /> Liberar dias gratuitos
-                      </Button>
-                    </div>
-                    <PlanPanel plan={plan} />
-                    <BillingHistory
-                      key={company.id}
-                      companyId={company.id}
-                      admin
-                      revision={revision}
-                      onChanged={() => {
-                        setRevision((n) => n + 1);
-                        onReload();
-                      }}
+                    <ViewSwitcher
+                      label="Gestão financeira da empresa"
+                      value={companyTab}
+                      onValueChange={setCompanyTab}
+                      items={[
+                        { value: 'overview', label: 'Plano e acesso' },
+                        { value: 'history', label: 'Cobranças' },
+                        { value: 'integration', label: 'Integração' },
+                      ]}
                     />
+                    {companyTab === 'overview' && (
+                      <>
+                        <div className="billing-admin-actions">
+                          <Button variant="outline" onClick={() => open('charge')}>
+                            <CreditCard size={16} /> Criar cobrança
+                          </Button>
+                          <Button onClick={() => open('payment')}>
+                            <CreditCard size={16} /> Registrar pagamento
+                          </Button>
+                          <Button variant="outline" onClick={() => open('complimentary')}>
+                            <Gift size={16} /> Liberar dias gratuitos
+                          </Button>
+                        </div>
+                        <section className="card billing-admin-overview" aria-label="Resumo do plano">
+                          <div className="billing-overview-heading">
+                            <div>
+                              <h3>{plan.plan_name}</h3>
+                              <strong>{currency(plan.monthly_amount_cents)} <small>/ mês</small></strong>
+                            </div>
+                            <span className="badge">{stateLabels[plan.status]}</span>
+                          </div>
+                          <dl className="billing-overview-facts">
+                            <div><dt>{plan.cycle_kind === 'complimentary' ? 'Gratuito até' : 'Vencimento'}</dt><dd>{dateLabel(plan.cycle_kind === 'complimentary' ? shiftDate(plan.due_date, -1) : plan.due_date)}</dd></div>
+                            <div><dt>Carência</dt><dd>Até 7 dias</dd></div>
+                          </dl>
+                          <details className="billing-renewal-rules">
+                            <summary>Regras e movimentações de acesso ({plan.events.length})</summary>
+                            <p className="small-note">A renovação depende do pagamento confirmado. Até 7 dias de carência utilizados são descontados do próximo ciclo pago.</p>
+                            {plan.events.length ? (
+                              <ul className="billing-overview-events">
+                                {plan.events.map((event) => (
+                                  <li key={event.id}>
+                                    <strong>{event.kind === 'payment' ? 'Pagamento' : 'Gratuidade'}</strong>
+                                    {' · '}{event.kind === 'payment' ? currency(event.amount_cents) : `${event.free_days} dias`}
+                                    {' · '}Vencimento: {dateLabel(event.next_due_date)}
+                                    {event.note && <p>{event.note}</p>}
+                                  </li>
+                                ))}
+                              </ul>
+                            ) : <p className="small-note">Sem movimentações registradas.</p>}
+                          </details>
+                        </section>
+                      </>
+                    )}
+                    {companyTab === 'history' && (
+                      <BillingHistory
+                        key={company.id}
+                        companyId={company.id}
+                        admin
+                        revision={revision}
+                        onChanged={() => {
+                          setRevision((n) => n + 1);
+                          onReload();
+                        }}
+                      />
+                    )}
+                    {companyTab === 'integration' && (
+                      <OnlineBilling key={company.id} companyId={company.id} admin />
+                    )}
                   </>
                 ) : (
                   !error && !planError && <p role="status">Consultando o plano...</p>

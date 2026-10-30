@@ -174,7 +174,6 @@ export function AdminWorkspace({
               </div>
               <div className="top-controls">
                 <NotificationBell userId={user.id} onRecheck={onRecheck} />
-                <span className="badge good admin-real-badge">Conta real</span>
                 <AccountMenu
                   name={user.displayName}
                   email={user.email}
@@ -184,10 +183,6 @@ export function AdminWorkspace({
                 />
               </div>
             </header>
-            <div className="crm-homologation-banner" role="note">
-              HOMOLOGAÇÃO INTERNA — As operações deste painel utilizam o banco de dados real. Use
-              apenas informações de teste; não cadastre dados pessoais de clientes reais.
-            </div>
             <main className="workspace" id="main">
               <div className="page">
                 {notice && (

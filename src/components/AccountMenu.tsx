@@ -1,3 +1,4 @@
+import { Button } from './ui/button';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { UserRound, Settings, CreditCard, LogOut } from 'lucide-react';
@@ -55,7 +56,9 @@ export function AccountMenu({
           if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false);
         }}
       >
-        <button
+        <Button
+          size="icon"
+          variant="outline"
           ref={trigger}
           type="button"
           className="icon-button account-trigger"
@@ -64,7 +67,7 @@ export function AccountMenu({
           onClick={() => setOpen(!open)}
         >
           <UserRound size={21} />
-        </button>
+        </Button>
         {
           <div className="account-popover" hidden={!open}>
             <div className="account-identity">

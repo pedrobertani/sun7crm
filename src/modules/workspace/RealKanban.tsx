@@ -1,3 +1,8 @@
+import { ViewSwitcher } from '../../components/ui/view-switcher';
+import { KanbanScroll } from '../../components/ui/kanban-scroll';
+import { Pagination } from '../../components/ui/pagination';
+import { KanbanSizeControl, type KanbanPageSize } from '../kanban/page-size';
+import { KanbanPeriodFilter, initialKanbanPeriod, kanbanDateRange, type KanbanPeriod } from '../kanban/period-filter';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
@@ -38,7 +43,6 @@ import {
   cents,
   datetimeLocal,
   fromLocal,
-  Pager,
   QueryState,
   SaveActions,
   useOperational,
@@ -68,8 +72,31 @@ export function RealKanban() {
     boardId = params.get('funil') || '',
     contactId = params.get('contato') || '',
     cardId = params.get('card') || '';
-  const [page, setPage] = useState(0),
-    [search, setSearch] = useState(''),
+  const [dateFilter, setDateFilter] = useState<KanbanPeriod>(() => {
+    const initial = initialKanbanPeriod();
+    const from = params.get('de') || '';
+    const to = params.get('ate') || '';
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(from) || !/^\d{4}-\d{2}-\d{2}$/.test(to)) return initial;
+    const linked = { ...initial, mode: 'custom' as const, from, to };
+    return kanbanDateRange(linked) ? linked : initial;
+  });
+  const [stagePages, setStagePages] = useState<Record<string, number>>({});
+  const updateDateFilter = (next: KanbanPeriod) => {
+    setDateFilter(next);
+    setStagePages({});
+    // An explicit selection supersedes dates passed by a deep link.
+    if (params.has('de') || params.has('ate')) {
+      setParams((previous) => {
+        const updated = new URLSearchParams(previous);
+        updated.delete('de');
+        updated.delete('ate');
+        return updated;
+      }, { replace: true });
+    }
+  };
+  const [pageSize, setPageSize] = useState<KanbanPageSize>(10);
+  const changePageSize = (size: KanbanPageSize) => { setPageSize(size); setStagePages({}); };
+  const [search, setSearch] = useState(''),
     [editing, setEditing] = useState<CardRow | 'new' | null>(null),
     [deleting, setDeleting] = useState<CardRow | null>(null),
     [newBoard, setNewBoard] = useState(false),
@@ -88,22 +115,56 @@ export function RealKanban() {
       refs.data?.stages
         .filter((s) => s.board_id === board?.id)
         .sort((a, b) => a.position - b.position) || [];
+  const stageIds = stages.map((stage) => stage.id).join(',');
+  const dateRange = kanbanDateRange(dateFilter);
+  const invalidDate = dateFilter.mode !== 'all' && !dateRange;
+  // Load each stage independently: one global page hides cards from other columns.
   const cards = useQuery(async () => {
     if (!board) return null;
-    const list = await api.list(
-      'cards',
-      page,
-      50,
-      { board_id: board.id, ...(contactId ? { contact_id: contactId } : {}) },
-      search,
-    );
+    if (invalidDate) return {
+      rows: [] as CardRow[], stageTotals: Object.fromEntries(stages.map((stage) => [stage.id, 0])),
+      total: 0, contacts: [] as ContactRow[], activity: [] as Awaited<ReturnType<typeof api.activityByIds>>,
+      labels: [] as Awaited<ReturnType<typeof api.labelsByCardIds>>,
+    };
+    const groups = await Promise.all(stages.map(async (stage) => ({
+      id: stage.id,
+      data: pageSize === 'all'
+        ? await api.listAllMatching(
+            'cards',
+            { board_id: board.id, stage_id: stage.id, ...(contactId ? { contact_id: contactId } : {}) },
+            search,
+            dateRange || undefined,
+          )
+        : await api.list(
+            'cards', stagePages[stage.id] || 0, pageSize,
+            { board_id: board.id, stage_id: stage.id, ...(contactId ? { contact_id: contactId } : {}) },
+            search,
+            dateRange || undefined,
+          ),
+    })));
+    const rows = groups.flatMap((group) => group.data.rows);
     const [contacts, activity, labels] = await Promise.all([
-      api.contactsByIds(list.rows.map((c) => c.contact_id)),
-      api.activityByIds(list.rows.map((c) => c.id)),
-      api.labelsByCardIds(list.rows.map((c) => c.id)),
+      api.contactsByIds(rows.map((c) => c.contact_id)),
+      api.activityByIds(rows.map((c) => c.id)),
+      api.labelsByCardIds(rows.map((c) => c.id)),
     ]);
-    return { ...list, contacts, activity, labels };
-  }, [api, board?.id, page, search, contactId]);
+    const stageTotals = Object.fromEntries(groups.map((group) => [group.id, group.data.total]));
+    return { rows, stageTotals, total: groups.reduce((sum, group) => sum + group.data.total, 0), contacts, activity, labels };
+  }, [api, board?.id, stageIds, stagePages, pageSize, search, contactId, dateRange?.from, dateRange?.until, invalidDate]);
+  // If a card was removed from the last page of a stage, don't leave an empty page.
+  useEffect(() => {
+    const totals = cards.data?.stageTotals;
+    if (!totals) return;
+    setStagePages((previous) => {
+      let changed = false;
+      const next = { ...previous };
+      for (const [id, page] of Object.entries(previous)) {
+        const last = pageSize === 'all' ? 0 : Math.max(0, Math.ceil((totals[id] || 0) / pageSize) - 1);
+        if (page > last) { next[id] = last; changed = true; }
+      }
+      return changed ? next : previous;
+    });
+  }, [cards.data?.stageTotals, pageSize]);
   const deepLink = useQuery(async () => (cardId ? api.cardDetails(cardId) : null), [api, cardId]);
   useEffect(() => {
     if (deepLink.data) {
@@ -131,14 +192,21 @@ export function RealKanban() {
       );
   }
   const moving = useSave();
-  const [pendingMove,setPendingMove]=useState<{card:CardRow;stage:StageRow;kind:'sale'|'other'}|null>(null);
+  const [pendingMove, setPendingMove] = useState<{
+    card: CardRow;
+    stage: StageRow;
+    kind: 'sale' | 'other';
+  } | null>(null);
   async function move(id: string, stage: string) {
     const card = cards.data?.rows.find((c) => c.id === id);
     if (!card || !writable || card.stage_id === stage || moving.busy || moving.uncertain) return;
-    const dest=stages.find(x=>x.id===stage);
-    if(!dest)return;
-    const kind=highImpactStage(dest.name);
-    if(kind) { setPendingMove({card,stage:dest,kind});return; }
+    const dest = stages.find((x) => x.id === stage);
+    if (!dest) return;
+    const kind = highImpactStage(dest.name);
+    if (kind) {
+      setPendingMove({ card, stage: dest, kind });
+      return;
+    }
     await moving.run(async () => {
       await api.saveCard({ stage_id: stage }, card.id, card.row_version);
       refresh();
@@ -173,7 +241,7 @@ export function RealKanban() {
                 p.delete('contato');
                 return p;
               });
-              setPage(0);
+              setStagePages({});
             }}
           >
             Limpar filtro de contato
@@ -182,32 +250,7 @@ export function RealKanban() {
       )}
       {refs.data && (
         <>
-          <div className="section-bar operational-toolbar">
-            <div className="tabs" aria-label="Funis">
-              {refs.data.boards.map((b) => (
-                <button
-                  type="button"
-                  key={b.id}
-                  className={b.id === board?.id ? 'active' : ''}
-                  onClick={() => {
-                    setParams({ funil: b.id, ...(contactId ? { contato: contactId } : {}) });
-                    setPage(0);
-                  }}
-                >
-                  {b.name}
-                </button>
-              ))}
-              {can('boards.create') && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  aria-label="Adicionar funil"
-                  onClick={() => setNewBoard(true)}
-                >
-                  <Plus size={16} />
-                </Button>
-              )}
-            </div>
+          <div className="section-bar operational-toolbar kanban-primary-actions">
             <div className="actions">
               {manager && board && (
                 <Button variant="outline" onClick={() => setStagesOpen(true)}>
@@ -223,34 +266,55 @@ export function RealKanban() {
               )}
             </div>
           </div>
-          {board ? (
-            <>
-              <div className="operational-toolbar">
+          <div className="kanban-toolbar">
+            <div className="actions board-navigation">
+              <ViewSwitcher
+                label="Funis"
+                value={board?.id || ''}
+                onValueChange={(id) => {
+                  setParams((previous) => {
+                    const updated = new URLSearchParams(previous);
+                    updated.set('funil', id);
+                    updated.delete('card');
+                    return updated;
+                  });
+                  setStagePages({});
+                }}
+                items={refs.data.boards.map((b) => ({ value: b.id, label: b.name }))}
+              />
+              {can('boards.create') && (
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  aria-label="Adicionar funil"
+                  onClick={() => setNewBoard(true)}
+                >
+                  <Plus size={16} />
+                </Button>
+              )}
+            </div>
+            {board && (
+              <div className="kanban-filterbar">
                 <SearchInput
                   value={search}
-                  onChange={(v) => {
-                    setSearch(v);
-                    setPage(0);
-                  }}
+                  onChange={(value) => { setSearch(value); setStagePages({}); }}
                   placeholder="Buscar pelo título do card..."
                 />
-                <p className="small-note">
-                  Alertas fixos: 24h sem primeiro acompanhamento · 3 dias para o responsável · 7
-                  dias para o gestor.
-                </p>
+                <KanbanPeriodFilter value={dateFilter} onChange={updateDateFilter} />
               </div>
+            )}
+          </div>
+          {board ? (
+            <>
               <QueryState query={cards} />
               {cards.data && (
                 <>
-                  <div className="kanban-scroll" aria-busy={moving.busy || cards.loading}>
+                  <KanbanScroll label="Colunas do funil">
                     {stages.map((stage) => (
                       <section className="kanban-column" data-drop-stage={stage.id} key={stage.id}>
                         <div className="kanban-column-head">
                           <h2>{stage.name}</h2>
-                          <span>
-                            {cards.data!.rows.filter((c) => c.stage_id === stage.id).length} nesta
-                            página
-                          </span>
+                          <span>{cards.data!.stageTotals[stage.id] || 0} cards</span>
                         </div>
                         <div className="kanban-cards">
                           {cards
@@ -299,27 +363,29 @@ export function RealKanban() {
                                       onOpen={() => setEditing(card)}
                                     />
                                     {can('cards.delete') && (
-                                      <button
+                                      <Button
+                                        size="icon"
+                                        variant="outline"
                                         type="button"
-                                        className="icon-button"
                                         aria-label={
                                           'Excluir ' + (card.title || contact?.name || 'card')
                                         }
                                         onClick={() => setDeleting(card)}
                                       >
                                         <Trash2 size={15} />
-                                      </button>
+                                      </Button>
                                     )}
                                     {writable && (
-                                      <button
-                                        className="icon-button"
+                                      <Button
+                                        size="icon"
+                                        variant="outline"
                                         aria-label={
                                           'Editar ' + (card.title || contact?.name || 'card')
                                         }
                                         onClick={() => setEditing(card)}
                                       >
                                         <Pencil size={15} />
-                                      </button>
+                                      </Button>
                                     )}
                                   </div>
                                   <p>{contact?.name || 'Contato indisponível'}</p>
@@ -409,15 +475,25 @@ export function RealKanban() {
                             <p className="kanban-empty">Nenhum card nesta página.</p>
                           )}
                         </div>
+                        {pageSize !== 'all' && (
+                          <div className="kanban-column-pagination">
+                            <Pagination
+                              page={stagePages[stage.id] || 0}
+                              size={pageSize}
+                              total={cards.data!.stageTotals[stage.id] || 0}
+                              onChange={(next) => setStagePages((previous) => ({ ...previous, [stage.id]: next }))}
+                              label={'cards de ' + stage.name}
+                              loading={moving.busy || cards.loading}
+                            />
+                          </div>
+                        )}
                       </section>
                     ))}
+                  </KanbanScroll>
+                  <div className="kanban-board-footer">
+                <KanbanSizeControl size={pageSize} onChange={changePageSize} />
+                <span className="muted result-count">{cards.data?.total ?? 0} oportunidades</span>
                   </div>
-                  <Pager
-                    page={page}
-                    total={cards.data.total}
-                    onChange={setPage}
-                    loading={cards.loading}
-                  />
                 </>
               )}
             </>
@@ -464,26 +540,49 @@ export function RealKanban() {
           }}
         />
       )}
-      {pendingMove && <ConfirmKanbanMove
-        key={pendingMove.card.id+'-'+pendingMove.stage.id}
-        contactName={cards.data?.contacts.find(c=>c.id===pendingMove.card.contact_id)?.name||pendingMove.card.title||'Cliente'}
-        fromStage={stages.find(x=>x.id===pendingMove.card.stage_id)?.name||'Etapa anterior'}
-        toStage={pendingMove.stage.name}
-        kind={pendingMove.kind}
-        amountCents={pendingMove.card.value_cents}
-        busy={moving.busy}
-        onCancel={()=>setPendingMove(null)}
-        onConfirm={(result:ConfirmedMove)=>void moving.run(async()=>{
-          if(result.confirmed){
-            await api.confirmCardSale(pendingMove.card.id,pendingMove.stage.id,pendingMove.card.row_version,result.amountCents);
-          }else{
-            await api.saveCard({stage_id:pendingMove.stage.id},pendingMove.card.id,pendingMove.card.row_version);
+      {pendingMove && (
+        <ConfirmKanbanMove
+          key={pendingMove.card.id + '-' + pendingMove.stage.id}
+          contactName={
+            cards.data?.contacts.find((c) => c.id === pendingMove.card.contact_id)?.name ||
+            pendingMove.card.title ||
+            'Cliente'
           }
-          setPendingMove(null);
-          refresh();
-          notice(result.confirmed?'Venda confirmada e registrada nas metas.':'Movimentação confirmada.');
-        })}
-      />}
+          fromStage={
+            stages.find((x) => x.id === pendingMove.card.stage_id)?.name || 'Etapa anterior'
+          }
+          toStage={pendingMove.stage.name}
+          kind={pendingMove.kind}
+          amountCents={pendingMove.card.value_cents}
+          busy={moving.busy}
+          onCancel={() => setPendingMove(null)}
+          onConfirm={(result: ConfirmedMove) =>
+            void moving.run(async () => {
+              if (result.confirmed) {
+                await api.confirmCardSale(
+                  pendingMove.card.id,
+                  pendingMove.stage.id,
+                  pendingMove.card.row_version,
+                  result.amountCents,
+                );
+              } else {
+                await api.saveCard(
+                  { stage_id: pendingMove.stage.id },
+                  pendingMove.card.id,
+                  pendingMove.card.row_version,
+                );
+              }
+              setPendingMove(null);
+              refresh();
+              notice(
+                result.confirmed
+                  ? 'Venda confirmada e registrada nas metas.'
+                  : 'Movimentação confirmada.',
+              );
+            })
+          }
+        />
+      )}
       {deleting && (
         <DeleteCardDialog
           card={deleting}
@@ -604,6 +703,8 @@ function StageEditor({
                   type="button"
                   className="icon-button stage-drag-handle"
                   aria-label={'Arrastar etapa ' + s.name}
+                  title={can('stages.reorder') ? 'Arrastar para reordenar' : 'Sem permissão para reordenar'}
+                  disabled={!can('stages.reorder') || save.busy || save.uncertain}
                   onPointerDown={(e) => drag(e, index)}
                 >
                   <GripVertical size={18} />
@@ -620,7 +721,9 @@ function StageEditor({
                     )
                   }
                 />
-                <button
+                <Button
+                  size="icon"
+                  variant="outline"
                   type="button"
                   className="icon-button"
                   aria-label={'Subir ' + s.name}
@@ -628,8 +731,10 @@ function StageEditor({
                   onClick={() => reorder(index, index - 1)}
                 >
                   <ArrowUp size={15} />
-                </button>
-                <button
+                </Button>
+                <Button
+                  size="icon"
+                  variant="outline"
                   type="button"
                   className="icon-button"
                   aria-label={'Descer ' + s.name}
@@ -637,8 +742,10 @@ function StageEditor({
                   onClick={() => reorder(index, index + 1)}
                 >
                   <ArrowDown size={15} />
-                </button>
-                <button
+                </Button>
+                <Button
+                  size="icon"
+                  variant="outline"
                   type="button"
                   className="icon-button"
                   aria-label={'Excluir etapa ' + s.name}
@@ -646,7 +753,7 @@ function StageEditor({
                   onClick={() => setRemove(s.id)}
                 >
                   <Trash2 size={15} />
-                </button>
+                </Button>
               </div>
             ))}
           </div>

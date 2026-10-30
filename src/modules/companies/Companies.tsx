@@ -5,6 +5,7 @@ import { AppliedFilter } from '../../components/shared';
 import { CurrencyInput } from '../../components/currency-input';
 import { Input } from '../../components/ui/input';
 import { useState, type FormEvent } from 'react';
+import { Pagination, paginatedRows, usePagination } from '../../components/ui/pagination';
 import { Plus, Pencil, Building2 } from 'lucide-react';
 import { useCrm } from '../../app/context';
 import type { Company, Template } from '../../domain/types';
@@ -24,6 +25,7 @@ const initial = {
   managerEmail: '',
 };
 export function Companies() {
+  const pages = usePagination();
   const { data, update, notice } = useCrm();
   const [query, setQuery] = useState('');
   const [params, setParams] = useSearchParams();
@@ -168,7 +170,7 @@ export function Companies() {
       )}
       <div className="card">
         <div className="toolbar">
-          <SearchInput value={query} onChange={setQuery} placeholder="Buscar empresa" />
+          <SearchInput value={query} onChange={(v) => { setQuery(v); pages.setPage(0); }} placeholder="Buscar empresa" />
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value)}
@@ -197,7 +199,7 @@ export function Companies() {
                 </tr>
               </thead>
               <tbody>
-                {companies.map((c) => (
+                {paginatedRows(companies, pages.page, pages.size).map((c) => (
                   <tr key={c.id}>
                     <td>
                       <div className="person-cell">
@@ -221,12 +223,11 @@ export function Companies() {
                     <td>
                       <Button
                         variant="ghost"
-                        size="sm"
+                        size="icon"
                         onClick={() => open(c)}
                         aria-label={'Editar ' + c.name}
                       >
-                        <Pencil size={14} />
-                        Editar
+                        <Pencil size={16} aria-hidden="true" />
                       </Button>
                     </td>
                   </tr>
@@ -234,12 +235,14 @@ export function Companies() {
               </tbody>
             </table>
           </div>
+
         ) : (
           <Empty
             title="Nenhuma empresa encontrada"
             description="Ajuste a busca ou cadastre uma empresa."
           />
         )}
+        <Pagination page={pages.page} size={pages.size} total={companies.length} onChange={pages.setPage} onSizeChange={pages.setSize} label="empresas" />
       </div>
       <Modal
         open={editing !== undefined}

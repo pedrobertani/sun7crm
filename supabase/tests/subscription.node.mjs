@@ -84,11 +84,12 @@ test('plano: carência, gratuidade, quitação e isolamento no servidor', async 
     [5, 100, 'manager'],
     [6, 100, 'manager'],
   ])
-    await q('insert into public.crm_memberships(id,user_id,company_id,role) values($1,$2,$3,$4)', [
+    await q('insert into public.crm_memberships(id,user_id,company_id,role,active) values($1,$2,$3,$4,$5)', [
       id(n + 10),
       id(n),
       id(company),
       role,
+      n !== 5 && n !== 6,
     ]);
   await q(
     "insert into public.crm_contacts(company_id,owner_membership_id,name) values($1,$2,'Fixture cliente')",

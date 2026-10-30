@@ -1,0 +1,103 @@
+/* Tarefas: restore the approved compact segmented layout without changing global tab styles. */
+.tasks-view-toolbar {
+  align-items: center;
+  margin: 0 0 16px;
+}
+.tasks-view-toolbar .result-count {
+  margin-left: auto;
+  white-space: nowrap;
+}
+.tasks-segmented {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 3px;
+  max-width: 100%;
+  padding: 4px;
+  background: var(--raised);
+  border-radius: 9px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.tasks-segmented > button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  min-height: 36px;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 12px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.tasks-segmented > button.active,
+.tasks-segmented > button[aria-pressed='true'] {
+  background: var(--surface);
+  color: var(--primary);
+  font-weight: 650;
+  box-shadow: 0 1px 3px var(--shadow-color);
+}
+.tasks-segmented > button:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: -2px;
+}
+.tasks-board-area > .tasks-filterbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 20px 24px;
+  margin: 0 0 18px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+}
+.tasks-board-area > .tasks-filterbar > .search {
+  flex: 1 1 280px;
+  width: min(100%, 420px);
+  max-width: 420px;
+  margin-left: auto;
+}
+.tasks-board-area .tasks-kanban {
+  min-width: min-content;
+}
+.tasks-board-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 14px clamp(14px, 1.7vw, 24px);
+  margin-top: 12px;
+  border-top: 1px solid var(--line);
+}
+.tasks-board-footer .kanban-board-size {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+.tasks-board-footer .kanban-board-size select {
+  min-height: 34px;
+}
+.tasks-board-area .kanban-column-pagination .ui-pagination {
+  justify-content: center;
+}
+@media (max-width: 760px) {
+  .tasks-board-area > .tasks-filterbar {
+    flex-wrap: wrap;
+    padding: 14px;
+    gap: 12px;
+  }
+  .tasks-board-area > .tasks-filterbar > .search {
+    width: 100%;
+    max-width: none;
+    margin-left: 0;
+  }
+  .tasks-view-toolbar .result-count { margin-left: 0; }
+}

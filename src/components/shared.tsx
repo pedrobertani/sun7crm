@@ -1,3 +1,4 @@
+import { ModalFooter } from './ui/modal-footer';
 import { Link } from 'react-router-dom';
 import { Input } from './ui/input';
 import type { ReactNode } from 'react';
@@ -11,17 +12,17 @@ export function Heading({
   description,
   children,
 }: {
-  eyebrow: string;
+  eyebrow?: string;
   title: string;
-  description: string;
+  description?: string;
   children?: ReactNode;
 }) {
   return (
     <div className="heading">
       <div>
-        <p className="eyebrow">{eyebrow}</p>
+        {eyebrow && <p className="eyebrow">{eyebrow}</p>}
         <h1>{title}</h1>
-        <p className="desc">{description}</p>
+        {description && <p className="desc">{description}</p>}
       </div>
       <div className="actions">{children}</div>
     </div>
@@ -101,7 +102,7 @@ export function Empty({
   action,
 }: {
   title: string;
-  description: string;
+  description?: string;
   action?: ReactNode;
 }) {
   return (
@@ -159,11 +160,11 @@ export function FormActions({
   label?: string;
 }) {
   return (
-    <div className="form-actions">
+    <ModalFooter>
       <Button type="button" variant="outline" onClick={onCancel}>
         Cancelar
       </Button>
       <Button type="submit">{label}</Button>
-    </div>
+    </ModalFooter>
   );
 }

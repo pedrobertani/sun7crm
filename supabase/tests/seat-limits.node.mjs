@@ -1,0 +1,21 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+import { PGlite } from '@electric-sql/pglite';
+const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
+test('1 gestor + 5 funcionários: criar, reativar, trocar papel e liberar vaga',async t=>{
+ const db=new PGlite();t.after(()=>db.close());
+ await db.exec('create role anon;create role authenticated;create role service_role;create schema crm_private;create table public.crm_memberships(id uuid primary key,company_id uuid,role text,active boolean)');
+ await db.exec(await readFile(new URL('../migrations/20261030122936_crm_company_seat_limits.sql',import.meta.url),'utf8'));
+ const add=(n,role='seller',active=true,company=100)=>db.query('insert into public.crm_memberships values($1,$2,$3,$4)',[id(n),id(company),role,active]);
+ const denied=p=>assert.rejects(p,e=>e.code==='23514'&&e.message.includes('CRM_SEAT_LIMIT'));
+ await add(1,'manager');for(let n=2;n<=6;n++)await add(n,n===6?'reception':'seller');
+ await denied(add(7));await denied(add(8,'manager'));
+ await add(9,'seller',false);await denied(db.query('update public.crm_memberships set active=true where id=$1',[id(9)]));
+ await denied(db.query("update public.crm_memberships set role='manager' where id=$1",[id(2)]));
+ await db.query('update public.crm_memberships set active=false where id=$1',[id(2)]);
+ await db.query('update public.crm_memberships set active=true where id=$1',[id(9)]);
+ await add(10,'seller',true,200);await denied(db.query('update public.crm_memberships set company_id=$1 where id=$2',[id(100),id(10)]));
+ await db.query("update public.crm_memberships set role='reception' where id=$1",[id(3)]);
+ assert.equal((await db.query('select count(*)::int n from public.crm_memberships where active and company_id=$1',[id(100)])).rows[0].n,6);
+});

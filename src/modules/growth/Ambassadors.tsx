@@ -1,4 +1,8 @@
+import { Pencil } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
+import { ViewSwitcher } from '../../components/ui/view-switcher';
+import { Pagination, type PageSize } from '../../components/ui/pagination';
+import { campaignViews, type CampaignView } from './campaign-views';
 import { RecordTitle } from '../../components/RecordTitle';
 import { useCrm } from '../../app/context';
 import type { Ambassador, AmbassadorCampaign } from '../../domain/types';
@@ -24,6 +28,15 @@ export function Ambassadors() {
     (c) => c.companyId === session.companyId,
   );
   const [selected, setSelected] = useState('');
+  const [campaignTab, setCampaignTab] = useState<CampaignView>('overview');
+  const [overviewPage, setOverviewPage] = useState(0);
+  const [referralsPage, setReferralsPage] = useState(0);
+  const [legacyPage, setLegacyPage] = useState(0);
+  const [paymentsPage, setPaymentsPage] = useState(0);
+  const [size, setSizeState] = useState<PageSize>(10);
+  const setSize = (next: PageSize) => {
+    setSizeState(next); setOverviewPage(0); setReferralsPage(0); setLegacyPage(0); setPaymentsPage(0);
+  };
   const campaign = campaigns.find((c) => c.id === selected) || campaigns[0];
   const [campaignForm, setCampaignForm] = useState<AmbassadorCampaign | null>(null);
   const [person, setPerson] = useState<Ambassador | null>(null);
@@ -100,6 +113,9 @@ export function Ambassadors() {
       }))
     ) {
       setSelected(campaignForm.id);
+      setCampaignTab('overview');
+      setOverviewPage(0);
+      setReferralsPage(0);
       setCampaignForm(null);
     }
   }
@@ -189,16 +205,19 @@ export function Ambassadors() {
           Nova campanha
         </Button>
       </Heading>
-      <div className="card growth-rule">
-        Cada <strong>R$ 1.000 completos = 1 ponto</strong>, somando indicações pagas e com
-        comparecimento confirmado. R$ 1.500 = 1 ponto. O encerramento apura a comissão; a
-        confirmação de pagamento quita os pontos. Valores e pagamentos desta demo são simulados.
-      </div>
+      <details className="growth-rule">
+        <summary>Como funcionam pontos e comissões</summary>
+        <p>
+          Cada <strong>R$ 1.000 completos = 1 ponto</strong>, somando indicações pagas e com
+          comparecimento confirmado. R$ 1.500 = 1 ponto. O encerramento apura a comissão; a
+          confirmação de pagamento quita os pontos. Valores e pagamentos desta demo são simulados.
+        </p>
+      </details>
       <section className="card campaign-panel">
         <div className="campaign-panel-toolbar">
           <label className="form-row campaign-selector">
             Campanha
-            <select value={campaign?.id || ''} onChange={(e) => setSelected(e.target.value)}>
+            <select value={campaign?.id || ''} onChange={(e) => { setSelected(e.target.value); setCampaignTab('overview'); setOverviewPage(0); setReferralsPage(0); }}>
               <option value="" disabled>
                 Selecione uma campanha
               </option>
@@ -273,7 +292,16 @@ export function Ambassadors() {
             </Button>
           </div>
         )}
-        <div className="campaign-participant-title">
+      </section>
+      <ViewSwitcher
+        label="Seções da campanha"
+        value={campaignTab}
+        onValueChange={setCampaignTab}
+        items={campaign ? campaignViews : campaignViews.filter((view) => view.value !== 'referrals')}
+      />
+      {campaignTab === 'overview' && (
+        <section className="card campaign-panel">
+          <div className="campaign-participant-title">
           <h2>{campaign ? 'Apuração por participante' : 'Participantes cadastrados'}</h2>
           <span>{people.length} participantes</span>
         </div>
@@ -294,7 +322,7 @@ export function Ambassadors() {
               </tr>
             </thead>
             <tbody>
-              {people.map((a) => {
+              {people.slice(overviewPage * size, (overviewPage + 1) * size).map((a) => {
                 const t = campaign ? campaignTotals(data, campaign, a.id) : null;
                 return (
                   <tr key={a.id}>
@@ -333,13 +361,14 @@ export function Ambassadors() {
                     <td>
                       <Button
                         variant="outline"
-                        size="sm"
+                        size="icon"
                         onClick={() => {
                           setError('');
                           setPerson({ ...a });
                         }}
+                        aria-label="Editar"
                       >
-                        Editar
+                        <Pencil size={16} aria-hidden="true" />
                       </Button>
                       {campaign?.status === 'closed' && t && !t.settled && t.amount > 0 && (
                         <Button size="sm" onClick={() => setConfirm({ kind: 'pay', id: a.id })}>
@@ -360,8 +389,10 @@ export function Ambassadors() {
             </tbody>
           </table>
         </div>
-      </section>
-      {campaign && (
+        <Pagination page={overviewPage} total={people.length} onChange={setOverviewPage} label="participantes" size={size} onSizeChange={setSize} />
+        </section>
+      )}
+      {campaignTab === 'referrals' && campaign && (
         <section className="card growth-section">
           <div className="toolbar">
             <h2>Indicações da campanha</h2>
@@ -378,7 +409,7 @@ export function Ambassadors() {
                 </tr>
               </thead>
               <tbody>
-                {sales.map((s) => (
+                {sales.slice(referralsPage * size, (referralsPage + 1) * size).map((s) => (
                   <tr key={s.id}>
                     <td>
                       {s.customer}
@@ -444,44 +475,100 @@ export function Ambassadors() {
               </tbody>
             </table>
           </div>
+          <Pagination page={referralsPage} total={sales.length} onChange={setReferralsPage} label="indicações" size={size} onSizeChange={setSize} />
         </section>
       )}
-      {!!legacy.length && (
+      {campaignTab === 'history' && !!legacy.length && (
         <section className="card growth-section">
           <h2>Histórico anterior às campanhas</h2>
-          <p>
+          <p className="small-note">
             {legacy.length} indicações preservadas. Não entram nas campanhas novas sem conferência.
           </p>
-          {legacy.map((s) => (
-            <p key={s.id}>
-              {s.customer} · {currency(s.value)} · {s.cancelled ? 'Cancelada' : 'Registro anterior'}
-            </p>
-          ))}
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Cliente indicado</th>
+                  <th>Valor</th>
+                  <th>Situação</th>
+                </tr>
+              </thead>
+              <tbody>
+                {legacy.slice(legacyPage * size, (legacyPage + 1) * size).map((s) => (
+                  <tr key={s.id}>
+                    <td>{s.customer}</td>
+                    <td>{currency(s.value)}</td>
+                    <td>
+                      <span className={'badge ' + (s.cancelled ? 'gray' : 'good')}>
+                        {s.cancelled ? 'Cancelada' : 'Registro anterior'}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <Pagination page={legacyPage} total={legacy.length} onChange={setLegacyPage} label="registros anteriores" size={size} onSizeChange={setSize} />
         </section>
       )}
-      <section className="card growth-section">
-        <h2>Histórico de pagamentos</h2>
-        {(data.ambassadorPayments || [])
-          .filter((p) => p.companyId === session.companyId)
-          .map((p) => (
-            <p key={p.id}>
-              {people.find((a) => a.id === p.ambassadorId)?.name} ·{' '}
-              {campaigns.find((c) => c.id === p.campaignId)?.name} · {p.points} pontos ·{' '}
-              {currency(p.amount)} · {dateLabel(p.paidAt.slice(0, 10))}
-            </p>
-          ))}
-      </section>
+      {campaignTab === 'history' && (
+        <section className="card growth-section">
+          <h2>Histórico de pagamentos</h2>
+        {(() => {
+          const payments = (data.ambassadorPayments || []).filter(
+            (p) => p.companyId === session.companyId,
+          );
+          return payments.length ? (
+            <>
+              <div className="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Embaixador</th>
+                    <th>Campanha</th>
+                    <th>Pontos</th>
+                    <th>Valor pago</th>
+                    <th>Data</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {payments.slice(paymentsPage * size, (paymentsPage + 1) * size).map((p) => (
+                    <tr key={p.id}>
+                      <td>
+                        {people.find((a) => a.id === p.ambassadorId)?.name ||
+                          'Embaixador não encontrado'}
+                      </td>
+                      <td>
+                        {campaigns.find((c) => c.id === p.campaignId)?.name || 'Campanha anterior'}
+                      </td>
+                      <td>{p.points}</td>
+                      <td>{currency(p.amount)}</td>
+                      <td>{dateLabel(p.paidAt.slice(0, 10))}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              </div>
+              <Pagination page={paymentsPage} total={payments.length} onChange={setPaymentsPage} label="pagamentos" size={size} onSizeChange={setSize} />
+            </>
+          ) : (
+            <p className="small-note">Nenhum pagamento registrado até o momento.</p>
+          );
+        })()}
+        </section>
+      )}
       <Modal
         open={!!person}
         onOpenChange={(v) => !v && setPerson(null)}
         title={people.some((a) => a.id === person?.id) ? 'Editar embaixador' : 'Novo embaixador'}
       >
         {person && (
-          <form onSubmit={savePerson}>
+          <form className="ambassador-dialog-form" onSubmit={savePerson}>
             <ContactPicker
               value={person.contactId || ''}
               onChange={(id) => setPerson({ ...person, contactId: id })}
             />
+            <div className="ambassador-demo-fields">
             <label className="form-row">
               Função no programa
               <Input
@@ -504,6 +591,7 @@ export function Ambassadors() {
                 onChange={(e) => setPerson({ ...person, reward: e.target.value })}
               />
             </label>
+            </div>
             <label className="check-row">
               <input
                 type="checkbox"
@@ -512,10 +600,6 @@ export function Ambassadors() {
               />
               Participa da comissão das campanhas
             </label>
-            <p>
-              Benefícios de acolhimento ou divulgação podem ser diferentes da comissão de vendas. A
-              função não altera permissões de acesso ao sistema.
-            </p>
             <label className="form-row">
               Situação
               <select
@@ -526,7 +610,6 @@ export function Ambassadors() {
                 <option value="false">Inativo</option>
               </select>
             </label>
-            <p>A regra de comissão é definida pelo gestor em cada campanha.</p>
             <FormError message={error} />
             <FormActions onCancel={() => setPerson(null)} />
           </form>
@@ -538,7 +621,7 @@ export function Ambassadors() {
         title="Nova campanha"
       >
         {campaignForm && (
-          <form onSubmit={saveCampaign}>
+          <form className="ambassador-dialog-form" onSubmit={saveCampaign}>
             <label className="form-row">
               Nome
               <Input
@@ -548,6 +631,7 @@ export function Ambassadors() {
                 onChange={(e) => setCampaignForm({ ...campaignForm, name: e.target.value })}
               />
             </label>
+            <div className="ambassador-demo-fields">
             <label className="form-row">
               Início
               <Input
@@ -567,6 +651,8 @@ export function Ambassadors() {
                 onChange={(e) => setCampaignForm({ ...campaignForm, end: e.target.value })}
               />
             </label>
+            </div>
+            <div className="ambassador-demo-fields">
             <label className="form-row">
               Regra de pagamento
               <select
@@ -607,6 +693,7 @@ export function Ambassadors() {
                 }
               />
             </label>
+            </div>
             <FormError message={error} />
             <FormActions onCancel={() => setCampaignForm(null)} />
           </form>

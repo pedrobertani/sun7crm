@@ -1,3 +1,7 @@
+import { ViewSwitcher } from '../../components/ui/view-switcher';
+import { Pagination, type PageSize } from '../../components/ui/pagination';
+import { campaignViews, type CampaignView } from '../growth/campaign-views';
+import { Pencil } from 'lucide-react';
 import { useRef, useState } from 'react';
 import { RecordTitle } from '../../components/RecordTitle';
 import { Link } from 'react-router-dom';
@@ -20,7 +24,6 @@ import { RecordPicker } from './RecordPicker';
 import { ContactDialog } from './RecordForms';
 import {
   cents,
-  Pager,
   QueryState,
   SaveActions,
   useOperational,
@@ -47,6 +50,7 @@ function useIntent<T>() {
 export function RealAmbassadors() {
   const { api, can, refresh, notice } = useOperational(),
     [tab, setTab] = useState<'campaigns' | 'people' | 'metrics'>('campaigns'),
+    [campaignTab, setCampaignTab] = useState<CampaignView>('overview'),
     [selected, setSelected] = useState(''),
     [ambassador, setAmbassador] = useState<AmbassadorRow | 'new' | null>(null),
     [campaign, setCampaign] = useState<CampaignRow | 'new' | null>(null),
@@ -55,7 +59,9 @@ export function RealAmbassadors() {
     [referral, setReferral] = useState<ReferralRow | 'new' | null>(null),
     [adjust, setAdjust] = useState<ReferralRow | null>(null),
     [metric, setMetric] = useState<MetricRow | 'new' | null>(null),
-    [page, setPage] = useState(0);
+    [page, setPage] = useState(0),
+    [size, setSize] = useState<PageSize>(10);
+  const changeSize = (value: PageSize) => { setSize(value); setPage(0); };
   const refs = useQuery(async () => {
     const [campaigns, ambassadors] = await Promise.all([
       api.all('campaigns'),
@@ -80,12 +86,12 @@ export function RealAmbassadors() {
   );
   const referrals = useQuery(
     async () =>
-      current ? { ...(await api.list('referrals', page, 50, { campaign_id: current.id })) } : null,
-    [api, current?.id, page],
+      current ? { ...(await api.list('referrals', page, size, { campaign_id: current.id })) } : null,
+    [api, current?.id, page, size],
   );
   const metrics = useQuery(
-    () => (tab === 'metrics' ? api.list('metrics', page, 50) : Promise.resolve(null)),
-    [api, tab, page],
+    () => (tab === 'metrics' ? api.list('metrics', page, size) : Promise.resolve(null)),
+    [api, tab, page, size],
   );
   function saved(message: string) {
     setAmbassador(null);
@@ -101,38 +107,19 @@ export function RealAmbassadors() {
   return (
     <>
       <div className="operational-toolbar">
-        <div className="tabs">
-          <button
-            type="button"
-            className={tab === 'campaigns' ? 'active' : ''}
-            onClick={() => {
-              setTab('campaigns');
-              setPage(0);
-            }}
-          >
-            Campanhas
-          </button>
-          <button
-            type="button"
-            className={tab === 'people' ? 'active' : ''}
-            onClick={() => {
-              setTab('people');
-              setPage(0);
-            }}
-          >
-            Embaixadores
-          </button>
-          <button
-            type="button"
-            className={tab === 'metrics' ? 'active' : ''}
-            onClick={() => {
-              setTab('metrics');
-              setPage(0);
-            }}
-          >
-            Métricas manuais
-          </button>
-        </div>
+        <ViewSwitcher
+          label="Embaixadores"
+          value={tab}
+          onValueChange={(value) => {
+            setTab(value);
+            setPage(0);
+          }}
+          items={[
+            { value: 'campaigns', label: 'Campanhas' },
+            { value: 'people', label: 'Embaixadores' },
+            { value: 'metrics', label: 'Métricas' },
+          ]}
+        />
         <div className="actions">
           <Button
             variant="outline"
@@ -164,7 +151,7 @@ export function RealAmbassadors() {
                   </tr>
                 </thead>
                 <tbody>
-                  {refs.data.ambassadors.map((a) => (
+                  {refs.data.ambassadors.slice(page * size, (page + 1) * size).map((a) => (
                     <tr key={a.id}>
                       <td>
                         <RecordTitle
@@ -184,11 +171,12 @@ export function RealAmbassadors() {
                       <td>
                         <Button
                           variant="outline"
-                          size="sm"
+                          size="icon"
                           disabled={!can('ambassadors.edit')}
                           onClick={() => setAmbassador(a)}
+                          aria-label="Editar"
                         >
-                          Editar
+                          <Pencil size={16} aria-hidden="true" />
                         </Button>
                       </td>
                     </tr>
@@ -201,6 +189,7 @@ export function RealAmbassadors() {
                   description="Escolha uma pessoa da lista de contatos ou cadastre uma nova."
                 />
               )}
+              <Pagination page={page} total={refs.data.ambassadors.length} onChange={setPage} label="embaixadores" size={size} onSizeChange={changeSize} />
             </div>
           ) : tab === 'metrics' ? (
             <>
@@ -253,12 +242,13 @@ export function RealAmbassadors() {
                             <td>{dateLabel(m.measured_on)}</td>
                             <td>
                               <Button
-                                size="sm"
+                                size="icon"
                                 variant="outline"
                                 disabled={!can('ambassadors.edit')}
                                 onClick={() => setMetric(m)}
+                                aria-label="Editar"
                               >
-                                Editar
+                                <Pencil size={16} aria-hidden="true" />
                               </Button>
                             </td>
                           </tr>
@@ -272,7 +262,7 @@ export function RealAmbassadors() {
                       />
                     )}
                   </div>
-                  <Pager page={page} total={metrics.data.total} onChange={setPage} />
+                  <Pagination page={page} total={metrics.data.total} onChange={setPage} label="métricas" size={size} onSizeChange={changeSize} />
                 </>
               )}
             </>
@@ -298,6 +288,7 @@ export function RealAmbassadors() {
                     onChange={(e) => {
                       setSelected(e.target.value);
                       setPage(0);
+                      setCampaignTab('overview');
                     }}
                   >
                     {refs.data.campaigns.map((c) => (
@@ -356,6 +347,17 @@ export function RealAmbassadors() {
                   )}
                 </div>
               </div>
+              <ViewSwitcher
+                label="Seções da campanha"
+                value={campaignTab}
+                onValueChange={(value) => {
+                  setCampaignTab(value);
+                  setPage(0);
+                }}
+                items={campaignViews}
+              />
+              {campaignTab === 'overview' && (
+                <>
               <QueryState query={totals} />
               {totals.data && (
                 <>
@@ -406,7 +408,7 @@ export function RealAmbassadors() {
                           </tr>
                         </thead>
                         <tbody>
-                          {totals.data.totals.map((r) => (
+                          {totals.data.totals.slice(page * size, (page + 1) * size).map((r) => (
                             <tr key={r.ambassador_id}>
                               <td>
                                 <strong>{r.ambassador_name}</strong>
@@ -461,8 +463,17 @@ export function RealAmbassadors() {
                         />
                       )}
                     </div>
+                    <Pagination page={page} total={totals.data.totals.length} onChange={setPage} label="participantes" size={size} onSizeChange={changeSize} />
                   </Panel>
-                  {totals.data.payments.length > 0 && (
+                </>
+              )}
+                </>
+              )}
+              {campaignTab === 'history' && (
+                <>
+                  <QueryState query={totals} />
+                  {totals.data && (
+                    totals.data.payments.length > 0 ? (
                     <Panel title="Histórico de quitações">
                       <div className="operational-table">
                         <table>
@@ -476,7 +487,7 @@ export function RealAmbassadors() {
                             </tr>
                           </thead>
                           <tbody>
-                            {totals.data.payments.map((p) => (
+                            {totals.data.payments.slice(page * size, (page + 1) * size).map((p) => (
                               <tr key={p.id}>
                                 <td>{p.ambassador_name}</td>
                                 <td>{currency(p.amount_cents)}</td>
@@ -494,10 +505,17 @@ export function RealAmbassadors() {
                           </tbody>
                         </table>
                       </div>
+                      <Pagination page={page} total={totals.data.payments.length} onChange={setPage} label="quitações" size={size} onSizeChange={changeSize} />
                     </Panel>
+                    ) : (
+                      <div className="card panel">
+                        <Empty title="Nenhuma quitação registrada" description="Os pagamentos confirmados das campanhas serão exibidos aqui." />
+                      </div>
+                    )
                   )}
                 </>
               )}
+              {campaignTab === 'referrals' && (
               <Panel
                 title="Indicações da campanha"
                 description="A confirmação de pagamento e comparecimento é registrada manualmente pelo gestor."
@@ -554,11 +572,12 @@ export function RealAmbassadors() {
                                   {current.status === 'active' && (
                                     <Button
                                       variant="outline"
-                                      size="sm"
+                                      size="icon"
                                       disabled={!can('referrals.edit')}
                                       onClick={() => setReferral(r)}
+                                      aria-label="Editar"
                                     >
-                                      Editar
+                                      <Pencil size={16} aria-hidden="true" />
                                     </Button>
                                   )}
                                   <Button
@@ -582,10 +601,12 @@ export function RealAmbassadors() {
                         />
                       )}
                     </div>
-                    <Pager page={page} total={referrals.data.total} onChange={setPage} />
+                    <Pagination page={page} total={referrals.data.total} onChange={setPage} label="indicações" size={size} onSizeChange={changeSize} />
                   </>
                 )}
               </Panel>
+              )}
+
             </>
           )}
           {ambassador && (
@@ -606,6 +627,7 @@ export function RealAmbassadors() {
               onClose={() => setCampaign(null)}
               onSaved={(row) => {
                 setSelected(row.id);
+                setCampaignTab('overview');
                 saved('Campanha salva.');
               }}
             />
@@ -687,7 +709,7 @@ function AmbassadorDialog({
       title={row ? 'Editar embaixador' : 'Novo embaixador'}
       onOpenChange={(v) => !v && !save.busy && onClose()}
     >
-      <form
+      <form className="ambassador-dialog-form"
         onSubmit={(e) => {
           e.preventDefault();
           void save.run(async () => {
@@ -711,7 +733,7 @@ function AmbassadorDialog({
           });
         }}
       >
-        <fieldset className="operational-fields" disabled={save.busy || save.uncertain}>
+        <fieldset className="operational-fields ambassador-dialog-fields" disabled={save.busy || save.uncertain}>
           <RecordPicker
             label="Contato"
             disabled={!!row}
@@ -728,6 +750,7 @@ function AmbassadorDialog({
             onCreate={row ? undefined : setAdding}
             createLabel="Cadastrar novo contato"
           />
+          <div className="ambassador-dialog-pair">
           <label className="form-row">
             Função / categoria
             <Input
@@ -745,6 +768,7 @@ function AmbassadorDialog({
               onChange={(e) => setForm({ ...form, referral_code: e.target.value })}
             />
           </label>
+          </div>
           <label className="form-row">
             Benefícios e observações
             <textarea
@@ -753,6 +777,7 @@ function AmbassadorDialog({
               onChange={(e) => setForm({ ...form, benefits: e.target.value })}
             />
           </label>
+          <div className="ambassador-dialog-options">
           <label className="operational-check">
             <input
               type="checkbox"
@@ -769,6 +794,7 @@ function AmbassadorDialog({
             />
             Embaixador ativo
           </label>
+          </div>
         </fieldset>
         <SaveActions save={save} onClose={onClose} />
       </form>
@@ -812,7 +838,7 @@ function CampaignDialog({
       title={row ? 'Editar campanha' : 'Nova campanha'}
       onOpenChange={(v) => !v && !save.busy && onClose()}
     >
-      <form
+      <form className="ambassador-dialog-form"
         onSubmit={(e) => {
           e.preventDefault();
           void save.run(async () => {
@@ -834,7 +860,7 @@ function CampaignDialog({
           });
         }}
       >
-        <fieldset className="operational-fields" disabled={save.busy || save.uncertain}>
+        <fieldset className="operational-fields ambassador-dialog-fields" disabled={save.busy || save.uncertain}>
           <label className="form-row">
             Nome
             <Input
@@ -844,7 +870,7 @@ function CampaignDialog({
               onChange={(e) => setForm({ ...form, name: e.target.value })}
             />
           </label>
-          <div className="form-grid">
+          <div className="form-grid ambassador-dialog-pair">
             <label className="form-row">
               Início
               <Input
@@ -865,6 +891,7 @@ function CampaignDialog({
               />
             </label>
           </div>
+          <div className="ambassador-dialog-pair">
           <label className="form-row">
             Regra de comissão
             <select
@@ -885,7 +912,8 @@ function CampaignDialog({
               onValueChange={(rate) => setForm({ ...form, rate })}
             />
           </label>
-          <p className="small-note">
+          </div>
+          <p className="small-note ambassador-dialog-help">
             Cada R$ 1.000 completos gera 1 ponto. Os valores elegíveis de cada embaixador são
             somados na campanha. A regra fica congelada no encerramento.
           </p>

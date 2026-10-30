@@ -1,9 +1,11 @@
+import { KeyRound } from 'lucide-react';
 import { PermissionTree } from '../permissions/PermissionTree';
 import { RecordTitle } from '../../components/RecordTitle';
 import { legacyPermissions, type EmployeePermissions } from '../permissions/model';
 import { Input } from '../../components/ui/input';
 import { useState, type FormEvent } from 'react';
-import { Plus, Pencil, UserRound, ShieldCheck } from 'lucide-react';
+import { Pagination, paginatedRows, usePagination } from '../../components/ui/pagination';
+import { Plus, Pencil, UserRound } from 'lucide-react';
 import { useCrm } from '../../app/context';
 import type { Member } from '../../domain/types';
 import { initials, uid } from '../../lib/format';
@@ -12,6 +14,7 @@ import { Button } from '../../components/ui/button';
 import { Modal } from '../../components/ui/modal';
 const initial = { name: '', email: '', role: 'seller' as Member['role'], active: true };
 export function Team() {
+  const pages = usePagination();
   const { data, session, update, notice } = useCrm();
   const [query, setQuery] = useState('');
   const [editing, setEditing] = useState<Member | null | undefined>();
@@ -105,7 +108,7 @@ export function Team() {
       </Heading>
       <div className="card">
         <div className="toolbar">
-          <SearchInput value={query} onChange={setQuery} placeholder="Buscar pessoa da equipe" />
+          <SearchInput value={query} onChange={(v) => { setQuery(v); pages.setPage(0); }} placeholder="Buscar pessoa da equipe" />
           <span className="muted result-count">
             <UserRound size={15} />
             {members.filter((m) => m.active).length} ativos
@@ -122,7 +125,7 @@ export function Team() {
               </tr>
             </thead>
             <tbody>
-              {members.map((m) => (
+              {paginatedRows(members, pages.page, pages.size).map((m) => (
                 <tr key={m.id}>
                   <td>
                     <div className="person-cell">
@@ -149,17 +152,20 @@ export function Team() {
                     <div className="actions">
                       <Button
                         variant="ghost"
-                        size="sm"
+                        size="icon"
                         onClick={() => open(m)}
                         aria-label={'Editar ' + m.name}
                       >
-                        <Pencil size={14} />
-                        Editar
+                        <Pencil size={16} aria-hidden="true" />
                       </Button>
                       {m.role !== 'manager' && (
-                        <Button variant="outline" size="sm" onClick={() => setResetMember(m)}>
-                          <ShieldCheck size={14} />
-                          Redefinir senha
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => setResetMember(m)}
+                          aria-label="Redefinir senha"
+                        >
+                          <KeyRound size={16} aria-hidden="true" />
                         </Button>
                       )}
                     </div>
@@ -169,6 +175,7 @@ export function Team() {
             </tbody>
           </table>
         </div>
+        <Pagination page={pages.page} total={members.length} size={pages.size} onChange={pages.setPage} onSizeChange={pages.setSize} label="integrantes" />
       </div>
       <p className="small-note">
         A desativação preserva os contatos e a autoria dos cadastros. Na demo, as alterações ficam

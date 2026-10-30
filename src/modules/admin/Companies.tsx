@@ -1,3 +1,7 @@
+import { ModalFooter } from '../../components/ui/modal-footer';
+import { Eye } from 'lucide-react';
+import { ViewSwitcher } from '../../components/ui/view-switcher';
+import { Pagination, paginatedRows, usePagination } from '../../components/ui/pagination';
 import { useState, type FormEvent } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Link } from 'react-router-dom';
@@ -57,6 +61,7 @@ export function AdminCompanies({
   onRecheck: () => void;
   onNotice: (message: string) => void;
 }) {
+  const pages = usePagination();
   const [params, setParams] = useSearchParams();
   const [query, setQuery] = useState('');
   const [details, setDetails] = useState<string | null>(null);
@@ -286,7 +291,7 @@ export function AdminCompanies({
       )}
       <div className="card">
         <div className="toolbar">
-          <SearchInput value={query} onChange={setQuery} placeholder="Buscar empresa ou segmento" />
+          <SearchInput value={query} onChange={(v) => { setQuery(v); pages.setPage(0); }} placeholder="Buscar empresa ou segmento" />
           <select
             aria-label="Situação das empresas"
             value={status}
@@ -320,7 +325,7 @@ export function AdminCompanies({
                 </tr>
               </thead>
               <tbody>
-                {rows.map((company) => (
+                {paginatedRows(rows, pages.page, pages.size).map((company) => (
                   <tr key={company.id}>
                     <td>
                       <RecordTitle title={company.name} onOpen={() => openDetails(company.id)} />
@@ -360,12 +365,12 @@ export function AdminCompanies({
                           Plano
                         </Link>
                         <Button
-                          size="sm"
+                          size="icon"
                           variant="ghost"
                           onClick={() => openDetails(company.id)}
                           aria-label={`Ver detalhes de ${company.name}`}
                         >
-                          Detalhes
+                          <Eye size={16} aria-hidden="true" />
                         </Button>
                         {!company.managers.length && (
                           <Button
@@ -394,6 +399,7 @@ export function AdminCompanies({
             }
           />
         )}
+        <Pagination page={pages.page} size={pages.size} total={rows.length} onChange={pages.setPage} onSizeChange={pages.setSize} label="empresas" />
       </div>
 
       <Modal
@@ -507,7 +513,7 @@ export function AdminCompanies({
               Mantenha esta janela aberta e confirme a mesma solicitação para evitar duplicidade.
             </p>
           )}
-          <div className="form-actions">
+          <ModalFooter>
             <Button
               type="button"
               variant="outline"
@@ -527,7 +533,7 @@ export function AdminCompanies({
                       : 'Cadastrar e continuar'}
               </Button>
             )}
-          </div>
+          </ModalFooter>
         </form>
       </Modal>
 
@@ -585,7 +591,7 @@ export function AdminCompanies({
               cadastro.
             </p>
           )}
-          <div className="form-actions">
+          <ModalFooter>
             <Button
               type="button"
               variant="outline"
@@ -603,7 +609,7 @@ export function AdminCompanies({
                     : 'Cadastrar gestor'}
               </Button>
             )}
-          </div>
+          </ModalFooter>
         </form>
       </Modal>
 
@@ -616,22 +622,15 @@ export function AdminCompanies({
       >
         {selected && (
           <>
-            <div className="billing-tabs" role="group" aria-label="Detalhes da empresa">
-              <Button
-                variant={detailsTab === 'company' ? 'outline' : 'ghost'}
-                aria-pressed={detailsTab === 'company'}
-                onClick={() => setDetailsTab('company')}
-              >
-                Dados e usuários
-              </Button>
-              <Button
-                variant={detailsTab === 'billing' ? 'outline' : 'ghost'}
-                aria-pressed={detailsTab === 'billing'}
-                onClick={() => setDetailsTab('billing')}
-              >
-                Cobranças
-              </Button>
-            </div>
+            <ViewSwitcher
+              label="Detalhes da empresa"
+              value={detailsTab}
+              onValueChange={setDetailsTab}
+              items={[
+                { value: 'company', label: 'Dados e usuários' },
+                { value: 'billing', label: 'Cobranças' },
+              ]}
+            />
             {detailsTab === 'billing' ? (
               <>
                 <BillingHistory
@@ -640,13 +639,13 @@ export function AdminCompanies({
                   admin
                   onChanged={onReload}
                 />
-                <div className="form-actions">
+                <ModalFooter>
                   <Button asChild variant="outline">
                     <Link to={`/admin/planos?empresa=${selected.id}&visao=planos`}>
                       Gerenciar plano e cobranças
                     </Link>
                   </Button>
-                </div>
+                </ModalFooter>
               </>
             ) : (
               <>
@@ -688,14 +687,14 @@ export function AdminCompanies({
                   onRecheck={onRecheck}
                   onNotice={onNotice}
                 />
-                <div className="form-actions">
+                <ModalFooter>
                   <Button variant="outline" onClick={() => editCompany(selected)}>
                     Editar empresa
                   </Button>
                   {!selected.managers.length && (
                     <Button onClick={() => openManager(selected)}>Cadastrar gestor</Button>
                   )}
-                </div>
+                </ModalFooter>
               </>
             )}
           </>

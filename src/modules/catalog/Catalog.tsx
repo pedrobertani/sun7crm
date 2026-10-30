@@ -1,4 +1,6 @@
+import { Pencil } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
+import { Pagination, paginatedRows, usePagination } from '../../components/ui/pagination';
 import { RecordTitle } from '../../components/RecordTitle';
 import { useCrm } from '../../app/context';
 import { Heading, FormActions, FormError } from '../../components/shared';
@@ -9,6 +11,7 @@ import { uid, currency } from '../../lib/format';
 import type { CatalogItem, Label } from '../../domain/types';
 
 export function Catalog() {
+  const pages = usePagination();
   const { data, session, update } = useCrm();
   const manager = session.role === 'manager';
   const [editing, setEditing] = useState<CatalogItem | null | undefined>();
@@ -69,7 +72,7 @@ export function Catalog() {
               </tr>
             </thead>
             <tbody>
-              {items.map((i) => (
+              {paginatedRows(items, pages.page, pages.size).map((i) => (
                 <tr key={i.id}>
                   <td>
                     <RecordTitle title={i.name} onOpen={manager ? () => open(i) : undefined} />
@@ -80,8 +83,13 @@ export function Catalog() {
                   <td>{i.active ? 'Ativo' : 'Inativo'}</td>
                   <td>
                     {manager && (
-                      <Button variant="outline" onClick={() => open(i)}>
-                        Editar
+                      <Button
+                        variant="outline"
+                        onClick={() => open(i)}
+                        size="icon"
+                        aria-label="Editar"
+                      >
+                        <Pencil size={16} aria-hidden="true" />
                       </Button>
                     )}
                   </td>
@@ -95,6 +103,7 @@ export function Catalog() {
             </tbody>
           </table>
         </div>
+        <Pagination page={pages.page} total={items.length} size={pages.size} onChange={pages.setPage} onSizeChange={pages.setSize} label="serviços e produtos" />
       </section>
       <Modal
         open={!!editing}
@@ -164,6 +173,7 @@ export function Catalog() {
   );
 }
 export function Labels() {
+  const pages = usePagination();
   const { data, session, update } = useCrm();
   const manager = session.role === 'manager';
   const [editing, setEditing] = useState<Label | null>(null);
@@ -212,24 +222,60 @@ export function Labels() {
         )}
       </Heading>
       <section className="card">
-        <div className="toolbar">
-          {labels.map((l) => (
-            <Button
-              key={l.id}
-              variant="outline"
-              onClick={() => {
-                if (manager) {
-                  setError('');
-                  setEditing(l);
-                }
-              }}
-            >
-              <span style={{ background: l.color, width: 12, height: 12, borderRadius: 6 }} />
-              {l.name}
-            </Button>
-          ))}
-          {!labels.length && <p>Nenhuma etiqueta cadastrada.</p>}
+        <div className="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Etiqueta</th>
+                <th>Cor</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody>
+              {paginatedRows(labels, pages.page, pages.size).map((l) => (
+                <tr key={l.id}>
+                  <td>
+                    <RecordTitle
+                      title={l.name}
+                      onOpen={
+                        manager
+                          ? () => {
+                              setError('');
+                              setEditing(l);
+                            }
+                          : undefined
+                      }
+                    />
+                  </td>
+                  <td>
+                    <span className="label-color" style={{ background: l.color }} /> {l.color}
+                  </td>
+                  <td>
+                    {manager && (
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        aria-label={'Editar ' + l.name}
+                        onClick={() => {
+                          setError('');
+                          setEditing(l);
+                        }}
+                      >
+                        <Pencil size={16} />
+                      </Button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+              {!labels.length && (
+                <tr>
+                  <td colSpan={3}>Nenhuma etiqueta cadastrada.</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
+        <Pagination page={pages.page} total={labels.length} size={pages.size} onChange={pages.setPage} onSizeChange={pages.setSize} label="etiquetas" />
       </section>
       <Modal open={!!editing} onOpenChange={(v) => !v && setEditing(null)} title="Etiqueta">
         {editing && (

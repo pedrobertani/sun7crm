@@ -1,19 +1,14 @@
+import { KanbanSizeControl, visibleKanbanRows, type KanbanPageSize } from '../kanban/page-size';
+import './tasks-layout.css';
+import { TasksSegmented } from './tasks-segmented';
+import { Pagination, paginatedRows, usePagination } from '../../components/ui/pagination';
 import { useCardDrag } from '../../hooks/useCardDrag';
 import { RecordTitle } from '../../components/RecordTitle';
 import type { Task } from '../../domain/types';
 import { useSearchParams } from 'react-router-dom';
 import { Input } from '../../components/ui/input';
 import { useState, type FormEvent } from 'react';
-import {
-  Plus,
-  CalendarDays,
-  Check,
-  Circle,
-  List,
-  KanbanSquare,
-  GripVertical,
-  UserRound,
-} from 'lucide-react';
+import { Pencil, Plus, CalendarDays, Check, Circle, GripVertical, UserRound, List, KanbanSquare } from 'lucide-react';
 import { useCrm } from '../../app/context';
 import { visibleContacts } from '../../domain/operations';
 import {
@@ -28,6 +23,10 @@ import { Heading, SearchInput, Empty, FormActions, FormError } from '../../compo
 import { Button } from '../../components/ui/button';
 import { Modal } from '../../components/ui/modal';
 export function Tasks() {
+  const pages = usePagination();
+  const [boardSize, setBoardSize] = useState<KanbanPageSize>(10);
+  const [boardPages, setBoardPages] = useState<Record<string, number>>({});
+  const changeBoardSize = (size: KanbanPageSize) => { setBoardSize(size); setBoardPages({}); };
   const { data, session, update, notice } = useCrm();
   const [params, setParams] = useSearchParams();
   const view = params.get('visualizacao') === 'lista' ? 'lista' : 'quadro';
@@ -38,6 +37,8 @@ export function Tasks() {
     const next = new URLSearchParams(params);
     next.set(key, value);
     setParams(next);
+    setBoardPages({});
+    pages.setPage(0);
   }
   const [query, setQuery] = useState('');
   const [open, setOpen] = useState(false);
@@ -130,45 +131,31 @@ export function Tasks() {
         </Button>
       </Heading>
       <div className="tasks-view-toolbar">
-        <div className="segmented" aria-label="Visualização das tarefas">
-          <button
-            className={view === 'quadro' ? 'active' : ''}
-            aria-pressed={view === 'quadro'}
-            onClick={() => changeParam('visualizacao', 'quadro')}
-          >
-            <KanbanSquare size={15} />
-            Quadro Kanban
-          </button>
-          <button
-            className={view === 'lista' ? 'active' : ''}
-            aria-pressed={view === 'lista'}
-            onClick={() => changeParam('visualizacao', 'lista')}
-          >
-            <List size={15} />
-            Lista
-          </button>
-        </div>
+        <TasksSegmented
+          label="Visualização das tarefas"
+          value={view}
+          onValueChange={(value) => changeParam('visualizacao', value)}
+          items={[
+            { value: 'quadro', label: 'Quadro Kanban', icon: <KanbanSquare size={15} /> },
+            { value: 'lista', label: 'Lista', icon: <List size={15} /> },
+          ]}
+        />
         <span className="muted result-count">{tasks.length} tarefas</span>
       </div>
       <div className={view === 'lista' ? 'card' : 'tasks-board-area'}>
-        <div className={'toolbar ' + (view === 'quadro' ? 'tasks-filterbar' : '')}>
-          <div className="segmented">
-            {[
-              ['all', 'Todas'],
-              ['pending', 'Pendentes'],
-              ['overdue', 'Atrasadas'],
-              ['done', 'Concluídas'],
-            ].map(([value, label]) => (
-              <button
-                key={value}
-                className={filter === value ? 'active' : ''}
-                onClick={() => changeParam('status', value)}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-          <SearchInput value={query} onChange={setQuery} placeholder="Buscar tarefa" />
+        <div className={'toolbar ' + (view === 'quadro' ? 'tasks-filterbar' : 'tasks-list-filterbar')}>
+          <TasksSegmented
+            label="Situação das tarefas"
+            value={filter}
+            onValueChange={(value) => changeParam('status', value)}
+            items={[
+              { value: 'all', label: 'Todas' },
+              { value: 'pending', label: 'Pendentes' },
+              { value: 'overdue', label: 'Atrasadas' },
+              { value: 'done', label: 'Concluídas' },
+            ]}
+          />
+          <SearchInput value={query} onChange={(v) => { setQuery(v); pages.setPage(0); setBoardPages({}); }} placeholder="Buscar tarefa" />
         </div>
         {view === 'quadro' ? (
           <>
@@ -176,6 +163,7 @@ export function Tasks() {
               <div className="tasks-kanban">
                 {TASK_STAGES.map((stage) => {
                   const rows = tasks.filter((t) => taskStatus(t) === stage.id);
+                  const visible = visibleKanbanRows(rows, boardSize, boardPages[stage.id] || 0);
                   return (
                     <section
                       key={stage.id}
@@ -191,7 +179,7 @@ export function Tasks() {
                         </div>
                       </div>
                       <div className="column-body">
-                        {rows.map((t) => {
+                        {visible.rows.map((t) => {
                           const owner = members.find((m) => m.id === t.ownerId);
                           const contact = data.contacts.find((c) => c.id === t.contactId);
                           return (
@@ -281,10 +269,23 @@ export function Tasks() {
                           Adicionar tarefa
                         </Button>
                       </div>
+                      {boardSize !== 'all' && rows.length > boardSize && (
+                        <div className="kanban-column-pagination">
+                          <Pagination
+                            page={visible.page} size={boardSize} total={rows.length}
+                            onChange={(next) => setBoardPages((previous) => ({ ...previous, [stage.id]: next }))}
+                            label={'tarefas de ' + stage.label}
+                          />
+                        </div>
+                      )}
                     </section>
                   );
                 })}
               </div>
+            </div>
+            <div className="tasks-board-footer">
+              <KanbanSizeControl size={boardSize} onChange={changeBoardSize} />
+              <span className="muted">{tasks.length} tarefas</span>
             </div>
             <p className="small-note">
               Arraste as tarefas entre as etapas ou use o seletor de cada cartão. As visualizações
@@ -292,38 +293,62 @@ export function Tasks() {
             </p>
           </>
         ) : tasks.length ? (
-          <div className="task-list">
-            {tasks.map((t) => (
-              <div className={'task-row ' + (t.done ? 'done' : '')} key={t.id}>
-                <button
-                  className={'check-button ' + (t.done ? 'checked' : '')}
-                  aria-label={(t.done ? 'Reabrir ' : 'Concluir ') + t.title}
-                  onClick={() => move(t.id, t.done ? 'todo' : 'done')}
-                >
-                  {t.done ? <Check size={16} /> : <Circle size={19} />}
-                </button>
-                <div className="task-content">
-                  <RecordTitle title={t.title} onOpen={() => openTask(t)} />
-                  <small>
-                    {data.contacts.find((c) => c.id === t.contactId)?.name ||
-                      'Sem contato vinculado'}{' '}
-                    <span>·</span>{' '}
-                    {members.find((m) => m.id === t.ownerId)?.name || 'Sem responsável'}
-                  </small>
-                </div>
-                <span
-                  className={
-                    'badge ' + (t.done ? 'good' : taskStatus(t) === 'in_progress' ? 'warn' : 'gray')
-                  }
-                >
-                  {TASK_STAGES.find((s) => s.id === taskStatus(t))?.label}
-                </span>
-                <span className={'task-date ' + (!t.done && t.dueDate < today() ? 'overdue' : '')}>
-                  <CalendarDays size={14} />
-                  {t.dueDate === today() ? 'Hoje' : dateLabel(t.dueDate)}
-                </span>
-              </div>
-            ))}
+          <div className="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Tarefa</th>
+                  <th>Responsável</th>
+                  <th>Prazo</th>
+                  <th>Situação</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody>
+                {paginatedRows(tasks, pages.page, pages.size).map((t) => (
+                  <tr key={t.id}>
+                    <td>
+                      <RecordTitle title={t.title} onOpen={() => openTask(t)} />
+                      <small>
+                        {data.contacts.find((c) => c.id === t.contactId)?.name || 'Sem contato'}
+                      </small>
+                    </td>
+                    <td>{members.find((m) => m.id === t.ownerId)?.name || 'Sem responsável'}</td>
+                    <td>{t.dueDate === today() ? 'Hoje' : dateLabel(t.dueDate)}</td>
+                    <td>
+                      <span
+                        className={
+                          'badge ' +
+                          (t.done ? 'good' : taskStatus(t) === 'in_progress' ? 'warn' : 'gray')
+                        }
+                      >
+                        {TASK_STAGES.find((s) => s.id === taskStatus(t))?.label}
+                      </span>
+                    </td>
+                    <td>
+                      <div className="actions">
+                        <Button
+                          size="icon"
+                          variant="outline"
+                          aria-label={(t.done ? 'Reabrir ' : 'Concluir ') + t.title}
+                          onClick={() => move(t.id, t.done ? 'todo' : 'done')}
+                        >
+                          {t.done ? <Circle size={16} /> : <Check size={16} />}
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="outline"
+                          aria-label={'Editar ' + t.title}
+                          onClick={() => openTask(t)}
+                        >
+                          <Pencil size={16} />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         ) : (
           <Empty
@@ -331,13 +356,9 @@ export function Tasks() {
             description="Nenhuma tarefa para os filtros selecionados."
           />
         )}
+        {view === 'lista' && <Pagination page={pages.page} total={tasks.length} size={pages.size} onChange={pages.setPage} onSizeChange={pages.setSize} label="tarefas" />}
       </div>
-      <Modal
-        open={open}
-        onOpenChange={setOpen}
-        title={editingId ? 'Editar tarefa' : 'Nova tarefa'}
-        description="Cadastro manual. Cadências automáticas serão definidas em outra etapa."
-      >
+      <Modal open={open} onOpenChange={setOpen} title={editingId ? 'Editar tarefa' : 'Nova tarefa'}>
         <form onSubmit={save}>
           <div className="form-grid">
             <label className="form-row span2">

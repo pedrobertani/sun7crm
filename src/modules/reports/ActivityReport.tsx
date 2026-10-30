@@ -8,6 +8,8 @@ import { DemoContactHistory } from '../contacts/ContactHistory';
 import { recordWhatsappOpen } from '../../domain/contact-history';
 import { WhatsAppButton } from '../../components/WhatsAppButton';
 import { Button } from '../../components/ui/button';
+import { ViewSwitcher } from '../../components/ui/view-switcher';
+import { Pagination, paginatedRows, usePagination } from '../../components/ui/pagination';
 import { Heading, SearchInput } from '../../components/shared';
 import { demoActivityReport, idleDays, type ActivityRow, type ActorActivity } from './activity';
 export function activityDate(value: string | null) {
@@ -33,6 +35,9 @@ export function ActivityReportView({
   onWhatsapp: (row: ActivityRow) => void;
   canWhatsapp?: boolean;
 }) {
+  const [tab, setTab] = useState<'contacts' | 'team'>('contacts');
+  const list = usePagination();
+  const teamList = usePagination();
   const [query, setQuery] = useState(''),
     [owner, setOwner] = useState(''),
     [days, setDays] = useState('7');
@@ -53,20 +58,30 @@ export function ActivityReportView({
           <strong>{rows.length}</strong>
         </div>
         <div className="card">
-          <span>Sem atividade há 7 dias ou mais</span>
+          <span>Sem atividade há 7+ dias</span>
           <strong>{rows.filter((r) => idleDays(r) >= 7).length}</strong>
         </div>
         <div className="card">
-          <span>WhatsApp acionado · últimos 30 dias</span>
+          <span>WhatsApp · últimos 30 dias</span>
           <strong>{actors.reduce((n, a) => n + a.whatsappCount, 0)}</strong>
         </div>
       </div>
-      <section className="card">
+      <ViewSwitcher
+        label="Seções dos relatórios"
+        value={tab}
+        onValueChange={setTab}
+        items={[{ value: 'contacts', label: 'Carteira de clientes' }, { value: 'team', label: 'Atividade da equipe' }]}
+      />
+      {tab === 'contacts' && (
+      <section className="card report-table-section">
         <div className="toolbar activity-toolbar">
-          <SearchInput value={query} onChange={setQuery} placeholder="Buscar cliente ou telefone" />
+          <div className="report-search-field">
+            <span className="report-filter-caption">Buscar</span>
+            <SearchInput value={query} onChange={(v) => { setQuery(v); list.setPage(0); }} placeholder="Buscar cliente ou telefone" />
+          </div>
           <label>
             Responsável
-            <select value={owner} onChange={(e) => setOwner(e.target.value)}>
+            <select value={owner} onChange={(e) => { setOwner(e.target.value); list.setPage(0); }}>
               <option value="">Toda a equipe</option>
               {owners.map(([id, name]) => (
                 <option key={id} value={id}>
@@ -77,7 +92,7 @@ export function ActivityReportView({
           </label>
           <label>
             Sem atividade há
-            <select value={days} onChange={(e) => setDays(e.target.value)}>
+            <select value={days} onChange={(e) => { setDays(e.target.value); list.setPage(0); }}>
               <option value="">Todos os clientes</option>
               {[3, 7, 15, 30].map((d) => (
                 <option key={d} value={d}>
@@ -89,25 +104,23 @@ export function ActivityReportView({
         </div>
         <div className="activity-description">
           <strong>{shown.length} clientes encontrados</strong>
-          <p>
-            Tempo desde o último registro no CRM ou, se não houver registros, desde o cadastro. Os
-            contadores por cliente mostram todo o histórico disponível.
-          </p>
         </div>
         <div className="table-wrap">
-          <table>
+          <table className="activity-table">
             <thead>
               <tr>
-                <th>Cliente / responsável atual</th>
+                <th>Cliente / responsável</th>
                 <th>Última atividade</th>
-                <th>Tempo sem atividade</th>
-                <th>Último WhatsApp acionado</th>
-                <th>Registros</th>
+                <th>Sem atividade</th>
+                <th>Último WhatsApp</th>
+                <th className="numeric">WhatsApp</th>
+                <th className="numeric">Movimentos</th>
+                <th className="numeric">Notas</th>
                 <th>Ações</th>
               </tr>
             </thead>
             <tbody>
-              {shown.map((r) => (
+              {paginatedRows(shown, list.page, list.size).map((r) => (
                 <tr key={r.contactId}>
                   <td>
                     <RecordTitle
@@ -131,12 +144,9 @@ export function ActivityReportView({
                     </span>
                   </td>
                   <td>{activityDate(r.lastWhatsappAt)}</td>
-                  <td>
-                    <small className="growth-note">
-                      {r.whatsappCount} WhatsApp · {r.movementCount} movimentos · {r.noteCount}{' '}
-                      anotações
-                    </small>
-                  </td>
+                  <td className="numeric">{r.whatsappCount}</td>
+                  <td className="numeric">{r.movementCount}</td>
+                  <td className="numeric">{r.noteCount}</td>
                   <td>
                     <div className="actions">
                       <WhatsAppButton
@@ -146,9 +156,13 @@ export function ActivityReportView({
                         compact
                         onOpen={() => onWhatsapp(r)}
                       />
-                      <Button size="sm" variant="outline" onClick={() => onHistory(r)}>
-                        <History size={15} />
-                        Histórico
+                      <Button
+                        size="icon"
+                        variant="outline"
+                        onClick={() => onHistory(r)}
+                        aria-label="Histórico"
+                      >
+                        <History size={16} aria-hidden="true" />
                       </Button>
                     </div>
                   </td>
@@ -156,7 +170,7 @@ export function ActivityReportView({
               ))}
               {!shown.length && (
                 <tr>
-                  <td colSpan={6} className="growth-empty">
+                  <td colSpan={8} className="growth-empty">
                     Nenhum cliente neste filtro. Ajuste o responsável ou o tempo sem atividade.
                   </td>
                 </tr>
@@ -164,8 +178,11 @@ export function ActivityReportView({
             </tbody>
           </table>
         </div>
+        <Pagination page={list.page} size={list.size} total={shown.length} onChange={list.setPage} onSizeChange={list.setSize} label="clientes" />
       </section>
-      <section className="card growth-section">
+      )}
+      {tab === 'team' && (
+      <section className="card growth-section report-table-section">
         <div className="toolbar">
           <div>
             <h2>Atuação registrada por colaborador</h2>
@@ -186,7 +203,7 @@ export function ActivityReportView({
               </tr>
             </thead>
             <tbody>
-              {actors.map((a) => (
+              {paginatedRows(actors, teamList.page, teamList.size).map((a) => (
                 <tr key={a.id}>
                   <td>{a.name}</td>
                   <td>{a.contactsCount}</td>
@@ -207,11 +224,18 @@ export function ActivityReportView({
             </tbody>
           </table>
         </div>
+        <Pagination page={teamList.page} size={teamList.size} total={actors.length} onChange={teamList.setPage} onSizeChange={teamList.setSize} label="colaboradores" />
       </section>
-      <p className="small-note">
-        O relatório mede registros no CRM. Acionar o WhatsApp não confirma envio, resposta ou
-        atendimento. Atividades anteriores sem registro não são estimadas.
-      </p>
+      )}
+      <details className="report-help">
+        <summary>Como os dados são contados</summary>
+        <p className="small-note">
+          O relatório mede registros no CRM. Acionar o WhatsApp não confirma envio, resposta ou
+          atendimento. Atividades anteriores sem registro não são estimadas. O tempo sem atividade
+          parte do último registro ou do cadastro. Os contadores por cliente incluem todo o
+          histórico disponível.
+        </p>
+      </details>
     </>
   );
 }

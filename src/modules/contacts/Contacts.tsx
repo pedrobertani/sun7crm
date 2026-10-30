@@ -1,3 +1,4 @@
+import { Eye } from 'lucide-react';
 import { recordWhatsappOpen } from '../../domain/contact-history';
 import { WhatsAppButton } from '../../components/WhatsAppButton';
 import { DemoContactHistory } from './ContactHistory';
@@ -10,8 +11,9 @@ import { readPeriod, inPeriod } from '../../domain/filters';
 import { dateLabel } from '../../lib/format';
 import { Input } from '../../components/ui/input';
 import { useState, type FormEvent } from 'react';
+import { Pagination, paginatedRows, usePagination } from '../../components/ui/pagination';
 import { RecordTitle } from '../../components/RecordTitle';
-import { Plus, Pencil, ArrowUpRight, Users } from 'lucide-react';
+import { Plus, Pencil, Users } from 'lucide-react';
 import { useCrm } from '../../app/context';
 import type { Contact, Temperature } from '../../domain/types';
 import { temperatureLabels } from '../../domain/config';
@@ -39,6 +41,7 @@ const blank = {
   notes: '',
 };
 export function Contacts() {
+  const pages = usePagination();
   const { data, session, update, notice } = useCrm();
   const [query, setQuery] = useState('');
   const [historyId, setHistoryId] = useState('');
@@ -178,7 +181,7 @@ export function Contacts() {
         <div className="toolbar">
           <SearchInput
             value={query}
-            onChange={setQuery}
+            onChange={(v) => { setQuery(v); pages.setPage(0); }}
             placeholder="Buscar nome, telefone ou interesse"
           />
           <select
@@ -211,7 +214,7 @@ export function Contacts() {
                 </tr>
               </thead>
               <tbody>
-                {contacts.map((c) => (
+                {paginatedRows(contacts, pages.page, pages.size).map((c) => (
                   <tr key={c.id}>
                     <td>
                       <div className="person-cell">
@@ -237,27 +240,29 @@ export function Contacts() {
                         />
                         <Button
                           variant="outline"
-                          size="sm"
+                          size="icon"
                           aria-label={'Histórico de ' + c.name}
                           onClick={() => setHistoryId(c.id)}
                         >
-                          <History size={15} />
-                          Histórico
+                          <History size={16} aria-hidden="true" />
                         </Button>
                         {canEdit ? (
                           <Button
                             variant="ghost"
-                            size="sm"
+                            size="icon"
                             onClick={() => open(c)}
                             aria-label={'Editar ' + c.name}
                           >
-                            <Pencil size={14} />
-                            Editar
+                            <Pencil size={16} aria-hidden="true" />
                           </Button>
                         ) : (
-                          <Button variant="ghost" size="sm" onClick={() => open(c)}>
-                            <ArrowUpRight size={14} />
-                            Ver
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => open(c)}
+                            aria-label="Ver"
+                          >
+                            <Eye size={16} aria-hidden="true" />
                           </Button>
                         )}
                       </div>
@@ -273,6 +278,7 @@ export function Contacts() {
             description="Ajuste os filtros ou cadastre o primeiro contato."
           />
         )}
+        <Pagination page={pages.page} total={contacts.length} size={pages.size} onChange={pages.setPage} onSizeChange={pages.setSize} label="contatos" />
       </div>
       {historyId && <DemoContactHistory contactId={historyId} onClose={() => setHistoryId('')} />}
       <Modal

@@ -1,4 +1,6 @@
+import { Pencil, Eye } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
+import { Pagination, paginatedRows, usePagination } from '../../components/ui/pagination';
 import { RecordTitle } from '../../components/RecordTitle';
 import { useCrm } from '../../app/context';
 import type { Strategy } from '../../domain/types';
@@ -20,6 +22,7 @@ const channels = [
   'Outra',
 ];
 export function Strategies() {
+  const pages = usePagination();
   const { data, session, update, notice } = useCrm();
   const [month, setMonth] = useState(today().slice(0, 7));
   const [query, setQuery] = useState('');
@@ -106,7 +109,7 @@ export function Strategies() {
       >
         {canEdit && <Button onClick={() => open(null)}>Nova estratégia</Button>}
       </Heading>
-      <div className="growth-summary">
+      <div className="growth-summary strategy-summary">
         <div className="card">
           <span>Ações no mês</span>
           <strong>{all.length}</strong>
@@ -122,10 +125,10 @@ export function Strategies() {
       </div>
       <section className="card">
         <div className="toolbar">
-          <SearchInput value={query} onChange={setQuery} placeholder="Buscar estratégia" />
+          <SearchInput value={query} onChange={(v) => { setQuery(v); pages.setPage(0); }} placeholder="Buscar estratégia" />
           <label className="growth-filter">
             Mês
-            <Input type="month" value={month} onChange={(e) => setMonth(e.target.value)} />
+            <Input type="month" value={month} onChange={(e) => { setMonth(e.target.value); pages.setPage(0); }} />
           </label>
         </div>
         <div className="table-wrap">
@@ -141,11 +144,10 @@ export function Strategies() {
               </tr>
             </thead>
             <tbody>
-              {rows.map((s) => (
+              {paginatedRows(rows, pages.page, pages.size).map((s) => (
                 <tr key={s.id}>
                   <td>
                     <RecordTitle title={s.name} onOpen={() => open(s)} />
-                    <small className="growth-note">{s.notes || 'Sem observações'}</small>
                   </td>
                   <td>{s.channel}</td>
                   <td>{members.find((m) => m.id === s.ownerId)?.name || 'Não atribuído'}</td>
@@ -156,8 +158,13 @@ export function Strategies() {
                     </span>
                   </td>
                   <td>
-                    <Button size="sm" variant="outline" onClick={() => open(s)}>
-                      {canEdit ? 'Editar' : 'Detalhes'}
+                    <Button
+                      size="icon"
+                      variant="outline"
+                      aria-label={(canEdit ? 'Editar ' : 'Detalhes de ') + s.name}
+                      onClick={() => open(s)}
+                    >
+                      {canEdit ? <Pencil size={16} /> : <Eye size={16} />}
                     </Button>
                   </td>
                 </tr>
@@ -172,6 +179,7 @@ export function Strategies() {
             </tbody>
           </table>
         </div>
+        <Pagination page={pages.page} size={pages.size} total={rows.length} onChange={pages.setPage} onSizeChange={pages.setSize} label="estratégias" />
       </section>
       <p className="small-note">
         Planejamento demonstrativo: não publica anúncios nem envia mensagens.{' '}

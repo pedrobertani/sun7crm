@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { Button } from '../../components/ui/button';
 import { Modal } from '../../components/ui/modal';
 import { FormError } from '../../components/shared';
+import { Pagination, paginatedRows, usePagination } from '../../components/ui/pagination';
+import { ModalFooter } from '../../components/ui/modal-footer';
 import {
   formatContactPhone,
   previewContacts,
@@ -34,6 +36,7 @@ export function ContactTransfer({
   demo?: boolean;
 }) {
   const [mode, setMode] = useState<'import' | 'export' | null>(null);
+  const previewPages = usePagination();
   const [rows, setRows] = useState<ImportRow[]>([]),
     [error, setError] = useState(''),
     [busy, setBusy] = useState(false),
@@ -54,6 +57,7 @@ export function ContactTransfer({
   function open(next: 'import' | 'export') {
     setDownload(null);
     setRows([]);
+    previewPages.setPage(0);
     setError('');
     setMessage('');
     setMode(next);
@@ -73,6 +77,7 @@ export function ContactTransfer({
     }
   }
   async function choose(file: File) {
+    previewPages.setPage(0);
     setRows([]);
     setMessage('');
     await run(async () => {
@@ -123,15 +128,16 @@ export function ContactTransfer({
       >
         {mode === 'import' ? (
           <>
-            <p>
-              Use a primeira aba de um arquivo .xlsx com os títulos <strong>Nome</strong> e{' '}
-              <strong>Contato</strong>. Até 1.000 linhas e 2 MB.
+            <p className="small-note contact-transfer-instructions">
+              Arquivo .xlsx · colunas <strong>Nome</strong> e <strong>Contato</strong> · até 1.000 linhas e 2 MB.
             </p>
-            <p>
-              Telefone opcional. Se preenchido, informe o DDD, com ou sem máscara e com +55
-              opcional. Exemplo: (14) 99673-2848. Duplicados serão ignorados, sem substituir
-              cadastros. Sem telefone, a comparação usa o nome.
-            </p>
+            <details className="contact-transfer-help">
+              <summary>Formato e regras de importação</summary>
+              <p className="small-note">
+                Telefone opcional; quando informado, deve conter DDD (com ou sem máscara, +55 opcional).
+                Contatos duplicados são ignorados, nunca substituídos. Sem telefone, a comparação é pelo nome.
+              </p>
+            </details>
             <Button
               variant="ghost"
               disabled={busy}
@@ -174,7 +180,7 @@ export function ContactTransfer({
                       </tr>
                     </thead>
                     <tbody>
-                      {rows.map((r) => (
+                      {paginatedRows(rows, previewPages.page, previewPages.size).map((r) => (
                         <tr key={r.line}>
                           <td>{r.line}</td>
                           <td>{r.name || 'Sem nome'}</td>
@@ -185,20 +191,27 @@ export function ContactTransfer({
                     </tbody>
                   </table>
                 </div>
+                <Pagination
+                  page={previewPages.page}
+                  size={previewPages.size}
+                  total={rows.length}
+                  onChange={previewPages.setPage}
+                  onSizeChange={previewPages.setSize}
+                  label="linhas da importação"
+                />
                 <p className="small-note">
-                  Somente as linhas válidas serão importadas. Corrija as demais no arquivo e importe
-                  novamente, se necessário.
+                  Apenas linhas válidas serão importadas; corrija as demais no arquivo.
                 </p>
               </>
             )}
-            <div className="form-actions">
+            <ModalFooter>
               <Button variant="outline" disabled={busy} onClick={() => setMode(null)}>
                 Fechar
               </Button>
               <Button disabled={busy || !valid.length} onClick={() => void confirm()}>
                 Importar {valid.length} contato(s) válido(s)
               </Button>
-            </div>
+            </ModalFooter>
           </>
         ) : (
           <>
@@ -244,13 +257,13 @@ export function ContactTransfer({
           </>
         )}
         {download && (
-          <div className="form-actions">
+          <ModalFooter>
             <Button asChild>
               <a href={download.url} download={download.filename}>
                 Baixar Excel
               </a>
             </Button>
-          </div>
+          </ModalFooter>
         )}
         {busy && <p role="status">Processando Excel...</p>}
         {message && <p role="status">{message}</p>}

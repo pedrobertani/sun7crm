@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
 import {
   LayoutDashboard,
-  KanbanSquare,
+  Filter as Funnel,
   Users,
   ListTodo,
   Settings,
@@ -29,7 +29,7 @@ import { initials } from '../lib/format';
 import { Button } from '../components/ui/button';
 const businessLinks = [
   { to: '/demo/painel', label: 'Dashboard', icon: LayoutDashboard, group: 'Dia a dia' },
-  { to: '/demo/funil/leads', label: 'Funil', icon: KanbanSquare, group: 'Dia a dia' },
+  { to: '/demo/funil/leads', label: 'Funil', icon: Funnel, group: 'Dia a dia' },
   { to: '/demo/contatos', label: 'Contatos', icon: Users, group: 'Dia a dia' },
   { to: '/demo/tarefas', label: 'Tarefas', icon: ListTodo, group: 'Dia a dia' },
   { to: '/demo/estrategias', label: 'Estratégias', icon: Megaphone, group: 'Crescimento' },

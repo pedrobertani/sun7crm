@@ -53,10 +53,22 @@
   align-items: center;
 }
 .growth-rule {
-  margin: 0 0 20px;
-  padding: 16px 20px;
-  line-height: 1.7;
+  margin: 0 0 12px;
+  padding: 8px 0 12px;
+  border: 0;
+  border-bottom: 1px solid var(--line);
+  background: transparent;
+  line-height: 1.55;
 }
+.growth-rule summary {
+  width: fit-content;
+  color: var(--muted);
+  font-size: 12px;
+  cursor: pointer;
+}
+.growth-rule summary:hover { color: var(--primary); }
+.growth-rule summary:focus-visible { outline: 2px solid var(--primary); outline-offset: 3px; }
+.growth-rule p { margin: 8px 0 0; font-size: 12px; color: var(--muted); max-width: 780px; }
 .growth-rule a {
   color: var(--primary);
   text-decoration: underline;
@@ -189,4 +201,126 @@
   .activity-toolbar > label:not(.search) {
     width: 100%;
   }
+}
+
+/* Activity report: equal-width label rows, compact controls, one panel not nested cards. */
+.report-table-section { margin-top: 14px; padding: 16px 18px; }
+.report-table-section .activity-toolbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) repeat(2, minmax(180px, 265px));
+  align-items: end;
+  column-gap: 14px;
+  row-gap: 12px;
+  margin: 0;
+  padding: 0 0 12px;
+  border: 0;
+}
+.report-table-section .activity-toolbar > .report-search-field,
+.report-table-section .activity-toolbar > label:not(.search) {
+  display: grid;
+  grid-template-rows: 18px 42px;
+  align-content: end;
+  gap: 6px;
+  min-width: 0;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+.report-table-section .report-filter-caption,
+.report-table-section .activity-toolbar > label:not(.search) {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 18px;
+}
+.report-table-section .activity-toolbar .search {
+  display: flex;
+  width: 100%;
+  height: 42px;
+  max-width: none;
+  flex: none;
+  min-width: 0;
+  margin: 0;
+}
+.report-table-section .activity-toolbar .search input,
+.report-table-section .activity-toolbar > label:not(.search) select {
+  display: block;
+  width: 100%;
+  height: 42px;
+  min-height: 42px;
+  max-width: none;
+  margin: 0;
+  padding-block: 8px;
+  font-size: 13px;
+}
+.report-table-section .activity-description {
+  padding: 4px 0 12px;
+  margin: 0;
+  border-top: 0;
+}
+.report-table-section .table-wrap {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+.report-table-section .activity-table {
+  width: 100%;
+  min-width: 980px;
+  table-layout: fixed;
+}
+.report-table-section .activity-table th {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  letter-spacing: 0.025em;
+  line-height: 1.3;
+  padding-inline: 10px;
+  font-size: 11px;
+}
+.report-table-section .activity-table td { padding-inline: 10px; overflow-wrap: anywhere; }
+.report-table-section .activity-table th:nth-child(1) { width: 20%; }
+.report-table-section .activity-table th:nth-child(2) { width: 16%; }
+.report-table-section .activity-table th:nth-child(3) { width: 12%; }
+.report-table-section .activity-table th:nth-child(4) { width: 15%; }
+.report-table-section .activity-table th:nth-child(5) { width: 9%; }
+.report-table-section .activity-table th:nth-child(6) { width: 9%; }
+.report-table-section .activity-table th:nth-child(7) { width: 6%; }
+.report-table-section .activity-table th:nth-child(8) { width: 13%; }
+.report-table-section .activity-table td:last-child .actions { flex-wrap: nowrap; }
+.report-table-section .toolbar:has(h2) { padding: 0 0 14px; }
+.report-table-section .toolbar h2 { margin-bottom: 6px; }
+.growth-rule + .campaign-panel { margin-top: 0; }
+.campaign-panel + .ui-tabs-list { margin-top: 18px; }
+.campaign-panel + .ui-tabs-list + .campaign-panel,
+.campaign-panel + .ui-tabs-list + .growth-section { margin-top: 18px; }
+@media (max-width: 900px) {
+  .report-table-section .activity-toolbar { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .report-table-section .report-search-field { grid-column: 1 / -1; }
+}
+@media (max-width: 600px) {
+  .report-table-section { padding: 14px; }
+  .report-table-section .activity-toolbar { grid-template-columns: minmax(0, 1fr); }
+  .report-table-section .report-search-field { grid-column: auto; }
+}
+
+/* Strategy KPIs are a compact summary, not three independent content panels. */
+.strategy-summary { gap: 10px; margin-bottom: 14px; }
+.strategy-summary > .card { padding: 12px 16px; gap: 4px; }
+.strategy-summary strong { font-size: 21px; }
+@media (max-width: 700px) {
+  .strategy-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .strategy-summary > .card { flex-direction: column; align-items: flex-start; gap: 4px; }
+  .strategy-summary > .card:last-child { grid-column: 1 / -1; }
+}
+
+/* Demo forms use the same compact field rhythm as the authenticated workspace. */
+.ambassador-dialog-form { display: grid; gap: 12px; }
+.ambassador-dialog-form > .form-row,
+.ambassador-dialog-form .ambassador-demo-fields > .form-row { margin: 0; min-width: 0; }
+.ambassador-demo-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.ambassador-dialog-form .check-row { margin: 0; }
+.ambassador-dialog-form .form-actions { margin-top: 4px; padding-top: 12px; }
+@media (max-width: 600px) {
+  .ambassador-demo-fields { grid-template-columns: minmax(0, 1fr); }
 }

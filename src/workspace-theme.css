@@ -85,11 +85,11 @@ body .themed-workspace[data-theme] .page {
   max-width: 1440px;
   padding: 28px 32px 44px;
 }
-body .themed-workspace[data-theme] :is(.btn, .icon-button, .notification-bell) {
-  min-height: 44px;
+body .themed-workspace[data-theme] :is(.icon-button, .notification-bell) {
+  min-height: var(--control-compact);
 }
 body .themed-workspace[data-theme] .icon-button {
-  min-width: 44px;
+  min-width: var(--control-compact);
 }
 body .themed-workspace[data-theme] .brand strong {
   font-size: 18px;
@@ -171,4 +171,22 @@ body .themed-workspace[data-theme] .brand strong {
   body .themed-workspace[data-theme] .page {
     padding: 18px 16px 30px;
   }
+}
+
+/* The workspace shell must not override the compact dashboard's narrower width. */
+@media (min-width: 901px) {
+  body .themed-workspace[data-theme] .page:has(.dashboard-tabs) {
+    max-width: 1120px;
+  }
+}
+
+/* SDD: authenticated dashboard should begin near the topbar, not below an empty band. */
+body .themed-workspace[data-theme] .page:has(.dashboard-tabs) {
+  padding-top: 14px;
+}
+body .themed-workspace[data-theme] .page:has(.dashboard-tabs) > .heading {
+  margin-bottom: 12px;
+}
+@media (max-width: 900px) {
+  body .themed-workspace[data-theme] .page:has(.dashboard-tabs) { padding-top: 12px; }
 }

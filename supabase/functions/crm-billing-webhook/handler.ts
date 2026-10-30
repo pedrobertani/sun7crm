@@ -7,7 +7,11 @@ import { recordVerifiedOrder } from '../_shared/billing-orders.ts';
 
 export function billingWebhook(backend: Backend, provider: MercadoPago) {
   return async (request: Request): Promise<Response> => {
-    const headers = { 'Cache-Control': 'no-store' };
+    const headers = {
+      'Cache-Control': 'no-store',
+      'X-Content-Type-Options': 'nosniff',
+      'Referrer-Policy': 'no-referrer',
+    };
     try {
       if (request.method !== 'POST')
         return new Response(null, { status: 405, headers: { ...headers, Allow: 'POST' } });

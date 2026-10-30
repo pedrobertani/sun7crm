@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Plus, Pencil, History } from 'lucide-react';
+import { Plus, Pencil, History, KanbanSquare } from 'lucide-react';
 import { Button } from '../../components/ui/button';
+import { usePagination } from '../../components/ui/pagination';
 import { Input } from '../../components/ui/input';
 import { Modal } from '../../components/ui/modal';
 import { CurrencyInput } from '../../components/currency-input';
@@ -30,16 +31,16 @@ import {
 } from './operational';
 
 export function RealContacts() {
+  const { page, size, setPage, setSize } = usePagination();
   const { api, can, company, refresh, notice } = useOperational(),
     [params, setParams] = useSearchParams(),
     selected = params.get('registro') || '';
-  const [page, setPage] = useState(0),
-    [search, setSearch] = useState(''),
+  const     [search, setSearch] = useState(''),
     [editing, setEditing] = useState<ContactRow | 'new' | null>(null),
     [history, setHistory] = useState<ContactRow | null>(null);
   const query = useQuery(
-    () => api.list('contacts', page, 50, selected ? { id: selected } : {}, search),
-    [api, page, search, selected],
+    () => api.list('contacts', page, size, selected ? { id: selected } : {}, search),
+    [api, page, size, search, selected],
   );
   return (
     <>
@@ -134,21 +135,32 @@ export function RealContacts() {
                         <Button
                           disabled={!can('history.view')}
                           variant="ghost"
-                          size="sm"
+                          size="icon"
                           onClick={() => setHistory(c)}
+                          aria-label="Histórico"
                         >
-                          <History size={15} />
-                          Histórico
+                          <History size={16} aria-hidden="true" />
                         </Button>
                         {can('contacts.edit') && (
-                          <Button variant="outline" size="sm" onClick={() => setEditing(c)}>
-                            <Pencil size={14} />
-                            Editar
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => setEditing(c)}
+                            aria-label="Editar"
+                          >
+                            <Pencil size={16} aria-hidden="true" />
                           </Button>
                         )}
-                        <Link className="operational-text-link" to={'/app/funil?contato=' + c.id}>
-                          Ver cards
-                        </Link>
+                        <Button
+                          asChild
+                          size="icon"
+                          variant="outline"
+                          aria-label={'Ver cards de ' + c.name}
+                        >
+                          <Link to={'/app/funil?contato=' + c.id}>
+                            <KanbanSquare size={16} aria-hidden="true" />
+                          </Link>
+                        </Button>
                       </div>
                     </td>
                   </tr>
@@ -162,7 +174,7 @@ export function RealContacts() {
               />
             )}
           </div>
-          <Pager page={page} total={query.data.total} onChange={setPage} />
+          <Pager page={page} total={query.data.total} size={size} onSizeChange={setSize} onChange={setPage} />
         </>
       )}
       {editing && (
@@ -190,14 +202,14 @@ export function RealContacts() {
   );
 }
 export function RealCatalog({ labels = false }: { labels?: boolean }) {
+  const { page, size, setPage, setSize } = usePagination();
   const { api, can, refresh, notice } = useOperational(),
-    [page, setPage] = useState(0),
-    [search, setSearch] = useState(''),
+        [search, setSearch] = useState(''),
     [editing, setEditing] = useState<CatalogRow | LabelRow | 'new' | null>(null);
   const query = useQuery(
     async () =>
-      labels ? api.list('labels', page, 50, {}, search) : api.list('catalog', page, 50, {}, search),
-    [api, labels, page, search],
+      labels ? api.list('labels', page, size, {}, search) : api.list('catalog', page, size, {}, search),
+    [api, labels, page, size, search],
   );
   function saved() {
     setEditing(null);
@@ -270,8 +282,13 @@ export function RealCatalog({ labels = false }: { labels?: boolean }) {
                     </td>
                     {can(labels ? 'labels.edit' : 'catalog.edit') && (
                       <td>
-                        <Button variant="outline" size="sm" onClick={() => setEditing(row)}>
-                          Editar
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => setEditing(row)}
+                          aria-label="Editar"
+                        >
+                          <Pencil size={16} aria-hidden="true" />
                         </Button>
                       </td>
                     )}
@@ -286,7 +303,7 @@ export function RealCatalog({ labels = false }: { labels?: boolean }) {
               />
             )}
           </div>
-          <Pager page={page} total={query.data.total} onChange={setPage} />
+          <Pager page={page} total={query.data.total} size={size} onSizeChange={setSize} onChange={setPage} />
         </>
       )}
       {editing &&
@@ -316,11 +333,11 @@ export function RealCatalog({ labels = false }: { labels?: boolean }) {
   );
 }
 export function RealStrategies() {
+  const { page, size, setPage, setSize } = usePagination();
   const { api, can, refresh, notice } = useOperational(),
-    [page, setPage] = useState(0),
-    [search, setSearch] = useState(''),
+        [search, setSearch] = useState(''),
     [editing, setEditing] = useState<StrategyRow | 'new' | null>(null);
-  const query = useQuery(() => api.list('strategies', page, 50, {}, search), [api, page, search]);
+  const query = useQuery(() => api.list('strategies', page, size, {}, search), [api, page, size, search]);
   return (
     <>
       <div className="operational-toolbar">
@@ -377,8 +394,13 @@ export function RealStrategies() {
                     </td>
                     {can('strategies.edit') && (
                       <td>
-                        <Button variant="outline" size="sm" onClick={() => setEditing(row)}>
-                          Editar
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          onClick={() => setEditing(row)}
+                          aria-label="Editar"
+                        >
+                          <Pencil size={16} aria-hidden="true" />
                         </Button>
                       </td>
                     )}
@@ -393,7 +415,7 @@ export function RealStrategies() {
               />
             )}
           </div>
-          <Pager page={page} total={query.data.total} onChange={setPage} />
+          <Pager page={page} total={query.data.total} size={size} onSizeChange={setSize} onChange={setPage} />
         </>
       )}
       {editing && (
@@ -544,15 +566,15 @@ function StrategyDialog({
   );
 }
 export function RealTasks() {
+  const { page, size, setPage, setSize } = usePagination();
   const { api, can, refresh, notice } = useOperational(),
     [params, setParams] = useSearchParams(),
     selected = params.get('registro') || '',
-    [page, setPage] = useState(0),
-    [search, setSearch] = useState(''),
+        [search, setSearch] = useState(''),
     [editing, setEditing] = useState<TaskRow | 'new' | null>(null);
   const query = useQuery(
-    () => api.list('tasks', page, 50, selected ? { id: selected } : {}, search),
-    [api, page, search, selected],
+    () => api.list('tasks', page, size, selected ? { id: selected } : {}, search),
+    [api, page, size, search, selected],
   );
   return (
     <>
@@ -632,10 +654,11 @@ export function RealTasks() {
                       <Button
                         disabled={!can('tasks.edit')}
                         variant="outline"
-                        size="sm"
+                        size="icon"
                         onClick={() => setEditing(row)}
+                        aria-label="Editar tarefa"
                       >
-                        Editar tarefa
+                        <Pencil size={16} aria-hidden="true" />
                       </Button>
                     </td>
                   </tr>
@@ -649,7 +672,7 @@ export function RealTasks() {
               />
             )}
           </div>
-          <Pager page={page} total={query.data.total} onChange={setPage} />
+          <Pager page={page} total={query.data.total} size={size} onSizeChange={setSize} onChange={setPage} />
         </>
       )}
       {editing && (

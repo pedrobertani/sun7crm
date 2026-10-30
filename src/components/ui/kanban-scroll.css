@@ -1,0 +1,120 @@
+/* A single board viewport keeps both horizontal and vertical navigation accessible. */
+.kanban-scroll-shell { min-width: 0; max-width: 100%; }
+.kanban-scroll-shell .kanban-scroll-top {
+  height: 13px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  margin-bottom: 9px;
+  border: 0;
+  border-radius: 6px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--control-border) transparent;
+}
+.kanban-scroll-shell .kanban-scroll-top[data-overflow='false'] { display: none; }
+.kanban-scroll-shell .kanban-scroll {
+  max-width: 100%;
+  /* Responsive height is CSS, never an app setting. */
+  max-height: clamp(460px, calc(100dvh - 260px), 840px);
+  overflow: auto;
+  padding: 0 0 5px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--control-border) transparent;
+  overscroll-behavior: contain;
+}
+.kanban-scroll-top:focus-visible,
+.kanban-scroll:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.kanban-scroll-top::-webkit-scrollbar,
+.kanban-scroll::-webkit-scrollbar:horizontal { height: 9px; }
+.kanban-scroll::-webkit-scrollbar:vertical { width: 9px; }
+.kanban-scroll-top::-webkit-scrollbar-thumb,
+.kanban-scroll::-webkit-scrollbar-thumb {
+  border-radius: 6px;
+  background: var(--control-border);
+}
+.kanban-scroll-top::-webkit-scrollbar-track,
+.kanban-scroll::-webkit-scrollbar-track { background: var(--raised); border-radius: 6px; }
+/* Short stages no longer stretch to the height of the longest stage. */
+.kanban-scroll-shell .kanban-board {
+  min-height: 0;
+  align-items: flex-start;
+}
+.kanban-scroll-shell .kanban-column,
+.official-member .kanban-scroll-shell .kanban-column {
+  flex-shrink: 0;
+  height: auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+.kanban-scroll-shell .column-head,
+.kanban-scroll-shell .kanban-column-head {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  flex: 0 0 auto;
+  background: var(--raised);
+}
+.kanban-scroll-shell .column-body,
+.kanban-scroll-shell .kanban-cards {
+  flex: 0 0 auto;
+  min-height: 0;
+  overflow: visible;
+  padding-right: 0;
+}
+.kanban-scroll-shell .kanban-cards { align-items: stretch; }
+.kanban-column-pagination { flex: 0 0 auto; padding-top: 8px; margin-top: 8px; border-top: 1px solid var(--line); }
+.kanban-column-pagination .ui-pagination { margin: 0; padding: 6px 0 0; border: 0; gap: 6px; justify-content: space-between; }
+.kanban-column-pagination .ui-pagination::before { display: none; }
+.kanban-column-pagination .ui-pagination > span { margin-left: 0; }
+.kanban-column-pagination .ui-pagination-page { display: none; }
+.kanban-column-pagination .ui-pagination .btn { padding: 6px 9px; }
+.kanban-board-size { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; color: var(--muted); white-space: nowrap; }
+.kanban-board-size select { min-width: 70px; padding: 7px 9px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink); }
+
+/* Azure-style compact layout: main value and frequent actions share a row. */
+.kanban-scroll-shell .kanban-board .opportunity-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 7px;
+  row-gap: 5px;
+}
+.kanban-scroll-shell .kanban-board .opportunity-top,
+.kanban-scroll-shell .kanban-board .opportunity-card > .record-title,
+.kanban-scroll-shell .kanban-board .opportunity-card > p,
+.kanban-scroll-shell .kanban-board .opportunity-footer,
+.kanban-scroll-shell .kanban-board .move-select {
+  grid-column: 1 / -1;
+}
+.kanban-scroll-shell .kanban-board .opportunity-value {
+  grid-column: 1;
+  margin: 0;
+}
+.kanban-scroll-shell .kanban-board .opportunity-quick-actions {
+  grid-column: 2;
+  margin: 0;
+}
+/* Condensed cards follow the Azure Boards idea: more cards visible without browser zoom. */
+.kanban-scroll-shell .kanban-column,
+.official-member .kanban-scroll-shell .kanban-column { padding: 10px; }
+.kanban-scroll-shell .column-head { padding-bottom: 9px; }
+.kanban-scroll-shell .kanban-column-head { margin-bottom: 9px; }
+.kanban-scroll-shell .column-body,
+.kanban-scroll-shell .kanban-cards { gap: 9px; }
+.kanban-scroll-shell .opportunity-card,
+.official-member .kanban-scroll-shell .opportunity-card {
+  padding: 11px;
+}
+.kanban-scroll-shell .opportunity-top { margin-bottom: 5px; }
+.kanban-scroll-shell .opportunity-card p { margin-top: 4px; line-height: 1.3; }
+.kanban-scroll-shell .opportunity-value { margin-top: 8px; }
+.kanban-scroll-shell .opportunity-quick-actions { margin-top: 5px; gap: 6px; }
+.kanban-scroll-shell .opportunity-footer { margin-top: 7px; padding-top: 7px; }
+.kanban-scroll-shell .move-select { margin-top: 7px; }
+.kanban-scroll-shell .move-select select { min-height: 30px; }
+.official-member .kanban-scroll-shell .opportunity-card { gap: 6px; }
+.official-member .kanban-scroll-shell .operational-card-actions { gap: 5px; }
+.official-member .kanban-scroll-shell .operational-move-label { padding-top: 6px; gap: 3px; }
+.official-member .kanban-scroll-shell .operational-move-label select { height: 32px; min-height: 32px; }
+

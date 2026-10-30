@@ -390,6 +390,7 @@ export class OperationalBackend {
     pageSize = 50,
     filters: Partial<Record<keyof Resources[K], string | boolean | null>> = {},
     search = '',
+    createdBetween?: { from: string; until: string },
   ): Promise<Page<Resources[K]>> {
     if (
       !tables[resource] ||
@@ -427,6 +428,16 @@ export class OperationalBackend {
         uuid(value);
       }
       query = value === null ? query.is(column, null) : query.eq(column, value);
+    }
+    if (createdBetween) {
+      if (
+        resource !== 'cards' ||
+        ![createdBetween.from, createdBetween.until].every(
+          (value) => !Number.isNaN(Date.parse(value)) && /T\d{2}:\d{2}:\d{2}/.test(value),
+        ) ||
+        Date.parse(createdBetween.from) >= Date.parse(createdBetween.until)
+      ) throw new BackendError('Confira o período selecionado.', 'INVALID_FILTER', 'validation');
+      query = query.gte('created_at', createdBetween.from).lt('created_at', createdBetween.until);
     }
     if (search.trim()) {
       const column =
@@ -466,6 +477,21 @@ export class OperationalBackend {
       );
     return page.rows[0];
   }
+  /** Fetch all matching rows in bounded pages, rather than silently capping at 200. */
+  async listAllMatching<K extends keyof Resources>(
+    resource: K,
+    filters: Partial<Record<keyof Resources[K], string | boolean | null>> = {},
+    search = '',
+    createdBetween?: { from: string; until: string },
+  ): Promise<{ rows: Resources[K][]; total: number }> {
+    const rows: Resources[K][] = [];
+    for (let page = 0; ; page++) {
+      const result = await this.list(resource, page, 200, filters, search, createdBetween);
+      rows.push(...result.rows);
+      if (!result.hasMore) return { rows, total: rows.length };
+    }
+  }
+
   async all<K extends keyof Resources>(resource: K): Promise<Resources[K][]> {
     const rows: Resources[K][] = [];
     for (let page = 0; ; page++) {
@@ -489,24 +515,32 @@ export class OperationalBackend {
     return rows;
   }
   async activityByIds(ids: string[]): Promise<CardActivity[]> {
-    if (!ids.length) return [];
-    const result = await this.client
-      .from('crm_card_activity')
-      .select('*')
-      .eq('company_id', this.companyId)
-      .in('opportunity_id', [...new Set(ids)].map(uuid));
-    if (result.error || !result.data) throw failure(result.error);
-    return result.data as CardActivity[];
+    const keys = [...new Set(ids)].map(uuid);
+    const rows: CardActivity[] = [];
+    for (let offset = 0; offset < keys.length; offset += 100) {
+      const result = await this.client
+        .from('crm_card_activity')
+        .select('*')
+        .eq('company_id', this.companyId)
+        .in('opportunity_id', keys.slice(offset, offset + 100));
+      if (result.error || !result.data) throw failure(result.error);
+      rows.push(...(result.data as CardActivity[]));
+    }
+    return rows;
   }
   async labelsByCardIds(ids: string[]): Promise<{ opportunity_id: string; label_id: string }[]> {
-    if (!ids.length) return [];
-    const result = await this.client
-      .from('crm_card_labels')
-      .select('opportunity_id,label_id')
-      .eq('company_id', this.companyId)
-      .in('opportunity_id', [...new Set(ids)].map(uuid));
-    if (result.error || !result.data) throw failure(result.error);
-    return result.data;
+    const keys = [...new Set(ids)].map(uuid);
+    const rows: { opportunity_id: string; label_id: string }[] = [];
+    for (let offset = 0; offset < keys.length; offset += 100) {
+      const result = await this.client
+        .from('crm_card_labels')
+        .select('opportunity_id,label_id')
+        .eq('company_id', this.companyId)
+        .in('opportunity_id', keys.slice(offset, offset + 100));
+      if (result.error || !result.data) throw failure(result.error);
+      rows.push(...result.data);
+    }
+    return rows;
   }
   async contactDetails(id: string) {
     const contact = await this.get('contacts', id);
