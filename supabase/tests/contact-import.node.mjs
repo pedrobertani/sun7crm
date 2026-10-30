@@ -54,11 +54,12 @@ test('importação Excel: duplicados e autorização no banco', async (t) => {
     [5, 100, 'seller'],
     [6, 100, 'manager'],
   ]) {
-    await q('insert into public.crm_memberships(id,company_id,user_id,role) values($1,$2,$3,$4)', [
+    await q('insert into public.crm_memberships(id,company_id,user_id,role,active) values($1,$2,$3,$4,$5)', [
       id(n + 10),
       id(company),
       id(n),
       role,
+      n !== 6,
     ]);
   }
   for (const kind of ['terms', 'privacy']) {
