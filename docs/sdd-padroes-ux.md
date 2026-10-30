@@ -1,5 +1,18 @@
 # SDD — padrões globais de UX do SUN7CRM
 
+## Homologação mobile do Dashboard — QA SUN7 Empresa B (29/10/2026)
+
+**Evidência:** capturas do usuário no Chrome Android das abas Comercial e Conquistas. Funil de metas, quatro medalhas bloqueadas, cartões e botões aparecem corretamente; usuário aprovou o restante e pediu apenas a eliminação do calendário de competência duplicado e apertado.
+
+- [x] Registrar aprovação visual do usuário para Comercial e Conquistas na prévia Android, restrita às telas mostradas.
+- [x] Preservar os dois filtros globais de data no topo das três abas; não criar outra faixa de filtros inferior.
+- [x] Remover o `input type=month` de competência dos painéis Funil de metas e Conquistas e medalhas.
+- [x] Usar o mês da data final (`até`) para consultar metas, vendas confirmadas e medalhas; exibir a competência selecionada somente como texto.
+- [x] Preservar o intervalo completo para os KPIs e gráficos de movimento comercial; não confundir filtros diários com apuração mensal.
+- [x] Manter a configuração das medalhas disponível ao gestor e renderizar metas mesmo que a consulta das métricas gerais falhe.
+- [ ] Conferir CI e preview do último HEAD, inclusive troca de período entre meses diferentes e largura mobile.
+- [ ] Homologar persistência, permissões e isolamento em sessões autenticadas distintas.
+
 ## Situação consolidada — 29/10/2026 (revisão 88740ec)
 
 Esta seção é o estado atual; os checklists abaixo preservam o histórico de cada rodada. **SDD ainda não encerrado:** testes automatizados aprovados não substituem a homologação autenticada, mobile e por volume.
