@@ -43,17 +43,17 @@ test('rotas de sessão passam pelo validador compartilhado; webhooks usam assina
   for (const [route, kind] of Object.entries(routeKinds)) {
     const entry = readFileSync(join(functionsDir, route, 'index.ts'), 'utf8');
     if (kind === 'session') {
-      assert.ok(/serve\\(|createHttpHandler\\(/.test(entry),
+      assert.ok(/serve\(|createHttpHandler\(/.test(entry),
         'Rota ' + route + ' deve exigir autenticação no HTTP compartilhado');
     } else {
       assert.ok(entry.includes('billingWebhook('), 'Webhook ' + route + ' sem handler assinado');
     }
   }
-  assert.match(runtime, /auth\\.getUser\\(token\\)/);
-  assert.match(http, /backend\\.authenticate\\(token\\)/);
-  assert.match(http, /token\\.startsWith\\('sb_'\\)/);
-  assert.match(webhook, /await provider\\.verify\\(request, id\\)/);
-  assert.match(webhook, /await readBody\\(request\\)/);
+  assert.match(runtime, /auth\.getUser\(token\)/);
+  assert.match(http, /backend\.authenticate\(token\)/);
+  assert.match(http, /token\.startsWith\('sb_'\)/);
+  assert.match(webhook, /await provider\.verify\(request, id\)/);
+  assert.match(webhook, /await readBody\(request\)/);
 });
 
 test('somente credencial publishable pode estar no cliente React do Supabase', () => {
