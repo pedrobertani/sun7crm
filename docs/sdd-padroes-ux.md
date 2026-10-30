@@ -1,5 +1,26 @@
 # SDD — padrões globais de UX do SUN7CRM
 
+## Auditoria de segurança do Supabase ativo — 30/10/2026
+
+Inspeção de leitura do banco real, Security Advisors, Storage e código no PR #30. Simulações QA com ROLE authenticated foram executadas em transações read-only revertidas; não substituem pentest ou sessões HTTP reais. Nenhuma política, senha ou dado comercial foi alterado.
+
+- [x] RLS habilitado em 35/35 tabelas public, 10/10 crm_private e 8/8 storage (53/53). Esquemas gerenciados auth/realtime/vault incluem tabelas sem RLS, com controles distintos.
+- [x] Todas as tabelas public do CRM sem SELECT para anon; tabelas crm_private sem leitura direta pelos papéis anon/authenticated.
+- [x] As seis views públicas do CRM são security_invoker.
+- [x] Bucket crm-company-logos privado e com políticas de acesso a objetos por empresa.
+- [x] Simulação de leitura com gestores QA A/B e consultor QA A bloqueou leitura cruzada de contatos, metas e cards. Consultor A teve escopo de contatos menor que gestor A.
+- [x] Código das Edge Functions autentica usuário por JWT internamente, e webhook de cobrança verifica assinatura do provedor. Gateway com verify_jwt=false em nove funções: não equivale a endpoint público sem proteção, mas exige testes por rota.
+- [x] Supabase declara AES-256 em repouso, TLS nas APIs, bcrypt com salt para senhas. Não há comprovação de criptografia por campo em telefone, nome e notas; pgcrypto e Vault instalados não a fornecem automaticamente.
+- [ ] PRIORIDADE ALTA: Security Advisor identificou leaked password protection DESATIVADA; habilitar quando permitido pelo plano.
+- [ ] Confirmar MFA para administradores/gestores, bloqueio de tentativas, rotação/revogação de sessões. O hook opcional de verificação de tentativas consta preparado, não ativado.
+- [ ] Verificar SSL enforcement em conexão direta ao PostgreSQL, backups/restauração, retenção e fluxo LGPD.
+- [ ] Auditoria detalhada das funções SECURITY DEFINER e APIs de escrita por perfil/empresa. Quarenta e uma funções privadas privilegiadas permitem EXECUTE a authenticated e exigem validação das condições internas.
+- [ ] Testes negativos de escrita entre empresas, objetos de Storage e replay de webhooks com sessões HTTP reais.
+- [ ] Confirmar CSP como cabeçalho HTTP no Cloudflare (a política atual do build é via meta), rate limiting, logs sem PII, rotação de segredos e análise de dependências.
+- [ ] Analisar necessidade de criptografia por campo para dados de alta sensibilidade, além de AES-256 em repouso, e realizar teste de intrusão independente.
+
+Resultado: cobertura forte de RLS nesses esquemas, sem acesso cruzado nos três cenários QA de leitura; nenhuma garantia de segurança total ou homologação integral.
+
 ## Auditoria Kanban — código e regressão automatizada (29/10/2026, PR #30)
 
 **Escopo:** demo e aplicativo autenticado. Não houve movimentação de cards nem criação de vendas no Supabase real nesta rodada. Foram auditados `RealKanban`, `Kanban`, `useCardDrag`, `useStageDrag`, `KanbanScroll`, filtro de criação, paginação e confirmação de venda.
