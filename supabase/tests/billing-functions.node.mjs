@@ -556,3 +556,14 @@ test('assinatura: recuperação consulta o contrato completo quando a busca não
     (e) => e.code === 'PROVIDER_RESPONSE',
   );
 });
+
+test('webhook também responde com headers seguros sem publicar payload ou assinatura', async () => {
+  const provider = createMercadoPago(config, async () => Response.json(payment));
+  const response = await billingWebhook(backend(), provider)(
+    new Request('https://edge.example.invalid/webhook', { method: 'GET' }),
+  );
+  assert.equal(response.status, 405);
+  assert.equal(response.headers.get('cache-control'), 'no-store');
+  assert.equal(response.headers.get('x-content-type-options'), 'nosniff');
+  assert.equal(response.headers.get('referrer-policy'), 'no-referrer');
+});
