@@ -1,6 +1,7 @@
-name: Smoke Mercado Pago SDK com CSP (somente leitura)
+name: Smoke Mercado Pago SDK com CSP em producao (somente leitura)
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - test/csp-mercadopago-smoke-20261031
@@ -23,7 +24,7 @@ jobs:
           which google-chrome || which google-chrome-stable || which chromium || which chromium-browser
       - name: Verificar CSP publicada e inicializacao do SDK sem cobrar
         env:
-          TEST_URLS: 'https://5b654716.sun7crm.pages.dev/,https://sun7crm.pages.dev/'
+          TEST_URLS: 'https://sun7crm.pages.dev/'
         run: |
           node --input-type=module <<'JS'
           import assert from 'node:assert/strict';
