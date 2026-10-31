@@ -20,7 +20,9 @@ Auditoria **sem tocar no Supabase remoto**: o conector Supabase desta sessão li
 - [x] Métodos não suportados e idempotência inválida não alcançam os comandos.
 - [x] Falha do serviço Auth retorna HTTP 503 sem execução de operações e sem expor corpo ou credenciais.
 - [ ] Confirmar com **o projeto Supabase SUN7CRM** qual é o `CRM_ALLOWED_ORIGINS` efetivamente configurado. Se definido, ele substitui a origem padrão, incluindo previews explicitamente autorizadas. O merge não altera automaticamente secrets do Supabase.
-- [ ] Executar HTTP real com token inválido e com perfil de homologação legítimo, verificando 401/403 e ausência de efeito no banco.
+- [x] HTTP público sem credenciais na implantação atual: GitHub Actions [execução #41167154690](https://github.com/pedrobertani/sun7crm/actions/runs/41167154690) — `crm-create-user` e `crm-first-access` recusaram requisições sem Bearer JWT com **401/UNAUTHENTICATED**, CORS `https://sun7crm.pages.dev` e `Cache-Control: no-store`.
+- [x] Teste adicional [execução #41167204519](https://github.com/pedrobertani/sun7crm/actions/runs/41167204519) — token falsificado recusado com **401**; Origin falsificado recusado com **403** e sem `Access-Control-Allow-Origin`; OPTIONS da origem legítima **204**; OPTIONS de origem falsificada **403**.
+- [ ] Executar requisições com **sessões legítimas fictícias de homologação** para validar autorização entre funções e perfis. O teste sem JWT confirma negação, mas não substitui esse cenário.
 - [ ] Confirmar o modo `verify_jwt` publicado e a classificação de todos os endpoints no ambiente remoto.
 
 ### Controles de abuso separados
