@@ -1,6 +1,6 @@
 import { DEFAULT_SUPABASE_URL, supabaseOrigin } from './public-config';
 
-/** CSP entregue por meta no HTML estático; não substitui os controles de acesso do servidor. */
+/** Política única para o HTML e os cabeçalhos HTTP gerados para Cloudflare Pages. */
 export function contentSecurityPolicy(
   supabaseUrl = DEFAULT_SUPABASE_URL,
   payments = false,
@@ -26,4 +26,22 @@ export function contentSecurityPolicy(
       : "frame-src 'none'",
     "worker-src 'none'",
   ].join('; ');
+}
+
+/** Regra Cloudflare Pages copiada para dist/_headers durante o build.
+ * Usa a mesma CSP da meta tag; somente os cabeçalhos HTTP podem aplicar frame-ancestors.
+ * Respostas de Pages Functions não herdam essas regras (o SUN7CRM é estático).
+ */
+export function cloudflarePagesSecurityHeaders(
+  supabaseUrl = DEFAULT_SUPABASE_URL,
+  payments = false,
+): string {
+  return [
+    '/*',
+    `  Content-Security-Policy: ${contentSecurityPolicy(supabaseUrl, payments)}; frame-ancestors 'none'`,
+    '  X-Content-Type-Options: nosniff',
+    '  Referrer-Policy: strict-origin-when-cross-origin',
+    '  X-Frame-Options: DENY',
+    '',
+  ].join('\\n');
 }
