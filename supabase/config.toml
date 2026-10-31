@@ -30,3 +30,11 @@ verify_jwt = false
 [functions.crm-billing-webhook-hom]
 verify_jwt = false
 
+# FUTURO / INATIVO: bloqueio de login após 5 falhas em 15 minutos.
+# O SQL está apenas em supabase/security/password-verification-hook.sql,
+# deliberadamente fora de migrations. Não instalar, nem ativar no Free/Pro.
+# A documentação atual do Supabase disponibiliza Password Verification Attempt
+# em Team/Enterprise. Validar o plano e testar em homologação antes de mudar a flag.
+[auth.hook.password_verification_attempt]
+enabled = false
+uri = "pg-functions://postgres/public/crm_password_verification_hook"
