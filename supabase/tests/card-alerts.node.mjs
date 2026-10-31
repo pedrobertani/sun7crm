@@ -203,9 +203,10 @@ test('alertas por card: prazos fixos de 24h, 3/7 dias e histórico do gestor', a
       assert.equal((await visible(2)).length, 0);
       await sync(5);
       assert.ok((await visible(5)).some((x) => x.entity_id === id(5003)));
-      assert.ok(
-        (await user(5, () => q('select * from public.crm_card_idle_report'))).rows.some(
-          (x) => x.opportunity_id === id(5003)),
+      // Relatório gerencial continua separado da permissão de visualizar o card.
+      assert.equal(
+        (await user(5, () => q('select * from public.crm_card_idle_report'))).rows.length,
+        0,
       );
     },
   );
