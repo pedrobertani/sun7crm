@@ -13,14 +13,14 @@ create index crm_card_company_owner_idx on public.crm_opportunities(company_id,o
 
 -- Gravações antigas (fixtures, migração ou integração) sem responsável explícito
 -- continuam vinculadas ao dono do contato. O novo CRM sempre envia dono próprio.
-create function crm_private.default_card_owner() returns trigger language plpgsql security definer set search_path='' as $
+create function crm_private.default_card_owner() returns trigger language plpgsql security definer set search_path='' as $$
 begin
  if new.owner_membership_id is null then
    select c.owner_membership_id into new.owner_membership_id from public.crm_contacts c
    where c.company_id=new.company_id and c.id=new.contact_id;
  end if;
  return new;
-end;$;
+end;$$;
 revoke all on function crm_private.default_card_owner() from public,anon,authenticated,service_role;
 create trigger crm_card_owner_default before insert on public.crm_opportunities
  for each row execute function crm_private.default_card_owner();
@@ -242,7 +242,7 @@ $$;
 
 -- A desativação de um funcionário redistribui também seus cards em aberto,
 -- para que nenhum card fique invisível após a transferência de carteira.
-create or replace function crm_private.workspace_update_team_member(p_company uuid,p_membership uuid,p_values jsonb,p_reassign_to uuid,p_expected_version bigint) returns jsonb language plpgsql security definer set search_path='' as $
+create or replace function crm_private.workspace_update_team_member(p_company uuid,p_membership uuid,p_values jsonb,p_reassign_to uuid,p_expected_version bigint) returns jsonb language plpgsql security definer set search_path='' as $$
 declare member public.crm_memberships;target public.crm_memberships;next_active boolean;next_role text;next_name text;
 begin
  perform crm_private.require_permission(p_company,'team.manage');
@@ -278,6 +278,6 @@ begin
  update public.crm_memberships set active=next_active,role=next_role where id=member.id returning * into member;
  return to_jsonb(member);
 end;
-$;
+$$;
 
 commit;
