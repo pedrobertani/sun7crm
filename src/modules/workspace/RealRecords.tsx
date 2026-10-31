@@ -27,7 +27,7 @@ import {
   useOperational,
   useQuery,
   useSave,
-  useTeam,
+  useAssignableMembers,
 } from './operational';
 
 export function RealContacts() {
@@ -442,7 +442,7 @@ function StrategyDialog({
   onSaved: () => void;
 }) {
   const { api, company } = useOperational(),
-    team = useTeam(),
+    team = useAssignableMembers('strategies', row ? 'edit' : 'create'),
     save = useSave(),
     [form, setForm] = useState({
       name: row?.name || '',
@@ -698,8 +698,8 @@ function TaskDialog({
   onClose: () => void;
   onSaved: () => void;
 }) {
-  const { api, can, companyScope, company } = useOperational(),
-    team = useTeam(),
+  const { api, companyScope, company } = useOperational(),
+    team = useAssignableMembers('tasks', row ? 'edit' : 'create'),
     save = useSave(),
     initial = useQuery(
       async () => ({
@@ -785,15 +785,11 @@ function TaskDialog({
                 (c) => ({ id: c.id, label: c.name, detail: c.phone }),
               )}
               onChange={(ids) => {
-                const contact = contacts.find((c) => c.id === ids[0]) || initial.data!.contact;
                 setForm({
                   ...form,
                   contact_id: ids[0] || '',
                   opportunity_id: '',
-                  owner_membership_id:
-                    can('contacts.edit') && contact && ids[0]
-                      ? contact.owner_membership_id
-                      : form.owner_membership_id,
+                  owner_membership_id: form.owner_membership_id,
                 });
               }}
               load={async (search, page) => {
@@ -847,7 +843,7 @@ function TaskDialog({
               Responsável
               <select
                 required
-                disabled={!companyScope}
+                disabled={!companyScope || team.data.length < 2}
                 value={form.owner_membership_id}
                 onChange={(e) => setForm({ ...form, owner_membership_id: e.target.value })}
               >
