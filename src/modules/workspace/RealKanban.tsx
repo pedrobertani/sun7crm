@@ -48,6 +48,7 @@ import {
   useOperational,
   useQuery,
   useSave,
+  useAssignableMembers,
 } from './operational';
 
 export function removedStageTarget(
@@ -873,12 +874,14 @@ function CardFields({
   onSaved: () => void;
   save: ReturnType<typeof useSave>;
 }) {
-  const { api, can } = useOperational(),
+  const { api, can, company } = useOperational(),
     c = data.card,
     readOnly = !can(c ? 'cards.edit' : 'cards.create'),
     initialBoard = c?.board_id || boardId;
+  const assignees = useAssignableMembers('cards', c ? 'edit' : 'create');
   const [form, setForm] = useState({
       contact_id: c?.contact_id || '',
+      owner_membership_id: c?.owner_membership_id || company.membershipId,
       board_id: initialBoard,
       stage_id:
         c?.stage_id ||
@@ -906,10 +909,11 @@ function CardFields({
     .sort((a, b) => a.position - b.position);
   return (
     <>
+      <QueryState query={assignees} />
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          if (readOnly) return;
+          if (readOnly || !assignees.data) return;
           void save.run(async () => {
             if (!form.contact_id) throw Error('Selecione um contato.');
             const { price, ...values } = form;
@@ -927,7 +931,22 @@ function CardFields({
           });
         }}
       >
-        <fieldset className="operational-fields" disabled={readOnly || save.busy || save.uncertain}>
+        <fieldset className="operational-fields" disabled={readOnly || save.busy || save.uncertain || !assignees.data}>
+          {!readOnly && (
+            <label className="form-row">
+              Responsável pelo card
+              <select
+                required
+                value={form.owner_membership_id}
+                onChange={(e) => setForm({ ...form, owner_membership_id: e.target.value })}
+              >
+                {(assignees.data || []).map((member) => (
+                  <option key={member.id} value={member.id}>{member.display_name}</option>
+                ))}
+              </select>
+              <small>Somente o responsável poderá consultar este card. O gestor vê todos.</small>
+            </label>
+          )}
           <RecordPicker
             label="Contato"
             items={contacts.map((c) => ({ id: c.id, label: c.name, detail: c.phone }))}
