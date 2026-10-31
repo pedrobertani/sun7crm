@@ -1,0 +1,28 @@
+name: XSS Demo - navegador real (sem dados de clientes)
+
+on:
+  push:
+    branches:
+      - test/xss-demo-browser-20261031
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  demo-xss:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Preparar navegador Chrome
+        run: |
+          npm install --no-save --no-package-lock --ignore-scripts playwright-core@1.56.1
+          which google-chrome || which google-chrome-stable || which chromium || which chromium-browser
+      - name: XSS persistente na demo (somente localStorage isolado)
+        env:
+          SUN7_XSS_URL: https://sun7crm.pages.dev
+        run: node scripts/xss-demo-browser-smoke.mjs
