@@ -280,4 +280,147 @@ begin
 end;
 $$;
 
+-- Alerta de card pertence ao responsável do card; gestor mantém visão geral.
+create or replace view public.crm_card_activity with(security_invoker=true) as
+with activity as (
+ select o.company_id,o.id as opportunity_id,o.contact_id,o.board_id,o.stage_id,o.title,o.value_cents,o.created_at,o.follow_up_at,o.is_closed,
+ c.name as contact_name,c.phone,o.owner_membership_id,coalesce(p.display_name,'Sem responsável') as owner_name,b.name as board_name,s.name as stage_name,
+ true as alerts_enabled,24 as first_response_hours,3 as idle_days_threshold,7 as escalation_days_threshold,
+ min(h.occurred_at) as first_activity_at,max(h.occurred_at) as last_activity_at
+ from public.crm_opportunities o join public.crm_contacts c on c.company_id=o.company_id and c.id=o.contact_id
+ join public.crm_boards b on b.company_id=o.company_id and b.id=o.board_id
+ join public.crm_stages s on s.company_id=o.company_id and s.board_id=o.board_id and s.id=o.stage_id
+ left join public.crm_memberships m on m.company_id=o.company_id and m.id=o.owner_membership_id
+ left join public.crm_profiles p on p.id=m.user_id
+ left join public.crm_contact_history h on h.company_id=o.company_id and h.opportunity_id=o.id and h.kind in ('note','whatsapp_opened','card_moved')
+ group by o.company_id,o.id,c.id,c.name,c.phone,o.owner_membership_id,p.display_name,b.id,b.name,s.id,s.name
+), effective as (
+ select *,greatest(coalesce(last_activity_at,created_at),follow_up_at) as effective_since from activity
+)
+select *,greatest(0,floor(extract(epoch from statement_timestamp()-effective_since)/3600))::integer as hours_without_activity,
+ greatest(0,floor(extract(epoch from statement_timestamp()-effective_since)/86400))::integer as days_without_activity,
+ extract(epoch from effective_since)::text as activity_key
+from effective;
+
+create or replace function crm_private.notification_candidates(p_recipient uuid)
+returns table(company_id uuid,recipient_user_id uuid,kind text,entity_id uuid,event_key text,
+  title text,body text,priority smallint,contact_id uuid)
+language sql stable security invoker set search_path='' as $$
+  with memberships as materialized (
+    select m.id,m.company_id,m.role,m.user_id,
+      (statement_timestamp() at time zone 'America/Sao_Paulo')::date as local_today
+    from public.crm_memberships m
+    join public.crm_companies c on c.id=m.company_id
+    where (p_recipient is null or m.user_id=p_recipient) and m.active and c.enabled
+      and exists(select 1 from public.crm_profiles p where p.id=m.user_id and not p.password_change_required)
+      and (select count(*) from public.crm_legal_requirements)=2
+      and not exists(
+        select 1 from public.crm_legal_requirements r where not exists(
+          select 1 from public.crm_legal_acceptances a
+          where a.user_id=m.user_id and a.kind=r.kind and a.version=r.version
+        )
+      )
+  ), card_activity as materialized (
+    select v.* from public.crm_card_activity v
+    where not v.is_closed and exists(select 1 from memberships m where m.company_id=v.company_id)
+  ), candidates as (
+    select m.company_id,m.user_id as recipient_user_id,'subscription_due'::text as kind,m.company_id as entity_id,
+      b.due_date::text || ':' || b.cycle_kind || ':' || crm_private.subscription_state(b.due_date,b.cycle_kind,local_today)
+        || case when b.cycle_kind='monthly' and local_today>b.due_date and local_today<=b.due_date+7
+          then ':' || (local_today-b.due_date)::text else '' end as event_key,
+      case when b.cycle_kind='awaiting_payment' then 'Plano aguardando liberação'
+        when b.cycle_kind='complimentary' and local_today<b.due_date then 'Seu período gratuito termina em breve'
+        when b.cycle_kind='complimentary' then 'Seu período gratuito terminou'
+        when local_today>b.due_date+7 then 'Acesso suspenso: pagamento pendente'
+        when local_today>b.due_date then 'Pagamento pendente: período de carência'
+        when local_today=b.due_date then 'Seu plano vence hoje'
+        else 'Seu plano vence em breve' end as title,
+      case when b.cycle_kind='awaiting_payment' then 'O administrador precisa confirmar o pagamento ou conceder dias gratuitos para liberar o acesso.'
+        when b.cycle_kind='complimentary' then 'Gratuidade até ' || to_char(b.due_date-1,'DD/MM/YYYY') || '. Combine a continuidade do plano com a administração.'
+        when local_today>b.due_date+7 then 'A carência terminou em ' || to_char(b.due_date+7,'DD/MM/YYYY') || '. Solicite a confirmação do pagamento à administração.'
+        when local_today>b.due_date then 'Dia ' || (local_today-b.due_date)::text || ' de 7 de carência. Acesso até ' || to_char(b.due_date+7,'DD/MM/YYYY') || '. Os dias utilizados serão descontados do próximo período.'
+        else 'Vencimento: ' || to_char(b.due_date,'DD/MM/YYYY') || '. Combine o pagamento com a administração.' end as body
+    from memberships m join public.crm_company_billing b on b.company_id=m.company_id
+    where crm_private.member_permission(m.id,'plan.view') and b.due_date<=local_today+7
+
+    union all
+    select m.company_id,m.user_id,'task_assigned',t.id,t.id::text || ':' || m.id::text,
+      'Tarefa atribuída a você','Há uma tarefa pendente sob sua responsabilidade. Confira os detalhes e o prazo.'
+    from memberships m join public.crm_tasks t on t.company_id=m.company_id and t.owner_membership_id=m.id
+    where crm_private.member_permission(m.id,'tasks.view') and t.status<>'done' and t.due_date>local_today
+
+    union all
+    select m.company_id,m.user_id,'task_due',t.id,t.id::text || ':' || t.due_date::text || ':' || case when t.due_date<local_today then 'overdue' else 'today' end,
+      case when t.due_date<local_today then 'Tarefa com prazo vencido' else 'Tarefa com prazo para hoje' end,
+      case when (crm_private.member_permission(m.id,'reports.view') and crm_private.member_company_scope(m.id)) then 'Há uma tarefa da equipe que precisa de acompanhamento.' else 'Confira a tarefa sob sua responsabilidade e atualize o andamento.' end
+    from memberships m join public.crm_tasks t on t.company_id=m.company_id
+    where crm_private.member_permission(m.id,'tasks.view') and t.status<>'done' and t.due_date<=local_today and ((crm_private.member_permission(m.id,'reports.view') and crm_private.member_company_scope(m.id)) or t.owner_membership_id=m.id)
+
+    union all
+    select m.company_id,m.user_id,'new_contact',c.id,c.id::text,
+      'Novo contato na empresa','Um novo contato entrou na carteira da empresa. Confira o responsável pelo atendimento.'
+    from memberships m join public.crm_contacts c on c.company_id=m.company_id
+    where crm_private.member_permission(m.id,'contacts.view') and (crm_private.member_permission(m.id,'reports.view') and crm_private.member_company_scope(m.id)) and c.created_at>=statement_timestamp()-interval '7 days'
+
+    union all
+    select m.company_id,m.user_id,'contact_assigned',c.id,c.id::text || ':' || m.id::text,
+      'Contato atribuído a você','Há um contato atribuído ao seu usuário. Confira o atendimento e o próximo passo.'
+    from memberships m join public.crm_contacts c on c.company_id=m.company_id and c.owner_membership_id=m.id
+    where crm_private.member_permission(m.id,'contacts.view') and m.role in ('seller','reception') and c.updated_at>=statement_timestamp()-interval '7 days'
+    union all
+    select m.company_id,m.user_id,'card_first_response',v.opportunity_id,v.opportunity_id::text||':'||v.activity_key||':first',
+      'Card aguardando primeiro acompanhamento','Uma oportunidade aguarda acompanhamento há mais de '||v.first_response_hours::text||' horas. Abra o contato e confira o próximo passo.'
+    from memberships m join card_activity v on v.company_id=m.company_id and v.owner_membership_id=m.id
+    where crm_private.member_permission(m.id,'cards.view') and crm_private.member_permission(m.id,'contacts.view') and v.alerts_enabled and not v.is_closed and v.first_activity_at is null and v.hours_without_activity>=v.first_response_hours and v.days_without_activity<v.idle_days_threshold
+      and (v.follow_up_at is null or v.follow_up_at<=statement_timestamp())
+    union all
+    select m.company_id,m.user_id,'card_idle',v.opportunity_id,v.opportunity_id::text||':'||v.activity_key||':idle',
+      'Card sem acompanhamento','Uma oportunidade está sem acompanhamento há '||v.idle_days_threshold::text||' dias ou mais. Confira o retorno combinado e registre o atendimento.'
+    from memberships m join card_activity v on v.company_id=m.company_id and v.owner_membership_id=m.id
+    where crm_private.member_permission(m.id,'cards.view') and crm_private.member_permission(m.id,'contacts.view') and v.alerts_enabled and not v.is_closed and v.days_without_activity>=v.idle_days_threshold
+      and (not (crm_private.member_permission(m.id,'reports.view') and crm_private.member_company_scope(m.id)) or v.days_without_activity<v.escalation_days_threshold)
+      and (v.follow_up_at is null or v.follow_up_at<=statement_timestamp())
+    union all
+    select m.company_id,m.user_id,'card_escalation',v.opportunity_id,v.opportunity_id::text||':'||v.activity_key||':escalation',
+      'Card precisa de acompanhamento da gestão','Uma oportunidade da equipe está sem acompanhamento há '||v.escalation_days_threshold::text||' dias ou mais. Confira o responsável e as atividades registradas.'
+    from memberships m join card_activity v on v.company_id=m.company_id
+    where crm_private.member_permission(m.id,'cards.view') and crm_private.member_permission(m.id,'contacts.view') and (crm_private.member_permission(m.id,'reports.view') and crm_private.member_company_scope(m.id)) and v.alerts_enabled and not v.is_closed and v.days_without_activity>=v.escalation_days_threshold
+      and (m.role='manager' or v.owner_membership_id=m.id)
+      and (v.follow_up_at is null or v.follow_up_at<=statement_timestamp())
+
+  )
+  select c.company_id,c.recipient_user_id,c.kind,c.entity_id,c.event_key,c.title,c.body,
+    (case when c.kind='subscription_due' then 3 when c.kind in ('task_due','card_escalation') then 2 else 1 end)::smallint,
+    case when c.kind in ('card_first_response','card_idle','card_escalation') then
+      (select o.contact_id from public.crm_opportunities o where o.company_id=c.company_id and o.id=c.entity_id)
+    else null end
+  from candidates c
+  where (c.kind='subscription_due' or crm_private.subscription_allows_access(c.company_id))
+ and exists(select 1 from memberships m where m.company_id=c.company_id and m.user_id=c.recipient_user_id and
+ case when c.kind in ('task_assigned','task_due') then crm_private.member_permission(m.id,'tasks.view')
+ when c.kind in ('new_contact','contact_assigned') then crm_private.member_permission(m.id,'contacts.view')
+ when c.kind in ('card_first_response','card_idle','card_escalation') then crm_private.member_permission(m.id,'cards.view') and crm_private.member_permission(m.id,'contacts.view')
+ else crm_private.member_permission(m.id,'plan.view') end);
+$$;
+
+create or replace function crm_private.can_read_notification(p_company uuid,p_recipient uuid,p_kind text,p_entity uuid,p_contact uuid) returns boolean
+language plpgsql stable security definer set search_path='' as $$
+declare role text;
+begin
+ if p_recipient is distinct from (select auth.uid()) or not crm_private.has_current_acceptance() then return false;end if;
+ role:=crm_private.company_role(p_company);
+ if p_kind='subscription_due' then return crm_private.has_permission(p_company,'plan.view');end if;
+ if not crm_private.has_company_access(p_company) then return false;end if;
+ if p_kind='new_contact' then return crm_private.has_permission(p_company,'reports.view') and crm_private.can_read_contact(p_company,p_entity);end if;
+ if p_kind in ('task_assigned','task_due') then return crm_private.has_permission(p_company,'tasks.view') and exists(select 1 from public.crm_tasks t where t.company_id=p_company and t.id=p_entity and t.status<>'done' and (crm_private.owns_membership(t.company_id,t.owner_membership_id) or (p_kind='task_due' and crm_private.has_permission(p_company,'reports.view') and crm_private.has_company_scope(p_company))) and (t.contact_id is null or crm_private.can_read_contact(t.company_id,t.contact_id)));end if;
+ if p_kind='contact_assigned' then return crm_private.has_permission(p_company,'contacts.view') and exists(select 1 from public.crm_contacts c where c.company_id=p_company and c.id=p_entity and crm_private.owns_membership(c.company_id,c.owner_membership_id));end if;
+ if p_kind in ('card_first_response','card_idle','card_escalation') then return crm_private.has_permission(p_company,'cards.view') and exists(
+  select 1 from public.crm_opportunities o join public.crm_contacts c on c.company_id=o.company_id and c.id=o.contact_id
+  where o.company_id=p_company and o.id=p_entity and o.contact_id=p_contact and not o.is_closed
+  and crm_private.can_read_contact(p_company,p_contact)
+  and crm_private.card_owner_scope(p_company,p_entity)
+   and (p_kind<>'card_escalation' or crm_private.has_permission(p_company,'reports.view')));end if;
+ return false;
+end;$$;
+
 commit;
