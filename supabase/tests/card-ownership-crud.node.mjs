@@ -61,7 +61,8 @@ test('cards têm dono independente do contato e somente dono/gestor enxergam', a
     assert.equal((await user(2,()=>q('select id from public.crm_opportunities where id=$1',[created.id]))).rows.length,1);
     await denied(card(5, {title:'Alteração indevida'},created.id,moved.row_version));
     assert.equal((await q('select title from public.crm_opportunities where id=$1',[created.id])).rows[0].title,'Encaminhado');
-    await denied(card(2,{owner_membership_id:id(14)},created.id,moved.row_version));
+    await assert.rejects(card(2,{owner_membership_id:id(14)},created.id,moved.row_version),
+      (e) => e.code === '22023' || /CRM_INVALID_OWNER/.test(e.message));
   });
 
   await t.test('nem os dados auxiliares de outro card ficam legíveis', async () => {
