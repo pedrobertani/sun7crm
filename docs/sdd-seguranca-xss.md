@@ -28,10 +28,11 @@
 - [x] O plugin Vite em `vite.config.ts` emite `dist/_headers` com regra `/*`, CSP, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin` e `X-Frame-Options: DENY`.
 - [x] Incluídos testes da sintaxe do `_headers`, proteção contra injeção de origem e variantes com/sem Mercado Pago; o comando `npm run build` agora verifica a existência do arquivo e a consistência entre a CSP do HTML e do cabeçalho.
 - [x] Consultada configuração Cloudflare Pages: produção e prévia têm `VITE_ONLINE_BILLING_ENABLED=true`. As origens necessárias ao Mercado Pago continuam na CSP quando o checkout está ativo.
-- [ ] Verificar CI e deploy de prévia do commit final (a regra precisa chegar ao Cloudflare).
-- [ ] Confirmar **HTTP response** em `https://sun7crm.pages.dev/` e na prévia, usando cabeçalhos reais via ferramenta de rede (a API de configuração Cloudflare usada nesta rodada não fornece os cabeçalhos HTTP da resposta). Garantir que não haja dois cabeçalhos CSP incompatíveis.
-- [ ] Exercitar login, navegação do CRM e Pix/cartão em homologação após a CSP HTTP; conferir mensagens CSP no console.
-- [ ] Integrar o PR #31 somente após aprovação e homologação.
+- [x] CI #298 aprovou a geração e validação de `dist/_headers`; a prévia do commit `6b5c96fe` foi publicada com sucesso. Conferir novamente o deploy final após limpeza dos testes temporários.
+- [x] **Prévia — cabeçalhos HTTP reais comprovados:** job GitHub Actions `41164956101` aprovado para `/`, `/acessar`, `/demo` no alias `security-xss-regression-2026.sun7crm.pages.dev`. Confirmados CSP com `frame-ancestors 'none'`, `script-src` sem `unsafe-inline`/`unsafe-eval`, URLs Mercado Pago, `nosniff`, `DENY` e `Referrer-Policy`. Em navegador remoto do Cloudflare, leitura same-origin via `fetch('/')` retornou status 200 e os quatro cabeçalhos; manipulador de evento inline foi bloqueado (`inlineEventHandlerExecuted=false`).
+- [ ] **Produção — checagem após merge:** repetir GET e leitura dos cabeçalhos em `https://sun7crm.pages.dev/` após a implantação do PR #31. Antes do merge, a produção ainda utiliza a versão anterior.
+- [ ] Exercitar login, navegação do CRM e Pix/cartão em homologação após a CSP HTTP; conferir mensagens CSP no console. Navegador remoto carregou a home da prévia, porém consulta posterior à tela de login atingiu limite 429 do serviço Browser Rendering; nenhum pagamento ou autenticação foi executado.
+- [ ] Integrar o PR #31 somente após aprovação e homologação. O job HTTP e o script de navegador foram criados apenas para auditoria e devem ser retirados da branch antes do merge.
 
 ### Escopo da segurança
 
