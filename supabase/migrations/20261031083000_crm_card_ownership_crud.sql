@@ -11,6 +11,20 @@ alter table public.crm_opportunities add constraint crm_card_owner_company_fk
  foreign key (company_id,owner_membership_id) references public.crm_memberships(company_id,id);
 create index crm_card_company_owner_idx on public.crm_opportunities(company_id,owner_membership_id,stage_id);
 
+-- Gravações antigas (fixtures, migração ou integração) sem responsável explícito
+-- continuam vinculadas ao dono do contato. O novo CRM sempre envia dono próprio.
+create function crm_private.default_card_owner() returns trigger language plpgsql security definer set search_path='' as $
+begin
+ if new.owner_membership_id is null then
+   select c.owner_membership_id into new.owner_membership_id from public.crm_contacts c
+   where c.company_id=new.company_id and c.id=new.contact_id;
+ end if;
+ return new;
+end;$;
+revoke all on function crm_private.default_card_owner() from public,anon,authenticated,service_role;
+create trigger crm_card_owner_default before insert on public.crm_opportunities
+ for each row execute function crm_private.default_card_owner();
+
 -- Política obrigatória: apenas gestor enxerga toda a empresa. Funcionários,
 -- mesmo com alcance "company" em contatos, só enxergam seus próprios cards.
 create function crm_private.card_owner_scope(p_company uuid,p_card uuid)
@@ -49,7 +63,10 @@ $$;
 
 drop policy permissions_select on public.crm_contacts;
 create policy permissions_select on public.crm_contacts for select to authenticated
- using(crm_private.can_read_contact(company_id,id));
+ using(crm_private.has_permission(company_id,'contacts.view') and
+  (crm_private.has_company_scope(company_id)
+   or crm_private.owns_membership(company_id,owner_membership_id)
+   or crm_private.can_read_contact(company_id,id)));
 
 drop policy permissions_select on public.crm_opportunities;
 create policy permissions_select on public.crm_opportunities for select to authenticated
@@ -131,7 +148,9 @@ begin
  contact:=coalesce((p_values->>'contact_id')::uuid,previous.contact_id);
  if not crm_private.can_read_contact(p_company,contact) then raise exception 'CRM_FORBIDDEN' using errcode='42501';end if;
  owner:=coalesce((p_values->>'owner_membership_id')::uuid,previous.owner_membership_id,(select m.id from public.crm_memberships m where m.company_id=p_company and m.user_id=(select auth.uid()) and m.active));
- if not crm_private.active_membership(p_company,owner) then raise exception 'CRM_INVALID_OWNER' using errcode='22023';end if;
+ if not crm_private.active_membership(p_company,owner)
+ or not crm_private.member_permission(owner,'cards.view') then
+   raise exception 'CRM_INVALID_OWNER' using errcode='22023';end if;
  board:=coalesce((p_values->>'board_id')::uuid,previous.board_id);stage:=coalesce((p_values->>'stage_id')::uuid,previous.stage_id);
  if not exists(select 1 from public.crm_stages where company_id=p_company and board_id=board and id=stage) then raise exception 'CRM_INVALID_STAGE' using errcode='22023';end if;
  if p_values ? 'strategy_id' then strategy:=(p_values->>'strategy_id')::uuid;else strategy:=previous.strategy_id;end if;
@@ -219,5 +238,46 @@ begin
   return result;
 end;
 $$;
+
+
+-- A desativação de um funcionário redistribui também seus cards em aberto,
+-- para que nenhum card fique invisível após a transferência de carteira.
+create or replace function crm_private.workspace_update_team_member(p_company uuid,p_membership uuid,p_values jsonb,p_reassign_to uuid,p_expected_version bigint) returns jsonb language plpgsql security definer set search_path='' as $
+declare member public.crm_memberships;target public.crm_memberships;next_active boolean;next_role text;next_name text;
+begin
+ perform crm_private.require_permission(p_company,'team.manage');
+ if jsonb_typeof(p_values) is distinct from 'object' or exists(select 1 from jsonb_object_keys(p_values) k where k<>all(array['display_name','role','active'])) then raise exception 'CRM_INVALID_INPUT' using errcode='22023';end if;
+ perform 1 from public.crm_companies where id=p_company for update;
+ select * into member from public.crm_memberships where company_id=p_company and id=p_membership for update;
+ if not found or member.role='manager' or member.user_id=(select auth.uid()) or exists(select 1 from crm_private.platform_admins where user_id=member.user_id) then raise exception 'CRM_FORBIDDEN' using errcode='42501';end if;
+ if crm_private.company_role(p_company)<>'manager' and (
+  not exists(select 1 from crm_private.employee_access a where a.membership_id=member.id)
+  or exists(select 1 from crm_private.employee_access a,unnest(a.keys) k where a.membership_id=member.id and not crm_private.has_permission(p_company,k))
+  or (crm_private.member_company_scope(member.id) and not crm_private.has_company_scope(p_company))
+  or (p_values ? 'role' and p_values->>'role' is distinct from member.role)
+ ) then raise exception 'CRM_FORBIDDEN' using errcode='42501';end if;
+ if p_expected_version is null or member.row_version<>p_expected_version then raise exception 'CRM_STALE_VERSION' using errcode='40001';end if;
+ next_active:=coalesce((p_values->>'active')::boolean,member.active);next_role:=coalesce(p_values->>'role',member.role);
+ if next_role not in ('seller','reception') then raise exception 'CRM_INVALID_ROLE' using errcode='22023';end if;
+ if p_values ? 'display_name' then
+  next_name:=btrim(p_values->>'display_name');
+  if next_name is null or length(next_name) not between 1 and 160 then raise exception 'CRM_INVALID_INPUT' using errcode='22023';end if;
+  if exists(select 1 from public.crm_memberships where user_id=member.user_id and company_id<>p_company) and next_name is distinct from (select display_name from public.crm_profiles where id=member.user_id) then raise exception 'CRM_SHARED_IDENTITY' using errcode='23514';end if;
+ end if;
+ if not next_active and member.active then
+  if exists(select 1 from public.crm_contacts where company_id=p_company and owner_membership_id=member.id) or exists(select 1 from public.crm_tasks where company_id=p_company and owner_membership_id=member.id and status<>'done') or exists(select 1 from public.crm_opportunities where company_id=p_company and owner_membership_id=member.id and archived_at is null) then
+   select * into target from public.crm_memberships where company_id=p_company and id=p_reassign_to and active and id<>member.id and crm_private.member_permission(id,'contacts.view')
+    and (not exists(select 1 from public.crm_opportunities where company_id=p_company and owner_membership_id=member.id and archived_at is null) or crm_private.member_permission(id,'cards.view')) for key share;
+   if not found then raise exception 'CRM_REASSIGNMENT_REQUIRED' using errcode='23514';end if;
+   update public.crm_contacts set owner_membership_id=target.id where company_id=p_company and owner_membership_id=member.id;
+   update public.crm_tasks set owner_membership_id=target.id where company_id=p_company and owner_membership_id=member.id and status<>'done';
+    update public.crm_opportunities set owner_membership_id=target.id where company_id=p_company and owner_membership_id=member.id and archived_at is null;
+  end if;
+ end if;
+ if next_name is not null then update public.crm_profiles set display_name=next_name where id=member.user_id;end if;
+ update public.crm_memberships set active=next_active,role=next_role where id=member.id returning * into member;
+ return to_jsonb(member);
+end;
+$;
 
 commit;
