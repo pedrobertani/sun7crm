@@ -21,6 +21,18 @@
 - [ ] Verificar CSP por **cabeçalho HTTP** na aplicação publicada, compatibilidade com Mercado Pago e ausência de `unsafe-inline` para scripts.
 - [ ] Testar em desktop e Android com pelo menos gestor e consultor, registrar evidências antes de marcar como concluído.
 
+
+### Correção dos cabeçalhos Cloudflare Pages — 31/10/2026
+
+- [x] A função `cloudflarePagesSecurityHeaders()` reutiliza `contentSecurityPolicy()`, separando a diretiva `frame-ancestors 'none'` (só permitida em HTTP).
+- [x] O plugin Vite em `vite.config.ts` emite `dist/_headers` com regra `/*`, CSP, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin` e `X-Frame-Options: DENY`.
+- [x] Incluídos testes da sintaxe do `_headers`, proteção contra injeção de origem e variantes com/sem Mercado Pago; o comando `npm run build` agora verifica a existência do arquivo e a consistência entre a CSP do HTML e do cabeçalho.
+- [x] Consultada configuração Cloudflare Pages: produção e prévia têm `VITE_ONLINE_BILLING_ENABLED=true`. As origens necessárias ao Mercado Pago continuam na CSP quando o checkout está ativo.
+- [ ] Verificar CI e deploy de prévia do commit final (a regra precisa chegar ao Cloudflare).
+- [ ] Confirmar **HTTP response** em `https://sun7crm.pages.dev/` e na prévia, usando cabeçalhos reais via ferramenta de rede (a API de configuração Cloudflare usada nesta rodada não fornece os cabeçalhos HTTP da resposta). Garantir que não haja dois cabeçalhos CSP incompatíveis.
+- [ ] Exercitar login, navegação do CRM e Pix/cartão em homologação após a CSP HTTP; conferir mensagens CSP no console.
+- [ ] Integrar o PR #31 somente após aprovação e homologação.
+
 ### Escopo da segurança
 
 A revisão estática e os testes React de renderização são medidas de prevenção e regressão, **não** constituem pentest nem atestam a ausência de XSS DOM/armazenado/refletido em todo o produto. Não alterar dados de clientes reais na auditoria.
