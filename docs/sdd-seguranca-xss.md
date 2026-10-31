@@ -34,6 +34,19 @@
 - [ ] Exercitar login, navegação do CRM e Pix/cartão em homologação após a CSP HTTP; conferir mensagens CSP no console. Navegador remoto carregou a home da prévia, porém consulta posterior à tela de login atingiu limite 429 do serviço Browser Rendering; nenhum pagamento ou autenticação foi executado.
 - [ ] Integrar o PR #31 somente após aprovação e homologação. O job HTTP e o script de navegador foram criados apenas para auditoria e devem ser retirados da branch antes do merge.
 
+### Testes XSS no navegador real — demo isolada (31/10/2026)
+
+- [x] GitHub Actions [execução #41166622518](https://github.com/pedrobertani/sun7crm/actions/runs/41166622518) aprovada no Chrome headless.
+- [x] Contatos: nome e observações com payload HTML/JavaScript, criados pelo formulário, gravados em `localStorage`, reabertos depois de atualizar a página.
+- [x] Tarefas: título com tentativa de fechamento de elemento e `<script>`, salvo e reaberto após atualizar a página.
+- [x] Catálogo: nome e descrição com `<img onerror>` e `<svg onload>`, persistidos.
+- [x] Etiquetas: nome com `<svg onload>`, persistido.
+- [x] Kanban: card fictício gravado no armazenamento **exclusivo da demo** e visualizado no quadro e na modal de detalhes junto às observações do contato.
+- [x] Em cada tela foram verificados: nenhum `alert` executado, nenhum elemento HTML de payload inserido no DOM e nenhuma exceção não tratada.
+- [ ] Validar o mesmo cenário com sessões autenticadas e banco real em **homologação**, cobrindo fluxo de inserção, listagem, histórico, relatórios e importação Excel. **Os testes na demo não comprovam essa etapa**, pois a demo usa apenas armazenamento local.
+
+**Privacidade:** os dados criados pela auditoria permaneceram no armazenamento isolado do navegador do runner; nenhum cliente, pagamento ou banco real foi modificado.
+
 ### Escopo da segurança
 
 A revisão estática e os testes React de renderização são medidas de prevenção e regressão, **não** constituem pentest nem atestam a ausência de XSS DOM/armazenado/refletido em todo o produto. Não alterar dados de clientes reais na auditoria.
