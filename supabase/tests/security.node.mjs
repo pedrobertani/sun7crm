@@ -99,18 +99,18 @@ test('segurança: entradas são dados e não alteram o escopo ou os comandos SQL
 
 test('hook de senha permanece desativado e fora das migrations automáticas', async () => {
   const config = await readFile(new URL('../config.toml', import.meta.url), 'utf8');
-  const section = config.match(/^\\[auth\\.hook\\.password_verification_attempt\\]\\s*\\n([^\\[]*)/m);
+  const section = config.match(/^\[auth\.hook\.password_verification_attempt\]\s*\n([^\[]*)/m);
   assert.ok(section, 'A configuração precisa declarar o hook como inativo');
-  assert.match(section[1], /^enabled\\s*=\\s*false\\s*$/m);
-  assert.match(section[1], /^uri\\s*=\\s*"pg-functions:\\/\\/postgres\\/public\\/crm_password_verification_hook"\\s*$/m);
+  assert.match(section[1], /^enabled\s*=\s*false\s*$/m);
+  assert.match(section[1], /^uri\s*=\s*"pg-functions:\/\/postgres\/public\/crm_password_verification_hook"\s*$/m);
   const hook = await readFile(
     new URL('../security/password-verification-hook.sql', import.meta.url),
     'utf8',
   );
   assert.match(hook, /PREPARADO, NÃO ATIVADO/);
   assert.match(hook, /security invoker/);
-  assert.match(hook, /grant execute on function public\\.crm_password_verification_hook\\(jsonb\\) to supabase_auth_admin/i);
-  assert.match(hook, /revoke all on function public\\.crm_password_verification_hook\\(jsonb\\) from public, anon, authenticated, service_role/i);
+  assert.match(hook, /grant execute on function public\.crm_password_verification_hook\(jsonb\) to supabase_auth_admin/i);
+  assert.match(hook, /revoke all on function public\.crm_password_verification_hook\(jsonb\) from public, anon, authenticated, service_role/i);
   const dir = new URL('../migrations/', import.meta.url);
   const files = await readdir(dir);
   assert.ok(files.length > 0);
@@ -118,12 +118,12 @@ test('hook de senha permanece desativado e fora das migrations automáticas', as
     const migration = await readFile(new URL(path, dir), 'utf8');
     assert.doesNotMatch(
       migration,
-      /create\\s+(?:or\\s+replace\\s+)?function\\s+(?:public\\.)?crm_password_verification_hook\\s*\\(/i,
+      /create\s+(?:or\s+replace\s+)?function\s+(?:public\.)?crm_password_verification_hook\s*\(/i,
       'A ativação do hook não pode acontecer por migrations automáticas: ' + path,
     );
     assert.doesNotMatch(
       migration,
-      /create\\s+table\\s+(?:if\\s+not\\s+exists\\s+)?crm_private\\.login_attempts/i,
+      /create\s+table\s+(?:if\s+not\s+exists\s+)?crm_private\.login_attempts/i,
       'Tabela do hook também deve permanecer fora de migrations: ' + path,
     );
   }
