@@ -1,6 +1,8 @@
 -- PREPARADO, NÃO ATIVADO. Fora de migrations intencionalmente.
--- O projeto Free não oferece Password Verification Attempt Hooks.
+-- O Password Verification Attempt Hook exige plano Team/Enterprise (documentação 31/10/2026); Free e Pro não incluem.
 -- Instalar e vincular no Auth apenas em plano compatível, após homologação do fluxo nativo.
+-- ATENÇÃO: tentativas inválidas não autenticadas podem ser usadas para bloquear contas de terceiros.
+-- Revisar proteção contra abuso antes de ativar. A aprovação local não implica liberação remota.
 -- pg-functions://postgres/public/crm_password_verification_hook
 begin;
 
@@ -12,7 +14,7 @@ create table if not exists crm_private.login_attempts (
 );
 alter table crm_private.login_attempts enable row level security;
 revoke all on crm_private.login_attempts from public, anon, authenticated, service_role;
-grant usage on schema crm_private to supabase_auth_admin;
+grant usage on schema public, crm_private to supabase_auth_admin;
 grant select, insert, update, delete on crm_private.login_attempts to supabase_auth_admin;
 -- O papel de Auth é o único leitor/escritor. Não há acesso pela API do aplicativo.
 drop policy if exists login_attempts_auth_only on crm_private.login_attempts;
