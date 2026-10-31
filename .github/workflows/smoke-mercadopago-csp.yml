@@ -1,0 +1,75 @@
+name: Smoke Mercado Pago SDK com CSP (somente leitura)
+
+on:
+  push:
+    branches:
+      - test/csp-mercadopago-smoke-20261031
+
+permissions:
+  contents: read
+
+jobs:
+  browser-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Preparar navegador headless
+        run: |
+          npm install --no-save --no-package-lock --ignore-scripts playwright-core@1.56.1
+          which google-chrome || which google-chrome-stable || which chromium || which chromium-browser
+      - name: Verificar CSP publicada e inicializacao do SDK sem cobrar
+        env:
+          TEST_URLS: 'https://5b654716.sun7crm.pages.dev/,https://sun7crm.pages.dev/'
+        run: |
+          node --input-type=module <<'JS'
+          import assert from 'node:assert/strict';
+          import { chromium } from 'playwright-core';
+          import { execFileSync } from 'node:child_process';
+          const candidates = ['google-chrome', 'google-chrome-stable', 'chromium', 'chromium-browser'];
+          let executablePath = '';
+          for (const candidate of candidates) {
+            try { executablePath = execFileSync('which', [candidate], { encoding: 'utf8' }).trim(); break; } catch {}
+          }
+          assert.ok(executablePath, 'Chromium/Chrome ausente no runner');
+          const browser = await chromium.launch({ executablePath, headless: true, args: ['--no-sandbox'] });
+          try {
+            for (const url of process.env.TEST_URLS.split(',')) {
+              const page = await browser.newPage();
+              const errors = [];
+              const failedRequests = [];
+              page.on('console', msg => { if (msg.type() === 'error') errors.push(msg.text()); });
+              page.on('requestfailed', req => failedRequests.push({ url:req.url(), error:req.failure()?.errorText }));
+              try {
+                const response = await page.goto(url, { waitUntil:'domcontentloaded', timeout:25000 });
+                assert.ok(response && response.status() === 200, 'Home sem HTTP 200: '+url);
+                const headers = response.headers();
+                const csp = headers['content-security-policy'] || '';
+                assert.match(csp, /script-src 'self' https:\/\/sdk\.mercadopago\.com/);
+                assert.match(csp, /frame-src[^;]*https:\/\/secure-fields\.mercadopago\.com/);
+                assert.match(csp, /frame-ancestors 'none'/);
+                assert.equal(headers['x-content-type-options'], 'nosniff');
+                const sdk = await page.evaluate(async () => {
+                  return await new Promise(resolve => {
+                    const el = document.createElement('script');
+                    const timeout = setTimeout(() => resolve({ loaded:false, reason:'timeout' }), 12000);
+                    el.src = 'https://sdk.mercadopago.com/js/v2';
+                    el.async = true;
+                    el.onload = () => { clearTimeout(timeout); resolve({loaded:true, available:typeof window.MercadoPago === 'function'}); };
+                    el.onerror = () => { clearTimeout(timeout); resolve({loaded:false, reason:'load-error'}); };
+                    document.head.appendChild(el);
+                  });
+                });
+                console.log('AUDITORIA', JSON.stringify({url, sdk, errors:errors.slice(0,8), failedRequests:failedRequests.slice(0,8)}));
+                assert.equal(sdk.loaded, true, 'SDK Mercado Pago bloqueado/falhou: '+url);
+                assert.equal(sdk.available, true, 'MercadoPago constructor ausente: '+url);
+                const cspErrors = errors.filter(x=>/Content Security Policy|Content-Security-Policy|violates the following Content Security Policy directive/i.test(x));
+                assert.equal(cspErrors.length, 0, 'Violacoes CSP detectadas no carregamento do SDK: '+url);
+                console.log('APROVADO: CSP HTTP e SDK oficial carregando no Chrome para '+url);
+              } finally { await page.close(); }
+            }
+          } finally { await browser.close(); }
+          JS
