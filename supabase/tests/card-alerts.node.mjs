@@ -196,20 +196,16 @@ test('alertas por card: prazos fixos de 24h, 3/7 dias e histórico do gestor', a
     },
   );
   await t.test(
-    'reatribuir a pessoa retira imediatamente os avisos do responsável anterior',
+    'transferir o card (não o contato) muda imediatamente seus alertas de responsável',
     async () => {
-      await user(1, () =>
-        q(
-          'select public.crm_save_contact($1,$2,$3,(select row_version from public.crm_contacts where id=$2))',
-          [id(100), id(1001), { owner_membership_id: id(15) }],
-        ),
-      );
+      const version = (await q('select row_version from public.crm_opportunities where id=$1',[id(5003)])).rows[0].row_version;
+      await card(1, { owner_membership_id: id(15) }, id(5003), version);
       assert.equal((await visible(2)).length, 0);
       await sync(5);
       assert.ok((await visible(5)).some((x) => x.entity_id === id(5003)));
-      assert.equal(
-        (await user(5, () => q('select * from public.crm_card_idle_report'))).rows.length,
-        0,
+      assert.ok(
+        (await user(5, () => q('select * from public.crm_card_idle_report'))).rows.some(
+          (x) => x.opportunity_id === id(5003)),
       );
     },
   );
