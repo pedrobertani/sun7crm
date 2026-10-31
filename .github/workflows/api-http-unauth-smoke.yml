@@ -1,6 +1,7 @@
 name: API HTTP no-auth and CORS smoke (read-only)
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - security/api-auth-boundaries-20261031
