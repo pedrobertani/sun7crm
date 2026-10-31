@@ -1,0 +1,51 @@
+name: Audit CSP HTTP in Cloudflare preview
+
+on:
+  push:
+    branches:
+      - security/xss-regression-20261031
+
+permissions:
+  contents: read
+
+jobs:
+  response-headers:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Confirm preview release and validate real HTTP headers
+        env:
+          PREVIEW: https://security-xss-regression-2026.sun7crm.pages.dev
+        run: |
+          set -euo pipefail
+          echo "Confirmando a publicação do marcador de auditoria no Cloudflare Pages..."
+          live=0
+          for attempt in $(seq 1 36); do
+            if curl --silent --show-error --fail --location --max-time 10 "$PREVIEW/__sun7_csp_probe_31.js" | grep -q 'sun7-csp-audit-result'; then
+              live=1
+              break
+            fi
+            sleep 10
+          done
+          if [ "$live" != "1" ]; then
+            echo "::error::A versão com a auditoria ainda não está publicada"
+            exit 1
+          fi
+          for route in / /acessar /demo; do
+            echo "Testando resposta HTTP de $route"
+            curl --silent --show-error --fail --location --max-time 20 \
+              --dump-header /tmp/sun7-headers --output /tmp/sun7-body "$PREVIEW$route"
+            tr -d '\r' </tmp/sun7-headers >/tmp/sun7-normalized
+            grep -Eiq '^content-security-policy: ' /tmp/sun7-normalized
+            grep -Eiq 'frame-ancestors .none.' /tmp/sun7-normalized
+            grep -Eiq "script-src 'self' https://sdk.mercadopago.com" /tmp/sun7-normalized
+            grep -Eiq '^x-content-type-options: nosniff$' /tmp/sun7-normalized
+            grep -Eiq '^x-frame-options: DENY$' /tmp/sun7-normalized
+            grep -Eiq '^referrer-policy: strict-origin-when-cross-origin$' /tmp/sun7-normalized
+            if grep -Ei '^content-security-policy:' /tmp/sun7-normalized | grep -Eiq "script-src[^;]*'unsafe-(inline|eval)'"; then
+              echo "::error::CSP admite scripts inseguros"
+              exit 1
+            fi
+            echo "APROVADO: status HTTP e cabeçalhos CSP/segurança"
+          done
+          echo "Auditoria HTTP concluída com sucesso."
