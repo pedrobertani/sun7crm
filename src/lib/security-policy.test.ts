@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { supabaseOrigin } from './public-config';
-import { contentSecurityPolicy } from './security-policy';
+import { cloudflarePagesSecurityHeaders, contentSecurityPolicy } from './security-policy';
 
 describe('Política de segurança do build', () => {
   it('restringe scripts e conexões ao aplicativo e ao projeto de autenticação', () => {
@@ -78,4 +78,32 @@ describe('Política de segurança do build', () => {
   ])('recusa configuração que possa ampliar ou injetar uma política: %s', (url) => {
     expect(() => contentSecurityPolicy(url)).toThrow();
   });
+  it('gera _headers válido para Cloudflare Pages e mantém a CSP igual à meta', () => {
+    const headers = cloudflarePagesSecurityHeaders('https://fixture.supabase.co/');
+    const lines = headers.trimEnd().split('\n');
+    expect(lines[0]).toBe('/*');
+    expect(lines[1]).toBe(
+      `  Content-Security-Policy: ${contentSecurityPolicy('https://fixture.supabase.co/')}; frame-ancestors 'none'`,
+    );
+    expect(lines).toContain('  X-Content-Type-Options: nosniff');
+    expect(lines).toContain('  Referrer-Policy: strict-origin-when-cross-origin');
+    expect(lines).toContain('  X-Frame-Options: DENY');
+    expect(headers).not.toContain('\\\\n');
+    expect(headers).not.toContain("'unsafe-eval'");
+  });
+  it('aplica permissões estritas de Mercado Pago apenas quando o checkout está habilitado', () => {
+    const withPayments = cloudflarePagesSecurityHeaders(undefined, true);
+    const withoutPayments = cloudflarePagesSecurityHeaders(undefined, false);
+    expect(withPayments).toContain('https://sdk.mercadopago.com');
+    expect(withPayments).toContain('https://secure-fields.mercadopago.com');
+    expect(withPayments).toContain('frame-ancestors \'none\'');
+    expect(withoutPayments).not.toContain('mercadopago');
+    expect(withoutPayments).toContain("frame-src 'none'");
+  });
+  it('impede injeção de cabeçalhos por uma origem Supabase inválida', () => {
+    expect(() =>
+      cloudflarePagesSecurityHeaders('https://example.invalid/;\nX-Fake: yes'),
+    ).toThrow();
+  });
+
 });
