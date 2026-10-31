@@ -3,7 +3,8 @@ import { HttpError } from './errors.ts';
 import { uuid } from './validation.ts';
 import { reportSafely, safeException } from './telemetry.ts';
 
-export const DEFAULT_ORIGIN = 'https://sun7crm-base.dreamygull10.chatgpt.site';
+// Fallback restrito ao domínio de produção ativo; previews precisam de CRM_ALLOWED_ORIGINS explícito.
+export const DEFAULT_ORIGIN = 'https://sun7crm.pages.dev';
 const MAX_BODY_BYTES = 16_384;
 
 export async function readBody(request: Request): Promise<JsonObject> {

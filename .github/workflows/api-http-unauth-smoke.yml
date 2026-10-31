@@ -1,0 +1,91 @@
+name: API HTTP no-auth and CORS smoke (read-only)
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - security/api-auth-boundaries-20261031
+
+permissions:
+  contents: read
+
+jobs:
+  unauthorized-api-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: HTTP sem credenciais (nenhum acesso a dados)
+        run: |
+          node --input-type=module <<'JS'
+          import assert from 'node:assert/strict';
+          const base = 'https://oduhbimlxnuyqliayvpl.supabase.co/functions/v1';
+          const origin = 'https://sun7crm.pages.dev';
+          const targets = ['crm-create-user', 'crm-first-access'];
+          for (const route of targets) {
+            const response = await fetch(base + '/' + route, {
+              method: 'POST',
+              headers: {
+                origin,
+                'content-type': 'application/json',
+                'idempotency-key': '00000000-0000-4000-8000-000000000001',
+              },
+              body: '{}',
+              signal: AbortSignal.timeout(15000),
+            });
+            const body = await response.text();
+            const cors = response.headers.get('access-control-allow-origin');
+            const code = (() => { try { return JSON.parse(body).error?.code || ''; } catch { return ''; } })();
+            console.log(JSON.stringify({route, status:response.status, errorCode:code, allowOrigin:cors, noStore:response.headers.get('cache-control')}));
+            assert.equal(response.status, 401, 'Sem JWT deveria retornar 401; conferir o Supabase remoto e CRM_ALLOWED_ORIGINS');
+            assert.equal(cors, origin, 'O domínio de produção deve estar autorizado no CORS');
+            assert.ok(!body.includes('sb_secret_'), 'Resposta não deve expor chave secreta');
+          }
+          const scenarios = [
+            {
+              name: 'JWT inválido não autentica usuário',
+              route: 'crm-create-user',
+              method: 'POST',
+              origin,
+              authorization: 'Bearer invalid-public-audit-token',
+              expected: 401,
+            },
+            {
+              name: 'Origem falsificada não chega ao Auth',
+              route: 'crm-create-user',
+              method: 'POST',
+              origin: 'https://sun7crm.pages.dev.attacker.invalid',
+              expected: 403,
+            },
+            {
+              name: 'Preflight legítimo aceita domínio de produção',
+              route: 'crm-first-access',
+              method: 'OPTIONS',
+              origin,
+              expected: 204,
+            },
+            {
+              name: 'Preflight de origem falsificada é negado',
+              route: 'crm-first-access',
+              method: 'OPTIONS',
+              origin: 'https://sun7crm.pages.dev.attacker.invalid',
+              expected: 403,
+            },
+          ];
+          for (const item of scenarios) {
+            const response = await fetch(base + '/' + item.route, {
+              method: item.method,
+              headers: {
+                origin: item.origin,
+                'content-type': 'application/json',
+                ...(item.authorization ? { authorization: item.authorization } : {}),
+              },
+              ...(item.method === 'POST' ? { body: '{}' } : {}),
+              signal: AbortSignal.timeout(15000),
+            });
+            const cors = response.headers.get('access-control-allow-origin');
+            console.log(JSON.stringify({name:item.name, route:item.route, status:response.status, allowOrigin:cors}));
+            assert.equal(response.status, item.expected, item.name);
+            assert.equal(cors, item.origin === origin ? origin : null, item.name + ': CORS');
+          }
+          console.log('API_PUBLIC_NO_AUTH_SMOKE_OK: sem JWT, JWT inválido, origens falsificadas e preflight recusado');
+          JS
