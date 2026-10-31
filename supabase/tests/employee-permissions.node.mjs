@@ -206,7 +206,7 @@ test('permissões por funcionário: ações, carteira e delegação', async (t) 
     });
   });
   await t.test('excluir card exige permissão própria e conserva o histórico', async () => {
-    const made = await card(1);
+    // O destinatário precisa ter cards.view para receber um card.
     await user(1, () =>
       q('select public.crm_set_employee_permissions($1,$2,$3,$4,5)', [
         company,
@@ -215,6 +215,7 @@ test('permissões por funcionário: ações, carteira e delegação', async (t) 
         'own',
       ]),
     );
+    const made = await card(1, { owner_membership_id: member });
     await assert.rejects(
       user(5, () =>
         q('select public.crm_delete_card($1,$2,$3)', [company, made.id, made.row_version]),

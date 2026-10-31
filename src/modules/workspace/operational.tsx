@@ -223,6 +223,26 @@ export function Pager({
 }) {
   return <Pagination page={page} total={total} size={size} onChange={onChange} onSizeChange={onSizeChange} loading={loading} />;
 }
+/** Somente id e nome dos responsáveis que o CRUD atual permite selecionar. Não concede team.view. */
+export function useAssignableMembers(
+  resource: 'contacts' | 'tasks' | 'strategies' | 'cards',
+  operation: 'create' | 'edit',
+) {
+  const { api, can, company, user } = useOperational();
+  const allowed = can(resource + '.' + operation);
+  return useQuery(
+    () =>
+      allowed
+        ? api.assignableMembers(resource, operation)
+        : Promise.resolve([{
+            id: company.membershipId,
+            display_name: user.displayName,
+            active: true,
+          }]),
+    [api, resource, operation, allowed, company.membershipId, user.id],
+    { live: false },
+  );
+}
 export function useTeam() {
   const { api, company, user, can } = useOperational();
   return useQuery(

@@ -10,7 +10,7 @@ import {
   useOperational,
   useQuery,
   useSave,
-  useTeam,
+  useAssignableMembers,
 } from './operational';
 import { RecordPicker } from './RecordPicker';
 import { currency } from '../../lib/format';
@@ -197,7 +197,7 @@ export function ContactDialog({
 }) {
   const { api } = useOperational(),
     save = useSave(),
-    team = useTeam();
+    team = useAssignableMembers('contacts', contact ? 'edit' : 'create');
   const details = useQuery(
     async () => ({
       contact: contact ? await api.contactDetails(contact.id) : null,
@@ -238,7 +238,7 @@ function ContactFields({
 }: {
   data: { contact: ContactRow | null; catalog: CatalogRow[] };
   name: string;
-  team: import('../../data/backend').TeamRow[];
+  team: import('../../data/backend').AssignableMember[];
   save: ReturnType<typeof useSave>;
   onClose: () => void;
   onSaved: (row: ContactRow) => void;
@@ -314,7 +314,7 @@ function ContactFields({
               <select
                 required
                 value={form.owner_membership_id}
-                disabled={!companyScope}
+                disabled={!companyScope || team.length < 2}
                 onChange={(e) => setForm({ ...form, owner_membership_id: e.target.value })}
               >
                 {team
