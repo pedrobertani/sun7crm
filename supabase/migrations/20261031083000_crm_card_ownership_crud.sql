@@ -423,4 +423,55 @@ begin
  return false;
 end;$$;
 
+-- Vendas indicadas não podem expor nem referenciar cards de outro funcionário.
+drop policy permissions_select on public.crm_ambassador_referrals;
+create policy permissions_select on public.crm_ambassador_referrals for select to authenticated using(
+ crm_private.has_permission(company_id,'referrals.view')
+ and crm_private.can_read_card(company_id,opportunity_id)
+);
+create or replace function crm_private.amb_save_referral(p_company uuid,p_referral uuid,p_campaign uuid,p_ambassador uuid,p_opportunity uuid,p_values jsonb,p_request_id uuid,p_expected_version bigint default null) returns jsonb language plpgsql security definer set search_path='' as $$
+declare c public.crm_ambassador_campaigns;r public.crm_ambassador_referrals;o public.crm_opportunities;previous public.crm_referral_revisions;hash text;items uuid[];item uuid;
+begin
+ perform crm_private.require_permission(p_company,case when p_referral is null then 'referrals.create' else 'referrals.edit' end);
+ if p_request_id is null or jsonb_typeof(p_values) is distinct from 'object' or exists(select 1 from jsonb_object_keys(p_values) k where k<>all(array['value_cents','sold_on','paid','attended','catalog_ids'])) then raise exception 'CRM_INVALID_INPUT' using errcode='22023';end if;
+ hash:=encode(sha256(convert_to(jsonb_build_array(p_company,p_referral,p_campaign,p_ambassador,p_opportunity,p_values,p_expected_version)::text,'UTF8')),'hex');
+ perform pg_advisory_xact_lock(hashtextextended(p_request_id::text,94));
+ select * into previous from public.crm_referral_revisions where request_id=p_request_id;
+ if found then
+  if previous.actor_user_id<>(select auth.uid()) or previous.company_id<>p_company or previous.fingerprint<>hash then raise exception 'CRM_REQUEST_CONFLICT' using errcode='23505';end if;return previous.result;
+ end if;
+ select * into c from public.crm_ambassador_campaigns where company_id=p_company and id=p_campaign for update;
+ if not found then raise exception 'CRM_NOT_FOUND' using errcode='P0002';end if;
+ if c.status<>'active' then raise exception 'CRM_CAMPAIGN_CLOSED' using errcode='23514';end if;
+ if not exists(select 1 from public.crm_ambassadors where company_id=p_company and id=p_ambassador and crm_private.permission_contact_scope(p_company,contact_id) and (active or p_referral is not null)) then raise exception 'CRM_INVALID_AMBASSADOR' using errcode='22023';end if;
+ select * into o from public.crm_opportunities where company_id=p_company and id=p_opportunity;
+ if not found or o.archived_at is not null or not crm_private.card_owner_scope(p_company,p_opportunity) or not crm_private.can_read_contact(p_company,o.contact_id) then raise exception 'CRM_INVALID_CARD' using errcode='22023';end if;
+ if p_referral is not null then
+  select * into r from public.crm_ambassador_referrals where company_id=p_company and id=p_referral for update;
+  if not found or r.campaign_id<>p_campaign or r.ambassador_id<>p_ambassador or r.opportunity_id<>p_opportunity then raise exception 'CRM_INVALID_REFERRAL' using errcode='22023';end if;
+  if p_expected_version is null or r.row_version<>p_expected_version then raise exception 'CRM_STALE_VERSION' using errcode='40001';end if;
+ end if;
+ if (p_values->>'sold_on')::date is null or (p_values->>'sold_on')::date<c.starts_on or (p_values->>'sold_on')::date>c.ends_on
+ or (p_values->>'sold_on')::date>(statement_timestamp() at time zone 'America/Sao_Paulo')::date or (p_values->>'value_cents')::integer is null or (p_values->>'value_cents')::integer<=0 then raise exception 'CRM_INVALID_SALE' using errcode='22023';end if;
+ if coalesce((p_values->>'value_cents')::integer,0)<coalesce(r.refunded_cents,0) then raise exception 'CRM_INVALID_SALE' using errcode='22023';end if;
+ if p_values ? 'catalog_ids' and jsonb_typeof(p_values->'catalog_ids') is distinct from 'array' then raise exception 'CRM_INVALID_INPUT' using errcode='22023';end if;
+ select coalesce(array_agg(distinct x::uuid),'{}') into items from jsonb_array_elements_text(coalesce(p_values->'catalog_ids','[]')) x;
+ foreach item in array items loop
+  if not exists(select 1 from public.crm_catalog_items ci where ci.company_id=p_company and ci.id=item and (ci.active or exists(select 1 from public.crm_referral_catalog where company_id=p_company and referral_id=p_referral and catalog_id=item))) then raise exception 'CRM_INVALID_CATALOG_ITEM' using errcode='22023';end if;
+ end loop;
+ if p_referral is null then
+  insert into public.crm_ambassador_referrals(company_id,campaign_id,ambassador_id,opportunity_id,contact_id,value_cents,sold_on,paid,attended)
+  values(p_company,p_campaign,p_ambassador,p_opportunity,o.contact_id,(p_values->>'value_cents')::integer,(p_values->>'sold_on')::date,coalesce((p_values->>'paid')::boolean,false),coalesce((p_values->>'attended')::boolean,false)) returning * into r;
+ else
+  update public.crm_ambassador_referrals set value_cents=(p_values->>'value_cents')::integer,sold_on=(p_values->>'sold_on')::date,
+  paid=coalesce((p_values->>'paid')::boolean,false),attended=coalesce((p_values->>'attended')::boolean,false) where id=p_referral returning * into r;
+ end if;
+ delete from public.crm_referral_catalog where company_id=p_company and referral_id=r.id and not(catalog_id=any(items));
+ insert into public.crm_referral_catalog(company_id,referral_id,catalog_id) select p_company,r.id,x from unnest(items) x where not exists(select 1 from public.crm_referral_catalog where company_id=p_company and referral_id=r.id and catalog_id=x);
+ insert into public.crm_referral_revisions(request_id,company_id,referral_id,actor_user_id,kind,fingerprint,result)
+ values(p_request_id,p_company,r.id,(select auth.uid()),case when p_referral is null then 'created' else 'updated' end,hash,to_jsonb(r));
+ return to_jsonb(r);
+end;
+$$;
+
 commit;
