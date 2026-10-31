@@ -15,7 +15,7 @@
 
 ### Ainda falta para homologar XSS
 
-- [ ] Confirmar CI/testes dos novos casos de renderização no commit exato da branch.
+- [x] CI #288 aprovado no commit `e80beb0c`: testes React, testes PostgreSQL, funções, typecheck e build aprovados. A aprovação automatizada **não** é homologação de XSS em navegador.
 - [ ] Realizar testes seguros em navegador de homologação: gravar dados **fictícios** contendo payloads inertes/marcadores em nome, observações, tarefas, serviços, etiquetas e card; recarregar e percorrer listas, detalhes, histórico, modais, Kanban e relatórios; comprovar que não ocorre execução.
 - [ ] Conferir entradas menos comuns: importação Excel, mensagens/personalizações, URLs de autenticação de pagamento e imagens/logo. Links externos e conteúdo de origem externa devem ter esquemas e origens restritos.
 - [ ] Verificar CSP por **cabeçalho HTTP** na aplicação publicada, compatibilidade com Mercado Pago e ausência de `unsafe-inline` para scripts.
