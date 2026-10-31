@@ -193,16 +193,18 @@ test('base operacional: funis, cards, catálogo e etiquetas', async (t) => {
     );
     await assert.rejects(configure([], 5), (e) => e.code === '22023');
   });
-  await t.test('troca de responsável retira acesso ao card e aos interesses', async () => {
+  await t.test('transferência do contato não transfere automaticamente seus cards', async () => {
     await user(1, () =>
       q(
         'select public.crm_save_contact($1,$2,$3,(select row_version from public.crm_contacts where id=$2))',
         [id(100), id(1001), { owner_membership_id: id(15) }],
       ),
     );
-    assert.equal((await user(2, () => q('select * from public.crm_opportunities'))).rows.length, 0);
-    assert.equal((await user(2, () => q('select * from public.crm_card_labels'))).rows.length, 0);
-    await denied(card(2, {}, first.id, first.row_version));
-    assert.equal((await user(5, () => q('select * from public.crm_opportunities'))).rows.length, 2);
+    assert.equal((await user(2, () => q('select * from public.crm_opportunities'))).rows.length, 2);
+    assert.ok((await user(2, () => q('select * from public.crm_card_labels'))).rows.length > 0);
+    assert.equal((await user(5, () => q('select * from public.crm_opportunities'))).rows.length, 0);
+    const version = (await q('select row_version from public.crm_opportunities where id=$1',[first.id])).rows[0].row_version;
+    const saved = await card(2, { title: 'Continua comigo' }, first.id, version);
+    assert.equal(saved.owner_membership_id, id(12));
   });
 });
