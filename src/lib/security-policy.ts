@@ -43,5 +43,5 @@ export function cloudflarePagesSecurityHeaders(
     '  Referrer-Policy: strict-origin-when-cross-origin',
     '  X-Frame-Options: DENY',
     '',
-  ].join('\\n');
+  ].join('\n');
 }
