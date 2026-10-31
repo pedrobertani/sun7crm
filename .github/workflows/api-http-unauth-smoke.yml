@@ -39,5 +39,52 @@ jobs:
             assert.equal(cors, origin, 'O domínio de produção deve estar autorizado no CORS');
             assert.ok(!body.includes('sb_secret_'), 'Resposta não deve expor chave secreta');
           }
-          console.log('API_PUBLIC_NO_AUTH_SMOKE_OK: requisições sem JWT recusadas por duas funções');
+          const scenarios = [
+            {
+              name: 'JWT inválido não autentica usuário',
+              route: 'crm-create-user',
+              method: 'POST',
+              origin,
+              authorization: 'Bearer invalid-public-audit-token',
+              expected: 401,
+            },
+            {
+              name: 'Origem falsificada não chega ao Auth',
+              route: 'crm-create-user',
+              method: 'POST',
+              origin: 'https://sun7crm.pages.dev.attacker.invalid',
+              expected: 403,
+            },
+            {
+              name: 'Preflight legítimo aceita domínio de produção',
+              route: 'crm-first-access',
+              method: 'OPTIONS',
+              origin,
+              expected: 204,
+            },
+            {
+              name: 'Preflight de origem falsificada é negado',
+              route: 'crm-first-access',
+              method: 'OPTIONS',
+              origin: 'https://sun7crm.pages.dev.attacker.invalid',
+              expected: 403,
+            },
+          ];
+          for (const item of scenarios) {
+            const response = await fetch(base + '/' + item.route, {
+              method: item.method,
+              headers: {
+                origin: item.origin,
+                'content-type': 'application/json',
+                ...(item.authorization ? { authorization: item.authorization } : {}),
+              },
+              ...(item.method === 'POST' ? { body: '{}' } : {}),
+              signal: AbortSignal.timeout(15000),
+            });
+            const cors = response.headers.get('access-control-allow-origin');
+            console.log(JSON.stringify({name:item.name, route:item.route, status:response.status, allowOrigin:cors}));
+            assert.equal(response.status, item.expected, item.name);
+            assert.equal(cors, item.origin === origin ? origin : null, item.name + ': CORS');
+          }
+          console.log('API_PUBLIC_NO_AUTH_SMOKE_OK: sem JWT, JWT inválido, origens falsificadas e preflight recusado');
           JS
