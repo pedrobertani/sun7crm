@@ -3,8 +3,13 @@ import { HttpError } from './errors.ts';
 import { uuid } from './validation.ts';
 import { reportSafely, safeException } from './telemetry.ts';
 
-// Fallback restrito ao domínio de produção ativo; previews precisam de CRM_ALLOWED_ORIGINS explícito.
+// Origens oficiais do SUN7CRM; outras origens confiáveis podem ser adicionadas por CRM_ALLOWED_ORIGINS.
 export const DEFAULT_ORIGIN = 'https://sun7crm.pages.dev';
+export const DEFAULT_ORIGINS: readonly string[] = [
+  DEFAULT_ORIGIN,
+  'https://sun7crm.com.br',
+  'https://www.sun7crm.com.br',
+];
 const MAX_BODY_BYTES = 16_384;
 
 export async function readBody(request: Request): Promise<JsonObject> {
@@ -45,7 +50,7 @@ export async function readBody(request: Request): Promise<JsonObject> {
   return body as JsonObject;
 }
 
-export function createHttpHandler(backend: Backend, command: Command, origins = [DEFAULT_ORIGIN]) {
+export function createHttpHandler(backend: Backend, command: Command, origins: readonly string[] = DEFAULT_ORIGINS) {
   return async (request: Request): Promise<Response> => {
     const requestId = crypto.randomUUID();
     let actorId: string | null = null;

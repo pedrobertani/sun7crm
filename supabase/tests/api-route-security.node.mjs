@@ -3,7 +3,7 @@ import test from 'node:test';
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { join, dirname } from 'node:path';
-import { createHttpHandler, DEFAULT_ORIGIN } from '../functions/_shared/http.ts';
+import { createHttpHandler, DEFAULT_ORIGIN, DEFAULT_ORIGINS } from '../functions/_shared/http.ts';
 import { HttpError } from '../functions/_shared/errors.ts';
 
 // A new Edge Function must be classified before it can ship. This checks the
@@ -65,8 +65,13 @@ test('somente credencial publishable pode estar no cliente React do Supabase', (
 });
 
 
-test('origem de fallback é o Cloudflare Pages da produção e CORS é exato (sem sufixos ou site legado)', async () => {
+test('CORS reconhece todos os domínios oficiais e exige correspondência exata', async () => {
   assert.equal(DEFAULT_ORIGIN, 'https://sun7crm.pages.dev');
+  assert.deepEqual(DEFAULT_ORIGINS, [
+    'https://sun7crm.pages.dev',
+    'https://sun7crm.com.br',
+    'https://www.sun7crm.com.br',
+  ]);
   const attempts = [];
   const handler = createHttpHandler({
     authenticate: async (token) => { attempts.push(['auth', token]); return token === 'fixture-jwt' ? 'actor-fixture' : null; },
@@ -84,13 +89,23 @@ test('origem de fallback é o Cloudflare Pages da produção e CORS é exato (se
       ...(method === 'POST' ? { body: '{}' } : {}),
     }));
 
-  const valid = await request(DEFAULT_ORIGIN);
-  assert.equal(valid.status, 200);
-  assert.equal(valid.headers.get('access-control-allow-origin'), DEFAULT_ORIGIN);
-  assert.ok(attempts.some(([call]) => call === 'mutation'));
+  for (const origin of DEFAULT_ORIGINS) {
+    attempts.length = 0;
+    const valid = await request(origin);
+    assert.equal(valid.status, 200);
+    assert.equal(valid.headers.get('access-control-allow-origin'), origin);
+    assert.ok(attempts.some(([call]) => call === 'mutation'));
+    attempts.length = 0;
+    const allowedPreflight = await request(origin, 'OPTIONS', '');
+    assert.equal(allowedPreflight.status, 204);
+    assert.equal(allowedPreflight.headers.get('access-control-allow-origin'), origin);
+    assert.deepEqual(attempts, []);
+  }
 
   for (const origin of [
     'https://sun7crm.pages.dev.evil.example',
+    'https://sun7crm.com.br.evil.example',
+    'https://www.sun7crm.com.br.evil.example',
     'https://evil.example',
     'null',
     'https://sun7crm-base.dreamygull10.chatgpt.site',
@@ -105,11 +120,7 @@ test('origem de fallback é o Cloudflare Pages da produção e CORS é exato (se
     assert.equal(preflight.status, 403);
     assert.equal(preflight.headers.get('access-control-allow-origin'), null);
   }
-  attempts.length = 0;
-  const allowedPreflight = await request(DEFAULT_ORIGIN, 'OPTIONS', '');
-  assert.equal(allowedPreflight.status, 204);
-  assert.equal(allowedPreflight.headers.get('access-control-allow-origin'), DEFAULT_ORIGIN);
-  assert.deepEqual(attempts, []);
+  assert.match(runtime, /\.\.\.DEFAULT_ORIGINS/, 'Ambiente não pode excluir os domínios oficiais');
 });
 
 test('camada HTTP bloqueia tokens malformados, chaves secretas, tokens excessivos e métodos indevidos antes de executar comandos', async () => {
