@@ -1,7 +1,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.118.0';
 import type { Backend } from './contracts.ts';
 import { databaseError, HttpError } from './errors.ts';
-import { createHttpHandler, DEFAULT_ORIGIN } from './http.ts';
+import { createHttpHandler, DEFAULT_ORIGINS } from './http.ts';
 import type { Command } from './contracts.ts';
 
 function injectedKey(name: string, prefix: string): string {
@@ -128,10 +128,13 @@ export function backendRuntime(functionName: string) {
       }
     },
   };
-  const origins = (Deno.env.get('CRM_ALLOWED_ORIGINS') || DEFAULT_ORIGIN)
-    .split(',')
-    .map((value) => value.trim())
-    .filter(Boolean);
+  const origins = [...new Set([
+    ...DEFAULT_ORIGINS,
+    ...(Deno.env.get('CRM_ALLOWED_ORIGINS') || '')
+      .split(',')
+      .map((value) => value.trim())
+      .filter(Boolean),
+  ])];
   return { backend, origins };
 }
 export function serve(command: Command, functionName: string) {
