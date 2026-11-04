@@ -1,5 +1,5 @@
 import {describe,it,expect} from 'vitest';
-import {buildGoalFunnel,validateGoalConfig,medalUnlocked,starterMedals,starterStages,numberInputToCents,medalSymbol,medalIcons} from './model';
+import {buildGoalFunnel,validateGoalConfig,medalUnlocked,starterMedals,starterStages,numberInputToCents,medalSymbol,medalIcons,medalRewardLabel} from './model';
 
 describe('Metas e medalhas configuráveis',()=>{
   const stages=[{label:'Contatos',rate:null},{label:'Agendamentos',rate:50},{label:'Comparecimentos',rate:80},{label:'Vendas',rate:10}];
@@ -32,6 +32,26 @@ describe('Metas e medalhas configuráveis',()=>{
     expect(medalSymbol({label:'Legada',kind:'percent',threshold:100})).toBe('🏆');
     expect(validateGoalConfig(10000000,300000,stages,[{label:'Ouro',kind:'sales',threshold:1,icon:'gold'}])).toBeNull();
     expect(Object.keys(medalIcons)).toHaveLength(9);
+  });
+  it('premiação opcional: valor em centavos ou descrição, sem alterar a conquista',()=>{
+    const money={label:'Primeira venda',kind:'sales' as const,threshold:1,reward:{kind:'money' as const,amount_cents:15000}};
+    const prize={label:'Meta',kind:'percent' as const,threshold:100,reward:{kind:'prize' as const,description:'Dia de folga'}};
+    expect(validateGoalConfig(10000000,300000,stages,[money,prize])).toBeNull();
+    expect(medalRewardLabel(money)).toBe('Prêmio: R$ 150,00');
+    expect(medalRewardLabel(prize)).toBe('Prêmio: Dia de folga');
+    expect(medalRewardLabel(starterMedals[0])).toBeNull();
+    expect(medalUnlocked(money,{goal_cents:10000,sales_cents:0,sales_count:1})).toBe(true);
+    for(const reward of [
+      {kind:'money',amount_cents:0},
+      {kind:'money',amount_cents:1.5},
+      {kind:'money',amount_cents:100000001},
+      {kind:'prize',description:''},
+      {kind:'prize',description:' '.repeat(8)},
+      {kind:'prize',description:'a'.repeat(101)},
+    ]) {
+      const result=validateGoalConfig(10000000,300000,stages,[{...money,reward} as typeof money]);
+      expect(result).toContain('premiação');
+    }
   });
   it('valida valores monetários em centavos sem notação exponencial',()=>{
     expect(numberInputToCents('3000.00')).toBe(300000);
