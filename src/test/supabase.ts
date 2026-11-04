@@ -82,7 +82,7 @@ export function fakeSupabase() {
   }));
   const invoke = vi.fn(
     async (_endpoint: string, _options: unknown): Promise<{ data: unknown; error: unknown }> => ({
-      data: { data: { company_id: 'company-local', enabled: false } },
+      data: { data: { company_id: 'company-local', enabled: true } },
       error: null,
     }),
   );
