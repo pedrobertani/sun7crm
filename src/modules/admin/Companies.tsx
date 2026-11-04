@@ -216,37 +216,6 @@ export function AdminCompanies({
       setCompanyBusy(false);
     }
   }
-  async function activateLegacyCompany(company: AdminCompany) {
-    if (companyBusy) return;
-    setCompanyBusy(true);
-    try {
-      const values = companyInput({
-        name: company.name,
-        segment: company.segment,
-        template: company.template,
-        theme: company.theme || 'sun7',
-        amount: (company.monthlyAmount / 100).toFixed(2),
-        dueDate: company.dueDate,
-      });
-      await updateAdminCompany(
-        getSupabaseClient(), userId,
-        { ...values, company_id: company.id, enabled: true },
-        uid(),
-      );
-      setDetails(null);
-      onReload();
-      onNotice('Empresa habilitada. O gestor já pode acessar conforme o vencimento do plano.');
-    } catch (error) {
-      if (error instanceof AccessChangedError || (error instanceof AdminCommandError && error.recovery === 'access')) {
-        onRecheck();
-      } else {
-        onNotice('Não foi possível ativar a empresa. Confira o plano e tente novamente.');
-      }
-    } finally {
-      setCompanyBusy(false);
-    }
-  }
-
   async function saveManager(event: FormEvent) {
     event.preventDefault();
     if (!managerCompany || managerBusy || managerRecovery === 'review') return;
@@ -702,11 +671,6 @@ export function AdminCompanies({
                   <Button variant="outline" onClick={() => editCompany(selected)}>
                     Editar empresa
                   </Button>
-                  {!selected.enabled && selected.managers.length > 0 && (
-                    <Button disabled={companyBusy} onClick={() => void activateLegacyCompany(selected)}>
-                      Ativar empresa
-                    </Button>
-                  )}
                   {!selected.managers.length && (
                     <Button onClick={() => openManager(selected)}>Cadastrar gestor</Button>
                   )}
