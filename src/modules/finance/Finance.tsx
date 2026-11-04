@@ -28,7 +28,7 @@ function shiftMonth(month:string,offset:number) {
   return new Date(Date.UTC(year,number-1+offset,1)).toISOString().slice(0,7);
 }
 const valueString=(n:number)=>currency(n);
-function FinanceGraph({graph,rows}:{graph:Graph;rows:{month:string;income:number;expenses:number;refunds:number}[]}) {
+export function FinanceGraph({graph,rows}:{graph:Graph;rows:{month:string;income:number;expenses:number;refunds:number}[]}) {
   const data=rows.map(x=>({
     name:new Intl.DateTimeFormat('pt-BR',{month:'short',timeZone:'UTC'}).format(new Date(x.month+'-01T12:00:00Z')),
     Receita:x.income/100,Despesas:x.expenses/100,Estornos:x.refunds/100,
