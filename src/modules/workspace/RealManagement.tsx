@@ -681,7 +681,6 @@ function CreateMember({ onClose, onSaved }: { onClose: () => void; onSaved: () =
           <label className="form-row">
             Senha inicial
             <PasswordInput
-              type="password"
               required
               minLength={12}
               autoComplete="new-password"
@@ -739,7 +738,6 @@ function ResetMember({
         <label className="form-row">
           Nova senha inicial
           <PasswordInput
-            type="password"
             required
             minLength={12}
             autoComplete="new-password"
