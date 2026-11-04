@@ -3,15 +3,28 @@ export interface GoalStep {
   /** Percentage moving from previous stage into this one. */
   rate: number | null;
 }
+export type MedalReward =
+  | { kind: 'money'; amount_cents: number }
+  | { kind: 'prize'; description: string };
 export interface GoalMedal {
   label: string;
   kind: 'sales' | 'percent';
   threshold: number;
   icon?: MedalIcon;
+  /** Premiação opcional; conquistar a medalha não registra entrega nem pagamento. */
+  reward?: MedalReward;
 }
 export const medalIcons = {bronze:'🥉',silver:'🥈',gold:'🥇',trophy:'🏆',diamond:'💎',crown:'👑',fire:'🔥',star:'⭐',rocket:'🚀'} as const;
 export type MedalIcon = keyof typeof medalIcons;
 export function medalSymbol(medal:GoalMedal){return medalIcons[medal.icon||'trophy']||medalIcons.trophy;}
+export function medalRewardLabel(medal: GoalMedal): string | null {
+  if (!medal.reward) return null;
+  if (medal.reward.kind === 'prize') return 'Prêmio: ' + medal.reward.description.trim();
+  return 'Prêmio: ' + new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  }).format(medal.reward.amount_cents / 100);
+}
 export interface GoalPlan {
   company_id: string;
   goal_month: string;
@@ -44,6 +57,14 @@ export const starterMedals: GoalMedal[] = [
 function positiveInteger(value: number) {
   return Number.isSafeInteger(value) && value > 0;
 }
+export function validMedalReward(reward: MedalReward | undefined): boolean {
+  if (reward === undefined) return true; // Medalhas existentes continuam válidas.
+  if (reward.kind === 'money')
+    return Number.isSafeInteger(reward.amount_cents) && reward.amount_cents > 0 && reward.amount_cents <= 100000000;
+  if (reward.kind === 'prize')
+    return typeof reward.description === 'string' && reward.description.trim().length > 0 && reward.description.length <= 100;
+  return false;
+}
 export function validateGoalConfig(targetCents:number,ticketCents:number,stages:GoalStep[],medals:GoalMedal[]):string|null {
   if(!positiveInteger(targetCents)||!positiveInteger(ticketCents)||targetCents>1e12||ticketCents>1e12)
     return 'Informe meta e ticket médio válidos, maiores que zero.';
@@ -55,6 +76,8 @@ export function validateGoalConfig(targetCents:number,ticketCents:number,stages:
   if(medals.length>8||medals.some(m=>!m.label.trim()||m.label.length>60||
     !['sales','percent'].includes(m.kind)||(m.icon!==undefined&&!(m.icon in medalIcons))||!positiveInteger(m.threshold)||m.threshold>1000))
     return 'Revise os critérios de medalhas (de 1 a 1000).';
+  if (medals.some((m) => !validMedalReward(m.reward)))
+    return 'Revise a premiação das medalhas: informe valor maior que zero ou descrição do prêmio.';
   return null;
 }
 export function buildGoalFunnel(plan:Pick<GoalPlan,'target_cents'|'ticket_cents'|'stages'>) {
