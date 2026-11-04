@@ -16,11 +16,12 @@ import {
   buildGoalFunnel,
   medalUnlocked,
   numberInputToCents,
-  medalIcons,
   medalSymbol,
+  medalRewardLabel,
 } from './model';
 import { useOperational, useQuery, useSave, QueryState } from '../workspace/operational';
 import type { TeamRow } from '../../data/backend';
+import { MedalEditor } from './MedalEditor';
 import './goals.css';
 
 type Section = 'plan' | 'medals' | 'results';
@@ -281,6 +282,9 @@ function Medal({ medal, earned }: { medal: GoalMedal; earned: boolean }) {
             ? medal.threshold + ' venda(s)'
             : medal.threshold + '% da meta'}
       </small>
+      {medalRewardLabel(medal) && (
+        <small className="goal-medal-reward">{medalRewardLabel(medal)}</small>
+      )}
     </div>
   );
 }
@@ -478,66 +482,16 @@ function GoalSettings({
       {section === 'medals' && (
         <div className="goal-edit-list">
           <p className="small-note">
-            O gestor escolhe os nomes e as condições. As conquistas só são liberadas quando há
-            resultados individuais registrados, nunca pelo valor estimado do funil.
+            O gestor define as condições e a premiação. Conquistas usam vendas confirmadas no
+            Kanban; a premiação não gera pagamento nem baixa de entrega automática.
           </p>
           {medals.map((m, i) => (
-            <div className="goal-edit-step" key={i}>
-              <label className="form-row">
-                Medalha
-                <Input
-                  value={m.label}
-                  maxLength={60}
-                  onChange={(e) => updateMedal(i, { label: e.target.value })}
-                />
-              </label>
-              <label className="form-row">
-                Ícone
-                <select
-                  aria-label={'Ícone de ' + m.label}
-                  value={m.icon || 'trophy'}
-                  onChange={(e) =>
-                    updateMedal(i, { icon: e.target.value as keyof typeof medalIcons })
-                  }
-                >
-                  {Object.entries(medalIcons).map(([key, emoji]) => (
-                    <option key={key} value={key}>
-                      {emoji} {key}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="form-row">
-                Critério
-                <select
-                  value={m.kind}
-                  onChange={(e) => updateMedal(i, { kind: e.target.value as GoalMedal['kind'] })}
-                >
-                  <option value="sales">Quantidade de vendas</option>
-                  <option value="percent">% da meta individual</option>
-                </select>
-              </label>
-              <label className="form-row">
-                Limite
-                <Input
-                  type="number"
-                  min="1"
-                  max="1000"
-                  step="1"
-                  value={m.threshold}
-                  onChange={(e) => updateMedal(i, { threshold: Number(e.target.value) })}
-                />
-              </label>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                aria-label={'Remover medalha ' + m.label}
-                onClick={() => setMedals((a) => a.filter((_, j) => j !== i))}
-              >
-                <Trash2 size={15} />
-              </Button>
-            </div>
+            <MedalEditor
+              key={i}
+              medal={m}
+              onChange={(part) => updateMedal(i, part)}
+              onRemove={() => setMedals((a) => a.filter((_, j) => j !== i))}
+            />
           ))}
           {medals.length < 8 && (
             <Button
