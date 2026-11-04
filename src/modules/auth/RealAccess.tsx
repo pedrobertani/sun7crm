@@ -191,7 +191,6 @@ export function RealAccess({
                 <label className="form-row">
                   Nova senha
                   <PasswordInput
-                    type="password"
                     autoComplete="new-password"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
@@ -202,7 +201,6 @@ export function RealAccess({
                 <label className="form-row">
                   Confirme a nova senha
                   <PasswordInput
-                    type="password"
                     autoComplete="new-password"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
