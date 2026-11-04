@@ -66,7 +66,7 @@ export function MedalEditor({
                   kind === 'money'
                     ? { kind: 'money', amount_cents: 0 }
                     : kind === 'prize'
-                      ? { kind: 'prize', description: '' }
+                      ? { kind: 'prize', name: '' }
                       : undefined,
               });
             }}
@@ -82,7 +82,7 @@ export function MedalEditor({
             <CurrencyInput
               value={reward.amount_cents > 0 ? (reward.amount_cents / 100).toFixed(2) : ''}
               onValueChange={(value) =>
-                onChange({ reward: { kind: 'money', amount_cents: numberInputToCents(value) ?? 0 } })
+                onChange({ reward: { ...reward, amount_cents: numberInputToCents(value) ?? 0 } })
               }
               aria-label={'Valor do prêmio de ' + medal.label}
             />
@@ -90,13 +90,26 @@ export function MedalEditor({
         )}
         {reward?.kind === 'prize' && (
           <label className="form-row">
-            Qual é o prêmio?
+            Nome do prêmio
             <Input
-              value={reward.description}
+              value={reward.name}
               maxLength={100}
               placeholder="Ex.: vale-presente ou dia de folga"
               onChange={(e) =>
-                onChange({ reward: { kind: 'prize', description: e.target.value } })
+                onChange({ reward: { ...reward, name: e.target.value } })
+              }
+            />
+          </label>
+        )}
+        {reward && (
+          <label className="form-row">
+            Descrição (opcional)
+            <Input
+              value={reward.description || ''}
+              maxLength={200}
+              placeholder="Ex.: válido até o fim do mês"
+              onChange={(e) =>
+                onChange({ reward: { ...reward, description: e.target.value || undefined } })
               }
             />
           </label>
