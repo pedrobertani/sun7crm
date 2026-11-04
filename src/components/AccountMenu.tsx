@@ -61,7 +61,7 @@ export function AccountMenu({
           variant="outline"
           ref={trigger}
           type="button"
-          className="icon-button account-trigger"
+          className="icon-button account-trigger top-control-icon"
           aria-label="Menu do usuário"
           aria-expanded={open}
           onClick={() => setOpen(!open)}
