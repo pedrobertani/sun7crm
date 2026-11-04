@@ -13,7 +13,7 @@ const groups = [
  {label:'Dia a dia',id:'daily',resources:['dashboard','cards','boards','stages','contacts','history','tasks']},
  {label:'Crescimento',id:'growth',resources:['strategies','ambassadors','campaigns','referrals','goals']},
  {label:'Cadastros',id:'records',resources:['catalog','labels']},
- {label:'Gestão',id:'management',resources:['reports','team','settings']},
+ {label:'Gestão',id:'management',resources:['finance','reports','team','settings']},
 ];
 const resources = new Map(permissionModules.flatMap(m=>m.resources).map(r=>[r.id,r]));
 
