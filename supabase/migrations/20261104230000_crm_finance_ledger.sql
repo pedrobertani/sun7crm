@@ -222,7 +222,8 @@ begin
  if p_version is null or sale.row_version<>p_version then raise exception 'CRM_STALE_VERSION' using errcode='40001'; end if;
  if p_cash is null or p_term is null or p_cash not between 1 and 1000000000000
   or p_term not between 1 and 1000000000000 or p_kind not in ('cash','installments')
-  or sale.total_cents<>case when p_kind='cash' then p_cash else p_term end
+  or (p_kind='cash' and sale.total_cents<>p_cash)
+  or (p_kind='installments' and sale.total_cents<>p_term)
  then raise exception 'CRM_FINANCE_INVALID_TERMS' using errcode='22023'; end if;
  if jsonb_typeof(p_schedule) is distinct from 'array'
   or jsonb_array_length(p_schedule) not between 1 and 61
