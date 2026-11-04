@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ArrowRight } from 'lucide-react';
 import { Input } from '../../components/ui/input';
+import { PasswordInput } from '../../components/ui/password-input';
 import { Button } from '../../components/ui/button';
 import { BrandSymbol, PublicShell } from './PublicShell';
 import { getSupabaseClient } from '../../lib/supabase';
@@ -106,7 +107,7 @@ export function LoginPage() {
               </label>
               <label className="form-row" htmlFor="login-password">
                 Senha
-                <Input
+                <PasswordInput
                   id="login-password"
                   name="password"
                   type="password"
