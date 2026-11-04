@@ -262,7 +262,7 @@ test('notificações por perfil, vencimento e erros técnicos: isolamento no ban
     await q('update public.crm_companies set enabled=true where id=$1', [id(100)]);
   });
   await t.test(
-    'administrador edita e habilita sem recriar quadros nem alterar o plano silenciosamente',
+    'administrador ajusta valor e vencimento, habilita e preserva os quadros',
     async () => {
       const values = {
         name: 'Empresa editada',
@@ -290,16 +290,21 @@ test('notificações por perfil, vencimento e erros técnicos: isolamento no ban
         "insert into public.crm_company_billing(company_id,monthly_amount_cents,due_date) values($1,0,'2026-12-31')",
         [id(250)],
       );
-      await as('service_role', null, () =>
-        assert.rejects(update(7, 952, 250), (error) => error.code === '23514'),
+      await as('service_role', null, () => update(7, 952, 250));
+      assert.equal(
+        (await q('select enabled from public.crm_companies where id=$1', [id(250)])).rows[0].enabled,
+        true,
       );
       await q(
         "insert into public.crm_boards(id,company_id,kind,name,position) values($1,$2,'leads','Quadro personalizado',0)",
         [id(800), id(200)],
       );
-      await as('service_role', null, () =>
-        assert.rejects(update(7, 949), (error) => error.code === '40001'),
-      );
+      await as('service_role', null, () => update(7, 949));
+      const editedBill = (
+        await q('select monthly_amount_cents,due_date::text as due_date from public.crm_company_billing where company_id=$1', [id(200)])
+      ).rows[0];
+      assert.equal(editedBill.monthly_amount_cents, 20000);
+      assert.equal(editedBill.due_date, '2026-12-31');
       const currentBill = (
         await q(
           'select monthly_amount_cents,due_date::text as due_date from public.crm_company_billing where company_id=$1',
