@@ -1,6 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { Workbook } from 'exceljs';
-import { contactsWorkbook, readContactsExcel } from './excel';
+import { contactsWorkbook, downloadPreparedContacts, readContactsExcel } from './excel';
 async function file(rows: unknown[][], name = 'contatos.xlsx') {
   const book = new Workbook();
   book.addWorksheet('Contatos').addRows(rows);
@@ -8,6 +8,30 @@ async function file(rows: unknown[][], name = 'contatos.xlsx') {
   return new File([new Uint8Array(bytes)], name);
 }
 describe('Leitura e exportação XLSX', () => {
+  it('inicia download direto pelo link, usando o nome correto e removendo o elemento temporário', () => {
+    const click = vi.fn();
+    const remove = vi.fn();
+    const appendChild = vi.fn();
+    const anchor = { href: '', download: '', style: { display: '' }, click, remove };
+    vi.stubGlobal('document', {
+      createElement: vi.fn(() => anchor),
+      body: { appendChild },
+    });
+    try {
+      downloadPreparedContacts({
+        url: 'blob:test-modelo',
+        filename: 'sun7crm-modelo-contatos.xlsx',
+      });
+      expect(anchor.href).toBe('blob:test-modelo');
+      expect(anchor.download).toBe('sun7crm-modelo-contatos.xlsx');
+      expect(anchor.style.display).toBe('none');
+      expect(appendChild).toHaveBeenCalledWith(anchor);
+      expect(click).toHaveBeenCalledTimes(1);
+      expect(remove).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
   it('exporta texto, preserva nomes e permite reimportação', async () => {
     const bytes = await contactsWorkbook([{ name: '=Não é fórmula', phone: '14996732848' }]);
     const rows = await readContactsExcel(new File([new Uint8Array(bytes)], 'contatos.xlsx'));
