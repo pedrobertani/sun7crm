@@ -554,6 +554,7 @@ export function RealKanban() {
           toStage={pendingMove.stage.name}
           kind={pendingMove.kind}
           amountCents={pendingMove.card.value_cents}
+          canConfigureFinance={can('finance.terms')}
           busy={moving.busy}
           onCancel={() => setPendingMove(null)}
           onConfirm={(result: ConfirmedMove) =>
@@ -564,6 +565,7 @@ export function RealKanban() {
                   pendingMove.stage.id,
                   pendingMove.card.row_version,
                   result.amountCents,
+                  result.finance,
                 );
               } else {
                 await api.saveCard(
