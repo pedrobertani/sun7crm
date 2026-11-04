@@ -110,7 +110,6 @@ export function LoginPage() {
                 <PasswordInput
                   id="login-password"
                   name="password"
-                  type="password"
                   autoComplete="current-password"
                   placeholder="Sua senha"
                   value={password}
