@@ -258,7 +258,6 @@ function ResetCompanyUser({
         <label className="form-row">
           Nova senha temporária
           <PasswordInput
-            type="password"
             autoComplete="new-password"
             required
             minLength={12}
