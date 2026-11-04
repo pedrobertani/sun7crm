@@ -127,7 +127,7 @@ export function NotificationBell({
         size="icon"
         variant="outline"
         type="button"
-        className="notification-bell"
+        className="notification-bell top-control-icon"
         aria-label={
           error
             ? 'Notificações, atualização indisponível'
