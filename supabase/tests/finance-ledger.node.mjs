@@ -152,7 +152,8 @@ test('financeiro: confirmação, parcelas, entradas, saídas, segurança e rever
       company,id(12),keys,'own',0,
     ]));
     const own=(await user(2,()=>q('select opportunity_id from public.crm_finance_sales'))).rows;
-    assert.equal(own.length,1);
+    assert.equal(own.length,2); // Duas vendas reais do mesmo vendedor após o teste do RPC atômico.
+    assert.ok(own.some(row=>row.opportunity_id===cardRow.id));
     const expenses=(await user(2,()=>q("select count(*)::int n from public.crm_finance_movements where kind='expense'"))).rows[0].n;
     assert.equal(expenses,0);
     await assert.rejects(user(2,()=>q('select public.crm_finance_save_expense($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)',[
