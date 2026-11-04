@@ -144,7 +144,8 @@ export function RealFinance() {
   const saleIds=new Set(matchingSales.map(s=>s.opportunity_id));
   const visibleSales=matchingSales.filter(s=>!s.cancelled_at);
   const hasSalesScope=seller!=='all'||product!=='all'||!!q;
-  const filteredInstallments=installments.filter(i=>saleIds.has(i.opportunity_id)&&
+  const activeSaleIds=new Set(visibleSales.map(s=>s.opportunity_id));
+  const filteredInstallments=installments.filter(i=>activeSaleIds.has(i.opportunity_id)&&
     i.due_on.startsWith(month)&&(method==='all'||i.expected_method===method)&&
     (status==='all'||financeStatus(i,movements).toLocaleLowerCase('pt-BR')===status));
   const filteredMovements=movements.filter(m=>
