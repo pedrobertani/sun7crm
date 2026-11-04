@@ -166,7 +166,7 @@ export function AdminCompanies({
       attempt = companyAttempt || {
         id: uid(),
         input: editingCompany
-          ? { ...values, company_id: editingCompany.id, enabled: companyForm.enabled }
+          ? { ...values, company_id: editingCompany.id, enabled: editingCompany.enabled }
           : values,
       };
     } catch (error) {
@@ -191,7 +191,7 @@ export function AdminCompanies({
       onNotice(
         editingCompany
           ? 'Empresa e vencimento atualizados.'
-          : 'Empresa cadastrada. Agora cadastre o gestor responsável.',
+          : 'Empresa ativa! Agora cadastre o gestor responsável para liberar o primeiro acesso.',
       );
       onReload();
       if (!editingCompany) openManager({ id: result.company_id, name: attempt.input.name });
@@ -406,7 +406,7 @@ export function AdminCompanies({
         open={newCompanyOpen}
         onOpenChange={closeCompany}
         title={editingCompany ? 'Editar empresa' : 'Nova empresa'}
-        description="Plano mensal SUN7CRM. Pagamentos e dias gratuitos são gerenciados na aba Planos."
+        description="Defina valor e vencimento. A empresa criada pelo administrador já fica ativa; pagamentos e dias gratuitos ficam em Planos."
       >
         <form onSubmit={(event) => void saveCompany(event)}>
           <fieldset disabled={companyLocked}>
@@ -465,7 +465,6 @@ export function AdminCompanies({
               <label className="form-row">
                 Valor mensal (R$)
                 <CurrencyInput
-                  readOnly
                   required
                   value={companyForm.amount}
                   onValueChange={(amount) => setCompanyForm({ ...companyForm, amount })}
@@ -476,36 +475,17 @@ export function AdminCompanies({
                 <Input
                   required
                   type="date"
-                  readOnly
                   value={companyForm.dueDate}
-                  onInput={(e) =>
-                    setCompanyForm({ ...companyForm, dueDate: e.currentTarget.value })
-                  }
                   onChange={(e) => setCompanyForm({ ...companyForm, dueDate: e.target.value })}
                 />
               </label>
-              {editingCompany && (
-                <label className="form-row span2">
-                  Situação
-                  <select
-                    value={String(companyForm.enabled)}
-                    onChange={(event) =>
-                      setCompanyForm({ ...companyForm, enabled: event.target.value === 'true' })
-                    }
-                  >
-                    <option value="false">Desativada</option>
-                    <option value="true" disabled={!editingCompany.managers.length}>
-                      Ativa{!editingCompany.managers.length ? ' — cadastre o gestor primeiro' : ''}
-                    </option>
-                  </select>
-                </label>
-              )}
+
             </div>
           </fieldset>
           <p className="small-note">
             {editingCompany
-              ? 'A ativação exige um gestor cadastrado. Alterar o modelo preserva os contatos e as etapas dos quadros existentes.'
-              : 'A empresa começa desativada. Cadastre o gestor no próximo passo e depois habilite o acesso em Editar empresa.'}
+              ? 'Valor e vencimento podem ser ajustados pelo administrador. Cobranças já pagas são preservadas.'
+              : 'A empresa será ativada automaticamente. Cadastre o gestor em seguida; o período de acesso respeita o vencimento informado.'}
           </p>
           <FormError message={companyError} />
           {companyRecovery === 'retry' && (
