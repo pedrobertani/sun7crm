@@ -198,3 +198,16 @@ test('falha no serviço Auth não libera a função e retorna erro genérico sem
   assert.ok(!body.includes('fixture-private-secret'));
   assert.equal(JSON.parse(body).error.code, 'AUTH_UNAVAILABLE');
 });
+
+
+test('demo fica na entrada pública, não no fluxo de senha e aceite autenticado', () => {
+  const appRoot = join(root, '..', 'src', 'modules');
+  const account = readFileSync(join(appRoot, 'auth', 'RealAccess.tsx'), 'utf8');
+  const login = readFileSync(join(appRoot, 'public', 'Login.tsx'), 'utf8');
+  assert.match(login, /to="\/demo"/, 'A demo pública continua acessível a visitantes');
+  assert.doesNotMatch(account, /to="\/demo"/, 'Conta real não deve oferecer link da demo');
+  assert.doesNotMatch(account, /demonstração fictícia|documentos de homologação|testes internos/i);
+  assert.match(account, /gate.pending.map\(\(doc\)/, 'Aceite individual não pode ser removido');
+  assert.match(account, /Li e aceito os Termos de Uso apresentados/);
+  assert.match(account, /Li e tomei ciência da Política de Privacidade apresentada/);
+});
