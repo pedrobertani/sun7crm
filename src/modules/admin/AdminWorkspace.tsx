@@ -1,4 +1,5 @@
 import { AccountMenu } from '../../components/AccountMenu';
+import { HelpCenter } from '../../components/help/HelpCenter';
 import { useEffect, useState } from 'react';
 import { Link, NavLink, Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import {
@@ -174,6 +175,7 @@ export function AdminWorkspace({
               </div>
               <div className="top-controls">
                 <NotificationBell userId={user.id} onRecheck={onRecheck} />
+                <HelpCenter role="admin" keys={[]} />
                 <AccountMenu
                   name={user.displayName}
                   email={user.email}
