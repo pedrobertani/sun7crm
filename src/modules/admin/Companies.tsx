@@ -551,7 +551,6 @@ export function AdminCompanies({
                 Senha temporária
                 <PasswordInput
                   required
-                  type="password"
                   minLength={12}
                   autoComplete="new-password"
                   value={managerForm.password}
