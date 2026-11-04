@@ -66,6 +66,9 @@ test('financeiro: confirmação, parcelas, entradas, saídas, segurança e rever
     await user(1,()=>q('select public.crm_finance_record_receipt($1,$2,$3,$4,$5,$6,$7)',args));
     await user(1,()=>q('select public.crm_finance_record_receipt($1,$2,$3,$4,$5,$6,$7)',args));
     assert.equal((await user(1,()=>q("select count(*)::int n from public.crm_finance_movements where kind='income'"))).rows[0].n,1);
+    // Conhecer um UUID/ID de transação não concede autorização para consultar retries.
+    await assert.rejects(user(2,()=>q('select public.crm_finance_record_receipt($1,$2,$3,$4,$5,$6,$7)',args)),/CRM_FORBIDDEN/);
+    await assert.rejects(user(4,()=>q('select public.crm_finance_record_receipt($1,$2,$3,$4,$5,$6,$7)',args)),/CRM_FORBIDDEN/);
     await assert.rejects(user(1,()=>q('select public.crm_finance_record_receipt($1,$2,$3,$4,$5,$6,$7)',[
       company,entry.id,id(9002),5001,'pix','2026-11-04','Excessivo',
     ])),/CRM_FINANCE_OVERPAYMENT/);
@@ -101,6 +104,7 @@ test('financeiro: confirmação, parcelas, entradas, saídas, segurança e rever
     let expense=(await user(1,()=>q('select public.crm_finance_save_expense($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) as m',args))).rows[0].m;
     assert.equal(expense.kind,'expense');
     assert.equal(Number(expense.amount_cents),32000);
+    await assert.rejects(user(2,()=>q('select public.crm_finance_save_expense($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)',args)),/CRM_FORBIDDEN/);
     expense=(await user(1,()=>q('select public.crm_finance_save_expense($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) as m',[
       company,id(9010),35000,'bank_transfer','2026-11-05','Aluguel','Valor corrigido',null,null,1,
     ]))).rows[0].m;
