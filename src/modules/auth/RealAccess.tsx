@@ -1,5 +1,5 @@
 import { lazy, Suspense, useCallback, useEffect, useState, type FormEvent } from 'react';
-import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate } from 'react-router-dom';
 import { ArrowRight, LockKeyhole, ShieldCheck } from 'lucide-react';
 import { getSupabaseClient } from '../../lib/supabase';
 import { uid } from '../../lib/format';
@@ -17,8 +17,6 @@ type Gate =
   | Exclude<AccountAccess, { stage: 'signed-out' }>
   | { stage: 'loading' }
   | { stage: 'error'; message: string };
-
-const UNSAFE_DATA_MESSAGE = 'Não informe dados de clientes reais durante os testes desta etapa.';
 
 export function RealAccess({
   adminPage = false,
@@ -224,16 +222,15 @@ export function RealAccess({
           )}
           {gate.stage === 'legal-unavailable' && (
             <>
-              <h1>Documentos em preparação</h1>
+              <h1>Documentos indisponíveis</h1>
               <p>
                 Sua senha pessoal já está configurada para <strong>{gate.email}</strong>.
               </p>
               <p>
-                O acesso operacional está bloqueado até a publicação dos Termos e da Política de
-                Privacidade definitivos. Os documentos de homologação devem ser confirmados por
-                você, individualmente, antes de utilizar o ambiente autenticado.
+                Os Termos de Uso e a Política de Privacidade ainda não estão disponíveis para
+                confirmação. Solicite ao administrador da plataforma a publicação dos documentos.
+                Seu acesso será liberado após a confirmação individual.
               </p>
-              <p className="small-note">{UNSAFE_DATA_MESSAGE}</p>
               <Button
                 type="button"
                 onClick={() => setRefresh((value) => value + 1)}
@@ -245,12 +242,12 @@ export function RealAccess({
           )}
           {gate.stage === 'accept' && (
             <>
-              <h1>Confirmação individual</h1>
+              <h1>Confirme os documentos</h1>
               <p>
-                Leia os documentos de homologação vinculados à sua conta,{' '}
-                <strong>{gate.email}</strong>. A confirmação ficará registrada individualmente no
-                Supabase. Esta versão é para testes internos e uma nova confirmação será solicitada
-                após aprovação dos documentos definitivos.
+                Leia os Termos de Uso e a Política de Privacidade vinculados à sua conta,{' '}
+                <strong>{gate.email}</strong>. Seu aceite dos Termos e sua ciência da Política
+                serão registrados individualmente. Alterações relevantes poderão exigir nova
+                confirmação.
               </p>
               <form onSubmit={acceptDocuments}>
                 {gate.documents.map((doc) => (
@@ -288,15 +285,14 @@ export function RealAccess({
             <>
               <h1>{adminPage ? 'Acesso restrito à administração' : 'Conta verificada'}</h1>
               <p>
-                Sessão real de <strong>{gate.email}</strong>, senha pessoal configurada e documentos
-                de homologação confirmados para testes internos.
+                A conta <strong>{gate.email}</strong> está autenticada, e os documentos exigidos
+                foram confirmados.
               </p>
               <p>
                 {adminPage
                   ? 'Seu perfil não possui permissão de administrador da plataforma.'
-                  : 'O painel de atendimento da empresa está em integração. Seus dados e seu acesso permanecem separados da demonstração.'}
+                  : 'Acesse o painel de sua empresa para continuar.'}
               </p>
-              <p className="small-note">{UNSAFE_DATA_MESSAGE}</p>
             </>
           )}
           {gate.stage !== 'loading' && (
@@ -317,7 +313,6 @@ export function RealAccess({
                 >
                   Sair da conta
                 </Button>
-                <Link to="/demo">Abrir demonstração fictícia</Link>
               </div>
             </>
           )}
