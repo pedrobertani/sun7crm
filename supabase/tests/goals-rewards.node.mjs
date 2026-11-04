@@ -85,6 +85,44 @@ test('medalhas: gerente define premiação por dinheiro ou descrição, sem paga
       q('select stages from public.crm_goal_plans where company_id=$1', [id(100)]))).rows[0];
     assert.deepEqual(result.stages, manualStages);
   });
+  await t.test('gestor salva contatos iniciais com taxas e preserva RLS e vendas reais', async () => {
+    const forward = [
+      { label: 'Contatos', rate: null, start_contacts: 200 },
+      { label: 'Agendamentos', rate: 40 },
+      { label: 'Comparecimentos', rate: 50 },
+      { label: 'Vendas', rate: 25 },
+    ];
+    await save(1, [base], forward);
+    const result = (await user(1, () =>
+      q('select stages from public.crm_goal_plans where company_id=$1', [id(100)]))).rows[0];
+    assert.deepEqual(result.stages, forward);
+    assert.equal((await user(1, () =>
+      q('select count(*)::int as n from public.crm_confirmed_sales'))).rows[0].n, 0);
+    // Alterar as porcentagens não invalida a entrada nem conta uma venda.
+    const updated = forward.map((step, i) => i === 1 ? { ...step, rate: 50 } : step);
+    await save(1, [base], updated);
+    assert.deepEqual((await user(1, () =>
+      q('select stages from public.crm_goal_plans where company_id=$1', [id(100)]))).rows[0].stages, updated);
+    await assert.rejects(save(2, [base], forward), /permission denied|row-level security|policy/i);
+  });
+  await t.test('banco impede contatos inválidos, repetidos em etapa e conflito com quantidades', async () => {
+    const forward = [
+      { label: 'Contatos', rate: null, start_contacts: 200 },
+      { label: 'Agendamentos', rate: 40 },
+      { label: 'Vendas', rate: 25 },
+    ];
+    const invalid = [
+      forward.map((s,i) => i === 0 ? { ...s, start_contacts: 0 } : s),
+      forward.map((s,i) => i === 0 ? { ...s, start_contacts: 1.5 } : s),
+      forward.map((s,i) => i === 0 ? { ...s, start_contacts: 1000000001 } : s),
+      forward.map((s,i) => i === 0 ? { ...s, start_contacts: '200' } : s),
+      forward.map((s,i) => i === 1 ? { ...s, start_contacts: 100 } : s),
+      forward.map((s,i) => i === 0 ? { ...s, count: 200 } : s),
+    ];
+    for(const input of invalid) {
+      await assert.rejects(save(1, [base], input), /CRM_INVALID_START_CONTACTS|CRM_GOAL_MODE_CONFLICT/);
+    }
+  });
   await t.test('continua aceitando modo calculado legado', async () => {
     await save(1, [base], stages);
     const result = (await user(1, () =>
