@@ -45,6 +45,12 @@ export function removeStage(board: Board, opps: Opportunity[], id: string, targe
     ),
   };
 }
+function hasUnrefundedDemoReceipt(data: Snapshot, cardId: string) {
+  const movements = data.demoFinance?.movements || [];
+  const net = movements.filter(m => m.opportunity_id === cardId && !m.voided_at)
+    .reduce((total, m) => total + (m.kind === 'income' ? m.amount_cents : m.kind === 'refund' ? -m.amount_cents : 0), 0);
+  return net > 0;
+}
 export function moveOpportunity(
   data: Snapshot,
   session: Session,
@@ -59,6 +65,9 @@ export function moveOpportunity(
     throw Error('Você não tem acesso a este contato.');
   const board = data.boards.find((b) => b.id === opp.boardId && b.companyId === session.companyId);
   if (!board?.stages.some((s) => s.id === stageId)) throw Error('Etapa inválida para este quadro.');
+  if (opp.confirmedSaleAt && opp.stageId !== stageId && hasUnrefundedDemoReceipt(data, opp.id)) {
+    throw Error('Existe recebimento líquido nesta venda. Registre o estorno antes de reabrir o card.');
+  }
   return {
     ...data,
     opportunities: data.opportunities.map((o) => o.id !== id ? o : {
@@ -111,6 +120,10 @@ export function saveCard(data: Snapshot, session: Session, card: Opportunity): S
     )
   )
     throw Error('Item de catálogo indisponível.');
+  if (previous?.confirmedSaleAt && previous.stageId !== card.stageId
+    && hasUnrefundedDemoReceipt(data, card.id)) {
+    throw Error('Existe recebimento líquido nesta venda. Registre o estorno antes de reabrir o card.');
+  }
   const safeCard=previous?.confirmedSaleAt && previous.stageId!==card.stageId
     ? {...card,confirmedSaleAt:undefined,confirmedSaleOwnerId:undefined,confirmedSaleCents:undefined}
     : card;
