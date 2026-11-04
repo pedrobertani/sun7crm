@@ -15,6 +15,10 @@ import {
   medalUnlocked,
   medalSymbol,
   medalRewardLabel,
+  medalRewardDescription,
+  isManualGoalFunnel,
+  manualGoalStages,
+  prepareGoalStages,
   validateGoalConfig,
   numberInputToCents,
   starterStages,
@@ -51,6 +55,7 @@ export function DemoGoalFunnel({ view = 'commercial' }: { view?: 'commercial' | 
   };
   const mine = progress(session.memberId);
   const recorded = confirmed.reduce((v, o) => v + (o.confirmedSaleCents || 0), 0);
+  const manual = !!plan && isManualGoalFunnel(plan.stages);
   const funnel = plan
     ? buildGoalFunnel({
         target_cents: plan.targetCents,
@@ -120,12 +125,18 @@ export function DemoGoalFunnel({ view = 'commercial' }: { view?: 'commercial' | 
                   >
                     <span>
                       <strong>{s.label}</strong>
-                      <small>{i ? 'Conversão: ' + s.rate + '%' : 'Entrada do funil'}</small>
+                      <small>{i ? (s.rate === null ? 'Taxa a definir' : Number(s.rate.toFixed(2)).toLocaleString('pt-BR') + '%') + (manual ? ' · meta definida' : ' · projetado') : (manual ? 'Meta definida · entrada' : 'Entrada projetada')}</small>
                     </span>
                     <b>{fmt(s.count)}</b>
                   </div>
                 ))}
               </div>
+            )}
+            {manager && manual && funnel.at(-1)?.count !== Math.ceil(plan.targetCents / plan.ticketCents) && (
+              <p className="small-note">
+                Meta manual de vendas ({fmt(funnel.at(-1)?.count ?? null)}) diferente da projeção
+                financeira ({fmt(Math.ceil(plan.targetCents / plan.ticketCents))}).
+              </p>
             )}
             <div className="goal-total">
               <span>
@@ -188,6 +199,9 @@ export function DemoGoalFunnel({ view = 'commercial' }: { view?: 'commercial' | 
                           </small>
                           {medalRewardLabel(medal) && (
                             <small className="goal-medal-reward">{medalRewardLabel(medal)}</small>
+                          )}
+                          {medalRewardDescription(medal) && (
+                            <small className="goal-medal-reward-description">{medalRewardDescription(medal)}</small>
                           )}
                         </div>
                       );
@@ -304,7 +318,7 @@ function DemoGoalSettings({
         month,
         targetCents: targetCents!,
         ticketCents: ticketCents!,
-        stages,
+        stages: prepareGoalStages(stages),
         medals,
       },
       parsed
@@ -347,6 +361,30 @@ function DemoGoalSettings({
               <CurrencyInput value={ticket} onValueChange={setTicket} />
             </label>
           </div>
+          <p className="small-note">
+            Projete por taxas ou defina a quantidade-meta de todas as etapas, inclusive contatos.
+            O gestor escolhe; os números não representam resultados realizados.
+          </p>
+          <label className="form-row goal-mode-control">
+            Como definir as quantidades?
+            <select
+              value={isManualGoalFunnel(stages) ? 'manual' : 'calculated'}
+              onChange={(event) => {
+                if (event.target.value === 'manual') {
+                  setStages((current) => manualGoalStages(
+                    current,
+                    numberInputToCents(target) ?? 0,
+                    numberInputToCents(ticket) ?? 0,
+                  ));
+                } else {
+                  setStages((current) => current.map(({ count: _count, ...step }) => step));
+                }
+              }}
+            >
+              <option value="calculated">Projetar pelas taxas</option>
+              <option value="manual">Definir metas por quantidade</option>
+            </select>
+          </label>
           {stages.map((s, i) => (
             <div className="goal-edit-step" key={i}>
               <label className="form-row">
@@ -358,7 +396,22 @@ function DemoGoalSettings({
                   onChange={(e) => changeStage(i, { label: e.target.value })}
                 />
               </label>
-              {i > 0 && (
+              {isManualGoalFunnel(stages) ? (
+                <label className="form-row">
+                  {i === 0 ? 'Meta de contatos' : 'Quantidade-meta'}
+                  <Input
+                    type="number"
+                    min="1"
+                    max="1000000000"
+                    step="1"
+                    value={s.count ?? ''}
+                    placeholder="Definir"
+                    onChange={(event) => changeStage(i, {
+                      count: event.target.value === '' ? null : Number(event.target.value),
+                    })}
+                  />
+                </label>
+              ) : i > 0 && (
                 <label className="form-row">
                   Conversão (%)
                   <Input
@@ -393,7 +446,7 @@ function DemoGoalSettings({
               onClick={() =>
                 setStages((a) => [
                   ...a.slice(0, -1),
-                  { label: 'Nova etapa', rate: null },
+                  { label: 'Nova etapa', rate: null, ...(isManualGoalFunnel(a) ? { count: null } : {}) },
                   a[a.length - 1],
                 ])
               }
