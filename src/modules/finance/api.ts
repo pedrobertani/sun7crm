@@ -29,11 +29,11 @@ export function financeError(error: { message?: string; code?: string } | null):
 /** O banco filtra empresa, carteira e ações por RLS; o frontend não substitui essa autorização. */
 export class FinanceRepository {
   constructor(private client: SupabaseClient, private companyId: string) {}
-  private async all<T>(table: string, order: string): Promise<T[]> {
+  private async all<T>(table: string, order: string, tie='id'): Promise<T[]> {
     const rows: T[] = [];
     for(let start=0; start<10000; start+=200) {
       const result = await this.client.from(table).select('*').eq('company_id',this.companyId)
-        .order(order,{ascending:false}).order('id',{ascending:false}).range(start,start+199);
+        .order(order,{ascending:false}).order(tie,{ascending:false}).range(start,start+199);
       if(result.error || !result.data) throw financeError(result.error);
       rows.push(...result.data as T[]);
       if(result.data.length<200) return rows;
@@ -41,21 +41,13 @@ export class FinanceRepository {
     throw Error('Há muitos lançamentos para uma única consulta. Utilize um período menor.');
   }
   async load(): Promise<FinanceRecords> {
-    const [saleResult,instResult,movements,audit] = await Promise.all([
-      this.client.from('crm_finance_sales').select('*').eq('company_id',this.companyId)
-        .order('confirmed_at',{ascending:false}).limit(10000),
-      this.client.from('crm_finance_installments').select('*').eq('company_id',this.companyId)
-        .order('due_on',{ascending:false}).limit(10000),
+    const [sales,installments,movements,audit] = await Promise.all([
+      this.all<FinanceSale>('crm_finance_sales','confirmed_at','opportunity_id'),
+      this.all<FinanceInstallment>('crm_finance_installments','due_on'),
       this.all<FinanceMovement>('crm_finance_movements','posted_on'),
       this.all<FinanceAudit>('crm_finance_audit','occurred_at'),
     ]);
-    if (saleResult.error || !saleResult.data) throw financeError(saleResult.error);
-    if (instResult.error || !instResult.data) throw financeError(instResult.error);
-    return {
-      sales:saleResult.data as FinanceSale[],
-      installments:instResult.data as FinanceInstallment[],
-      movements,audit,
-    };
+    return {sales,installments,movements,audit};
   }
   private async write<T>(name:string, args:Record<string,unknown>):Promise<T> {
     let result;
