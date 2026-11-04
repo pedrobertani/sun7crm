@@ -121,6 +121,31 @@ test('financeiro: confirmação, parcelas, entradas, saídas, segurança e rever
     assert.equal((await user(1,()=>q("select count(*)::int n from public.crm_finance_audit where movement_id=$1",[id(9010)]))).rows[0].n,3);
     assert.equal((await user(2,()=>q('select count(*)::int n from public.crm_finance_movements'))).rows[0].n,0);
   });
+  await t.test('venda e condições personalizadas são gravadas atomicamente, sem lançar recebimento', async () => {
+    const invalidCard=await card(2,{value_cents:110000});
+    const schedule=[
+      {entry:true,amount_cents:10000,due_on:'2026-11-04',method:'pix'},
+      {amount_cents:50000,due_on:'2026-12-04',method:'credit_card'},
+      {amount_cents:50000,due_on:'2027-01-04',method:'credit_card'},
+    ];
+    await assert.rejects(user(1,()=>q('select public.crm_confirm_card_sale_finance($1,$2,$3,$4,$5,$6,$7,$8,$9)',[
+      company,invalidCard.id,stageId,invalidCard.row_version,110000,90000,110000,'installments',
+      JSON.stringify(schedule.map((s,i)=>i===2?{...s,amount_cents:49999}:s)),
+    ])),/CRM_FINANCE_SCHEDULE_SUM_MISMATCH/);
+    assert.equal((await user(1,()=>q('select count(*)::int n from public.crm_confirmed_sales where opportunity_id=$1',[invalidCard.id]))).rows[0].n,0);
+    assert.equal((await user(1,()=>q('select stage_id from public.crm_opportunities where id=$1',[invalidCard.id]))).rows[0].stage_id,id(3101));
+    await user(1,()=>q('select public.crm_confirm_card_sale_finance($1,$2,$3,$4,$5,$6,$7,$8,$9)',[
+      company,invalidCard.id,stageId,invalidCard.row_version,110000,90000,110000,'installments',
+      JSON.stringify(schedule),
+    ]));
+    const sale=(await user(1,()=>q('select payment_kind,cash_price_cents,term_price_cents,total_cents from public.crm_finance_sales where opportunity_id=$1',[invalidCard.id]))).rows[0];
+    assert.equal(sale.payment_kind,'installments');
+    assert.equal(Number(sale.cash_price_cents),90000);
+    assert.equal(Number(sale.term_price_cents),110000);
+    assert.equal(Number(sale.total_cents),110000);
+    assert.equal((await user(1,()=>q('select count(*)::int n from public.crm_finance_installments where opportunity_id=$1',[invalidCard.id]))).rows[0].n,3);
+    assert.equal((await user(1,()=>q('select count(*)::int n from public.crm_finance_movements where opportunity_id=$1',[invalidCard.id]))).rows[0].n,0);
+  });
   await t.test('vendedor só vê seus registros quando o gestor concede finance.view', async () => {
     const keys=['boards.view','contacts.view','cards.view','finance.view','finance.receive'];
     await user(1,()=>q('select public.crm_set_employee_permissions($1,$2,$3,$4,$5)',[
