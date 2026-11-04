@@ -13,14 +13,15 @@ import type { DemoGoalPlan, DemoEmployeeGoal } from '../../domain/types';
 import {
   buildGoalFunnel,
   medalUnlocked,
-  medalIcons,
   medalSymbol,
+  medalRewardLabel,
   validateGoalConfig,
   numberInputToCents,
   starterStages,
   starterMedals,
 } from './model';
 import type { GoalStep, GoalMedal } from './model';
+import { MedalEditor } from './MedalEditor';
 import './goals.css';
 
 const fmt = (v: number | null) => (v === null ? 'A definir' : v.toLocaleString('pt-BR'));
@@ -185,6 +186,9 @@ export function DemoGoalFunnel({ view = 'commercial' }: { view?: 'commercial' | 
                                 ? medal.threshold + ' venda(s)'
                                 : medal.threshold + '% da meta'}
                           </small>
+                          {medalRewardLabel(medal) && (
+                            <small className="goal-medal-reward">{medalRewardLabel(medal)}</small>
+                          )}
                         </div>
                       );
                     })}
@@ -402,64 +406,15 @@ function DemoGoalSettings({
       {tab === 'medals' && (
         <div className="goal-edit-list">
           <p className="small-note">
-            Critérios são calculados automaticamente a partir das vendas confirmadas no Kanban.
+            Configure a premiação de cada medalha. O desbloqueio considera vendas confirmadas no Kanban; não representa prêmio entregue.
           </p>
           {medals.map((m, i) => (
-            <div className="goal-edit-step" key={i}>
-              <label className="form-row">
-                Medalha
-                <Input
-                  value={m.label}
-                  maxLength={60}
-                  onChange={(e) => changeMedal(i, { label: e.target.value })}
-                />
-              </label>
-              <label className="form-row">
-                Ícone
-                <select
-                  aria-label={'Ícone de ' + m.label}
-                  value={m.icon || 'trophy'}
-                  onChange={(e) =>
-                    changeMedal(i, { icon: e.target.value as keyof typeof medalIcons })
-                  }
-                >
-                  {Object.entries(medalIcons).map(([key, emoji]) => (
-                    <option key={key} value={key}>
-                      {emoji} {key}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label className="form-row">
-                Regra
-                <select
-                  value={m.kind}
-                  onChange={(e) => changeMedal(i, { kind: e.target.value as GoalMedal['kind'] })}
-                >
-                  <option value="sales">Vendas</option>
-                  <option value="percent">% da meta</option>
-                </select>
-              </label>
-              <label className="form-row">
-                Limite
-                <Input
-                  type="number"
-                  min="1"
-                  max="1000"
-                  value={m.threshold}
-                  onChange={(e) => changeMedal(i, { threshold: Number(e.target.value) })}
-                />
-              </label>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                aria-label={'Remover medalha ' + m.label}
-                onClick={() => setMedals((x) => x.filter((_, j) => j !== i))}
-              >
-                <Trash2 size={16} />
-              </Button>
-            </div>
+            <MedalEditor
+              key={i}
+              medal={m}
+              onChange={(part) => changeMedal(i, part)}
+              onRemove={() => setMedals((x) => x.filter((_, j) => j !== i))}
+            />
           ))}
           {medals.length < 8 && (
             <Button
