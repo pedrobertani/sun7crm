@@ -296,7 +296,7 @@ function commandFailure(code: string, status?: number) {
     );
   if (code === 'BILLING_CHANGED')
     return new AdminCommandError(
-      'O plano foi atualizado. Atualize a lista e gerencie o vencimento na aba Planos.',
+      'Há uma cobrança em andamento ou o plano mudou. Conclua ou cancele a cobrança antes de editar valor ou vencimento.',
       'edit',
     );
   if (

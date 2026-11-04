@@ -336,7 +336,7 @@ test('plano: carência, gratuidade, quitação e isolamento no servidor', async 
       );
     },
   );
-  await t.test('cadastro novo usa R$189,90 e aguarda pagamento ou cortesia', async () => {
+  await t.test('Caio cria empresa habilitada com valor e vencimento informados e pode corrigir ambos', async () => {
     const created = (
       await as('service_role', null, () =>
         q('select public.crm_edge_create_company($1,$2,$3,$4) as result', [
@@ -357,12 +357,36 @@ test('plano: carência, gratuidade, quitação e isolamento no servidor', async 
     const bill = (
       await q('select * from public.crm_company_billing where company_id=$1', [created])
     ).rows[0];
-    assert.equal(bill.monthly_amount_cents, 18990);
-    assert.equal(bill.cycle_kind, 'awaiting_payment');
+    const account = (await q('select enabled from public.crm_companies where id=$1', [created])).rows[0];
+    assert.equal(account.enabled, true);
+    assert.equal(bill.monthly_amount_cents, 12345);
+    assert.equal(new Date(bill.due_date).toISOString().slice(0, 10), '2099-01-01');
+    assert.equal(bill.cycle_kind, 'monthly');
     assert.equal(
       (await q('select crm_private.subscription_allows_access($1) as result', [created])).rows[0]
         .result,
-      false,
+      true,
     );
+
+    const change = {
+      name: 'Nova fixture editada', segment: 'Teste', template: 'generic', theme: 'blue',
+      monthly_amount_cents: 4990, due_date: '2099-02-01', enabled: true,
+    };
+    const changeId = id(++op);
+    const update = (actor, payload = change, fingerprint = 'b'.repeat(64)) =>
+      as('service_role', null, () =>
+        q('select public.crm_edge_update_company($1,$2,$3,$4,$5)', [
+          id(actor), changeId, created, fingerprint, payload,
+        ]),
+      );
+    await denied(update(2));
+    await update(1);
+    await update(1); // reenvio idempotente
+    const changed = (await q('select * from public.crm_company_billing where company_id=$1', [created])).rows[0];
+    assert.equal(changed.monthly_amount_cents, 4990);
+    assert.equal(new Date(changed.due_date).toISOString().slice(0, 10), '2099-02-01');
+    assert.equal(changed.cycle_kind, 'monthly');
+    assert.equal((await q('select enabled from public.crm_companies where id=$1', [created])).rows[0].enabled, true);
+    await assert.rejects(update(1, {...change, due_date: '2099-03-01'}, 'c'.repeat(64)), e => e.code==='23505');
   });
 });

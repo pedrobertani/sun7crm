@@ -116,7 +116,7 @@ test('criação de empresa usa ator da sessão, valor em centavos e mantém desa
   const response = await f.request(company);
   assert.equal(response.status, 201);
   assert.equal(response.headers.get('cache-control'), 'no-store');
-  assert.deepEqual((await response.json()).data, { company_id: id(10), enabled: false });
+  assert.deepEqual((await response.json()).data, { company_id: id(10), enabled: true });
   const args = f.calls.find(([name]) => name === 'crm_edge_create_company')[1];
   assert.equal(args.p_actor, id(1));
   assert.equal(args.p_values.monthly_amount_cents, 19000);

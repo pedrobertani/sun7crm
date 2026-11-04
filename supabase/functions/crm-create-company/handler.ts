@@ -38,5 +38,5 @@ export async function createCompany({ actorId, requestId, body, backend }: Comma
     p_fingerprint: await fingerprint([values]),
     p_values: values,
   });
-  return { status: 201, data: { company_id: companyId, enabled: false } };
+  return { status: 201, data: { company_id: companyId, enabled: true } };
 }

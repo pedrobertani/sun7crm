@@ -70,6 +70,12 @@ function PlanSummary({ plan, demo = false }: { plan: Subscription; demo?: boolea
           </span>
         </div>
       </div>
+      {!demo && plan.status === 'active' && plan.events.every((event) => event.kind !== 'payment') && (
+        <p className="billing-alert" role="status">
+          Sua primeira mensalidade ainda não tem pagamento confirmado. O acesso está liberado
+          até {dateLabel(plan.due_date)}; confira a aba Pagamento para regularizar.
+        </p>
+      )}
       {plan.status === 'grace' && (
         <p className="billing-alert" role="status">
           Pagamento pendente. Você utilizou {plan.grace_days_used} de 7 dias de carência. O acesso
