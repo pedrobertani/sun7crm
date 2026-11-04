@@ -1,0 +1,46 @@
+/* Sino, ajuda e usuário compartilham o mesmo alvo de toque e contorno. */
+.top-controls .top-control-icon {
+  box-sizing: border-box;
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  flex: 0 0 44px;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
+  border: 1px solid var(--control-border);
+  background: var(--surface);
+  color: var(--ink);
+}
+.top-controls .top-control-icon:hover { background: var(--soft); }
+.top-controls .top-control-icon:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+.help-center { display: grid; gap: 16px; min-width: 0; }
+.help-center-intro { display: grid; gap: 5px; }
+.help-center-intro p { margin: 0; }
+.help-center-search { position: relative; display: block; min-width: 0; }
+.help-center-search > svg {
+  position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+  color: var(--muted); pointer-events: none; z-index: 1;
+}
+.help-center-search input { width: 100%; padding-left: 38px; }
+.help-center-section { display: grid; gap: 9px; }
+.help-center-section h3 { color: var(--primary); font-size: 13px; margin: 0; font-weight: 700; }
+.help-center-items { display: grid; gap: 7px; }
+.help-center-topic { min-width: 0; border: 1px solid var(--line); border-radius: 9px; background: var(--surface); }
+.help-center-topic > summary { padding: 13px; cursor: pointer; font-weight: 600; font-size: 13px; }
+.help-center-topic > summary:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.help-center-topic-body { padding: 0 14px 14px; color: var(--ink); font-size: 12px; line-height: 1.7; }
+.help-center-topic-body p { margin: 0 0 8px; }
+.help-center-topic-body ol { padding-left: 20px; margin: 8px 0 12px; }
+.help-center-topic-body li + li { margin-top: 5px; }
+.help-center-topic-body a { font-weight: 650; color: var(--primary); text-decoration: underline; }
+@media (max-width: 760px) {
+  .help-center-topic > summary { padding: 12px; }
+  .help-center-topic-body { padding: 0 12px 12px; }
+}
