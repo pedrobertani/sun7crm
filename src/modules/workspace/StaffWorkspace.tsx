@@ -15,6 +15,7 @@ import {
   UsersRound,
   Settings,
   CreditCard,
+  Wallet,
 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { pageRefreshScheduler } from '../../lib/query-refresh';
@@ -42,6 +43,7 @@ import { RealKanban } from './RealKanban';
 import { RealCatalog, RealContacts, RealStrategies, RealTasks } from './RealRecords';
 import { RealDashboard, RealReports, RealSettings, RealTeam } from './RealManagement';
 import { RealAmbassadors } from './RealAmbassadors';
+import { RealFinance } from '../finance/Finance';
 import '../admin/admin.css';
 import './operational.css';
 
@@ -64,6 +66,7 @@ export const operationalNavigation = [
   },
   { to: '/app/catalogo', label: 'Serviços e produtos', icon: Package, group: 'Cadastros' },
   { to: '/app/etiquetas', label: 'Etiquetas', icon: Tags, group: 'Cadastros' },
+  { to: '/app/financeiro', label: 'Financeiro', icon: Wallet, group: 'Gestão', manager: true },
   {
     to: '/app/relatorios',
     label: 'Relatórios',
@@ -248,6 +251,7 @@ export function StaffWorkspace({
       '/app/embaixadores': 'ambassadors.view',
       '/app/catalogo': 'catalog.view',
       '/app/etiquetas': 'labels.view',
+      '/app/financeiro': 'finance.view',
       '/app/relatorios': 'reports.view',
       '/app/equipe': 'team.view',
       '/app/configuracoes': 'settings.view',
@@ -483,6 +487,8 @@ function OperationalContent({
       return <RealTeam />;
     case '/app/configuracoes':
       return <RealSettings onCompanyChanged={onCompanyChanged} />;
+    case '/app/financeiro':
+      return <RealFinance />;
     case '/app/relatorios':
       return <RealReports />;
     case '/app/plano':
