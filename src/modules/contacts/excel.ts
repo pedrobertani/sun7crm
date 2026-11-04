@@ -71,3 +71,17 @@ export async function prepareContactsDownload(
   });
   return { url: URL.createObjectURL(blob), filename };
 }
+
+/** Dispara o download sem exigir um segundo clique após gerar a planilha. */
+export function downloadPreparedContacts(file: { url: string; filename: string }): void {
+  const anchor = document.createElement('a');
+  anchor.href = file.url;
+  anchor.download = file.filename;
+  anchor.style.display = 'none';
+  document.body.appendChild(anchor);
+  try {
+    anchor.click();
+  } finally {
+    anchor.remove();
+  }
+}
