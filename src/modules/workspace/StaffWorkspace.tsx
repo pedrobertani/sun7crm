@@ -26,6 +26,7 @@ import { getSupabaseClient } from '../../lib/supabase';
 import { initials } from '../../lib/format';
 import type { CrmTheme } from '../../lib/themes';
 import { AccountMenu } from '../../components/AccountMenu';
+import { HelpCenter } from '../../components/help/HelpCenter';
 import { legacyPermissions } from '../permissions/model';
 import { loadAccountAccess, type AccountUser } from '../auth/access';
 import { PublicShell } from '../public/PublicShell';
@@ -350,6 +351,11 @@ export function StaffWorkspace({
                 userId={user.id}
                 companyId={company.id}
                 onRecheck={onRecheck}
+              />
+              <HelpCenter
+                role={company.role}
+                keys={(company.permissions || legacyPermissions(company.role)).keys}
+                scope={(company.permissions || legacyPermissions(company.role)).scope}
               />
               <AccountMenu
                 name={user.displayName}
