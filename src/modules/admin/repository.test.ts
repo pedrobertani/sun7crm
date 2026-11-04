@@ -136,7 +136,7 @@ describe('Painel administrativo conectado', () => {
       input = companyInput(form);
     await expect(
       createAdminCompany(fake.client, fixtureUserId, input, operationId),
-    ).resolves.toEqual({ company_id: 'company-local', enabled: false });
+    ).resolves.toEqual({ company_id: 'company-local', enabled: true });
     expect(fake.invoke).toHaveBeenCalledWith('crm-create-company', {
       body: input,
       headers: { Authorization: 'Bearer local-test-token', 'Idempotency-Key': operationId },
