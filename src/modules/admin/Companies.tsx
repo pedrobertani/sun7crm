@@ -10,6 +10,7 @@ import { AppliedFilter, Empty, FormError, Heading, SearchInput } from '../../com
 import { RecordTitle } from '../../components/RecordTitle';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
+import { PasswordInput } from '../../components/ui/password-input';
 import { Modal } from '../../components/ui/modal';
 import { CurrencyInput } from '../../components/currency-input';
 import { filterCompanies, companyFilterLabels } from '../../domain/filters';
@@ -548,7 +549,7 @@ export function AdminCompanies({
               </label>
               <label className="form-row span2">
                 Senha temporária
-                <Input
+                <PasswordInput
                   required
                   type="password"
                   minLength={12}
