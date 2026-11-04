@@ -18,7 +18,7 @@ import { currency, dateLabel, shiftDate, today, uid } from '../../lib/format';
 import { CRM_THEMES, type CrmTheme } from '../../lib/themes';
 import { getSupabaseClient } from '../../lib/supabase';
 import { AccessChangedError } from '../auth/access';
-import { stateLabels, subscriptionState } from '../billing/subscription';
+import { addMonth, stateLabels, subscriptionState } from '../billing/subscription';
 import { CompanyUsers } from './CompanyUsers';
 import { BillingHistory } from '../billing/BillingHistory';
 import {
@@ -41,7 +41,7 @@ function initialCompany() {
     template: 'aesthetic' as Template,
     theme: 'sun7' as CrmTheme,
     amount: '189.90',
-    dueDate: today(),
+    dueDate: addMonth(today()),
     enabled: false,
   };
 }
