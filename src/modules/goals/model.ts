@@ -4,6 +4,8 @@ export interface GoalStep {
   rate: number | null;
   /** Quantidade-meta definida pelo gestor. Ausente quando a etapa é projetada por taxas. */
   count?: number | null;
+  /** Informado somente na etapa de contatos ao projetar de cima para baixo por taxas. */
+  start_contacts?: number | null;
 }
 export type MedalReward =
   | { kind: 'money'; amount_cents: number; description?: string }
@@ -82,6 +84,14 @@ export function validMedalReward(reward: MedalReward | undefined): boolean {
 export function isManualGoalFunnel(stages: GoalStep[]): boolean {
   return stages.some((stage) => stage.count !== undefined);
 }
+/** O gestor informa a entrada do funil e conserva as taxas de conversão editáveis. */
+export function isContactsGoalFunnel(stages: GoalStep[]): boolean {
+  return !isManualGoalFunnel(stages) && stages[0]?.start_contacts !== undefined;
+}
+export type GoalFunnelMode = 'calculated' | 'contacts' | 'manual';
+export function goalFunnelMode(stages: GoalStep[]): GoalFunnelMode {
+  return isManualGoalFunnel(stages) ? 'manual' : isContactsGoalFunnel(stages) ? 'contacts' : 'calculated';
+}
 
 function validGoalCount(count: number | null | undefined): count is number {
   return typeof count === 'number' && Number.isSafeInteger(count) && count > 0 && count <= 1000000000;
@@ -111,10 +121,29 @@ export function manualGoalStages(
     target_cents: targetCents,
     ticket_cents: ticketCents,
   });
-  return stages.map((stage, index) => ({
+  return stages.map(({ start_contacts: _start, ...stage }, index) => ({
     ...stage,
     count: projected[index]?.count ?? null,
   }));
+}
+/** Trocar modos preserva taxas, e converte a configuração manual em taxas atualizadas. */
+export function changeGoalFunnelMode(
+  stages: GoalStep[],
+  mode: GoalFunnelMode,
+  targetCents: number,
+  ticketCents: number,
+): GoalStep[] {
+  if (mode === goalFunnelMode(stages)) return stages;
+  if (mode === 'manual') return manualGoalStages(stages, targetCents, ticketCents);
+
+  const rates = prepareGoalStages(stages).map(({ count: _count, start_contacts: _start, ...stage }) => stage);
+  if (mode === 'calculated') return rates;
+  const firstCount = isManualGoalFunnel(stages)
+    ? stages[0]?.count
+    : buildGoalFunnel({ stages: rates, target_cents: targetCents, ticket_cents: ticketCents })[0]?.count;
+  return rates.map((stage, index) =>
+    index === 0 ? { ...stage, start_contacts: firstCount ?? null } : stage);
+
 }
 export function validateGoalConfig(targetCents:number,ticketCents:number,stages:GoalStep[],medals:GoalMedal[]):string|null {
   if(!positiveInteger(targetCents)||!positiveInteger(ticketCents)||targetCents>1e12||ticketCents>1e12)
@@ -124,13 +153,22 @@ export function validateGoalConfig(targetCents:number,ticketCents:number,stages:
   if (stages.some((s) => !s.label.trim() || s.label.length > 50))
     return 'Informe nomes válidos para todas as etapas do funil.';
   if (isManualGoalFunnel(stages)) {
+    if (stages.some((s) => s.start_contacts !== undefined))
+      return 'Escolha apenas um modo: contatos iniciais ou quantidades por etapa.';
     if (stages.some((s) => !validGoalCount(s.count)))
       return 'Defina uma quantidade inteira maior que zero para todas as etapas, inclusive contatos.';
     if (stages.some((s, index) => index > 0 && s.count! > stages[index - 1].count!))
       return 'No funil manual, a quantidade de cada etapa não pode superar a etapa anterior.';
-  } else if (stages.some((s,i) =>
-    i===0?s.rate!==null:s.rate===null||!Number.isFinite(s.rate)||s.rate<=0||s.rate>100))
-    return 'Informe todas as taxas de passagem (acima de 0% até 100%).';
+  } else {
+    if (stages.some((s, i) => i > 0 && s.start_contacts !== undefined))
+      return 'Informe os contatos iniciais somente na primeira etapa.';
+    if (isContactsGoalFunnel(stages) && !validGoalCount(stages[0].start_contacts))
+      return 'Informe uma quantidade inicial de contatos válida (de 1 a 1 bilhão).';
+    if (stages.some((s,i) => i===0
+      ? s.rate!==null
+      : s.rate===null || !Number.isFinite(s.rate) || s.rate<=0 || s.rate>100))
+      return 'Informe todas as taxas de passagem (acima de 0% até 100%).';
+  }
   if(medals.length>8||medals.some(m=>!m.label.trim()||m.label.length>60||
     !['sales','percent'].includes(m.kind)||(m.icon!==undefined&&!(m.icon in medalIcons))||!positiveInteger(m.threshold)||m.threshold>1000))
     return 'Revise os critérios de medalhas (de 1 a 1000).';
@@ -144,6 +182,19 @@ export function buildGoalFunnel(plan:Pick<GoalPlan,'target_cents'|'ticket_cents'
       ...step,
       count: validGoalCount(step.count) ? step.count : null,
     }));
+  }
+  if (isContactsGoalFunnel(plan.stages)) {
+    let previous: number | null = validGoalCount(plan.stages[0].start_contacts)
+      ? plan.stages[0].start_contacts : null;
+    return plan.stages.map((step, index) => {
+      if (index > 0) {
+        const rate = step.rate;
+        previous = previous === null || rate === null || !Number.isFinite(rate) || rate <= 0 || rate > 100
+          ? null
+          : Math.floor(previous * rate / 100);
+      }
+      return { ...step, count: previous };
+    });
   }
   if (!positiveInteger(plan.target_cents) || !positiveInteger(plan.ticket_cents))
     return [];
@@ -159,6 +210,13 @@ export function buildGoalFunnel(plan:Pick<GoalPlan,'target_cents'|'ticket_cents'
     counts[i - 1] = Number.isSafeInteger(result) && result <= 1e9 ? result : null;
   }
   return plan.stages.map((step, index) => ({ ...step, count: counts[index] }));
+}
+/** Só projeção, nunca contabilização de venda ou recebimento real. */
+export function projectedRevenueCents(plan: Pick<GoalPlan, 'stages' | 'target_cents' | 'ticket_cents'>): number | null {
+  const sales = buildGoalFunnel(plan).at(-1)?.count;
+  if (sales === undefined || sales === null) return null;
+  const total = sales * plan.ticket_cents;
+  return Number.isSafeInteger(total) && total >= 0 ? total : null;
 }
 export function medalUnlocked(medal:GoalMedal, result:Pick<GoalEmployeeProgress,'sales_count'|'sales_cents'|'goal_cents'>) {
   if(medal.kind==='sales') return result.sales_count>=medal.threshold;
