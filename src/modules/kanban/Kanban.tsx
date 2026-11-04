@@ -37,7 +37,7 @@ import {
   removeStage,
   stageNameError,
 } from '../../domain/operations';
-import { currency, initials, uid } from '../../lib/format';
+import { currency, initials, uid, today } from '../../lib/format';
 import type { BoardKind, Opportunity } from '../../domain/types';
 import {
   Heading,
@@ -50,6 +50,8 @@ import { Button } from '../../components/ui/button';
 import { Modal } from '../../components/ui/modal';
 import { ConfirmKanbanMove, type ConfirmedMove } from '../goals/ConfirmKanbanMove';
 import { highImpactStage } from '../goals/stageOutcome';
+import { defaultFinanceTerms } from '../finance/model';
+import { legacyPermissions } from '../permissions/model';
 export function Kanban() {
   const { kind } = useParams();
   const [params, setParams] = useSearchParams();
@@ -138,6 +140,26 @@ export function Kanban() {
       const now = moveOpportunity(d, session, card.id, targetId);
       return {
         ...now,
+        demoFinance: result.confirmed && result.finance
+          ? {
+              terms: {
+                ...(now.demoFinance?.terms || {}),
+                [card.id]: {
+                  ...defaultFinanceTerms(result.amountCents),
+                  cashCents: result.finance.cashCents,
+                  termCents: result.finance.termCents,
+                  kind: result.finance.kind,
+                  entryCents: result.finance.schedule.find(x => x.entry)?.amount_cents || 0,
+                  count: result.finance.schedule.filter(x => !x.entry).length,
+                  firstDue: result.finance.schedule.find(x => !x.entry)?.due_on || today(),
+                  method: result.finance.schedule[0]?.method || 'pix',
+                  customCents: result.finance.schedule.filter(x => !x.entry).map(x => x.amount_cents),
+                  customDates: result.finance.schedule.filter(x => !x.entry).map(x => x.due_on),
+                },
+              },
+              movements: now.demoFinance?.movements || [],
+            }
+          : now.demoFinance,
         opportunities: now.opportunities.map((o) =>
           o.id !== card.id
             ? o
@@ -471,6 +493,8 @@ export function Kanban() {
           toStage={board.stages.find((x) => x.id === pendingMove.targetId)?.name || 'Conclusão'}
           kind={pendingMove.kind}
           amountCents={pendingMove.card.value}
+          canConfigureFinance={session.role==='manager' || (data.members.find(m=>m.id===session.memberId)?.permissions
+            || legacyPermissions(session.role)).keys.includes('finance.terms')}
           onCancel={() => setPendingMove(null)}
           onConfirm={confirmMove}
         />
