@@ -61,9 +61,11 @@ export function AppShell() {
     : businessLinks;
   const allLinks = [
     ...links,
+    ...(!admin && (session.role === 'manager' || (member?.permissions || legacyPermissions(session.role)).keys.includes('finance.view'))
+      ? [{ to: '/demo/financeiro', label: 'Financeiro', icon: Wallet, group: 'Gestão' }]
+      : []),
     ...(!admin && session.role === 'manager'
       ? [
-          { to: '/demo/financeiro', label: 'Financeiro', icon: Wallet, group: 'Gestão' },
           {
             to: '/demo/relatorios',
             label: 'Relatórios',
@@ -185,8 +187,8 @@ export function AppShell() {
           <div className="top-controls">
             <HelpCenter
               role={session.role}
-              keys={legacyPermissions(session.role).keys}
-              scope={legacyPermissions(session.role).scope}
+              keys={(member?.permissions || legacyPermissions(session.role)).keys}
+              scope={(member?.permissions || legacyPermissions(session.role)).scope}
               demo
             />
             <AccountMenu
