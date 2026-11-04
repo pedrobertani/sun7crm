@@ -9,6 +9,7 @@ import { Pagination, paginatedRows, usePagination } from '../../components/ui/pa
 import { ViewSwitcher } from '../../components/ui/view-switcher';
 import { Empty, Kpi, Panel, SearchInput } from '../../components/shared';
 import { currency, dateLabel, today } from '../../lib/format';
+import { CHART_COLORS } from '../../lib/themes';
 import { getSupabaseClient } from '../../lib/supabase';
 import { useOperational, QueryState, useQuery } from '../workspace/operational';
 import { FinanceRepository } from './api';
@@ -44,7 +45,7 @@ export function FinanceGraph({graph,rows}:{graph:Graph;rows:{month:string;income
       {points.length ? <ResponsiveContainer width="100%" height="100%">
         <PieChart><Pie data={points} dataKey="value" nameKey="name" outerRadius={92}
           label={({name})=>name}>
-          {points.map((_,i)=><Cell key={i} fill={['#c8a24b','#64748b','#b45353'][i]}/>)}
+          {points.map((_,i)=><Cell key={i} fill={CHART_COLORS[i]}/>)}
         </Pie><ChartTooltip formatter={(n)=>valueString(Math.round(Number(n)*100))}/><Legend/></PieChart>
       </ResponsiveContainer> : <p className="small-note">Nenhuma movimentação neste período.</p>}
     </div>;
@@ -56,17 +57,17 @@ export function FinanceGraph({graph,rows}:{graph:Graph;rows:{month:string;income
           <CartesianGrid strokeDasharray="3 3" opacity={0.25}/>
           <XAxis dataKey="name"/><YAxis width={70} tickFormatter={n=>valueString(Number(n)*100)}/>
           <ChartTooltip formatter={n=>valueString(Math.round(Number(n)*100))}/><Legend/>
-          <Bar dataKey="Receita" fill="#c8a24b" radius={[3,3,0,0]}/>
-          <Bar dataKey="Despesas" fill="#64748b" radius={[3,3,0,0]}/>
-          <Bar dataKey="Estornos" fill="#b45353" radius={[3,3,0,0]}/>
+          <Bar dataKey="Receita" fill={CHART_COLORS[0]} radius={[3,3,0,0]}/>
+          <Bar dataKey="Despesas" fill={CHART_COLORS[1]} radius={[3,3,0,0]}/>
+          <Bar dataKey="Estornos" fill={CHART_COLORS[2]} radius={[3,3,0,0]}/>
         </BarChart> :
         <LineChart data={data} margin={{top:10,right:10,bottom:10,left:0}}>
           <CartesianGrid strokeDasharray="3 3" opacity={0.25}/>
           <XAxis dataKey="name"/><YAxis width={70} tickFormatter={n=>valueString(Number(n)*100)}/>
           <ChartTooltip formatter={n=>valueString(Math.round(Number(n)*100))}/><Legend/>
-          <Line dataKey="Receita" stroke="#c8a24b" strokeWidth={2} dot/>
-          <Line dataKey="Despesas" stroke="#64748b" strokeWidth={2} dot/>
-          <Line dataKey="Estornos" stroke="#b45353" strokeWidth={2} dot/>
+          <Line dataKey="Receita" stroke={CHART_COLORS[0]} strokeWidth={2} dot/>
+          <Line dataKey="Despesas" stroke={CHART_COLORS[1]} strokeWidth={2} dot/>
+          <Line dataKey="Estornos" stroke={CHART_COLORS[2]} strokeWidth={2} dot/>
         </LineChart>}
     </ResponsiveContainer>
   </div>;
