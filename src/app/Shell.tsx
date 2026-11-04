@@ -23,6 +23,7 @@ import {
   Tags,
   ChartNoAxesCombined,
   CreditCard,
+  Wallet,
 } from 'lucide-react';
 import { useCrm } from './context';
 import { roleLabels } from '../domain/config';
@@ -62,6 +63,7 @@ export function AppShell() {
     ...links,
     ...(!admin && session.role === 'manager'
       ? [
+          { to: '/demo/financeiro', label: 'Financeiro', icon: Wallet, group: 'Gestão' },
           {
             to: '/demo/relatorios',
             label: 'Relatórios',
