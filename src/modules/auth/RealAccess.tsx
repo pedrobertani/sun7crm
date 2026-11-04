@@ -3,7 +3,7 @@ import { Navigate, useNavigate } from 'react-router-dom';
 import { ArrowRight, LockKeyhole, ShieldCheck } from 'lucide-react';
 import { getSupabaseClient } from '../../lib/supabase';
 import { uid } from '../../lib/format';
-import { Input } from '../../components/ui/input';
+import { PasswordInput } from '../../components/ui/password-input';
 import { Button } from '../../components/ui/button';
 import { PublicShell } from '../public/PublicShell';
 import { passwordValidation } from './flow';
@@ -190,7 +190,7 @@ export function RealAccess({
               <form onSubmit={changePassword}>
                 <label className="form-row">
                   Nova senha
-                  <Input
+                  <PasswordInput
                     type="password"
                     autoComplete="new-password"
                     value={newPassword}
@@ -201,7 +201,7 @@ export function RealAccess({
                 </label>
                 <label className="form-row">
                   Confirme a nova senha
-                  <Input
+                  <PasswordInput
                     type="password"
                     autoComplete="new-password"
                     value={confirmPassword}
