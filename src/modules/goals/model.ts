@@ -3,7 +3,7 @@ export interface GoalStep {
   /** Taxa de conversão para esta etapa. Em modo manual, é derivada das quantidades. */
   rate: number | null;
   /** Quantidade-meta definida pelo gestor. Ausente quando a etapa é projetada por taxas. */
-  count?: number;
+  count?: number | null;
 }
 export type MedalReward =
   | { kind: 'money'; amount_cents: number; description?: string }
@@ -83,8 +83,8 @@ export function isManualGoalFunnel(stages: GoalStep[]): boolean {
   return stages.some((stage) => stage.count !== undefined);
 }
 
-function validGoalCount(count: number | undefined): count is number {
-  return Number.isSafeInteger(count) && count !== undefined && count > 0 && count <= 1000000000;
+function validGoalCount(count: number | null | undefined): count is number {
+  return typeof count === 'number' && Number.isSafeInteger(count) && count > 0 && count <= 1000000000;
 }
 
 /** Salva taxas derivadas das quantidades para preservar o contrato já utilizado pelo banco. */
@@ -113,7 +113,7 @@ export function manualGoalStages(
   });
   return stages.map((stage, index) => ({
     ...stage,
-    count: projected[index]?.count ?? undefined,
+    count: projected[index]?.count ?? null,
   }));
 }
 export function validateGoalConfig(targetCents:number,ticketCents:number,stages:GoalStep[],medals:GoalMedal[]):string|null {
