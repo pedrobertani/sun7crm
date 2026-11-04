@@ -382,3 +382,39 @@
     font-size: 9px;
   }
 }
+
+/* Formulário compacto de medalha: combinações de critério e premiação sem campos espremidos. */
+.goal-medal-editor {
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  min-width: 0;
+}
+.goal-medal-editor > button { flex: 0 0 auto; }
+.goal-medal-fields {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: end;
+  gap: 12px;
+}
+.goal-medal-fields .form-row { min-width: 0; margin: 0; }
+.goal-medal-fields select { width: 100%; }
+.goal-medal-reward {
+  display: block;
+  color: var(--ink) !important;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 800px) {
+  .goal-medal-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 480px) {
+  .goal-medal-editor { align-items: flex-start; }
+  .goal-medal-fields { grid-template-columns: minmax(0, 1fr); }
+}
