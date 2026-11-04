@@ -68,6 +68,7 @@ export function helpTopics({ role, keys, scope = 'own', demo = false }: HelpAcce
     ambassadors: base + '/embaixadores',
     catalog: base + '/catalogo',
     labels: base + '/etiquetas',
+    finance: base + '/financeiro',
     reports: base + '/relatorios',
     team: base + '/equipe',
     settings: base + '/configuracoes',
@@ -207,6 +208,33 @@ export function helpTopics({ role, keys, scope = 'own', demo = false }: HelpAcce
       'As medalhas dependem de vendas confirmadas no Kanban; o prêmio não é pago automaticamente.',
     ],
     route: routes.dashboard,
+  });
+  add('finance.view', {
+    id: 'finance', section: 'Gestão', title: 'Financeiro · vendas, parcelas e despesas',
+    intro: 'Acompanhe resultados comerciais, valores a receber e caixa efetivamente movimentado.',
+    steps: [
+      'Abra Financeiro no grupo Gestão para consultar os registros permitidos à sua carteira.',
+      allowed('finance.company')
+        ? 'Seu acesso permite consultar valores de toda a empresa.'
+        : 'Você consulta somente lançamentos vinculados à sua carteira financeira.',
+      'As vendas fechadas não entram automaticamente no caixa. Recebimentos devem ser registrados separadamente.',
+      allowed('finance.terms')
+        ? 'Ao confirmar uma venda no Kanban, defina preço à vista, a prazo, entrada, vencimentos e parcelas.'
+        : 'O gestor ou profissional autorizado define as condições de parcelamento.',
+      allowed('finance.receive')
+        ? 'Na aba Contas a receber, abra a venda e registre os pagamentos totais ou parciais.'
+        : 'A baixa de pagamentos depende de uma permissão específica.',
+      allowed('finance.expense')
+        ? 'Cadastre despesas na aba Despesas, podendo vinculá-las a uma venda.'
+        : 'O cadastro de despesas depende de autorização do gestor.',
+      allowed('finance.edit')
+        ? 'Edite despesas autorizadas; as alterações preservam histórico.'
+        : 'A edição de despesas depende de autorização adicional.',
+      allowed('finance.void')
+        ? 'Para estornar ou anular movimentações, informe um motivo: o histórico não é apagado.'
+        : 'Estornos e anulações exigem uma permissão específica.',
+    ],
+    route: demo ? '/demo/financeiro' : routes.finance,
   });
   add('reports.view', {
     id: 'reports', section: 'Gestão', title: 'Relatórios',
