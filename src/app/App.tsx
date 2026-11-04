@@ -12,6 +12,7 @@ import { Navigate, Outlet, Route, Routes } from 'react-router-dom';
 import { CrmProvider, useCrm } from './context';
 import { BrowserRepository } from '../data/repository';
 import { AppShell } from './Shell';
+import { DemoFinance } from '../modules/finance/DemoFinance';
 import { CompanyDashboard } from '../modules/dashboard/Dashboard';
 import { Contacts } from '../modules/contacts/Contacts';
 import { Kanban } from '../modules/kanban/Kanban';
@@ -43,6 +44,7 @@ function Demo() {
               <Route path="funil/:kind" element={<Kanban />} />
               <Route path="tarefas" element={<Tasks />} />
               <Route path="relatorios" element={<DemoActivityReport />} />
+              <Route path="financeiro" element={<DemoFinance />} />
               <Route path="plano" element={<DemoPlan />} />
               <Route path="estrategias" element={<Strategies />} />
               <Route path="campanhas" element={<Navigate to="/demo/estrategias" replace />} />

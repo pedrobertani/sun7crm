@@ -125,6 +125,7 @@ export function RealDashboard() {
                 value={currency(query.data.metrics.estimated_pipeline_cents)}
                 foot="Valor estimado dos cards abertos"
                 icon={<Wallet size={19} />}
+                to={can('finance.view') ? '/app/financeiro' : '/app/funil'}
               />
               <Kpi
                 label="Tarefas pendentes"

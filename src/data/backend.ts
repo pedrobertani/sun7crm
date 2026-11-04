@@ -648,11 +648,23 @@ export class OperationalBackend {
       true,
     );
   }
-  confirmCardSale(id: string, stage: string, expectedVersion: number, amountCents: number) {
+  confirmCardSale(
+    id: string, stage: string, expectedVersion: number, amountCents: number,
+    finance?: { cashCents:number;termCents:number;kind:'cash'|'installments';schedule:{
+      amount_cents:number;due_on:string;method:string;entry?:boolean;
+    }[] },
+  ) {
     return this.rpc<CardRow>(
-      'crm_confirm_card_sale',
-      {p_card:uuid(id),p_stage:uuid(stage),p_expected_version:version(expectedVersion),p_amount_cents:amountCents},
-      true
+      finance ? 'crm_confirm_card_sale_finance' : 'crm_confirm_card_sale',
+      {
+        p_card:uuid(id),p_stage:uuid(stage),p_expected_version:version(expectedVersion),
+        p_amount_cents:amountCents,
+        ...(finance ? {
+          p_cash:finance.cashCents,p_term:finance.termCents,p_kind:finance.kind,
+          p_schedule:finance.schedule,
+        } : {}),
+      },
+      true,
     );
   }
   async confirmedSales(month: string):Promise<{membership_id:string;value_cents:number}[]>{

@@ -27,6 +27,18 @@ describe('árvore de permissões', () => {
     expect(togglePermissions(allPermissionKeys, allPermissionKeys, false)).toEqual([]);
     expect(new Set(allPermissionKeys).size).toBe(allPermissionKeys.length);
   });
+  it('o financeiro começa sem acesso para funcionários e sem permissões implícitas', () => {
+    const financeKeys = allPermissionKeys.filter((k) => k.startsWith('finance.'));
+    expect(financeKeys).toHaveLength(8);
+    expect(legacyPermissions('manager').keys).toEqual(expect.arrayContaining(financeKeys));
+    expect(legacyPermissions('seller').keys).not.toContain('finance.view');
+    expect(legacyPermissions('reception').keys).not.toContain('finance.view');
+    const keys = togglePermissions([], ['finance.receive'], true);
+    expect(keys).toContain('finance.view');
+    expect(keys).not.toContain('finance.company');
+    expect(keys).not.toContain('finance.expense');
+    expect(togglePermissions(keys, ['finance.view'], false)).not.toContain('finance.receive');
+  });
   it('preserva carteiras e direitos existentes antes da primeira personalização', () => {
     expect(legacyPermissions('manager').scope).toBe('company');
     expect(legacyPermissions('seller').scope).toBe('own');

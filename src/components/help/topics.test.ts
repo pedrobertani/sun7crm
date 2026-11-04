@@ -17,7 +17,7 @@ describe('central de ajuda por permissões', () => {
     const names = ids('manager', legacyPermissions('manager').keys);
     expect(names).toEqual(expect.arrayContaining([
       'dashboard', 'funnel', 'contacts', 'import', 'export',
-      'tasks', 'catalog', 'goals', 'team', 'reports', 'settings', 'plan',
+      'tasks', 'catalog', 'goals', 'finance', 'team', 'reports', 'settings', 'plan',
     ]));
   });
   it('recepção sem permissão financeira não vê plano, gestão nem operações não concedidas', () => {

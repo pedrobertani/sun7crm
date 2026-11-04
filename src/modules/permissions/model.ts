@@ -65,6 +65,14 @@ export const permissionModules: PermissionModule[] = [
     resources: [{id:'goals',label:'Minhas metas e medalhas',actions:['view']}],
   },
   {
+    id: 'finance',
+    label: 'Financeiro',
+    resources: [
+      { id: 'finance', label: 'Recebíveis, movimentações e despesas',
+        actions: ['view', 'company', 'terms', 'receive', 'expense', 'edit', 'void', 'export'] },
+    ],
+  },
+  {
     id: 'management',
     label: 'Gestão',
     resources: [
@@ -85,6 +93,11 @@ export const actionLabels: Record<string, string> = {
   export: 'Exportar',
   whatsapp: 'Abrir WhatsApp',
   close: 'Encerrar',
+  company: 'Visualizar os valores de toda a empresa',
+  terms: 'Definir preços e parcelamentos',
+  receive: 'Registrar recebimentos',
+  expense: 'Cadastrar despesas',
+  void: 'Estornar e anular movimentações',
   pay: 'Registrar pagamento',
   adjust: 'Estornar ou cancelar',
   manage: 'Administrar funcionários e permissões',

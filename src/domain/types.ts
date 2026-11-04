@@ -113,6 +113,11 @@ export interface DemoEmployeeGoal {
 export interface Snapshot {
   goalPlans?:DemoGoalPlan[];
   employeeGoals?:DemoEmployeeGoal[];
+  /** Apenas /demo: simulações locais sem ligação com cobrança ou Supabase. */
+  demoFinance?: {
+    terms: Record<string, import('../modules/finance/model').FinanceTerms>;
+    movements: import('../modules/finance/model').FinanceMovement[];
+  };
   contactHistory?: ContactHistoryEvent[];
   version: 1;
   companies: Company[];
