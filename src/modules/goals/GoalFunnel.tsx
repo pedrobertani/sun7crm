@@ -18,6 +18,10 @@ import {
   numberInputToCents,
   medalSymbol,
   medalRewardLabel,
+  medalRewardDescription,
+  isManualGoalFunnel,
+  manualGoalStages,
+  prepareGoalStages,
 } from './model';
 import { useOperational, useQuery, useSave, QueryState } from '../workspace/operational';
 import type { TeamRow } from '../../data/backend';
@@ -82,6 +86,7 @@ export function GoalFunnel({
   const mine = progressFor(company.membershipId);
   const recorded = confirmed.reduce((sum, r) => sum + r.value_cents, 0);
   const plannedSales = plan ? Math.ceil(plan.target_cents / plan.ticket_cents) : null;
+  const isManual = !!plan && isManualGoalFunnel(plan.stages);
   return (
     <div className="goal-area" data-view={view}>
       <Panel
@@ -140,16 +145,23 @@ export function GoalFunnel({
                   >
                     <span>
                       <strong>{step.label}</strong>
-                      <small>{i === 0 ? 'Entrada' : step.rate + '% da etapa anterior'}</small>
+                      <small>{i === 0 ? (isManual ? 'Meta definida · entrada' : 'Entrada projetada') : (step.rate === null ? 'Taxa a definir' : Number(step.rate.toFixed(2)).toLocaleString('pt-BR') + '%') + (isManual ? ' · meta definida' : ' · projetado')}</small>
                     </span>
                     <b>{numberFormat(step.count)}</b>
                   </div>
                 ))}
               </div>
             )}
+            {manager && isManual && plannedSales !== null && funnel.at(-1)?.count !== null &&
+              funnel.at(-1)?.count !== plannedSales && (
+              <p className="small-note">
+                A meta manual de vendas ({numberFormat(funnel.at(-1)?.count ?? null)}) difere
+                das {numberFormat(plannedSales)} vendas calculadas para o faturamento mensal.
+              </p>
+            )}
             {manager && funnel.some((x) => x.count === null) && (
               <p className="small-note">
-                Complete as taxas de conversão na configuração para estimar todas as etapas.
+                Complete as quantidades manuais ou as taxas de conversão na configuração.
               </p>
             )}
             {manager && plan && (
@@ -285,6 +297,9 @@ function Medal({ medal, earned }: { medal: GoalMedal; earned: boolean }) {
       {medalRewardLabel(medal) && (
         <small className="goal-medal-reward">{medalRewardLabel(medal)}</small>
       )}
+      {medalRewardDescription(medal) && (
+        <small className="goal-medal-reward-description">{medalRewardDescription(medal)}</small>
+      )}
     </div>
   );
 }
@@ -346,7 +361,7 @@ function GoalSettings({
         goal_month: month + '-01',
         target_cents: t!,
         ticket_cents: tk!,
-        stages: stages.map((x) => ({ ...x })),
+        stages: prepareGoalStages(stages),
         medals: medals.map((x) => ({ ...x })),
       });
       notice('Planejamento e medalhas atualizados para ' + month + '.');
@@ -400,8 +415,8 @@ function GoalSettings({
       {section === 'plan' && (
         <div className="goal-edit-list">
           <p className="small-note">
-            Os cálculos são projeções, não dados de venda. As taxas representam a passagem da etapa
-            anterior para a atual.
+            Defina o funil por taxas de conversão ou informe a quantidade-meta de cada etapa,
+            incluindo contatos. Nenhum desses números é uma venda realizada.
           </p>
           <div className="goal-edit-grid">
             <label className="form-row">
@@ -413,6 +428,26 @@ function GoalSettings({
               <CurrencyInput value={ticket} onValueChange={setTicket} />
             </label>
           </div>
+          <label className="form-row goal-mode-control">
+            Como definir as quantidades?
+            <select
+              value={isManualGoalFunnel(stages) ? 'manual' : 'calculated'}
+              onChange={(event) => {
+                if (event.target.value === 'manual') {
+                  setStages((current) => manualGoalStages(
+                    current,
+                    numberInputToCents(target) ?? 0,
+                    numberInputToCents(ticket) ?? 0,
+                  ));
+                } else {
+                  setStages((current) => current.map(({ count: _count, ...step }) => step));
+                }
+              }}
+            >
+              <option value="calculated">Projetar pelas taxas</option>
+              <option value="manual">Definir metas por quantidade</option>
+            </select>
+          </label>
           {stages.map((s, i) => (
             <div className="goal-edit-step" key={i}>
               <label className="form-row">
@@ -424,7 +459,22 @@ function GoalSettings({
                   onChange={(e) => updateStage(i, { label: e.target.value })}
                 />
               </label>
-              {i !== 0 && (
+              {isManualGoalFunnel(stages) ? (
+                <label className="form-row">
+                  {i === 0 ? 'Meta de contatos' : 'Quantidade-meta'}
+                  <Input
+                    type="number"
+                    min="1"
+                    max="1000000000"
+                    step="1"
+                    value={s.count ?? ''}
+                    placeholder="Definir"
+                    onChange={(e) => updateStage(i, {
+                      count: e.target.value === '' ? null : Number(e.target.value),
+                    })}
+                  />
+                </label>
+              ) : i !== 0 && (
                 <label className="form-row">
                   Conversão da anterior (%)
                   <Input
@@ -462,7 +512,7 @@ function GoalSettings({
               onClick={() =>
                 setStages((a) => [
                   ...a.slice(0, -1),
-                  { label: 'Nova etapa', rate: null },
+                  { label: 'Nova etapa', rate: null, ...(isManualGoalFunnel(a) ? { count: null } : {}) },
                   a[a.length - 1],
                 ])
               }
@@ -474,7 +524,9 @@ function GoalSettings({
             <p className="small-note">
               Necessidade projetada:{' '}
               {Math.ceil(numberInputToCents(target)! / numberInputToCents(ticket)!)} vendas.
-              Preencha as taxas para projetar os contatos.
+              {isManualGoalFunnel(stages)
+                ? ' Compare com as quantidades estabelecidas manualmente em cada etapa.'
+                : ' Preencha as taxas para projetar os contatos.'}
             </p>
           )}
         </div>
