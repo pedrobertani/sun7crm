@@ -297,8 +297,11 @@ begin
  if p_request is null then raise exception 'CRM_FINANCE_REQUEST_REQUIRED' using errcode='22023';end if;
  select * into movement from public.crm_finance_movements where id=p_request;
  if found then
+   perform crm_private.finance_guard(p_company,movement.owner_membership_id,'finance.receive');
    if movement.company_id=p_company and movement.installment_id=p_installment and movement.kind='income'
-     and movement.amount_cents=p_amount and movement.voided_at is null then return to_jsonb(movement);end if;
+     and movement.amount_cents=p_amount and movement.method=p_method and movement.posted_on=p_date
+     and movement.description=coalesce(p_description,'') and movement.voided_at is null
+   then return to_jsonb(movement);end if;
    raise exception 'CRM_FINANCE_REQUEST_CONFLICT' using errcode='23505';
  end if;
  select * into ins from public.crm_finance_installments
@@ -359,7 +362,9 @@ begin
  if p_version is null then
    select * into m from public.crm_finance_movements where id=p_id;
    if found then
+     perform crm_private.finance_guard(p_company,m.owner_membership_id,'finance.expense');
      if m.company_id=p_company and m.kind='expense' and m.voided_at is null
+     and m.owner_membership_id=owner_id and m.opportunity_id is not distinct from p_opportunity
      and m.amount_cents=p_amount and m.method=p_method and m.posted_on=p_date
      and m.category=btrim(p_category) and m.description=coalesce(p_description,'')
      then return to_jsonb(m);end if;
@@ -406,8 +411,11 @@ begin
  if p_request is null then raise exception 'CRM_FINANCE_REQUEST_REQUIRED' using errcode='22023';end if;
  select * into m from public.crm_finance_movements where id=p_request;
  if found then
+  perform crm_private.finance_guard(p_company,m.owner_membership_id,'finance.void');
   if m.company_id=p_company and m.kind='refund' and m.origin_id=p_receipt
-    and m.amount_cents=p_amount then return to_jsonb(m);end if;
+    and m.amount_cents=p_amount and m.method=p_method and m.posted_on=p_date
+    and m.description=btrim(p_reason) and m.voided_at is null
+  then return to_jsonb(m);end if;
   raise exception 'CRM_FINANCE_REQUEST_CONFLICT' using errcode='23505';
  end if;
  select * into original from public.crm_finance_movements
