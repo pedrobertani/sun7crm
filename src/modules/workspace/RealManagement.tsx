@@ -19,6 +19,7 @@ import { ContactIntakeChart } from '../dashboard/ContactIntakeChart';
 import { GoalFunnel } from '../goals/GoalFunnel';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
+import { PasswordInput } from '../../components/ui/password-input';
 import { Modal } from '../../components/ui/modal';
 import { Empty, Kpi, Panel } from '../../components/shared';
 import { RecordTitle } from '../../components/RecordTitle';
@@ -679,8 +680,7 @@ function CreateMember({ onClose, onSaved }: { onClose: () => void; onSaved: () =
           />
           <label className="form-row">
             Senha inicial
-            <Input
-              type="password"
+            <PasswordInput
               required
               minLength={12}
               autoComplete="new-password"
@@ -737,8 +737,7 @@ function ResetMember({
       >
         <label className="form-row">
           Nova senha inicial
-          <Input
-            type="password"
+          <PasswordInput
             required
             minLength={12}
             autoComplete="new-password"

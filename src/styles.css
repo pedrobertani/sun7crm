@@ -5857,3 +5857,33 @@ td:has(> .admin-row-actions) {
   }
 }
 
+/* Controle universal de visibilidade de senha (login, primeiro acesso e administração). */
+.password-control {
+  display: block;
+  position: relative;
+  width: 100%;
+  min-width: 0;
+}
+.password-control > input.password-control-input {
+  width: 100%;
+  padding-right: 46px;
+}
+.password-control-toggle {
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  transform: translateY(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  color: var(--muted);
+  background: transparent;
+  border: none;
+  border-radius: 7px;
+  cursor: pointer;
+}
+.password-control-toggle:hover { color: var(--ink); background: var(--surface-alt, var(--surface)); }
+.password-control-toggle:focus-visible { outline: 2px solid var(--primary); outline-offset: 0; }
+.password-control-toggle:disabled { cursor: not-allowed; opacity: .5; }

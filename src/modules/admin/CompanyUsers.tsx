@@ -5,7 +5,7 @@ import { Pagination, paginatedRows, usePagination } from '../../components/ui/pa
 import { Users, ShieldCheck, UserRound, UserRoundX } from 'lucide-react';
 import { Kpi } from '../../components/shared';
 import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
+import { PasswordInput } from '../../components/ui/password-input';
 import { Modal } from '../../components/ui/modal';
 import { getSupabaseClient } from '../../lib/supabase';
 import { uid } from '../../lib/format';
@@ -257,8 +257,7 @@ function ResetCompanyUser({
         </p>
         <label className="form-row">
           Nova senha temporária
-          <Input
-            type="password"
+          <PasswordInput
             autoComplete="new-password"
             required
             minLength={12}
