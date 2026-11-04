@@ -1,4 +1,6 @@
 import { AccountMenu } from '../components/AccountMenu';
+import { HelpCenter } from '../components/help/HelpCenter';
+import { legacyPermissions } from '../modules/permissions/model';
 import { WorkspaceTheme } from '../components/WorkspaceTheme';
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useNavigate, useLocation } from 'react-router-dom';
@@ -179,6 +181,12 @@ export function AppShell() {
             <strong>{current}</strong>
           </div>
           <div className="top-controls">
+            <HelpCenter
+              role={session.role}
+              keys={legacyPermissions(session.role).keys}
+              scope={legacyPermissions(session.role).scope}
+              demo
+            />
             <AccountMenu
               name={admin ? 'Caio' : member?.name || 'Usuário'}
               role={roleLabels[session.role]}
