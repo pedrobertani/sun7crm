@@ -1,5 +1,5 @@
 import {describe,it,expect} from 'vitest';
-import {buildGoalFunnel,validateGoalConfig,medalUnlocked,starterMedals,starterStages,numberInputToCents,medalSymbol,medalIcons,medalRewardLabel,medalRewardDescription,manualGoalStages,prepareGoalStages,isManualGoalFunnel} from './model';
+import {buildGoalFunnel,validateGoalConfig,medalUnlocked,starterMedals,starterStages,numberInputToCents,medalSymbol,medalIcons,medalRewardLabel,medalRewardDescription,manualGoalStages,prepareGoalStages,isManualGoalFunnel,isContactsGoalFunnel,goalFunnelMode,changeGoalFunnelMode,projectedRevenueCents} from './model';
 
 describe('Metas e medalhas configuráveis',()=>{
   const stages=[{label:'Contatos',rate:null},{label:'Agendamentos',rate:50},{label:'Comparecimentos',rate:80},{label:'Vendas',rate:10}];
@@ -54,6 +54,68 @@ describe('Metas e medalhas configuráveis',()=>{
     expect(back[0]).not.toHaveProperty('count');
     expect(buildGoalFunnel({target_cents:10000000,ticket_cents:300000,stages:back}).map(s=>s.count))
       .toEqual([850,425,340,34]);
+  });
+  it('parte de 200 contatos, aplica taxas editadas e projeta vendas e receita',()=>{
+    const contactStages=[
+      {label:'Contatos',rate:null,start_contacts:200},
+      {label:'Agendamentos',rate:40},
+      {label:'Comparecimentos',rate:50},
+      {label:'Vendas',rate:25},
+    ];
+    const plan={target_cents:1000000,ticket_cents:100000,stages:contactStages};
+    expect(goalFunnelMode(contactStages)).toBe('contacts');
+    expect(isContactsGoalFunnel(contactStages)).toBe(true);
+    expect(isManualGoalFunnel(contactStages)).toBe(false);
+    expect(validateGoalConfig(1000000,100000,contactStages,starterMedals)).toBeNull();
+    expect(buildGoalFunnel(plan).map(s=>s.count)).toEqual([200,80,40,10]);
+    expect(projectedRevenueCents(plan)).toBe(1000000);
+    expect(prepareGoalStages(contactStages)[0].start_contacts).toBe(200);
+    const edited=contactStages.map((s,i)=>i===1?{...s,rate:50}:s);
+    expect(buildGoalFunnel({...plan,stages:edited}).map(s=>s.count)).toEqual([200,100,50,12]);
+    expect(projectedRevenueCents({...plan,stages:edited})).toBe(1200000);
+    // Piso inteiro evita prometer frações de clientes ou de vendas.
+    expect(buildGoalFunnel({...plan,stages:[
+      {label:'Contatos',rate:null,start_contacts:1},
+      {label:'Vendas',rate:50},
+    ]}).at(-1)?.count).toBe(0);
+  });
+  it('troca os três modos sem perder taxas nem quantidades antigas',()=>{
+    const byContacts=changeGoalFunnelMode(stages,'contacts',10000000,300000);
+    expect(byContacts[0].start_contacts).toBe(850);
+    expect(byContacts.map(s=>s.rate)).toEqual([null,50,80,10]);
+    expect(goalFunnelMode(byContacts)).toBe('contacts');
+    const manual=changeGoalFunnelMode(byContacts,'manual',10000000,300000);
+    expect(goalFunnelMode(manual)).toBe('manual');
+    expect(manual[0]).not.toHaveProperty('start_contacts');
+    expect(manual.map(s=>s.count)).toEqual([850,425,340,34]);
+    const backwards=changeGoalFunnelMode(manual,'calculated',10000000,300000);
+    expect(goalFunnelMode(backwards)).toBe('calculated');
+    expect(backwards[0]).not.toHaveProperty('count');
+    expect(backwards[0]).not.toHaveProperty('start_contacts');
+    expect(backwards.map(s=>s.rate)).toEqual([null,50,80,10]);
+    expect(buildGoalFunnel({stages:backwards,target_cents:10000000,ticket_cents:300000})
+      .map(s=>s.count)).toEqual([850,425,340,34]);
+  });
+  it('recusa contatos inválidos, posição errada e conflito de modos',()=>{
+    const contactStages=[
+      {label:'Contatos',rate:null,start_contacts:200},
+      {label:'Agendamentos',rate:40},
+      {label:'Vendas',rate:25},
+    ];
+    for(const start_contacts of [null,0,-2,1.5,1000000001,NaN]) {
+      const result=validateGoalConfig(1000000,100000,
+        [{...contactStages[0],start_contacts},...contactStages.slice(1)],starterMedals);
+      expect(result).toContain('contatos');
+    }
+    expect(validateGoalConfig(1000000,100000,
+      [contactStages[0],{...contactStages[1],start_contacts:100},contactStages[2]],
+      starterMedals)).toContain('primeira');
+    expect(validateGoalConfig(1000000,100000,
+      [{...contactStages[0],count:200},contactStages[1],contactStages[2]],
+      starterMedals)).toContain('modo');
+    expect(buildGoalFunnel({target_cents:1000000,ticket_cents:100000,stages:[
+      contactStages[0],{...contactStages[1],rate:null},contactStages[2],
+    ]}).map(s=>s.count)).toEqual([200,null,null]);
   });
   it('conquista apenas com resultado individual informado, não com valor planejado',()=>{
     const r={goal_cents:1000000,sales_cents:0,sales_count:0};
