@@ -17,7 +17,10 @@ import {
   medalRewardLabel,
   medalRewardDescription,
   isManualGoalFunnel,
-  manualGoalStages,
+  isContactsGoalFunnel,
+  goalFunnelMode,
+  changeGoalFunnelMode,
+  projectedRevenueCents,
   prepareGoalStages,
   validateGoalConfig,
   numberInputToCents,
@@ -56,6 +59,7 @@ export function DemoGoalFunnel({ view = 'commercial' }: { view?: 'commercial' | 
   const mine = progress(session.memberId);
   const recorded = confirmed.reduce((v, o) => v + (o.confirmedSaleCents || 0), 0);
   const manual = !!plan && isManualGoalFunnel(plan.stages);
+  const contactsMode = !!plan && isContactsGoalFunnel(plan.stages);
   const funnel = plan
     ? buildGoalFunnel({
         target_cents: plan.targetCents,
@@ -125,12 +129,26 @@ export function DemoGoalFunnel({ view = 'commercial' }: { view?: 'commercial' | 
                   >
                     <span>
                       <strong>{s.label}</strong>
-                      <small>{i ? (s.rate === null ? 'Taxa a definir' : Number(s.rate.toFixed(2)).toLocaleString('pt-BR') + '%') + (manual ? ' · meta definida' : ' · projetado') : (manual ? 'Meta definida · entrada' : 'Entrada projetada')}</small>
+                      <small>{i ? (s.rate === null ? 'Taxa a definir' : Number(s.rate.toFixed(2)).toLocaleString('pt-BR') + '%') + (manual ? ' · meta definida' : ' · projetado') : (manual ? 'Meta definida · entrada' : contactsMode ? 'Contatos definidos · entrada' : 'Entrada projetada')}</small>
                     </span>
                     <b>{fmt(s.count)}</b>
                   </div>
                 ))}
               </div>
+            )}
+            {manager && contactsMode && (
+              <p className="small-note" role="status">
+                Projeção pelos contatos: {fmt(funnel.at(-1)?.count ?? null)} vendas e{' '}
+                {(() => {
+                  const revenue = projectedRevenueCents({
+                    stages: plan.stages,
+                    target_cents: plan.targetCents,
+                    ticket_cents: plan.ticketCents,
+                  });
+                  return revenue === null ? 'faturamento a definir' : currency(revenue);
+                })()} estimados, frente à meta de {currency(plan.targetCents)}.
+                São projeções fictícias, não vendas confirmadas.
+              </p>
             )}
             {manager && manual && funnel.at(-1)?.count !== Math.ceil(plan.targetCents / plan.ticketCents) && (
               <p className="small-note">
@@ -362,26 +380,22 @@ function DemoGoalSettings({
             </label>
           </div>
           <p className="small-note">
-            Projete por taxas ou defina a quantidade-meta de todas as etapas, inclusive contatos.
-            O gestor escolhe; os números não representam resultados realizados.
+            Escolha a base do cálculo: meta financeira, contatos iniciais ou quantidades manuais.
+            Nas opções por taxas, o gestor define cada porcentagem.
           </p>
           <label className="form-row goal-mode-control">
             Como definir as quantidades?
             <select
-              value={isManualGoalFunnel(stages) ? 'manual' : 'calculated'}
-              onChange={(event) => {
-                if (event.target.value === 'manual') {
-                  setStages((current) => manualGoalStages(
-                    current,
-                    numberInputToCents(target) ?? 0,
-                    numberInputToCents(ticket) ?? 0,
-                  ));
-                } else {
-                  setStages((current) => current.map(({ count: _count, ...step }) => step));
-                }
-              }}
+              value={goalFunnelMode(stages)}
+              onChange={(event) => setStages((current) => changeGoalFunnelMode(
+                current,
+                event.target.value as ReturnType<typeof goalFunnelMode>,
+                numberInputToCents(target) ?? 0,
+                numberInputToCents(ticket) ?? 0,
+              ))}
             >
-              <option value="calculated">Projetar pelas taxas</option>
+              <option value="calculated">Pelas taxas · partir da meta financeira</option>
+              <option value="contacts">Pelas taxas · partir dos contatos</option>
               <option value="manual">Definir metas por quantidade</option>
             </select>
           </label>
@@ -408,6 +422,21 @@ function DemoGoalSettings({
                     placeholder="Definir"
                     onChange={(event) => changeStage(i, {
                       count: event.target.value === '' ? null : Number(event.target.value),
+                    })}
+                  />
+                </label>
+              ) : i === 0 && isContactsGoalFunnel(stages) ? (
+                <label className="form-row">
+                  Contatos iniciais
+                  <Input
+                    type="number"
+                    min="1"
+                    max="1000000000"
+                    step="1"
+                    value={s.start_contacts ?? ''}
+                    placeholder="Definir"
+                    onChange={(event) => changeStage(i, {
+                      start_contacts: event.target.value === '' ? null : Number(event.target.value),
                     })}
                   />
                 </label>
@@ -453,6 +482,26 @@ function DemoGoalSettings({
             >
               Adicionar etapa
             </Button>
+          )}
+          {isContactsGoalFunnel(stages) && (
+            <p className="small-note goal-projection-preview" aria-live="polite">
+              Com {fmt(stages[0]?.start_contacts ?? null)} contatos e as taxas informadas,
+              a projeção é de{' '}
+              {fmt(buildGoalFunnel({
+                stages,
+                target_cents: numberInputToCents(target) ?? 0,
+                ticket_cents: numberInputToCents(ticket) ?? 0,
+              }).at(-1)?.count ?? null)} vendas.
+              Faturamento estimado:{' '}
+              {(() => {
+                const cents = projectedRevenueCents({
+                  stages,
+                  target_cents: numberInputToCents(target) ?? 0,
+                  ticket_cents: numberInputToCents(ticket) ?? 0,
+                });
+                return cents === null ? 'a definir' : currency(cents);
+              })()}. Não são resultados realizados.
+            </p>
           )}
         </div>
       )}
