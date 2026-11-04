@@ -10,7 +10,7 @@ import {
   type ImportRow,
   type TransferContact,
 } from '../../domain/contact-transfer';
-import { prepareContactsDownload, readContactsExcel } from './excel';
+import { downloadPreparedContacts, prepareContactsDownload, readContactsExcel } from './excel';
 import './transfer.css';
 export function ContactTransfer({
   canImport,
@@ -139,11 +139,15 @@ export function ContactTransfer({
               </p>
             </details>
             <Button
-              variant="ghost"
+              type="button"
+              variant="link"
               disabled={busy}
+              title="Baixar planilha modelo com as colunas Nome e Contato"
               onClick={() =>
                 void run(async () => {
-                  setDownload(await prepareContactsDownload([], 'sun7crm-modelo-contatos.xlsx'));
+                  const file = await prepareContactsDownload([], 'sun7crm-modelo-contatos.xlsx');
+                  setDownload(file);
+                  downloadPreparedContacts(file);
                 })
               }
             >
@@ -256,7 +260,7 @@ export function ContactTransfer({
             </div>
           </>
         )}
-        {download && (
+        {mode === 'export' && download && (
           <ModalFooter>
             <Button asChild>
               <a href={download.url} download={download.filename}>
