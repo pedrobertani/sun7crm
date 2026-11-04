@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { BarChart3, LineChart as LineChartIcon, PieChart as PieChartIcon, Plus, Wallet,
-  CheckCircle2, Clock3, ArrowUpRight, Download, Receipt, Filter as Funnel } from 'lucide-react';
+  CheckCircle2, Clock3, ArrowUpRight, Download } from 'lucide-react';
 import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, CartesianGrid,
   Tooltip as ChartTooltip, XAxis, YAxis, ResponsiveContainer, Legend } from 'recharts';
 import { Button } from '../../components/ui/button';
@@ -14,7 +14,7 @@ import { useOperational, QueryState, useQuery } from '../workspace/operational';
 import { FinanceRepository } from './api';
 import { FinanceCorrectionDialog, FinanceExpenseDialog, FinanceSaleDialog } from './FinanceDialogs';
 import { financeMethodLabel, financeMethods, financeNetInstallmentPaid, financeStatus, financeTotals,
-  type FinanceInstallment, type FinanceMovement, type FinanceSale } from './model';
+  type FinanceMovement, type FinanceSale } from './model';
 import './finance.css';
 
 type Tab = 'overview' | 'receivables' | 'expenses' | 'movements';
@@ -156,7 +156,13 @@ export function RealFinance() {
       ||!!m.opportunity_id&&saleIds.has(m.opportunity_id))
   );
   const filteredExpenses=filteredMovements.filter(m=>m.kind==='expense');
-  const totals=financeTotals(matchingSales,installments,filteredMovements,month);
+  const baseTotals=financeTotals(matchingSales,installments,movements,month);
+  const received=filteredMovements.reduce((sum,m)=>
+    sum+(m.kind==='income'?m.amount_cents:m.kind==='refund'?-m.amount_cents:0),0);
+  const expenses=filteredMovements.filter(m=>m.kind==='expense')
+    .reduce((sum,m)=>sum+m.amount_cents,0);
+  const totals={...baseTotals,received,expenses,
+    cash:received-expenses,projected:received-expenses+baseTotals.pending};
   // Escopo do período: fechamento da venda neste mês, pagamentos realizados neste mês,
   // e recebíveis ativos acumulados (nunca caixa recebido).
   const periodClosed=visibleSales.filter(s=>s.confirmed_at.slice(0,7)===month)
@@ -173,7 +179,6 @@ export function RealFinance() {
   });
   const sortedInstallments=[...filteredInstallments].sort((a,b)=>a.due_on.localeCompare(b.due_on));
   const sortedMovements=[...filteredMovements].sort((a,b)=>b.posted_on.localeCompare(a.posted_on));
-  const listed=tab==='receivables'?sortedInstallments:tab==='expenses'?filteredExpenses:sortedMovements;
   const saleById=new Map(sales.map(s=>[s.opportunity_id,s]));
   const selectedSalesForExpense=can('finance.company')?sales:sales.filter(s=>s.membership_id===company.membershipId);
   const reload=()=>{
