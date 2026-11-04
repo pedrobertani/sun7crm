@@ -35,6 +35,7 @@ export interface StageRow {
 }
 export interface CardRow extends VersionedRow {
   contact_id: string;
+  owner_membership_id: string;
   board_id: string;
   stage_id: string;
   title: string;
@@ -125,6 +126,11 @@ export interface MetricRow {
   unit: string;
   measured_on: string;
   source: 'manual';
+}
+export interface AssignableMember {
+  id: string;
+  display_name: string;
+  active: boolean;
 }
 export interface TeamRow {
   id: string;
@@ -264,6 +270,7 @@ export type CardInput = Partial<
   Pick<
     CardRow,
     | 'contact_id'
+    | 'owner_membership_id'
     | 'board_id'
     | 'stage_id'
     | 'title'
@@ -916,6 +923,9 @@ export class OperationalBackend {
       },
       true,
     );
+  }
+  assignableMembers(resource: 'cards' | 'contacts' | 'tasks' | 'strategies', operation: 'create' | 'edit') {
+    return this.rpc<AssignableMember[]>('crm_assignable_members', { p_resource: resource, p_operation: operation });
   }
   team() {
     return this.rpc<TeamRow[]>('crm_team_members', {});

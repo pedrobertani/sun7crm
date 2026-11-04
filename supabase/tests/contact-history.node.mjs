@@ -275,17 +275,16 @@ test('histórico e relatórios: autoria, imutabilidade e isolamento por empresa'
       assert.equal(actor.note_count, 1);
     },
   );
-  await t.test('reatribuição e bloqueio cortam o acesso ao histórico imediatamente', async () => {
+  await t.test('transferir contato mantém só o histórico do card próprio; inativação corta o restante', async () => {
     await user(1, () =>
       q(
         'select public.crm_save_contact($1,$2,$3,(select row_version from public.crm_contacts where id=$2))',
         [id(100), id(1001), { owner_membership_id: id(15) }],
       ),
     );
-    assert.equal(
-      (await user(2, () => q('select * from public.crm_contact_history'))).rows.length,
-      0,
-    );
+    const ownCardHistory = (await user(2, () => q('select * from public.crm_contact_history'))).rows;
+    assert.ok(ownCardHistory.length > 0, 'a titularidade do card independe do contato');
+    assert.ok(ownCardHistory.every((h) => h.opportunity_id !== null));
     assert.ok((await user(5, () => q('select * from public.crm_contact_history'))).rows.length > 0);
     await q('update public.crm_memberships set active=false where id=$1', [id(15)]);
     assert.equal(
