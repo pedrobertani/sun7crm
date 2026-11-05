@@ -1,4 +1,5 @@
 import type { ChangeEvent } from 'react';
+import { GlobalFilters, type FilterValues } from '../../components/ui/global-filters';
 import './period-filter.css';
 
 export type KanbanPeriodMode = 'all' | 'day' | 'month' | 'year' | 'custom';
@@ -129,4 +130,46 @@ export function KanbanPeriodFilter({
       {!valid && <span className="kanban-filter-error" role="alert">Confira as datas do filtro.</span>}
     </div>
   );
+}
+
+/** A mesma barra universal de filtros, com datas condicionais específicas do Kanban. */
+export function KanbanGlobalFilters({
+  value,onChange,search,onSearchChange,placeholder='Buscar no quadro',
+}: {
+  value:KanbanPeriod;
+  onChange:(period:KanbanPeriod)=>void;
+  search:string;
+  onSearchChange:(search:string)=>void;
+  placeholder?:string;
+}) {
+  const initial=initialKanbanPeriod();
+  const fields = [
+    {key:'mode',label:'Filtrar cards por data',type:'select' as const,defaultValue:'all',
+      options:[
+        {value:'all',label:'Todas as datas'},{value:'day',label:'Dia'},
+        {value:'month',label:'Mês'},{value:'year',label:'Ano'},
+        {value:'custom',label:'Intervalo'},
+      ]},
+    {key:'day',label:'Data',type:'date' as const,defaultValue:initial.day,
+      when:{key:'mode',values:['day']}},
+    {key:'month',label:'Mês',type:'month' as const,defaultValue:initial.month,
+      when:{key:'mode',values:['month']}},
+    {key:'year',label:'Ano',type:'number' as const,defaultValue:initial.year,min:1900,max:2200,step:1,
+      when:{key:'mode',values:['year']}},
+    {key:'from',label:'De',type:'date' as const,defaultValue:initial.from,
+      when:{key:'mode',values:['custom']}},
+    {key:'to',label:'Até',type:'date' as const,defaultValue:initial.to,
+      when:{key:'mode',values:['custom']}},
+  ];
+  const asPeriod=(next:FilterValues):KanbanPeriod=>({
+    ...value,mode:next.mode as KanbanPeriodMode,
+    day:next.day,month:next.month,year:next.year,from:next.from,to:next.to,
+  });
+  return <GlobalFilters className="kanban-global-filters"
+    fields={fields} values={value}
+    onApply={next=>onChange(asPeriod(next))}
+    validate={next=>kanbanDateRange(asPeriod(next))||next.mode==='all'
+      ? null : 'Confira o período informado antes de aplicar o filtro.'}
+    search={{value:search,onChange:onSearchChange,placeholder}}
+  />;
 }
