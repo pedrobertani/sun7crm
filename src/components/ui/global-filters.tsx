@@ -22,6 +22,8 @@ export interface FilterField {
   step?: number;
   /** Oculta um filtro sem perder seu estado (ex.: situação só na aba de recebíveis). */
   visible?: boolean;
+  /** Mantém um contexto importante visível (ex.: mês atual), sem contar como filtro ativo. */
+  pin?: boolean;
   /** Regra declarativa: mostra o campo somente quando outro filtro assume os valores indicados. */
   when?: {key: string; values: readonly string[]};
 }
@@ -76,6 +78,8 @@ export function GlobalFilters({
   const instance = useId();
   const available = fields.filter(f => filterFieldVisible(f,draft));
   const active = activeFilterFields(fields,values);
+  const pinned = fields.filter(field=>field.pin && filterFieldVisible(field,values)
+    && !active.includes(field) && !!(values[field.key] ?? field.defaultValue));
   const issue = validate?.(patchFilterValues(fields,values,draft)) || null;
   const defaults = () => resetFilterValues(fields);
   const openPanel = () => { setDraft({...defaults(),...values}); setOpen(true); };
@@ -94,14 +98,18 @@ export function GlobalFilters({
       {actions && <div className="global-filters-actions">{actions}</div>}
       {children}
     </div>
-    {active.length>0 && <div className="global-filters-active" aria-label="Filtros aplicados">
+    {(active.length>0 || pinned.length>0) && <div className="global-filters-active" aria-label="Resumo dos filtros">
+      {pinned.map(field=><span className="global-filter-context" key={field.key}>
+        {field.label}: {filterValueLabel(field,values[field.key] ?? field.defaultValue)}
+      </span>)}
       {active.map(field => <Button key={field.key} type="button" variant="outline" size="sm"
         className="global-filter-chip" aria-label={'Remover filtro '+field.label}
         onClick={() => onApply(patchFilterValues(fields,values,{[field.key]:field.defaultValue}))}>
         {field.label}: {filterValueLabel(field,values[field.key] ?? field.defaultValue)}
         <X size={13} aria-hidden="true"/>
       </Button>)}
-      <Button type="button" variant="link" size="sm" onClick={clearAll}>Limpar filtros</Button>
+      {active.length>0 &&
+        <Button type="button" variant="link" size="sm" onClick={clearAll}>Limpar filtros</Button>}
     </div>}
     <Modal open={open} onOpenChange={setOpen} title={label} presentation="filters"
       description="Escolha os critérios e aplique à visualização.">
