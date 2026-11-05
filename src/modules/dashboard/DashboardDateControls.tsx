@@ -1,4 +1,3 @@
-import { CalendarDays } from 'lucide-react';
 import { GlobalFilters } from '../../components/ui/global-filters';
 import { dateLabel } from '../../lib/format';
 import './dashboard-date-controls.css';
@@ -35,7 +34,6 @@ export function DashboardDateControls({
         onApply={(next) => onChange({ from: next.from, to: next.to })}
       />
       <label className="dashboard-day-picker" title="Selecionar um dia para filtrar o dashboard">
-        <CalendarDays size={17} aria-hidden="true" />
         <input
           type="date"
           aria-label="Selecionar dia do dashboard"
