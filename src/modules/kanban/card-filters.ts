@@ -43,7 +43,7 @@ export function cardFacetFields({
   includeOwners?:boolean;
 }):FilterField[] {
   const opt=(items:readonly Choice[]) => items
-    .filter(item=>item.active!==false).map(item=>({value:item.id,label:item.name}))
+    .map(item=>({value:item.id,label:item.name+(item.active===false?' (inativo)':'')}))
     .sort((a,b)=>a.label.localeCompare(b.label,'pt-BR'));
   const fields:FilterField[]=[
     {key:'stage',label:'Etapa do funil',type:'select',defaultValue:'all',
