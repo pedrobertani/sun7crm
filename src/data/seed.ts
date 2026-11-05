@@ -184,6 +184,81 @@ export function createSeed(): Snapshot {
       confirmedSaleOwnerId:'aurora-champion',confirmedSaleCents:45000,
     });
   }
+  // Mais exemplos de vendas confirmadas para que todas as empresas tenham um Financeiro demonstrável.
+  for (const company of companies) {
+    const own = opportunities.filter(o => o.companyId === company.id && !o.confirmedSaleAt);
+    own.slice(0, 2).forEach((opportunity, index) => {
+      opportunity.confirmedSaleAt = shiftDate(date, index === 0 ? -2 : -11) + 'T12:00:00.000Z';
+      opportunity.confirmedSaleOwnerId = company.id + '-seller';
+      opportunity.confirmedSaleCents = opportunity.value;
+    });
+  }
+  // Pagamento integral, entrada parcial e parcela futura; despesas e estornos apenas fictícios.
+  const financeTerms: NonNullable<Snapshot['demoFinance']>['terms'] = {};
+  const financeMovements: NonNullable<Snapshot['demoFinance']>['movements'] = [];
+  for (const company of companies) {
+    const confirmed = opportunities.filter(o => o.companyId === company.id && !!o.confirmedSaleAt);
+    const paidSale = confirmed[0];
+    const partialSale = confirmed[1];
+    if (paidSale) {
+      financeMovements.push({
+        id: company.id + '-demo-income-1', company_id: company.id,
+        opportunity_id: paidSale.id, installment_id: paidSale.id + '-parcela-0',
+        owner_membership_id: paidSale.confirmedSaleOwnerId!,
+        kind: 'income', amount_cents: paidSale.confirmedSaleCents!,
+        method: 'pix', posted_on: shiftDate(date, -2),
+        category: 'Recebimento de venda', description: 'Venda fictícia recebida por Pix',
+        origin_id: null, created_at: date + 'T12:00:00.000Z', row_version: 1, voided_at: null,
+      });
+    }
+    if (partialSale) {
+      const amount = partialSale.confirmedSaleCents!;
+      const entryCents = Math.floor(amount / 4);
+      financeTerms[partialSale.id] = {
+        cashCents: amount, termCents: amount, kind: 'installments',
+        entryCents, count: 2, firstDue: shiftDate(date, 10),
+        method: 'credit_card',
+      };
+      financeMovements.push({
+        id: company.id + '-demo-income-entry', company_id: company.id,
+        opportunity_id: partialSale.id, installment_id: partialSale.id + '-parcela-0',
+        owner_membership_id: partialSale.confirmedSaleOwnerId!,
+        kind: 'income', amount_cents: entryCents,
+        method: 'credit_card', posted_on: shiftDate(date, -1),
+        category: 'Entrada', description: 'Entrada fictícia de venda parcelada',
+        origin_id: null, created_at: date + 'T12:00:00.000Z', row_version: 1, voided_at: null,
+      });
+    }
+    financeMovements.push({
+      id: company.id + '-demo-expense-1', company_id: company.id,
+      opportunity_id: null, installment_id: null,
+      owner_membership_id: company.id + '-manager',
+      kind: 'expense', amount_cents: 8900, method: 'pix',
+      posted_on: shiftDate(date, -3), category: 'Insumos',
+      description: 'Compra de materiais — exemplo',
+      origin_id: null, created_at: date + 'T12:00:00.000Z', row_version: 1, voided_at: null,
+    }, {
+      id: company.id + '-demo-expense-2', company_id: company.id,
+      opportunity_id: null, installment_id: null,
+      owner_membership_id: company.id + '-manager',
+      kind: 'expense', amount_cents: 15000, method: 'bank_transfer',
+      posted_on: shiftDate(date, -6), category: 'Marketing',
+      description: 'Anúncios de divulgação — exemplo',
+      origin_id: null, created_at: date + 'T12:00:00.000Z', row_version: 1, voided_at: null,
+    });
+    if (paidSale && paidSale.confirmedSaleCents! >= 10000) {
+      financeMovements.push({
+        id: company.id + '-demo-refund-1', company_id: company.id,
+        opportunity_id: paidSale.id, installment_id: paidSale.id + '-parcela-0',
+        owner_membership_id: paidSale.confirmedSaleOwnerId!,
+        kind: 'refund', amount_cents: 5000, method: 'pix',
+        posted_on: shiftDate(date, -1), category: 'Estorno parcial',
+        description: 'Estorno parcial fictício da venda',
+        origin_id: company.id + '-demo-income-1',
+        created_at: date + 'T12:00:00.000Z', row_version: 1, voided_at: null,
+      });
+    }
+  }
   const tasks = companies.flatMap((c) => [
     {
       id: c.id + '-task1',
@@ -234,6 +309,7 @@ export function createSeed(): Snapshot {
   ]);
   return {
     version: 1,
+    demoFinance: { terms: financeTerms, movements: financeMovements },
     companies,
     members,
     boards,
@@ -260,13 +336,24 @@ export function createSeed(): Snapshot {
       { id: c.id + '-hot', companyId: c.id, name: 'Quente', color: '#ef4444' },
     ]),
     catalog,
-    ambassadorCampaigns: companies.map(c => ({
+    ambassadorCampaigns: companies.flatMap(c => [{
       id: c.id + '-campaign-current', companyId: c.id,
       name: 'Campanha de indicações do mês', start: date.slice(0,7) + '-01',
       end: shiftDate(date, 21), status: 'active' as const,
       paymentMode: 'per_point' as const, rate: 10000,
+    }, {
+      id: c.id + '-campaign-previous', companyId: c.id,
+      name: 'Campanha anterior — encerrada',
+      start: shiftDate(date, -60), end: shiftDate(date, -31),
+      status: 'closed' as const, paymentMode: 'per_point' as const, rate: 10000,
+      closedAt: shiftDate(date, -30) + 'T12:00:00.000Z',
+    }]),
+    ambassadorPayments: companies.map(c => ({
+      id: c.id + '-demo-commission', companyId: c.id,
+      campaignId: c.id + '-campaign-previous',
+      ambassadorId: c.id + '-ambassador-1', points: 2, amount: 20000,
+      paidAt: shiftDate(date, -29) + 'T12:00:00.000Z',
     })),
-    ambassadorPayments: [],
     ...marketingSeed(companies),
   };
 }
