@@ -10,6 +10,7 @@ export function Modal({
   onOpenChange,
   children,
   size = 'default',
+  presentation = 'default',
 }: {
   title: string;
   description?: string;
@@ -17,6 +18,7 @@ export function Modal({
   onOpenChange: (v: boolean) => void;
   children: ReactNode;
   size?: 'default' | 'wide';
+  presentation?: 'default' | 'filters';
 }) {
   const colors = useThemeStyle();
   const contentRef = useRef<HTMLDivElement>(null);
@@ -26,7 +28,7 @@ export function Modal({
         <Dialog.Overlay className="dialog-overlay" data-color-scheme={colors.colorScheme} />
         <Dialog.Content
           ref={contentRef}
-          className={'dialog-content' + (size === 'wide' ? ' dialog-content-wide' : '')}
+          className={'dialog-content' + (size === 'wide' ? ' dialog-content-wide' : '') + (presentation === 'filters' ? ' dialog-content-filter' : '')}
           data-color-scheme={colors.colorScheme}
           style={colors}
           onOpenAutoFocus={(event) => {
