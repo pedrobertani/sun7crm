@@ -7,6 +7,7 @@
 .global-filters-actions { display:flex; align-items:center; justify-content:flex-end; flex-wrap:wrap; gap:8px; margin-left:auto; }
 .global-filters-active { display:flex; align-items:center; flex-wrap:wrap; gap:7px; min-width:0; }
 .global-filter-chip { gap:5px; display:inline-flex; align-items:center; max-width:100%; white-space:normal; overflow-wrap:anywhere; font-size:11px; }
+.global-filter-context { display:inline-flex; align-items:center; min-height:30px; padding:5px 10px; border-radius:999px; background:var(--soft); color:var(--muted); font-size:11px; font-weight:600; }
 .global-filters-active .btn-link { padding-inline:6px; white-space:nowrap; }
 .dialog-content.dialog-content-filter { left:auto; right:0; top:0; transform:none; width:min(460px,100vw); max-height:100dvh; height:100dvh; border-radius:14px 0 0 14px; }
 .dialog-content.dialog-content-filter .dialog-body { flex:1; padding:0; margin:0; display:flex; flex-direction:column; min-height:0; }
