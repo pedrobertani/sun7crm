@@ -312,6 +312,7 @@ export function createSeed(): Snapshot {
   ]);
   return {
     version: 1,
+    demoSeedVersion: 2,
     demoFinance: { terms: financeTerms, movements: financeMovements },
     companies,
     members,
