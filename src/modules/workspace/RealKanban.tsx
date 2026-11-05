@@ -128,19 +128,11 @@ export function RealKanban() {
     };
     const groups = await Promise.all(stages.map(async (stage) => ({
       id: stage.id,
-      data: pageSize === 'all'
-        ? await api.listAllMatching(
-            'cards',
-            { board_id: board.id, stage_id: stage.id, ...(contactId ? { contact_id: contactId } : {}) },
-            search,
-            dateRange || undefined,
-          )
-        : await api.list(
-            'cards', stagePages[stage.id] || 0, pageSize,
-            { board_id: board.id, stage_id: stage.id, ...(contactId ? { contact_id: contactId } : {}) },
-            search,
-            dateRange || undefined,
-          ),
+      data: await api.list(
+        'cards',stagePages[stage.id] || 0,pageSize,
+        {board_id:board.id,stage_id:stage.id,...(contactId?{contact_id:contactId}:{})},
+        search,dateRange || undefined,
+      ),
     })));
     const rows = groups.flatMap((group) => group.data.rows);
     const [contacts, activity, labels] = await Promise.all([
@@ -159,7 +151,7 @@ export function RealKanban() {
       let changed = false;
       const next = { ...previous };
       for (const [id, page] of Object.entries(previous)) {
-        const last = pageSize === 'all' ? 0 : Math.max(0, Math.ceil((totals[id] || 0) / pageSize) - 1);
+        const last = Math.max(0, Math.ceil((totals[id] || 0) / pageSize) - 1);
         if (page > last) { next[id] = last; changed = true; }
       }
       return changed ? next : previous;
@@ -474,7 +466,7 @@ export function RealKanban() {
                             <p className="kanban-empty">Nenhum card nesta página.</p>
                           )}
                         </div>
-                        {pageSize !== 'all' && (
+                        {(
                           <div className="kanban-column-pagination">
                             <Pagination
                               page={stagePages[stage.id] || 0}
