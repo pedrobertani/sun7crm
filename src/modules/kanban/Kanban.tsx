@@ -15,7 +15,7 @@ import { readPeriod } from '../../domain/filters';
 import { KanbanGlobalFilters, initialKanbanPeriod, matchesKanbanPeriod, type KanbanPeriod } from './period-filter';
 import { cardFacetFields,matchDemoCardFacets,emptyCardFacets,type CardFacetValues } from './card-filters';
 import { Input } from '../../components/ui/input';
-import { useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { KanbanScroll } from '../../components/ui/kanban-scroll';
 import { Pagination } from '../../components/ui/pagination';
 import { KanbanSizeControl, visibleKanbanRows, type KanbanPageSize } from './page-size';
@@ -116,6 +116,7 @@ export function Kanban() {
       && (!normalized||[contact?.name||'',contact?.phone||'',o.title||'']
         .join(' ').toLocaleLowerCase('pt-BR').includes(normalized));
   });
+  useEffect(()=>{setFacets(emptyCardFacets);setStagePages({});},[board.id]);
   const visibleStages=facets.stage==='all'?board.stages:
     board.stages.filter(s=>s.id===facets.stage);
   const manager = session.role === 'manager';
