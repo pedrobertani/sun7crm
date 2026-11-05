@@ -135,6 +135,20 @@ export function createSeed(): Snapshot {
       createdAt: shiftDate(date, -i * 2),
     })),
   );
+  // Catálogo fictício completo por empresa para demonstrar busca e filtros de cards.
+  const catalog: NonNullable<Snapshot['catalog']> = companies.flatMap((company) => {
+    const names = company.template === 'aesthetic'
+      ? [['Limpeza de pele', 'service', 18000], ['Harmonização facial', 'service', 89000],
+         ['Tratamento corporal', 'service', 45000], ['Kit pós-procedimento', 'product', 12000]]
+      : [['Projeto de interiores', 'service', 120000], ['Instalação especializada', 'service', 45000],
+         ['Cortinas sob medida', 'product', 65000], ['Piso vinílico', 'product', 89000]];
+    return names.map(([name, kind, value], index) => ({
+      id: company.id + '-catalog-' + index, companyId: company.id,
+      kind: kind as 'service' | 'product', name: String(name),
+      description: 'Item ilustrativo para exploração da demonstração.',
+      value: Number(value), active: true,
+    }));
+  });
   const opportunities: Snapshot['opportunities'] = contacts.map((c, i) => {
     const b = boards.find(
       (b) => b.companyId === c.companyId && b.kind === (i % 12 < 9 ? 'leads' : 'clients'),
@@ -147,6 +161,7 @@ export function createSeed(): Snapshot {
       stageId: b.stages[i % b.stages.length].id,
       value: [45000, 89000, 120000, 65000][i % 4],
       source: ['Tráfego pago', 'Indicação', 'Instagram', 'Parceria'][i % 4],
+      catalogIds: [c.companyId + '-catalog-' + (i % 4)],
       createdAt: c.createdAt,
     };
   });
@@ -244,8 +259,13 @@ export function createSeed(): Snapshot {
       { id: c.id + '-warm', companyId: c.id, name: 'Morno', color: '#eab308' },
       { id: c.id + '-hot', companyId: c.id, name: 'Quente', color: '#ef4444' },
     ]),
-    catalog: [],
-    ambassadorCampaigns: [],
+    catalog,
+    ambassadorCampaigns: companies.map(c => ({
+      id: c.id + '-campaign-current', companyId: c.id,
+      name: 'Campanha de indicações do mês', start: date.slice(0,7) + '-01',
+      end: shiftDate(date, 21), status: 'active' as const,
+      paymentMode: 'per_point' as const, rate: 10000,
+    })),
     ambassadorPayments: [],
     ...marketingSeed(companies),
   };
