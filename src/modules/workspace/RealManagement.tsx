@@ -1,6 +1,5 @@
 import { ShieldCheck, Pencil, KeyRound } from 'lucide-react';
 import { ViewSwitcher } from '../../components/ui/view-switcher';
-import { GlobalFilters } from '../../components/ui/global-filters';
 import { DashboardDateControls, type DashboardDateRange } from '../dashboard/DashboardDateControls';
 import { Pagination, paginatedRows, usePagination } from '../../components/ui/pagination';
 import { PermissionTree } from '../permissions/PermissionTree';
