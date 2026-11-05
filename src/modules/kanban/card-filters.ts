@@ -1,7 +1,5 @@
 import { type FilterField, filterSelectedValues } from '../../components/ui/global-filters';
-import type { Temperature, Contact, Opportunity } from '../../domain/types';
-import type { LabelRow, CatalogRow, StageRow, TeamRow } from '../../data/backend';
-import type { Stage, Label, CatalogItem, Member } from '../../domain/types';
+import type { Contact, Opportunity } from '../../domain/types';
 
 export interface CardFacetValues {
   stage: string;
@@ -18,7 +16,7 @@ export interface CardFacetCriteria {
   labelIds:string[];
   catalogIds:string[];
   ownerId?:string;
-  temperature?:'cold'|'warm'|'hot';
+  temperature?:'unclassified'|'cold'|'warm'|'hot';
   closed?:boolean;
 }
 export function cardFacetCriteria(
@@ -29,7 +27,7 @@ export function cardFacetCriteria(
     catalogIds:filterSelectedValues(facets.catalog),
     ownerId:facets.owner==='mine'?ownMembershipId:
       facets.owner==='all'?undefined:facets.owner,
-    temperature:facets.temperature==='cold'||facets.temperature==='warm'||facets.temperature==='hot'
+    temperature:facets.temperature==='unclassified'||facets.temperature==='cold'||facets.temperature==='warm'||facets.temperature==='hot'
       ? facets.temperature:undefined,
     closed:facets.status==='closed'?true:facets.status==='open'?false:undefined,
   };
@@ -38,10 +36,10 @@ type Choice={id:string;name:string;active?:boolean;kind?:string};
 export function cardFacetFields({
   stages,labels,catalog,team,includeOwners=true,
 }: {
-  stages:readonly Pick<StageRow,'id'|'name'>[] | readonly Stage[];
-  labels:readonly Choice[] | readonly LabelRow[] | readonly Label[];
-  catalog:readonly Choice[] | readonly CatalogRow[] | readonly CatalogItem[];
-  team?:readonly Pick<TeamRow,'id'|'name'>[] | readonly Member[];
+  stages:readonly {id:string;name:string}[];
+  labels:readonly Choice[];
+  catalog:readonly Choice[];
+  team?:readonly Choice[];
   includeOwners?:boolean;
 }):FilterField[] {
   const opt=(items:readonly Choice[]) => items
@@ -53,7 +51,7 @@ export function cardFacetFields({
     {key:'labels',label:'Etiquetas',type:'multi-select',defaultValue:'[]',options:opt(labels)},
     {key:'catalog',label:'Serviços e produtos',type:'multi-select',defaultValue:'[]',options:opt(catalog)},
     {key:'temperature',label:'Temperatura do contato',type:'select',defaultValue:'all',
-      options:[{value:'all',label:'Todas'},{value:'cold',label:'Frio'},
+      options:[{value:'all',label:'Todas'},{value:'unclassified',label:'Sem classificação'},{value:'cold',label:'Frio'},
         {value:'warm',label:'Morno'},{value:'hot',label:'Quente'}]},
     {key:'status',label:'Situação do card',type:'select',defaultValue:'all',
       options:[{value:'all',label:'Todos'},{value:'open',label:'Em aberto'},
