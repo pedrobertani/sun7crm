@@ -66,7 +66,7 @@ revoke all on function public.crm_search_kanban_cards(
  uuid,uuid,uuid,uuid,integer,integer,text,timestamptz,timestamptz,uuid[],uuid[],uuid,text,boolean
 ) from public,anon,authenticated,service_role;
 grant execute on function public.crm_search_kanban_cards(
- uuid,uuid,uuid,integer,integer,text,timestamptz,timestamptz,uuid[],uuid[],uuid,text,boolean
+ uuid,uuid,uuid,uuid,integer,integer,text,timestamptz,timestamptz,uuid[],uuid[],uuid,text,boolean
 ) to authenticated;
 create index if not exists crm_kanban_facets_stage_date_idx
  on public.crm_opportunities(company_id,board_id,stage_id,created_at desc,id desc);
