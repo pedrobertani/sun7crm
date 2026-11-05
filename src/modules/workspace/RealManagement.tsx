@@ -85,21 +85,19 @@ export function RealDashboard() {
   return (
     <>
       {activeTab !== 'achievements' && <QueryState query={query} />}
-      <div className="dashboard-tabs-row">
+      <div className="dashboard-tabs-row dashboard-tabs-inline-filters">
         <ViewSwitcher
-        className="dashboard-tabs"
-        label="Áreas do dashboard"
-        value={activeTab}
-        onValueChange={setDashboardTab}
-        items={availableTabs.map(([value, label]) => ({
-          value: value as 'overview' | 'commercial' | 'achievements',
-          label,
-        }))}
+          className="dashboard-tabs"
+          label="Áreas do dashboard"
+          value={activeTab}
+          onValueChange={setDashboardTab}
+          items={availableTabs.map(([value, label]) => ({
+            value: value as 'overview' | 'commercial' | 'achievements',
+            label,
+          }))}
         />
-        <div className="dashboard-toolbar-actions" style={{display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 12, flexWrap: 'wrap', marginLeft: 'auto'}}>
-          <DashboardPeriodFilter from={from} to={to} onFromChange={setFrom} onToChange={setTo} />
-          {commercialAllowed && <Link className="operational-text-link" to="/app/funil">Abrir funil →</Link>}
-        </div>
+        <DashboardPeriodFilter from={from} to={to} onFromChange={setFrom} onToChange={setTo} />
+        {commercialAllowed && <Link className="operational-text-link dashboard-funnel-link" to="/app/funil">Abrir funil →</Link>}
       </div>
       {activeTab === 'commercial' && can('goals.view') && <GoalFunnel view="commercial" month={goalsMonth} />}
       {activeTab === 'achievements' && can('goals.view') && <GoalFunnel view="medals" month={goalsMonth} />}
