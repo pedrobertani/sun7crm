@@ -115,7 +115,7 @@ export function CompanyDashboard() {
       >
       </Heading>
       <GlobalFilters
-        fields={[{key:'days',label:'Período do dashboard',type:'select',defaultValue:'30',
+        fields={[{key:'days',label:'Período do dashboard',type:'select',defaultValue:'30',pin:true,
           options:[{value:'7',label:'Últimos 7 dias'},
             {value:'30',label:'Últimos 30 dias'},{value:'90',label:'Últimos 90 dias'}]}]}
         values={{days}} onApply={values=>setDays(values.days)}
