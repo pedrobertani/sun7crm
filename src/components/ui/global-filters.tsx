@@ -13,7 +13,7 @@ export interface FilterField {
   /** Identificador único da regra de filtragem: separado dos nomes apresentados. */
   key: string;
   label: string;
-  type: 'select' | 'date' | 'month' | 'number' | 'text';
+  type: 'select' | 'multi-select' | 'date' | 'month' | 'number' | 'text';
   defaultValue: string;
   options?: readonly FilterOption[];
   placeholder?: string;
@@ -28,6 +28,20 @@ export interface FilterField {
   when?: {key: string; values: readonly string[]};
 }
 export type FilterValues = Record<string, string>;
+export function filterSelectedValues(value:string,max=30):string[] {
+  try {
+    const parsed:unknown=JSON.parse(value);
+    return Array.isArray(parsed)&&parsed.length<=max
+      &&parsed.every(x=>typeof x==='string'&&x.length<=100)
+      ? [...new Set(parsed)] : [];
+  }catch{return [];}
+}
+export function toggleFilterSelection(value:string,id:string):string {
+  const selected=filterSelectedValues(value);
+  if(!selected.includes(id)&&selected.length>=30) return JSON.stringify(selected);
+  return JSON.stringify(selected.includes(id)?selected.filter(x=>x!==id):[...selected,id]);
+}
+
 
 export function resetFilterValues(fields: readonly FilterField[]): FilterValues {
   return Object.fromEntries(fields.map(field => [field.key, field.defaultValue]));
@@ -41,6 +55,11 @@ export function activeFilterFields(fields: readonly FilterField[], values: Filte
 }
 export function filterValueLabel(field: FilterField, value: string): string {
   if (field.type === 'select') return field.options?.find(option => option.value === value)?.label ?? value;
+  if (field.type === 'multi-select') {
+    const ids=filterSelectedValues(value);
+    const labels=ids.map(id=>field.options?.find(o=>o.value===id)?.label||id);
+    return labels.length<=2 ? labels.join(', ') : labels.slice(0,2).join(', ')+' +'+(labels.length-2);
+  }
   if (field.type === 'month' && /^\d{4}-\d{2}$/.test(value)) {
     return new Intl.DateTimeFormat('pt-BR', { month: 'short', year: 'numeric', timeZone: 'UTC' })
       .format(new Date(value + '-01T12:00:00Z'));
@@ -75,6 +94,7 @@ export function GlobalFilters({
 }) {
   const [open,setOpen] = useState(false);
   const [draft,setDraft] = useState<FilterValues>({});
+  const [optionSearch,setOptionSearch]=useState<Record<string,string>>({});
   const instance = useId();
   const available = fields.filter(f => filterFieldVisible(f,draft));
   const active = activeFilterFields(fields,values);
@@ -82,7 +102,7 @@ export function GlobalFilters({
     && !active.includes(field) && !!(values[field.key] ?? field.defaultValue));
   const issue = validate?.(patchFilterValues(fields,values,draft)) || null;
   const defaults = () => resetFilterValues(fields);
-  const openPanel = () => { setDraft({...defaults(),...values}); setOpen(true); };
+  const openPanel = () => { setDraft({...defaults(),...values}); setOptionSearch({}); setOpen(true); };
   const clearAll = () => onApply(patchFilterValues(fields,values,defaults()));
   const updateField = (key:string,value:string) => setDraft(prev => ({...prev,[key]:value}));
   return <div className={'global-filters '+className}>
@@ -121,7 +141,30 @@ export function GlobalFilters({
       }}>
         <div className="global-filters-fields">
           {available.map(field => {
-            const id = instance+'-'+field.key.replace(/[^\w-]/g,'-');
+            const id=instance+'-'+field.key.replace(/[^\w-]/g,'-');
+            if(field.type==='multi-select'){
+              const checked=filterSelectedValues(draft[field.key] ?? field.defaultValue);
+              const query=(optionSearch[field.key]||'').trim().toLocaleLowerCase('pt-BR');
+              const options=(field.options||[]).filter(option=>
+                option.label.toLocaleLowerCase('pt-BR').includes(query));
+              return <fieldset key={field.key} className="global-filter-multiselect">
+                <legend>{field.label} ({checked.length} selecionadas)</legend>
+                {(field.options||[]).length>8 && <input type="search"
+                  aria-label={'Buscar em '+field.label} placeholder={'Buscar em '+field.label}
+                  value={optionSearch[field.key]||''}
+                  onChange={e=>setOptionSearch(old=>({...old,[field.key]:e.target.value}))}/>}
+                <div className="global-filter-options" role="group" aria-label={field.label}>
+                  {options.slice(0,80).map(option=><label key={option.value} className="global-filter-option">
+                    <input type="checkbox" checked={checked.includes(option.value)}
+                      onChange={()=>updateField(field.key,
+                        toggleFilterSelection(draft[field.key] ?? field.defaultValue,option.value))}/>
+                    <span>{option.label}</span>
+                  </label>)}
+                  {options.length===0 && <span className="small-note">Nenhuma opção encontrada.</span>}
+                  {options.length>80 && <span className="small-note">Refine a busca para encontrar mais opções.</span>}
+                </div>
+              </fieldset>;
+            }
             return <label className="form-row" key={field.key} htmlFor={id}>
               {field.label}
               {field.type==='select' ? <select id={id} value={draft[field.key] ?? field.defaultValue}

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { BarChart3, LineChart as LineChartIcon, PieChart as PieChartIcon, Plus, Wallet,
   CheckCircle2, Clock3, ArrowUpRight, Download } from 'lucide-react';
@@ -19,10 +19,11 @@ import { financeMethodLabel, financeMethods, financeNetInstallmentPaid, financeS
   type FinanceMovement, type FinanceSale } from './model';
 import './finance.css';
 
-type Tab = 'overview' | 'receivables' | 'expenses' | 'movements';
+type Tab = 'overview' | 'sales' | 'receivables' | 'expenses' | 'movements';
 type Graph = 'bars' | 'line' | 'pie';
 const tabs:{value:Tab;label:string}[]=[
-  {value:'overview',label:'Visão geral'},{value:'receivables',label:'Contas a receber'},
+  {value:'overview',label:'Visão geral'},{value:'sales',label:'Vendas fechadas'},
+  {value:'receivables',label:'Contas a receber'},
   {value:'expenses',label:'Despesas'},{value:'movements',label:'Movimentações'},
 ];
 function shiftMonth(month:string,offset:number) {
@@ -114,6 +115,7 @@ export function RealFinance() {
   const active=(params.get('aba')||'overview') as Tab;
   const tab=tabs.some(x=>x.value===active)?active:'overview';
   const changeTab=(value:Tab)=>{setParams(value==='overview'?{}:{aba:value});pages.setPage(0);};
+  const movementType=params.get('tipo')==='income'?'income':'all';
   const [month,setMonth]=useState(today().slice(0,7));
   const [search,setSearch]=useState('');
   const [seller,setSeller]=useState('all');
@@ -127,6 +129,7 @@ export function RealFinance() {
   const [exportError,setExportError]=useState('');
   const [exporting,setExporting]=useState(false);
   const pages=usePagination();
+  useEffect(()=>pages.setPage(0),[tab,movementType]);
   const repo=useMemo(()=>new FinanceRepository(getSupabaseClient(),company.id),[company.id]);
   const query=useQuery(()=>repo.load(),[repo]);
   const data=query.data;
@@ -182,6 +185,8 @@ export function RealFinance() {
   });
   const sortedInstallments=[...filteredInstallments].sort((a,b)=>a.due_on.localeCompare(b.due_on));
   const sortedMovements=[...filteredMovements].sort((a,b)=>b.posted_on.localeCompare(a.posted_on));
+  const visibleMovements=tab==='movements'&&movementType==='income'
+    ?sortedMovements.filter(m=>m.kind==='income'||m.kind==='refund'):sortedMovements;
   const saleById=new Map(sales.map(s=>[s.opportunity_id,s]));
   const selectedSalesForExpense=can('finance.company')?sales:sales.filter(s=>s.membership_id===company.membershipId);
   const filterFields:FilterField[] = [
@@ -230,13 +235,17 @@ export function RealFinance() {
     {exportError&&<p role="alert" className="form-error">{exportError}</p>}
     <div className="kpis">
       <Kpi label="Vendas fechadas" value={currency(periodClosed)}
-        foot="Vendas confirmadas no mês · não são recebimentos" icon={<CheckCircle2 size={19}/>}/>
+        foot="Vendas confirmadas no mês · não são recebimentos" icon={<CheckCircle2 size={19}/>}
+        to="/app/financeiro?aba=sales"/>
       <Kpi label="A receber" value={currency(totals.pending)}
-        foot="Saldo pendente acumulado das vendas autorizadas" icon={<Clock3 size={19}/>}/>
+        foot="Saldo pendente acumulado das vendas autorizadas" icon={<Clock3 size={19}/>}
+        to="/app/financeiro?aba=receivables"/>
       <Kpi label="Recebido" value={currency(totals.received)}
-        foot="Recebimentos líquidos de estornos no mês" icon={<Wallet size={19}/>}/>
+        foot="Recebimentos líquidos de estornos no mês" icon={<Wallet size={19}/>}
+        to="/app/financeiro?aba=movements&tipo=income"/>
       <Kpi label="Saídas" value={currency(totals.expenses)}
-        foot="Despesas pagas no mês" icon={<ArrowUpRight size={19}/>}/>
+        foot="Despesas pagas no mês" icon={<ArrowUpRight size={19}/>}
+        to="/app/financeiro?aba=expenses"/>
     </div>
     <p className="finance-summary-note">
       Resultado de caixa neste mês: <strong>{currency(totals.cash)}</strong>.
@@ -267,6 +276,29 @@ export function RealFinance() {
           onChange={pages.setPage} onSizeChange={pages.setSize} label="movimentações"/>
       </Panel>
     </>}
+    {tab==='sales'&&<Panel title="Vendas fechadas"
+      description="Vendas confirmadas no período, com cliente, vendedor e itens vinculados.">
+      <div className="table-wrap"><table className="finance-table">
+        <thead><tr><th>Data</th><th>Cliente</th><th>Vendedor</th><th>Produtos e serviços</th><th>Valor</th></tr></thead>
+        <tbody>{paginatedRows(
+          visibleSales.filter(sale=>sale.confirmed_at.slice(0,7)===month),
+          pages.page,pages.size,
+        ).map(sale=><tr key={sale.opportunity_id}>
+          <td>{dateLabel(sale.confirmed_at.slice(0,10))}</td>
+          <td><button className="finance-link" onClick={()=>setSaleDetail(sale)}>
+            {sale.contact_name_snapshot}</button></td>
+          <td>{sale.seller_name_snapshot||'Não informado'}</td>
+          <td>{sale.items_snapshot?.map(item=>item.name).join(', ')||'Sem itens vinculados'}</td>
+          <td>{currency(sale.total_cents)}</td>
+        </tr>)}</tbody>
+      </table></div>
+      {!visibleSales.some(sale=>sale.confirmed_at.startsWith(month))&&
+        <Empty title="Nenhuma venda fechada neste período"
+          description="Confirme uma venda no Kanban ou altere os filtros."/>}
+      <Pagination page={pages.page} size={pages.size}
+        total={visibleSales.filter(sale=>sale.confirmed_at.startsWith(month)).length}
+        onChange={pages.setPage} onSizeChange={pages.setSize} label="vendas"/>
+    </Panel>}
     {tab==='receivables'&&<Panel title="Contas a receber" description="Vencimentos e pagamentos parciais; não se confunde com receita recebida.">
       <div className="table-wrap"><table className="finance-table"><thead><tr>
         <th>Vencimento</th><th>Cliente / vendedor</th><th>Parcela</th>
@@ -299,10 +331,12 @@ export function RealFinance() {
         onChange={pages.setPage} onSizeChange={pages.setSize} label="despesas"/>
     </Panel>}
     {tab==='movements'&&<Panel title="Histórico financeiro" description="Entradas, saídas e estornos reais vinculados ao usuário e à venda.">
-      <FinanceMovementsTable rows={paginatedRows(sortedMovements,pages.page,pages.size)}
+      {movementType==='income'&&<p className="small-note">Exibindo recebimentos e estornos do período. <button
+        type="button" className="finance-link" onClick={()=>setParams({aba:'movements'})}>Ver todos</button></p>}
+      <FinanceMovementsTable rows={paginatedRows(visibleMovements,pages.page,pages.size)}
         saleById={saleById} canEdit={can('finance.edit')} canVoid={can('finance.void')}
         onExpense={setExpenseEdit} onCorrection={setCorrection} onSale={setSaleDetail}/>
-      <Pagination page={pages.page} size={pages.size} total={sortedMovements.length}
+      <Pagination page={pages.page} size={pages.size} total={visibleMovements.length}
         onChange={pages.setPage} onSizeChange={pages.setSize} label="movimentações"/>
     </Panel>}
     {saleDetail&&<FinanceSaleDialog sale={saleDetail} installments={installments}

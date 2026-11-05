@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { BarChart3, Plus, Wallet, Clock3, CheckCircle2, ArrowUpRight } from 'lucide-react';
 import { useCrm } from '../../app/context';
 import { Button } from '../../components/ui/button';
@@ -18,9 +19,10 @@ import { defaultFinanceTerms, financeSelectedTotal, financeMethods, financeNetIn
   type FinanceSale, type FinanceTerms } from './model';
 import './finance.css';
 
-type DemoTab='overview'|'receivables'|'expenses'|'movements';
+type DemoTab='overview'|'sales'|'receivables'|'expenses'|'movements';
 const demoTabs:{value:DemoTab;label:string}[]=[
- {value:'overview',label:'Visão geral'}, {value:'receivables',label:'Contas a receber'},
+ {value:'overview',label:'Visão geral'}, {value:'sales',label:'Vendas fechadas'},
+ {value:'receivables',label:'Contas a receber'},
  {value:'expenses',label:'Despesas'}, {value:'movements',label:'Movimentações'},
 ];
 export function DemoFinance() {
@@ -28,7 +30,11 @@ export function DemoFinance() {
   const member=data.members.find(m=>m.id===session.memberId);
   const permissions=member?.permissions||legacyPermissions(session.role);
   const can=(key:string)=>session.role==='manager'||permissions.keys.includes(key);
-  const [tab,setTab]=useState<DemoTab>('overview');
+  const [params,setParams]=useSearchParams();
+  const tab:DemoTab=demoTabs.some(t=>t.value===params.get('aba'))
+    ?params.get('aba') as DemoTab:'overview';
+  const setTab=(value:DemoTab)=>setParams(value==='overview'?{}:{aba:value});
+  const movementType=params.get('tipo')==='income'?'income':'all';
   const [month,setMonth]=useState(today().slice(0,7));
   const [seller,setSeller]=useState('all');
   const [method,setMethod]=useState('all');
@@ -48,6 +54,7 @@ export function DemoFinance() {
   const [error,setError]=useState('');
   const [graph,setGraph]=useState<'bars'|'line'|'pie'>('bars');
   const pages=usePagination();
+  useEffect(()=>pages.setPage(0),[tab,movementType]);
   const termsMap=data.demoFinance?.terms||{};
   const moves=data.demoFinance?.movements||[];
   const sales:FinanceSale[]=data.opportunities.filter(o=>
@@ -156,7 +163,8 @@ export function DemoFinance() {
         {value:'parcial',label:'Parcial'},{value:'recebido',label:'Recebido'},
         {value:'vencido',label:'Vencido'}]},
   ];
-  const movementRows=period.filter(m=>tab!=='expenses'||m.kind==='expense');
+  const movementRows=period.filter(m=>(tab!=='expenses'||m.kind==='expense')
+    &&(tab!=='movements'||movementType!=='income'||m.kind==='income'||m.kind==='refund'));
   return <div className="finance-page">
     <Heading eyebrow="DEMONSTRAÇÃO · DADOS FICTÍCIOS" title="Financeiro"
       description="Vendas confirmadas geram recebíveis. Registre entradas e saídas separadamente."/>
@@ -173,10 +181,14 @@ export function DemoFinance() {
       </Button>}
     />
     <div className="kpis">
-      <Kpi label="Vendas fechadas" value={currency(closed)} foot="Confirmadas no mês" icon={<CheckCircle2 size={19}/>}/>
-      <Kpi label="A receber" value={currency(results.pending)} foot="Saldo em aberto acumulado" icon={<Clock3 size={19}/>}/>
-      <Kpi label="Recebido" value={currency(results.received)} foot="Entradas menos estornos no mês" icon={<Wallet size={19}/>}/>
-      <Kpi label="Saídas" value={currency(results.expenses)} foot="Despesas registradas no mês" icon={<ArrowUpRight size={19}/>}/>
+      <Kpi label="Vendas fechadas" value={currency(closed)} foot="Confirmadas no mês"
+        icon={<CheckCircle2 size={19}/>} to="/demo/financeiro?aba=sales"/>
+      <Kpi label="A receber" value={currency(results.pending)} foot="Saldo em aberto acumulado"
+        icon={<Clock3 size={19}/>} to="/demo/financeiro?aba=receivables"/>
+      <Kpi label="Recebido" value={currency(results.received)} foot="Entradas menos estornos no mês"
+        icon={<Wallet size={19}/>} to="/demo/financeiro?aba=movements&tipo=income"/>
+      <Kpi label="Saídas" value={currency(results.expenses)} foot="Despesas registradas no mês"
+        icon={<ArrowUpRight size={19}/>} to="/demo/financeiro?aba=expenses"/>
     </div>
     <p className="finance-summary-note">Saldo de caixa simulado: <strong>{currency(results.cash)}</strong>.
       Nenhum desses lançamentos movimenta dinheiro real.</p>
@@ -193,6 +205,22 @@ export function DemoFinance() {
         </div>
         <FinanceGraph graph={graph} rows={charts}/>
       </Panel>}
+    {tab==='sales'&&<Panel title="Vendas fechadas" description="Negociações comercialmente confirmadas.">
+      <div className="table-wrap"><table className="finance-table">
+        <thead><tr><th>Data</th><th>Cliente</th><th>Vendedor</th><th>Itens vinculados</th><th>Valor</th></tr></thead>
+        <tbody>{paginatedRows(salesFiltered.filter(s=>s.confirmed_at.startsWith(month)),
+          pages.page,pages.size).map(sale=><tr key={sale.opportunity_id}>
+          <td>{dateLabel(sale.confirmed_at.slice(0,10))}</td>
+          <td><button className="finance-link" onClick={()=>openSale(sale)}>{sale.contact_name_snapshot}</button></td>
+          <td>{sale.seller_name_snapshot}</td>
+          <td>{sale.items_snapshot.map(i=>i.name).join(', ')||'Sem itens'}</td>
+          <td>{currency(sale.total_cents)}</td>
+        </tr>)}</tbody>
+      </table></div>
+      <Pagination page={pages.page} size={pages.size}
+        total={salesFiltered.filter(s=>s.confirmed_at.startsWith(month)).length}
+        onChange={pages.setPage} onSizeChange={pages.setSize} label="vendas"/>
+    </Panel>}
     {tab==='receivables'&&<Panel title="Contas a receber" description="Abra uma venda para consultar as parcelas e registrar um pagamento fictício.">
       <div className="table-wrap"><table className="finance-table"><thead><tr>
         <th>Cliente</th><th>Parcela</th><th>Vencimento</th><th>Valor</th><th>Em aberto</th><th>Situação</th>
