@@ -78,3 +78,21 @@
   .dashboard-tabs-inline-filters > .dashboard-compact-toolbar { flex:1 1 auto; }
   .dashboard-tabs-inline-filters > .dashboard-funnel-link { margin-left:auto; }
 }
+
+/* Dashboard: retirar o vão entre a saudação e a barra de navegação. */
+.page:has(.dashboard-tabs-inline-filters) .heading {
+  margin-bottom: 12px;
+}
+.page:has(.dashboard-tabs-inline-filters) .dashboard-tabs-row {
+  margin-top: 0;
+  margin-bottom: 12px;
+}
+.dashboard-tabs-inline-filters > .dashboard-inline-filter,
+.dashboard-tabs-inline-filters > .dashboard-compact-toolbar {
+  margin-bottom: 0;
+}
+@media (max-width:760px) {
+  .page:has(.dashboard-tabs-inline-filters) .heading {
+    margin-bottom: 10px;
+  }
+}
