@@ -272,6 +272,7 @@ export function RealKanban() {
                 label="Funis"
                 value={board?.id || ''}
                 onValueChange={(id) => {
+                  setFacets(emptyCardFacets);
                   setParams((previous) => {
                     const updated = new URLSearchParams(previous);
                     updated.set('funil', id);
