@@ -1,0 +1,8 @@
+.dashboard-date-controls{display:flex;align-items:center;gap:9px;flex-wrap:wrap;min-width:0}
+.dashboard-date-filter{display:block;margin:0}
+.dashboard-date-filter .global-filters-active{display:none}
+.dashboard-day-picker{display:inline-flex;align-items:center;gap:7px;padding:0 10px;border:1px solid var(--control-border);border-radius:8px;min-height:40px;background:var(--raised);color:var(--ink)}
+.dashboard-day-picker:focus-within{outline:2px solid var(--primary);outline-offset:2px}
+.dashboard-day-picker input{border:0;background:transparent;color:inherit;font:inherit;font-size:12px;min-height:34px;min-width:118px;max-width:146px;color-scheme:light dark}
+.dashboard-period-label{font-size:11px;font-weight:600;color:var(--muted);white-space:nowrap}
+@media(max-width:760px){.dashboard-date-controls{flex:1 1 100%;gap:8px}.dashboard-period-label{white-space:normal}.dashboard-day-picker{min-height:44px}}
