@@ -1,7 +1,7 @@
 import { useSearchParams } from 'react-router-dom';
 import { RecordTitle } from '../../components/RecordTitle';
 import { filterCompanies, companyFilterLabels } from '../../domain/filters';
-import { AppliedFilter } from '../../components/shared';
+import { GlobalFilters } from '../../components/ui/global-filters';
 import { CurrencyInput } from '../../components/currency-input';
 import { Input } from '../../components/ui/input';
 import { useState, type FormEvent } from 'react';
@@ -11,7 +11,7 @@ import { useCrm } from '../../app/context';
 import type { Company, Template } from '../../domain/types';
 import { defaultStages } from '../../domain/config';
 import { currency, dateLabel, today, shiftDate, uid } from '../../lib/format';
-import { Heading, SearchInput, Empty, FormActions, FormError } from '../../components/shared';
+import { Heading, Empty, FormActions, FormError } from '../../components/shared';
 import { Button } from '../../components/ui/button';
 import { Modal } from '../../components/ui/modal';
 const initial = {
@@ -36,10 +36,17 @@ export function Companies() {
     : 30;
   const date = today(),
     from = shiftDate(date, -days + 1);
-  function setStatus(value: string) {
-    const next = new URLSearchParams(params);
-    next.set('situacao', value);
+  function applyCompanyFilters(values:Record<string,string>) {
+    const next=new URLSearchParams(params);
+    for(const [key,value] of Object.entries({
+      situacao:values.status==='all'?'':values.status,
+      carteira:values.portfolio==='all'?'':values.portfolio,
+      periodo:values.days==='30'?'':values.days,
+    })) {
+      if(value) next.set(key,value);else next.delete(key);
+    }
     setParams(next);
+    pages.setPage(0);
   }
   const [editing, setEditing] = useState<Company | null | undefined>();
   const [form, setForm] = useState(initial);
@@ -162,29 +169,24 @@ export function Companies() {
           Nova empresa
         </Button>
       </Heading>
-      {params.toString() && (
-        <AppliedFilter
-          label={`Painel: ${[companyFilterLabels[portfolio] || 'Todas as empresas', ...(status !== portfolio ? [companyFilterLabels[status] || 'Todas as situações'] : [])].join(' · ')}${status === 'new' || portfolio === 'new' ? ` · últimos ${days} dias` : ''}`}
-          onClear={() => setParams({})}
-        />
-      )}
       <div className="card">
-        <div className="toolbar">
-          <SearchInput value={query} onChange={(v) => { setQuery(v); pages.setPage(0); }} placeholder="Buscar empresa" />
-          <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-            aria-label="Situação das empresas"
-          >
-            <option value="all">Todas as situações</option>
-            <option value="active">Ativas</option>
-            <option value="inactive">Desativadas</option>
-            <option value="upcoming">Vencem em até 7 dias</option>
-            <option value="new">Novas no período</option>
-            <option value="overdue">Com vencimento passado</option>
-          </select>
+        <GlobalFilters fields={[
+          {key:'status',label:'Situação',type:'select',defaultValue:'all',
+            options:Object.entries(companyFilterLabels).map(([value,label])=>({value,label}))},
+          {key:'portfolio',label:'Carteira',type:'select',defaultValue:'all',
+            options:Object.entries(companyFilterLabels).map(([value,label])=>({value,label}))},
+          {key:'days',label:'Período de novas empresas',type:'select',defaultValue:'30',
+            when:{key:'status',values:['new']},
+            options:[{value:'7',label:'Últimos 7 dias'},
+              {value:'30',label:'Últimos 30 dias'},{value:'90',label:'Últimos 90 dias'}]},
+        ]}
+          values={{status,portfolio,days:String(days)}}
+          onApply={applyCompanyFilters}
+          search={{value:query,onChange:v=>{setQuery(v);pages.setPage(0);},
+            placeholder:'Buscar empresa'}}
+        >
           <span className="muted result-count">{companies.length} empresas</span>
-        </div>
+        </GlobalFilters>
         {companies.length ? (
           <div className="table-wrap">
             <table>
