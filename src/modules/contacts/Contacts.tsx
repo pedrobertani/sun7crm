@@ -8,7 +8,6 @@ import { ContactTransfer } from './ContactTransfer';
 import { normalizeContactPhone } from '../../domain/contact-transfer';
 import { useSearchParams } from 'react-router-dom';
 import { readPeriod, inPeriod } from '../../domain/filters';
-import { dateLabel } from '../../lib/format';
 import { Input } from '../../components/ui/input';
 import { useState, type FormEvent } from 'react';
 import { Pagination, paginatedRows, usePagination } from '../../components/ui/pagination';
@@ -21,14 +20,15 @@ import { visibleContacts } from '../../domain/operations';
 import { initials, uid, today } from '../../lib/format';
 import {
   Heading,
-  AppliedFilter,
-  SearchInput,
+  
+  
   TemperatureBadge,
   Empty,
   FormActions,
   FormError,
 } from '../../components/shared';
 import { Button } from '../../components/ui/button';
+import { GlobalFilters } from '../../components/ui/global-filters';
 import { Modal } from '../../components/ui/modal';
 const blank = {
   name: '',
@@ -50,11 +50,17 @@ export function Contacts() {
     ? params.get('temperatura')!
     : 'all';
   const period = readPeriod(params);
-  function setTemperature(value: string) {
+  function applyContactFilters(values: Record<string,string>) {
     const next = new URLSearchParams(params);
-    if (value === 'all') next.delete('temperatura');
-    else next.set('temperatura', value);
+    for (const [key,value] of Object.entries({
+      temperatura:values.temperature==='all'?'':values.temperature,
+      de:values.from,ate:values.to,
+    })) {
+      if (value) next.set(key,value);
+      else next.delete(key);
+    }
     setParams(next);
+    pages.setPage(0);
   }
   const [editing, setEditing] = useState<Contact | null | undefined>(undefined);
   const [form, setForm] = useState(blank);
@@ -171,36 +177,24 @@ export function Contacts() {
           </Button>
         )}
       </Heading>
-      {(period.from || period.to) && (
-        <AppliedFilter
-          label={`Cadastros de ${period.from ? dateLabel(period.from) : 'qualquer data'} até ${period.to ? dateLabel(period.to) : 'hoje'}`}
-          onClear={() => setParams({})}
-        />
-      )}
       <div className="card">
-        <div className="toolbar">
-          <SearchInput
-            value={query}
-            onChange={(v) => { setQuery(v); pages.setPage(0); }}
-            placeholder="Buscar nome, telefone ou interesse"
-          />
-          <select
-            aria-label="Filtrar temperatura"
-            value={temperature}
-            onChange={(e) => setTemperature(e.target.value)}
-          >
-            <option value="all">Todas as temperaturas</option>
-            {Object.entries(temperatureLabels).map(([v, l]) => (
-              <option key={v} value={v}>
-                {l}
-              </option>
-            ))}
-          </select>
+        <GlobalFilters
+          fields={[
+            {key:'temperature',label:'Temperatura',type:'select',defaultValue:'all',
+              options:[{value:'all',label:'Todas as temperaturas'},
+                ...Object.entries(temperatureLabels).map(([value,label])=>({value,label}))]},
+            {key:'from',label:'Cadastro de',type:'date',defaultValue:''},
+            {key:'to',label:'Cadastro até',type:'date',defaultValue:''},
+          ]}
+          values={{temperature,from:period.from,to:period.to}}
+          onApply={applyContactFilters}
+          search={{value:query,onChange:v=>{setQuery(v);pages.setPage(0);},
+            placeholder:'Buscar nome, telefone ou interesse'}}
+        >
           <span className="muted result-count">
-            <Users size={15} />
-            {contacts.length} contatos
+            <Users size={15} />{contacts.length} contatos
           </span>
-        </div>
+        </GlobalFilters>
         {contacts.length ? (
           <div className="table-wrap">
             <table>
