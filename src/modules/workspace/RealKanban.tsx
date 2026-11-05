@@ -3,6 +3,7 @@ import { KanbanScroll } from '../../components/ui/kanban-scroll';
 import { Pagination } from '../../components/ui/pagination';
 import { KanbanSizeControl, type KanbanPageSize } from '../kanban/page-size';
 import { KanbanGlobalFilters, initialKanbanPeriod, kanbanDateRange, type KanbanPeriod } from '../kanban/period-filter';
+import { cardFacetFields,cardFacetCriteria,emptyCardFacets,type CardFacetValues } from '../kanban/card-filters';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
@@ -94,6 +95,7 @@ export function RealKanban() {
       }, { replace: true });
     }
   };
+  const [facets,setFacets]=useState<CardFacetValues>(emptyCardFacets);
   const [pageSize, setPageSize] = useState<KanbanPageSize>(10);
   const changePageSize = (size: KanbanPageSize) => { setPageSize(size); setStagePages({}); };
   const [search, setSearch] = useState(''),
@@ -103,19 +105,23 @@ export function RealKanban() {
     [stagesOpen, setStagesOpen] = useState(false),
     [history, setHistory] = useState<{ contact: ContactRow; cardId: string } | null>(null);
   const refs = useQuery(async () => {
-    const [boards, stages, labels] = await Promise.all([
+    const [boards, stages, labels, catalog, team] = await Promise.all([
       api.all('boards'),
       api.all('stages'),
       api.all('labels'),
+      can('catalog.view')?api.all('catalog'):Promise.resolve([] as CatalogRow[]),
+      can('team.view')?api.all('team'):Promise.resolve([]),
     ]);
-    return { boards: boards.sort((a, b) => a.position - b.position), stages, labels };
-  }, [api]);
+    return {boards:boards.sort((a,b)=>a.position-b.position),stages,labels,catalog,team};
+  }, [api,can('catalog.view'),can('team.view')]);
   const board = refs.data?.boards.find((b) => b.id === boardId) || refs.data?.boards[0],
     stages =
       refs.data?.stages
         .filter((s) => s.board_id === board?.id)
         .sort((a, b) => a.position - b.position) || [];
-  const stageIds = stages.map((stage) => stage.id).join(',');
+  const visibleStages=facets.stage==='all'?stages:stages.filter(s=>s.id===facets.stage);
+  const stageIds=visibleStages.map(stage=>stage.id).join(',');
+  const criteria=cardFacetCriteria(facets,company.membershipId);
   const dateRange = kanbanDateRange(dateFilter);
   const invalidDate = dateFilter.mode !== 'all' && !dateRange;
   // Load each stage independently: one global page hides cards from other columns.
@@ -126,13 +132,14 @@ export function RealKanban() {
       total: 0, contacts: [] as ContactRow[], activity: [] as Awaited<ReturnType<typeof api.activityByIds>>,
       labels: [] as Awaited<ReturnType<typeof api.labelsByCardIds>>,
     };
-    const groups = await Promise.all(stages.map(async (stage) => ({
-      id: stage.id,
-      data: await api.list(
-        'cards',stagePages[stage.id] || 0,pageSize,
-        {board_id:board.id,stage_id:stage.id,...(contactId?{contact_id:contactId}:{})},
-        search,dateRange || undefined,
-      ),
+    const groups=await Promise.all(visibleStages.map(async stage=>({
+      id:stage.id,
+      data:await api.searchKanbanCards({
+        boardId:board.id,stageId:stage.id,page:stagePages[stage.id]||0,pageSize,
+        search,createdBetween:dateRange||undefined,
+        labelIds:criteria.labelIds,catalogIds:criteria.catalogIds,
+        ownerId:criteria.ownerId,temperature:criteria.temperature,closed:criteria.closed,
+      }),
     })));
     const rows = groups.flatMap((group) => group.data.rows);
     const [contacts, activity, labels] = await Promise.all([
@@ -142,7 +149,7 @@ export function RealKanban() {
     ]);
     const stageTotals = Object.fromEntries(groups.map((group) => [group.id, group.data.total]));
     return { rows, stageTotals, total: groups.reduce((sum, group) => sum + group.data.total, 0), contacts, activity, labels };
-  }, [api, board?.id, stageIds, stagePages, pageSize, search, contactId, dateRange?.from, dateRange?.until, invalidDate]);
+  }, [api,board?.id,stageIds,stagePages,pageSize,search,contactId,dateRange?.from,dateRange?.until,invalidDate,facets.labels,facets.catalog,facets.owner,facets.temperature,facets.status]);
   // If a card was removed from the last page of a stage, don't leave an empty page.
   useEffect(() => {
     const totals = cards.data?.stageTotals;
@@ -289,9 +296,22 @@ export function RealKanban() {
               <KanbanGlobalFilters
                 value={dateFilter}
                 onChange={updateDateFilter}
+                facetFields={cardFacetFields({
+                  stages,labels:can('labels.view')?refs.data.labels:[],
+                  catalog:refs.data.catalog,
+                  team:refs.data.team.map(m=>({id:m.id,name:m.display_name,active:m.active})),
+                })}
+                facetValues={facets}
+                onFacetChange={values=>{
+                  setFacets({
+                    stage:values.stage,labels:values.labels,catalog:values.catalog,
+                    owner:values.owner,temperature:values.temperature,status:values.status,
+                  });
+                  setStagePages({});
+                }}
                 search={search}
                 onSearchChange={value=>{setSearch(value);setStagePages({});}}
-                placeholder="Buscar pelo título do card..."
+                placeholder="Buscar título ou nome do cliente..."
               />
             )}
           </div>
@@ -301,7 +321,7 @@ export function RealKanban() {
               {cards.data && (
                 <>
                   <KanbanScroll label="Colunas do funil">
-                    {stages.map((stage) => (
+                    {visibleStages.map((stage) => (
                       <section className="kanban-column" data-drop-stage={stage.id} key={stage.id}>
                         <div className="kanban-column-head">
                           <h2>{stage.name}</h2>
