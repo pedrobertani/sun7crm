@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { BarChart3, LineChart as LineChartIcon, PieChart as PieChartIcon, Plus, Wallet,
   CheckCircle2, Clock3, ArrowUpRight, Download } from 'lucide-react';
@@ -129,6 +129,7 @@ export function RealFinance() {
   const [exportError,setExportError]=useState('');
   const [exporting,setExporting]=useState(false);
   const pages=usePagination();
+  useEffect(()=>pages.setPage(0),[tab,movementType]);
   const repo=useMemo(()=>new FinanceRepository(getSupabaseClient(),company.id),[company.id]);
   const query=useQuery(()=>repo.load(),[repo]);
   const data=query.data;
@@ -185,7 +186,7 @@ export function RealFinance() {
   const sortedInstallments=[...filteredInstallments].sort((a,b)=>a.due_on.localeCompare(b.due_on));
   const sortedMovements=[...filteredMovements].sort((a,b)=>b.posted_on.localeCompare(a.posted_on));
   const visibleMovements=tab==='movements'&&movementType==='income'
-    ?sortedMovements.filter(m=>m.kind==='income'):sortedMovements;
+    ?sortedMovements.filter(m=>m.kind==='income'||m.kind==='refund'):sortedMovements;
   const saleById=new Map(sales.map(s=>[s.opportunity_id,s]));
   const selectedSalesForExpense=can('finance.company')?sales:sales.filter(s=>s.membership_id===company.membershipId);
   const filterFields:FilterField[] = [
@@ -330,7 +331,7 @@ export function RealFinance() {
         onChange={pages.setPage} onSizeChange={pages.setSize} label="despesas"/>
     </Panel>}
     {tab==='movements'&&<Panel title="Histórico financeiro" description="Entradas, saídas e estornos reais vinculados ao usuário e à venda.">
-      {movementType==='income'&&<p className="small-note">Exibindo recebimentos do período. <button
+      {movementType==='income'&&<p className="small-note">Exibindo recebimentos e estornos do período. <button
         type="button" className="finance-link" onClick={()=>setParams({aba:'movements'})}>Ver todos</button></p>}
       <FinanceMovementsTable rows={paginatedRows(visibleMovements,pages.page,pages.size)}
         saleById={saleById} canEdit={can('finance.edit')} canVoid={can('finance.void')}
