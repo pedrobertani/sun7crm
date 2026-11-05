@@ -38,6 +38,7 @@ export class BrowserRepository implements CrmRepository {
           const enriched = refreshShowcase && base
             ? {
                 ...o,
+                stageId: !o.confirmedSaleAt && base.confirmedSaleAt ? base.stageId : o.stageId,
                 catalogIds: o.catalogIds?.length ? o.catalogIds : base.catalogIds,
                 confirmedSaleAt: o.confirmedSaleAt || base.confirmedSaleAt,
                 confirmedSaleOwnerId: o.confirmedSaleOwnerId || base.confirmedSaleOwnerId,
