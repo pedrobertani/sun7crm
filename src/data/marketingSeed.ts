@@ -1,5 +1,5 @@
 import type { Company, Strategy, Ambassador, AmbassadorSale } from '../domain/types';
-import { today } from '../lib/format';
+import { today, shiftDate } from '../lib/format';
 
 export function marketingSeed(companies: Pick<Company, 'id'>[]) {
   const date = today();
@@ -56,8 +56,23 @@ export function marketingSeed(companies: Pick<Company, 'id'>[]) {
   ]);
   const ambassadorSales: AmbassadorSale[] = companies.flatMap(({ id }) => [
     {
+      id: id + '-referral-previous',
+      companyId: id,
+      campaignId: id + '-campaign-previous',
+      paid: true,
+      attended: true,
+      ambassadorId: id + '-ambassador-1',
+      customer: 'Cliente de campanha encerrada',
+      value: 250000,
+      date: shiftDate(date, -40),
+      cancelled: false,
+    },
+    {
       id: id + '-referral-1',
       companyId: id,
+      campaignId: id + '-campaign-current',
+      paid: true,
+      attended: true,
       ambassadorId: id + '-ambassador-1',
       customer: 'Marina Alves',
       value: 180000,
@@ -67,6 +82,9 @@ export function marketingSeed(companies: Pick<Company, 'id'>[]) {
     {
       id: id + '-referral-2',
       companyId: id,
+      campaignId: id + '-campaign-current',
+      paid: true,
+      attended: true,
       ambassadorId: id + '-ambassador-1',
       customer: 'Renata Lima',
       value: 70000,
@@ -76,6 +94,9 @@ export function marketingSeed(companies: Pick<Company, 'id'>[]) {
     {
       id: id + '-referral-3',
       companyId: id,
+      campaignId: id + '-campaign-current',
+      paid: true,
+      attended: true,
       ambassadorId: id + '-ambassador-2',
       customer: 'Ana Ferreira',
       value: 120000,

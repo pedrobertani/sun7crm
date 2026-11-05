@@ -51,9 +51,10 @@ describe('isolamento da prévia e funil', () => {
   });
   it('movimenta preservando o contato, a origem e as demais oportunidades', () => {
     const d = createSeed();
-    const o = d.opportunities[0];
+    const o = d.opportunities.find(card => card.companyId === 'aurora'
+      && !card.confirmedSaleAt && card.stageId !== 'aurora-leads-1')!;
     const moved = moveOpportunity(d, manager, o.id, 'aurora-leads-1');
-    expect(moved.opportunities[0]).toEqual({ ...o, stageId: 'aurora-leads-1' });
+    expect(moved.opportunities.find(card => card.id === o.id)).toEqual({ ...o, stageId: 'aurora-leads-1' });
     expect(moved.contacts).toBe(d.contacts);
     expect(moved.opportunities[1]).toBe(d.opportunities[1]);
   });

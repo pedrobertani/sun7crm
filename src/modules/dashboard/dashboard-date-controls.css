@@ -1,0 +1,78 @@
+/* Shared dashboard toolbar: one baseline for tabs, filters, calendar and context. */
+.dashboard-date-controls {
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:10px;
+  min-width:0;
+}
+.dashboard-date-filter { display:flex; align-items:center; margin:0; }
+.dashboard-date-filter .global-filters-active { display:none; }
+.dashboard-date-filter .global-filters-bar { flex-wrap:nowrap; }
+.dashboard-day-picker {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:var(--control-height);
+  height:var(--control-height);
+  padding:0 12px;
+  border:1px solid var(--control-border);
+  border-radius:10px;
+  background:var(--raised);
+  color:var(--ink);
+  cursor:pointer;
+}
+.dashboard-day-picker:focus-within { outline:2px solid var(--primary); outline-offset:2px; }
+.dashboard-day-picker input {
+  width:160px;
+  max-width:100%;
+  min-height:calc(var(--control-height) - 2px);
+  border:0;
+  outline:0;
+  background:transparent;
+  color:inherit;
+  font:inherit;
+  font-size:12px;
+  cursor:pointer;
+  color-scheme:light dark;
+}
+.dashboard-period-label {
+  display:inline-flex;
+  align-items:center;
+  min-height:var(--control-height);
+  color:var(--muted);
+  font-size:12px;
+  font-weight:600;
+  white-space:nowrap;
+}
+.dashboard-tabs-row.dashboard-tabs-inline-filters {
+  display:flex;
+  align-items:flex-end;
+  justify-content:flex-start;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-top:0;
+  margin-bottom:12px;
+}
+.dashboard-tabs-inline-filters .dashboard-tabs {
+  margin:0;
+  align-self:flex-end;
+}
+.dashboard-tabs-inline-filters > .dashboard-date-controls { align-self:flex-end; }
+.dashboard-tabs-inline-filters > .dashboard-funnel-link {
+  margin-left:auto;
+  align-self:center;
+  white-space:nowrap;
+}
+@media (max-width:900px) {
+  .dashboard-tabs-row.dashboard-tabs-inline-filters { row-gap:12px; }
+  .dashboard-tabs-inline-filters > .dashboard-date-controls { flex:1 1 100%; }
+  .dashboard-tabs-inline-filters > .dashboard-funnel-link { margin-left:auto; }
+}
+@media (max-width:600px) {
+  .dashboard-date-controls { gap:8px; }
+  .dashboard-day-picker { flex:1 1 auto; }
+  .dashboard-day-picker input { width:100%; min-width:110px; }
+  .dashboard-period-label { flex:1 1 100%; min-height:20px; white-space:normal; }
+  .dashboard-day-picker { min-height:44px; height:44px; }
+}

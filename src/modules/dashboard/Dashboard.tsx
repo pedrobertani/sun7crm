@@ -1,5 +1,6 @@
 import { ViewSwitcher } from '../../components/ui/view-switcher';
 import { GlobalFilters } from '../../components/ui/global-filters';
+import { DashboardDateControls, type DashboardDateRange } from './DashboardDateControls';
 import { filterCompanies } from '../../domain/filters';
 import { CHART_COLORS } from '../../lib/themes';
 import { useState } from 'react';
@@ -49,7 +50,7 @@ function ChartEmpty() {
 }
 export function CompanyDashboard() {
   const { data, session } = useCrm();
-  const [days, setDays] = useState('30');
+  const [period, setPeriod] = useState<DashboardDateRange>(() => ({from: shiftDate(today(), -29), to: today()}));
   const [dashboardTab, setDashboardTab] = useState<'overview' | 'commercial' | 'achievements'>(
     'overview',
   );
@@ -63,15 +64,15 @@ export function CompanyDashboard() {
   ];
   const activeTab = availableTabs.some(([key]) => key === dashboardTab) ? dashboardTab : 'overview';
   const date = today();
-  const from = shiftDate(date, -Number(days) + 1);
+  const {from, to} = period;
   const company = data.companies.find((c) => c.id === session.companyId)!;
   const palette = CHART_COLORS;
   const all = visibleContacts(data, session);
-  const contacts = all.filter((c) => c.createdAt >= from && c.createdAt <= date);
+  const contacts = all.filter((c) => c.createdAt >= from && c.createdAt <= to);
   const allOpps = data.opportunities.filter(
     (o) => o.companyId === session.companyId && all.some((c) => c.id === o.contactId),
   );
-  const opps = allOpps.filter((o) => o.createdAt >= from && o.createdAt <= date);
+  const opps = allOpps.filter((o) => o.createdAt >= from && o.createdAt <= to);
   const tasks = data.tasks.filter(
     (t) =>
       t.companyId === session.companyId &&
@@ -85,11 +86,11 @@ export function CompanyDashboard() {
     name: s.name,
     total: opps.filter((o) => o.boardId === leadBoard.id && o.stageId === s.id).length,
   }));
-  const interval = Number(days);
+  const interval = Math.max(1, Math.round((Date.parse(to + 'T12:00:00Z') - Date.parse(from + 'T12:00:00Z')) / 86400000) + 1);
   const bucket = Math.max(1, Math.ceil(interval / 7));
   const trend = Array.from({ length: Math.ceil(interval / bucket) }, (_, i) => {
     const start = shiftDate(from, i * bucket);
-    const end = shiftDate(start, bucket - 1);
+    const end = shiftDate(start, Math.min(bucket - 1, interval - i * bucket - 1));
     return {
       name: dateLabel(start).slice(0, 5),
       novos: contacts.filter((c) => c.createdAt >= start && c.createdAt <= end).length,
@@ -114,42 +115,44 @@ export function CompanyDashboard() {
         }
       >
       </Heading>
-      <GlobalFilters
-        fields={[{key:'days',label:'Período do dashboard',type:'select',defaultValue:'30',pin:true,
-          options:[{value:'7',label:'Últimos 7 dias'},
-            {value:'30',label:'Últimos 30 dias'},{value:'90',label:'Últimos 90 dias'}]}]}
-        values={{days}} onApply={values=>setDays(values.days)}
-      />
-      <ViewSwitcher
-        className="dashboard-tabs"
-        label="Áreas do dashboard"
-        value={activeTab}
-        onValueChange={setDashboardTab}
-        items={availableTabs.map(([value, label]) => ({
-          value: value as 'overview' | 'commercial' | 'achievements',
-          label,
-        }))}
-      />
+      <div className="dashboard-tabs-row dashboard-tabs-inline-filters">
+        <ViewSwitcher
+          className="dashboard-tabs"
+          label="Áreas do dashboard"
+          value={activeTab}
+          onValueChange={setDashboardTab}
+          items={availableTabs.map(([value, label]) => ({
+            value: value as 'overview' | 'commercial' | 'achievements',
+            label,
+          }))}
+        />
+        <DashboardDateControls
+          value={period}
+          onChange={setPeriod}
+          initial={{from: shiftDate(today(), -29), to: today()}}
+        />
+        {canView('cards.view') && <Link className="operational-text-link dashboard-funnel-link" to="/demo/funil/leads">Abrir funil →</Link>}
+      </div>
       {activeTab === 'overview' && (
         <>
           <div className="kpis">
             <Kpi
               label="Novos contatos"
-              to={`/demo/contatos?de=${from}&ate=${date}`}
+              to={`/demo/contatos?de=${from}&ate=${to}`}
               value={contacts.length}
               foot="Cadastrados no período"
               icon={<Users size={19} />}
             />
             <Kpi
               label="Oportunidades quentes"
-              to={`/demo/contatos?temperatura=hot&de=${from}&ate=${date}`}
+              to={`/demo/contatos?temperatura=hot&de=${from}&ate=${to}`}
               value={contacts.filter((c) => c.temperature === 'hot').length}
               foot="Temperatura definida pela equipe"
               icon={<Flame size={19} />}
             />
             <Kpi
               label="Valor no funil de leads"
-              to={`/demo/funil/leads?de=${from}&ate=${date}`}
+              to={`/demo/funil/leads?de=${from}&ate=${to}`}
               value={currency(
                 opps.filter((o) => o.boardId === leadBoard.id).reduce((s, o) => s + o.value, 0),
               )}

@@ -30,9 +30,10 @@ describe('Histórico do cliente', () => {
       actorName: 'Mariana Costa',
       contactId: opportunity.contactId,
     });
-    expect(captured.contactHistory![0].body).toContain(board.stages[0].name);
+    const previousStage = board.stages.find(stage => stage.id === opportunity.stageId)!;
+    expect(captured.contactHistory![0].body).toContain(previousStage.name);
     expect(captured.contactHistory![0].body).toContain(board.stages[1].name);
-    board.stages[0].name = 'Nome posterior';
+    previousStage.name = 'Nome posterior';
     expect(captured.contactHistory![0].body).not.toContain('Nome posterior');
   });
   it('registra edição de cadastro e novo card sem duplicar a pessoa', () => {

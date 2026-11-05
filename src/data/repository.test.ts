@@ -16,6 +16,39 @@ function memoryStorage(): Storage {
   };
 }
 describe('persistência local', () => {
+  it('inicia demonstração com catálogo, campanhas, financeiro e histórico ilustrativos', () => {
+    const data = new BrowserRepository(memoryStorage()).read();
+    expect(data.demoSeedVersion).toBe(2);
+    expect(data.catalog?.some(item => item.kind === 'service')).toBe(true);
+    expect(data.catalog?.some(item => item.kind === 'product')).toBe(true);
+    expect(data.opportunities.some(o => o.catalogIds?.length)).toBe(true);
+    expect(data.ambassadorCampaigns?.some(item => item.status === 'active')).toBe(true);
+    expect(data.ambassadorCampaigns?.some(item => item.status === 'closed')).toBe(true);
+    expect(data.ambassadorPayments?.length).toBeGreaterThan(0);
+    expect(data.demoFinance?.movements.some(item => item.kind === 'income')).toBe(true);
+    expect(data.demoFinance?.movements.some(item => item.kind === 'expense')).toBe(true);
+    expect(data.demoFinance?.movements.some(item => item.kind === 'refund')).toBe(true);
+  });
+  it('atualiza demo antiga sem descartar contatos nem duplicar lançamentos', () => {
+    const storage = memoryStorage();
+    const first = new BrowserRepository(storage).read();
+    first.contacts[0].name = 'Registro do visitante';
+    first.demoSeedVersion = 1;
+    first.catalog = [];
+    first.ambassadorCampaigns = [];
+    first.ambassadorPayments = [];
+    first.demoFinance = undefined;
+    storage.setItem('sun7crm:prototype:v1', JSON.stringify(first));
+    const repository = new BrowserRepository(storage);
+    const upgraded = repository.read();
+    expect(upgraded.contacts[0].name).toBe('Registro do visitante');
+    expect(upgraded.catalog?.length).toBeGreaterThan(0);
+    expect(upgraded.demoFinance?.movements.length).toBeGreaterThan(0);
+    repository.write(upgraded);
+    const again = new BrowserRepository(storage).read();
+    expect(again.demoFinance?.movements.length).toBe(upgraded.demoFinance?.movements.length);
+    expect(again.ambassadorPayments?.length).toBe(upgraded.ambassadorPayments?.length);
+  });
   it('adiciona estratégias e embaixadores sem apagar uma demo salva na versão anterior', () => {
     const storage = memoryStorage();
     const previous = new BrowserRepository(storage).read();

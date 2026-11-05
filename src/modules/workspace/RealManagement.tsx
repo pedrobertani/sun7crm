@@ -1,6 +1,6 @@
 import { ShieldCheck, Pencil, KeyRound } from 'lucide-react';
 import { ViewSwitcher } from '../../components/ui/view-switcher';
-import { GlobalFilters } from '../../components/ui/global-filters';
+import { DashboardDateControls, type DashboardDateRange } from '../dashboard/DashboardDateControls';
 import { Pagination, paginatedRows, usePagination } from '../../components/ui/pagination';
 import { PermissionTree } from '../permissions/PermissionTree';
 import { type EmployeePermissions } from '../permissions/model';
@@ -32,36 +32,11 @@ import { RealContactHistory } from '../contacts/RealContactHistory';
 import { RealActivityReport } from '../reports/RealActivityReport';
 import { Pager, QueryState, SaveActions, useOperational, useQuery, useSave } from './operational';
 
-/** Shared dashboard range: dated KPIs use the full interval; goals use the ending month. */
-function DashboardPeriodFilter({
-  from,
-  to,
-  onFromChange,
-  onToChange,
-}: {
-  from: string;
-  to: string;
-  onFromChange: (value: string) => void;
-  onToChange: (value: string) => void;
-}) {
-  return <GlobalFilters className="dashboard-compact-toolbar"
-    fields={[
-      {key:'from',label:'Período de',type:'date',defaultValue:today().slice(0,7)+'-01'},
-      {key:'to',label:'Até',type:'date',defaultValue:today()},
-    ]}
-    values={{from,to}}
-    onApply={values=>{
-      onFromChange(values.from);
-      onToChange(values.to);
-    }}
-  />;
-
-}
-
 export function RealDashboard() {
   const { api, can } = useOperational(),
-    [from, setFrom] = useState(today().slice(0, 7) + '-01'),
-    [to, setTo] = useState(today()),
+    [period, setPeriod] = useState<DashboardDateRange>(() => ({
+      from: today().slice(0, 7) + '-01', to: today(),
+    })),
     [dashboardTab, setDashboardTab] = useState<'overview' | 'commercial' | 'achievements'>(
       'overview',
     );
@@ -72,6 +47,7 @@ export function RealDashboard() {
     ...(can('goals.view') ? [['achievements', 'Conquistas']] : []),
   ];
   const activeTab = availableTabs.some(([key]) => key === dashboardTab) ? dashboardTab : 'overview';
+  const { from, to } = period;
   const goalsMonth = (to || from || today()).slice(0, 7);
   const query = useQuery(async () => {
     const [metrics, boards, stages, strategies] = await Promise.all([
@@ -84,20 +60,24 @@ export function RealDashboard() {
   }, [api, from, to]);
   return (
     <>
-      <DashboardPeriodFilter from={from} to={to} onFromChange={setFrom} onToChange={setTo} />
       {activeTab !== 'achievements' && <QueryState query={query} />}
-      <div className="dashboard-tabs-row">
+      <div className="dashboard-tabs-row dashboard-tabs-inline-filters">
         <ViewSwitcher
-        className="dashboard-tabs"
-        label="Áreas do dashboard"
-        value={activeTab}
-        onValueChange={setDashboardTab}
-        items={availableTabs.map(([value, label]) => ({
-          value: value as 'overview' | 'commercial' | 'achievements',
-          label,
-        }))}
+          className="dashboard-tabs"
+          label="Áreas do dashboard"
+          value={activeTab}
+          onValueChange={setDashboardTab}
+          items={availableTabs.map(([value, label]) => ({
+            value: value as 'overview' | 'commercial' | 'achievements',
+            label,
+          }))}
         />
-        <Link className="operational-text-link" to="/app/funil">Abrir funil →</Link>
+        <DashboardDateControls
+          value={period}
+          onChange={setPeriod}
+          initial={{from: today().slice(0, 7) + '-01', to: today()}}
+        />
+        {commercialAllowed && <Link className="operational-text-link dashboard-funnel-link" to="/app/funil">Abrir funil →</Link>}
       </div>
       {activeTab === 'commercial' && can('goals.view') && <GoalFunnel view="commercial" month={goalsMonth} />}
       {activeTab === 'achievements' && can('goals.view') && <GoalFunnel view="medals" month={goalsMonth} />}

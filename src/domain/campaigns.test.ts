@@ -91,7 +91,7 @@ describe('campanhas de embaixadores', () => {
       points: 1,
       balance: -5000,
     });
-    expect(refunded.ambassadorPayments![0].amount).toBe(10000);
+    expect(refunded.ambassadorPayments!.find(payment => payment.id === 'p')?.amount).toBe(10000);
     expect(() => refundReferral(paid, session, 'sale', 300000)).toThrow();
   });
   it('não presume comissão por função e preserva elegibilidade após encerramento', () => {
