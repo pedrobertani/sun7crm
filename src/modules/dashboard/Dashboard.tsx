@@ -114,7 +114,7 @@ export function CompanyDashboard() {
         }
       >
       </Heading>
-      <div className="dashboard-tabs-row" style={{display:'flex',alignItems:'center',gap:16,flexWrap:'wrap'}}>
+      <div className="dashboard-tabs-row dashboard-tabs-inline-filters">
         <ViewSwitcher
           className="dashboard-tabs"
           label="Áreas do dashboard"
@@ -125,15 +125,14 @@ export function CompanyDashboard() {
             label,
           }))}
         />
-        <div style={{display:'flex',alignItems:'center',gap:12,flexWrap:'wrap',marginLeft:'auto'}}>
-          <GlobalFilters
-            fields={[{key:'days',label:'Período do dashboard',type:'select',defaultValue:'30',pin:true,
-              options:[{value:'7',label:'Últimos 7 dias'},
-                {value:'30',label:'Últimos 30 dias'},{value:'90',label:'Últimos 90 dias'}]}]}
-            values={{days}} onApply={values=>setDays(values.days)}
-          />
-          {canView('cards.view') && <Link className="operational-text-link" to="/demo/funil/leads">Abrir funil →</Link>}
-        </div>
+        <GlobalFilters
+          className="dashboard-inline-filter"
+          fields={[{key:'days',label:'Período do dashboard',type:'select',defaultValue:'30',pin:true,
+            options:[{value:'7',label:'Últimos 7 dias'},
+              {value:'30',label:'Últimos 30 dias'},{value:'90',label:'Últimos 90 dias'}]}]}
+          values={{days}} onApply={values=>setDays(values.days)}
+        />
+        {canView('cards.view') && <Link className="operational-text-link dashboard-funnel-link" to="/demo/funil/leads">Abrir funil →</Link>}
       </div>
       {activeTab === 'overview' && (
         <>
