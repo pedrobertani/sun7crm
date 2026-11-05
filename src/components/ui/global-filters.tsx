@@ -59,13 +59,14 @@ export function patchFilterValues(
 }
 
 export function GlobalFilters({
-  fields, values, onApply, search, actions, label = 'Filtros', className = '', children,
+  fields, values, onApply, search, actions, validate, label = 'Filtros', className = '', children,
 }: {
   fields: readonly FilterField[];
   values: FilterValues;
   onApply: (values: FilterValues) => void;
   search?: {value: string; onChange: (value: string) => void; placeholder?: string};
   actions?: ReactNode;
+  validate?: (values: FilterValues) => string | null;
   label?: string;
   className?: string;
   children?: ReactNode;
@@ -75,6 +76,7 @@ export function GlobalFilters({
   const instance = useId();
   const available = fields.filter(f => filterFieldVisible(f,draft));
   const active = activeFilterFields(fields,values);
+  const issue = validate?.(patchFilterValues(fields,values,draft)) || null;
   const defaults = () => resetFilterValues(fields);
   const openPanel = () => { setDraft({...defaults(),...values}); setOpen(true); };
   const clearAll = () => onApply(patchFilterValues(fields,values,defaults()));
@@ -105,6 +107,7 @@ export function GlobalFilters({
       description="Escolha os critérios e aplique à visualização.">
       <form className="global-filters-form" onSubmit={e=>{
         e.preventDefault();
+        if (issue) return;
         onApply(patchFilterValues(fields,values,draft));
         setOpen(false);
       }}>
@@ -122,9 +125,10 @@ export function GlobalFilters({
             </label>;
           })}
         </div>
+        {issue && <p className="global-filters-error" role="alert">{issue}</p>}
         <div className="global-filters-footer">
           <Button type="button" variant="outline" onClick={()=>setDraft(defaults())}>Limpar tudo</Button>
-          <Button type="submit">Aplicar filtros</Button>
+          <Button type="submit" disabled={!!issue}>Aplicar filtros</Button>
         </div>
       </form>
     </Modal>
