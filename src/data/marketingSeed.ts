@@ -58,6 +58,9 @@ export function marketingSeed(companies: Pick<Company, 'id'>[]) {
     {
       id: id + '-referral-1',
       companyId: id,
+      campaignId: id + '-campaign-current',
+      paid: true,
+      attended: true,
       ambassadorId: id + '-ambassador-1',
       customer: 'Marina Alves',
       value: 180000,
@@ -67,6 +70,9 @@ export function marketingSeed(companies: Pick<Company, 'id'>[]) {
     {
       id: id + '-referral-2',
       companyId: id,
+      campaignId: id + '-campaign-current',
+      paid: true,
+      attended: true,
       ambassadorId: id + '-ambassador-1',
       customer: 'Renata Lima',
       value: 70000,
@@ -76,6 +82,9 @@ export function marketingSeed(companies: Pick<Company, 'id'>[]) {
     {
       id: id + '-referral-3',
       companyId: id,
+      campaignId: id + '-campaign-current',
+      paid: true,
+      attended: true,
       ambassadorId: id + '-ambassador-2',
       customer: 'Ana Ferreira',
       value: 120000,
