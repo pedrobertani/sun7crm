@@ -132,19 +132,24 @@ export function KanbanPeriodFilter({
   );
 }
 
-/** A mesma barra universal de filtros, com datas condicionais específicas do Kanban. */
+/** Filtro global: período + facetas parametrizadas sem duplicar modal. */
 export function KanbanGlobalFilters({
   value,onChange,search,onSearchChange,placeholder='Buscar no quadro',
+  facetFields=[],facetValues={},onFacetChange,
 }: {
   value:KanbanPeriod;
   onChange:(period:KanbanPeriod)=>void;
   search:string;
   onSearchChange:(search:string)=>void;
   placeholder?:string;
+  facetFields?:readonly import('../../components/ui/global-filters').FilterField[];
+  facetValues?:FilterValues;
+  onFacetChange?:(values:FilterValues)=>void;
 }) {
   const initial=initialKanbanPeriod();
-  const fields = [
-    {key:'mode',label:'Filtrar cards por data',type:'select' as const,defaultValue:'all',
+  const fields=[
+    ...facetFields,
+    {key:'mode',label:'Data de criação',type:'select' as const,defaultValue:'all',
       options:[
         {value:'all',label:'Todas as datas'},{value:'day',label:'Dia'},
         {value:'month',label:'Mês'},{value:'year',label:'Ano'},
@@ -162,12 +167,18 @@ export function KanbanGlobalFilters({
       when:{key:'mode',values:['custom']}},
   ];
   const asPeriod=(next:FilterValues):KanbanPeriod=>({
-    ...value,mode:next.mode as KanbanPeriodMode,
+    mode:next.mode as KanbanPeriodMode,
     day:next.day,month:next.month,year:next.year,from:next.from,to:next.to,
   });
   return <GlobalFilters className="kanban-global-filters"
-    fields={fields} values={{...value}}
-    onApply={next=>onChange(asPeriod(next))}
+    fields={fields} values={{...value,...facetValues}}
+    onApply={next=>{
+      const period=asPeriod(next);
+      if((Object.keys(value) as (keyof KanbanPeriod)[]).some(key=>period[key]!==value[key]))
+        onChange(period);
+      if(Object.keys(facetValues).some(key=>next[key]!==facetValues[key]))
+        onFacetChange?.(next);
+    }}
     validate={next=>kanbanDateRange(asPeriod(next))||next.mode==='all'
       ? null : 'Confira o período informado antes de aplicar o filtro.'}
     search={{value:search,onChange:onSearchChange,placeholder}}
