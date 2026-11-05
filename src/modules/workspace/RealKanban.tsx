@@ -135,7 +135,8 @@ export function RealKanban() {
     const groups=await Promise.all(visibleStages.map(async stage=>({
       id:stage.id,
       data:await api.searchKanbanCards({
-        boardId:board.id,stageId:stage.id,page:stagePages[stage.id]||0,pageSize,
+        boardId:board.id,stageId:stage.id,contactId:contactId||undefined,
+        page:stagePages[stage.id]||0,pageSize,
         search,createdBetween:dateRange||undefined,
         labelIds:criteria.labelIds,catalogIds:criteria.catalogIds,
         ownerId:criteria.ownerId,temperature:criteria.temperature,closed:criteria.closed,
