@@ -111,6 +111,7 @@ export interface DemoEmployeeGoal {
   goalCents:number;
 }
 export interface Snapshot {
+  demoSeedVersion?: number;
   goalPlans?:DemoGoalPlan[];
   employeeGoals?:DemoEmployeeGoal[];
   /** Apenas /demo: simulações locais sem ligação com cobrança ou Supabase. */
