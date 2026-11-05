@@ -110,7 +110,7 @@ export function RealKanban() {
       api.all('stages'),
       api.all('labels'),
       can('catalog.view')?api.all('catalog'):Promise.resolve([] as CatalogRow[]),
-      can('team.view')?api.all('team'):Promise.resolve([]),
+      can('team.view')?api.team():Promise.resolve([]),
     ]);
     return {boards:boards.sort((a,b)=>a.position-b.position),stages,labels,catalog,team};
   }, [api,can('catalog.view'),can('team.view')]);
