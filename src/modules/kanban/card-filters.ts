@@ -1,7 +1,7 @@
 import { type FilterField, filterSelectedValues } from '../../components/ui/global-filters';
 import type { Contact, Opportunity } from '../../domain/types';
 
-export interface CardFacetValues {
+export interface CardFacetValues extends Record<string,string> {
   stage: string;
   labels: string;
   catalog: string;
