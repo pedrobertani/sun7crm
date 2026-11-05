@@ -28,7 +28,7 @@ export function DashboardDateControls({
       <GlobalFilters
         className="dashboard-date-filter"
         fields={fields}
-        values={value}
+        values={{from: value.from, to: value.to}}
         validate={(next) => !isValidDate(next.from) || !isValidDate(next.to) || next.from > next.to
           ? 'Escolha datas válidas. O início não pode ser depois do fim.'
           : null}
