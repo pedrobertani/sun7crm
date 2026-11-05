@@ -198,15 +198,17 @@ export function createSeed(): Snapshot {
   const financeMovements: NonNullable<Snapshot['demoFinance']>['movements'] = [];
   for (const company of companies) {
     const confirmed = opportunities.filter(o => o.companyId === company.id && !!o.confirmedSaleAt);
-    const paidSale = confirmed[0];
-    const partialSale = confirmed[1];
+    const paidSale = confirmed.find(o => o.confirmedSaleAt!.slice(0, 10) <= shiftDate(date, -2)) || confirmed[0];
+    const partialSale = confirmed.find(o => o.id !== paidSale?.id && o.confirmedSaleAt!.slice(0, 10) <= shiftDate(date, -1))
+      || confirmed.find(o => o.id !== paidSale?.id);
     if (paidSale) {
       financeMovements.push({
         id: company.id + '-demo-income-1', company_id: company.id,
         opportunity_id: paidSale.id, installment_id: paidSale.id + '-parcela-0',
         owner_membership_id: paidSale.confirmedSaleOwnerId!,
         kind: 'income', amount_cents: paidSale.confirmedSaleCents!,
-        method: 'pix', posted_on: shiftDate(date, -2),
+        method: 'pix', posted_on: paidSale.confirmedSaleAt!.slice(0, 10) > shiftDate(date, -2)
+          ? paidSale.confirmedSaleAt!.slice(0, 10) : shiftDate(date, -2),
         category: 'Recebimento de venda', description: 'Venda fictícia recebida por Pix',
         origin_id: null, created_at: date + 'T12:00:00.000Z', row_version: 1, voided_at: null,
       });
@@ -224,7 +226,8 @@ export function createSeed(): Snapshot {
         opportunity_id: partialSale.id, installment_id: partialSale.id + '-parcela-0',
         owner_membership_id: partialSale.confirmedSaleOwnerId!,
         kind: 'income', amount_cents: entryCents,
-        method: 'credit_card', posted_on: shiftDate(date, -1),
+        method: 'credit_card', posted_on: partialSale.confirmedSaleAt!.slice(0, 10) > shiftDate(date, -1)
+          ? partialSale.confirmedSaleAt!.slice(0, 10) : shiftDate(date, -1),
         category: 'Entrada', description: 'Entrada fictícia de venda parcelada',
         origin_id: null, created_at: date + 'T12:00:00.000Z', row_version: 1, voided_at: null,
       });
