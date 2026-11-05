@@ -418,9 +418,13 @@ export class OperationalBackend {
       'active',
       'status',
       'is_closed',
+      'temperature',
+      'kind',
     ];
     for (const [column, value] of Object.entries(filters)) {
-      if (!allowed.includes(column))
+      if (!allowed.includes(column)
+        || (column === 'temperature' && resource !== 'contacts')
+        || (column === 'kind' && resource !== 'catalog'))
         throw new BackendError('Filtro inválido.', 'INVALID_FILTER', 'validation');
       if (value !== null && (column === 'id' || column.endsWith('_id'))) {
         if (typeof value !== 'string')
