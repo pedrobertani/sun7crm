@@ -12,7 +12,7 @@ import { saveCard } from '../../domain/operations';
 import { useNavigate } from 'react-router-dom';
 import { useCardDrag } from '../../hooks/useCardDrag';
 import { readPeriod } from '../../domain/filters';
-import { KanbanPeriodFilter, initialKanbanPeriod, matchesKanbanPeriod, type KanbanPeriod } from './period-filter';
+import { KanbanGlobalFilters, initialKanbanPeriod, matchesKanbanPeriod, type KanbanPeriod } from './period-filter';
 import { Input } from '../../components/ui/input';
 import { useState, type FormEvent } from 'react';
 import { KanbanScroll } from '../../components/ui/kanban-scroll';
@@ -41,7 +41,6 @@ import { currency, initials, uid, today } from '../../lib/format';
 import type { BoardKind, Opportunity } from '../../domain/types';
 import {
   Heading,
-  SearchInput,
   Empty,
   FormError,
   FormActions,
@@ -330,10 +329,9 @@ export function Kanban() {
             </Button>
           )}
         </div>
-        <div className="kanban-filterbar">
-          <SearchInput value={query} onChange={(value) => { setQuery(value); setStagePages({}); }} placeholder="Buscar no quadro" />
-          <KanbanPeriodFilter value={dateFilter} onChange={updateDateFilter} />
-        </div>
+        <KanbanGlobalFilters value={dateFilter} onChange={updateDateFilter}
+          search={query} onSearchChange={value=>{setQuery(value);setStagePages({});}}
+          placeholder="Buscar no quadro" />
       </div>
       <KanbanScroll key={board.id} label="Colunas do funil">
         <div className="kanban-board">
@@ -458,7 +456,7 @@ export function Kanban() {
                     </div>
                   )}
                 </div>
-                {pageSize !== 'all' && (
+                {(
                   <div className="kanban-column-pagination">
                     <Pagination
                       page={stagePage} size={pageSize} total={rows.length}

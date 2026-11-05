@@ -4,6 +4,7 @@ import { useCrm } from '../../app/context';
 import { Button } from '../../components/ui/button';
 import { Modal } from '../../components/ui/modal';
 import { ViewSwitcher } from '../../components/ui/view-switcher';
+import { GlobalFilters, type FilterField } from '../../components/ui/global-filters';
 import { Pagination, paginatedRows, usePagination } from '../../components/ui/pagination';
 import { CurrencyInput } from '../../components/currency-input';
 import { Heading, Panel, Kpi, Empty, FormError } from '../../components/shared';
@@ -31,6 +32,9 @@ export function DemoFinance() {
   const [month,setMonth]=useState(today().slice(0,7));
   const [seller,setSeller]=useState('all');
   const [method,setMethod]=useState('all');
+  const [product,setProduct]=useState('all');
+  const [status,setStatus]=useState('all');
+  const [search,setSearch]=useState('');
   const [selected,setSelected]=useState<FinanceSale|null>(null);
   const [editingTerms,setEditingTerms]=useState(false);
   const [receipt,setReceipt]=useState<FinanceInstallment|null>(null);
@@ -79,13 +83,20 @@ export function DemoFinance() {
     m.company_id===session.companyId&&!m.voided_at&&
     (session.role==='manager'||can('finance.company')||m.owner_membership_id===session.memberId)
   );
-  const salesFiltered=sales.filter(s=>seller==='all'||s.seller_name_snapshot===seller);
+  const query=search.trim().toLocaleLowerCase('pt-BR');
+  const salesFiltered=sales.filter(s=>
+    (seller==='all'||s.seller_name_snapshot===seller)
+    && (product==='all'||s.items_snapshot.some(item=>item.name===product))
+    && (!query||[s.contact_name_snapshot,s.seller_name_snapshot,...s.items_snapshot.map(x=>x.name)]
+      .join(' ').toLocaleLowerCase('pt-BR').includes(query)));
   const ids=new Set(salesFiltered.map(s=>s.opportunity_id));
   const movements=filteredMovements.filter(m=>(method==='all'||m.method===method)&&
     (seller==='all'||!!m.opportunity_id&&ids.has(m.opportunity_id)));
   const period=movements.filter(m=>m.posted_on.startsWith(month));
   const results=financeTotals(salesFiltered,installments,movements,month);
-  const receivables=installments.filter(i=>ids.has(i.opportunity_id)&&i.due_on.startsWith(month));
+  const receivables=installments.filter(i=>ids.has(i.opportunity_id)&&i.due_on.startsWith(month)
+    && (method==='all'||i.expected_method===method)
+    && (status==='all'||financeStatus(i,movements).toLocaleLowerCase('pt-BR')===status));
   const closed=salesFiltered.filter(s=>s.confirmed_at.slice(0,7)===month).reduce((sum,s)=>sum+s.total_cents,0);
   const charts=Array.from({length:6},(_,i)=>{
     const date=new Date(month+'-01T12:00:00Z');
@@ -129,29 +140,38 @@ export function DemoFinance() {
   if(!can('finance.view'))return <Heading title="Financeiro"
     description="Acesso exclusivo para usuários autorizados pelo gestor."/>;
   const methodOptions=financeMethods.map(x=><option key={x.value} value={x.value}>{x.label}</option>);
+  const filterFields:FilterField[]=[
+    {key:'month',label:'Mês de referência',type:'month',defaultValue:today().slice(0,7),pin:true},
+    {key:'seller',label:'Vendedor',type:'select',defaultValue:'all',
+      options:[{value:'all',label:'Todos os autorizados'},
+        ...[...new Set(sales.map(x=>x.seller_name_snapshot))].map(label=>({value:label,label}))]},
+    {key:'product',label:'Produto ou serviço',type:'select',defaultValue:'all',
+      options:[{value:'all',label:'Todos'},...[...new Set(sales.flatMap(x=>x.items_snapshot.map(i=>i.name)))]
+        .map(label=>({value:label,label}))]},
+    {key:'method',label:'Forma de pagamento',type:'select',defaultValue:'all',
+      options:[{value:'all',label:'Todas'},...financeMethods.map(x=>({value:x.value,label:x.label}))]},
+    {key:'status',label:'Situação do recebível',type:'select',defaultValue:'all',
+      visible:tab==='receivables',
+      options:[{value:'all',label:'Todas'},{value:'pendente',label:'Pendente'},
+        {value:'parcial',label:'Parcial'},{value:'recebido',label:'Recebido'},
+        {value:'vencido',label:'Vencido'}]},
+  ];
   const movementRows=period.filter(m=>tab!=='expenses'||m.kind==='expense');
   return <div className="finance-page">
     <Heading eyebrow="DEMONSTRAÇÃO · DADOS FICTÍCIOS" title="Financeiro"
       description="Vendas confirmadas geram recebíveis. Registre entradas e saídas separadamente."/>
-    <div className="finance-toolbar">
-      <div className="actions">
-        <label className="form-row">Mês
-          <input type="month" value={month} onChange={e=>{setMonth(e.target.value);pages.setPage(0);}}/>
-        </label>
-        <label className="form-row">Vendedor
-          <select value={seller} onChange={e=>setSeller(e.target.value)}>
-            <option value="all">Todos os autorizados</option>
-            {[...new Set(sales.map(x=>x.seller_name_snapshot))].map(x=><option key={x}>{x}</option>)}
-          </select>
-        </label>
-        <label className="form-row">Forma de pagamento
-          <select value={method} onChange={e=>setMethod(e.target.value)}>
-            <option value="all">Todas</option>{methodOptions}
-          </select>
-        </label>
-      </div>
-      {can('finance.expense')&&<Button onClick={()=>openExpense('new')}><Plus size={16}/>Nova despesa</Button>}
-    </div>
+    <GlobalFilters fields={filterFields}
+      values={{month,seller,product,method,status}}
+      onApply={v=>{
+        setMonth(v.month);setSeller(v.seller);setProduct(v.product);
+        setMethod(v.method);setStatus(v.status);pages.setPage(0);
+      }}
+      search={{value:search,onChange:v=>{setSearch(v);pages.setPage(0);},
+        placeholder:'Buscar cliente, vendedor ou produto...'}}
+      actions={can('finance.expense')&&<Button onClick={()=>openExpense('new')}>
+        <Plus size={16}/>Nova despesa
+      </Button>}
+    />
     <div className="kpis">
       <Kpi label="Vendas fechadas" value={currency(closed)} foot="Confirmadas no mês" icon={<CheckCircle2 size={19}/>}/>
       <Kpi label="A receber" value={currency(results.pending)} foot="Saldo em aberto acumulado" icon={<Clock3 size={19}/>}/>

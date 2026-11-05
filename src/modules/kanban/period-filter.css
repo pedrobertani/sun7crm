@@ -110,3 +110,14 @@
   .kanban-filter-field select, .kanban-filter-field input { min-width: 110px; max-width: 170px; }
   .kanban-period-filter { width: 100%; }
 }
+
+/* A barra universal ocupa o espaço restante sem empurrar os funis. */
+.kanban-toolbar .kanban-global-filters { flex:1 1 350px; min-width:0; }
+.kanban-global-filters .global-filters-bar { justify-content:flex-end; }
+.kanban-global-filters .global-filters-bar > .search { max-width:360px; }
+.kanban-global-filters .global-filters-active { justify-content:flex-end; }
+@media(max-width:760px) {
+ .kanban-toolbar .kanban-global-filters { flex-basis:100%; width:100%; }
+ .kanban-global-filters .global-filters-bar > .search { max-width:none; }
+ .kanban-global-filters .global-filters-active { justify-content:flex-start; }
+}

@@ -1,5 +1,6 @@
 import { ShieldCheck, Pencil, KeyRound } from 'lucide-react';
 import { ViewSwitcher } from '../../components/ui/view-switcher';
+import { GlobalFilters } from '../../components/ui/global-filters';
 import { Pagination, paginatedRows, usePagination } from '../../components/ui/pagination';
 import { PermissionTree } from '../permissions/PermissionTree';
 import { type EmployeePermissions } from '../permissions/model';
@@ -43,20 +44,18 @@ function DashboardPeriodFilter({
   onFromChange: (value: string) => void;
   onToChange: (value: string) => void;
 }) {
-  return (
-    <div className="operational-toolbar dashboard-compact-toolbar" role="group" aria-label="Período dos indicadores">
-      <div className="actions">
-        <label className="form-row">
-          Período de
-          <Input type="date" value={from} onChange={(event) => onFromChange(event.target.value)} />
-        </label>
-        <label className="form-row">
-          até
-          <Input type="date" value={to} onChange={(event) => onToChange(event.target.value)} />
-        </label>
-      </div>
-    </div>
-  );
+  return <GlobalFilters className="dashboard-compact-toolbar"
+    fields={[
+      {key:'from',label:'Período de',type:'date',defaultValue:today().slice(0,7)+'-01'},
+      {key:'to',label:'Até',type:'date',defaultValue:today()},
+    ]}
+    values={{from,to}}
+    onApply={values=>{
+      onFromChange(values.from);
+      onToChange(values.to);
+    }}
+  />;
+
 }
 
 export function RealDashboard() {

@@ -5,19 +5,20 @@ import { initialKanbanPeriod, kanbanDateRange, matchesKanbanPeriod } from './per
 describe('Kanban: paginação por etapa e carga elevada', () => {
   const cards = Array.from({ length: 305 }, (_, index) => ({ id: index + 1 }));
 
-  it('mantém 10, 50 e 100 cards por etapa, sem descartar os seguintes', () => {
+  it('mantém 10, 25, 50 e 100 cards por etapa, sem descartar os seguintes', () => {
     expect(visibleKanbanRows(cards, 10).rows).toHaveLength(10);
+    expect(visibleKanbanRows(cards, 25).rows).toHaveLength(25);
     expect(visibleKanbanRows(cards, 50).rows).toHaveLength(50);
     expect(visibleKanbanRows(cards, 100).rows).toHaveLength(100);
     expect(visibleKanbanRows(cards, 10, 1).rows[0].id).toBe(11);
     expect(visibleKanbanRows(cards, 50, 1).rows[0].id).toBe(51);
   });
 
-  it('exibe todos os 305 registros ao selecionar Todos', () => {
-    const all = visibleKanbanRows(cards, 'all', 99);
-    expect(all.total).toBe(305);
-    expect(all.rows).toHaveLength(305);
-    expect(all.page).toBe(0);
+  it('impede carregamento integral mesmo em etapas com 305 registros', () => {
+    const last = visibleKanbanRows(cards, 100, 99);
+    expect(last.total).toBe(305);
+    expect(last.rows).toHaveLength(5);
+    expect(last.page).toBe(3);
   });
 
   it('ajusta automaticamente páginas fora do limite após movimentação ou filtro', () => {

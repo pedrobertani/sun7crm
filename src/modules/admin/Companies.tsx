@@ -6,7 +6,8 @@ import { useState, type FormEvent } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { Plus } from 'lucide-react';
-import { AppliedFilter, Empty, FormError, Heading, SearchInput } from '../../components/shared';
+import { Empty, FormError, Heading } from '../../components/shared';
+import { GlobalFilters } from '../../components/ui/global-filters';
 import { RecordTitle } from '../../components/RecordTitle';
 import { Button } from '../../components/ui/button';
 import { Input } from '../../components/ui/input';
@@ -284,33 +285,37 @@ export function AdminCompanies({
           Nova empresa
         </Button>
       </Heading>
-      {params.toString() && (
-        <AppliedFilter
-          label={`${companyFilterLabels[portfolio] || 'Todas as empresas'} · ${companyFilterLabels[status] || 'Todas as situações'}${status === 'new' || portfolio === 'new' ? ` · últimos ${days} dias` : ''}`}
-          onClear={() => setParams({})}
-        />
-      )}
       <div className="card">
-        <div className="toolbar">
-          <SearchInput value={query} onChange={(v) => { setQuery(v); pages.setPage(0); }} placeholder="Buscar empresa ou segmento" />
-          <select
-            aria-label="Situação das empresas"
-            value={status}
-            onChange={(e) => {
-              const next = new URLSearchParams(params);
-              next.set('situacao', e.target.value);
-              setParams(next);
-            }}
-          >
-            <option value="all">Todas as situações</option>
-            <option value="active">Ativas</option>
-            <option value="inactive">Desativadas</option>
-            <option value="upcoming">Vencem em até 7 dias</option>
-            <option value="new">Novas no período</option>
-            <option value="overdue">Com vencimento passado</option>
-          </select>
+        <GlobalFilters
+          fields={[
+            {key:'status',label:'Situação das empresas',type:'select',defaultValue:'all',
+              options:['all','active','inactive','upcoming','new','overdue']
+                .map(value=>({value,label:companyFilterLabels[value]}))},
+            {key:'portfolio',label:'Carteira',type:'select',defaultValue:'all',
+              options:['all','active','inactive','upcoming','new','overdue']
+                .map(value=>({value,label:companyFilterLabels[value]}))},
+            {key:'days',label:'Período de novas empresas',type:'select',defaultValue:'30',
+              visible:status==='new'||portfolio==='new',
+              options:[{value:'7',label:'Últimos 7 dias'},
+                {value:'30',label:'Últimos 30 dias'},
+                {value:'90',label:'Últimos 90 dias'}]},
+          ]}
+          values={{status,portfolio,days:String(days)}}
+          onApply={values=>{
+            const next=new URLSearchParams(params);
+            const filters={situacao:values.status==='all'?'':values.status,
+              carteira:values.portfolio==='all'?'':values.portfolio,
+              periodo:values.days==='30'?'':values.days};
+            for(const [key,value] of Object.entries(filters)) {
+              if(value) next.set(key,value);else next.delete(key);
+            }
+            setParams(next);pages.setPage(0);
+          }}
+          search={{value:query,onChange:v=>{setQuery(v);pages.setPage(0);},
+            placeholder:'Buscar empresa ou segmento'}}
+        >
           <span className="muted result-count">{rows.length} empresas</span>
-        </div>
+        </GlobalFilters>
         {rows.length ? (
           <div className="table-wrap">
             <table>

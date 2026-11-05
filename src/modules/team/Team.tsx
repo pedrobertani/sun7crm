@@ -9,7 +9,8 @@ import { Plus, Pencil, UserRound } from 'lucide-react';
 import { useCrm } from '../../app/context';
 import type { Member } from '../../domain/types';
 import { initials, uid } from '../../lib/format';
-import { Heading, SearchInput, FormActions, FormError } from '../../components/shared';
+import { Heading, FormActions, FormError } from '../../components/shared';
+import { GlobalFilters } from '../../components/ui/global-filters';
 import { Button } from '../../components/ui/button';
 import { Modal } from '../../components/ui/modal';
 const initial = { name: '', email: '', role: 'seller' as Member['role'], active: true };
@@ -107,13 +108,14 @@ export function Team() {
         </Button>
       </Heading>
       <div className="card">
-        <div className="toolbar">
-          <SearchInput value={query} onChange={(v) => { setQuery(v); pages.setPage(0); }} placeholder="Buscar pessoa da equipe" />
+        <GlobalFilters fields={[]} values={{}} onApply={()=>{}}
+          search={{value:query,onChange:v=>{setQuery(v);pages.setPage(0);},
+            placeholder:'Buscar pessoa da equipe'}}>
           <span className="muted result-count">
-            <UserRound size={15} />
-            {members.filter((m) => m.active).length} ativos
+            <UserRound size={15}/>
+            {members.filter(m=>m.active).length} ativos
           </span>
-        </div>
+        </GlobalFilters>
         <div className="table-wrap">
           <table>
             <thead>

@@ -6,7 +6,9 @@ import { usePagination } from '../../components/ui/pagination';
 import { Input } from '../../components/ui/input';
 import { Modal } from '../../components/ui/modal';
 import { CurrencyInput } from '../../components/currency-input';
-import { Empty, SearchInput, TemperatureBadge } from '../../components/shared';
+import { Empty, TemperatureBadge } from '../../components/shared';
+import { GlobalFilters } from '../../components/ui/global-filters';
+import { temperatureLabels } from '../../domain/config';
 import { RecordTitle } from '../../components/RecordTitle';
 import { WhatsAppButton } from '../../components/WhatsAppButton';
 import type { ContactRow, CatalogRow, LabelRow, StrategyRow, TaskRow } from '../../data/backend';
@@ -38,22 +40,25 @@ export function RealContacts() {
   const     [search, setSearch] = useState(''),
     [editing, setEditing] = useState<ContactRow | 'new' | null>(null),
     [history, setHistory] = useState<ContactRow | null>(null);
+  const [temperature,setTemperature]=useState('all');
   const query = useQuery(
-    () => api.list('contacts', page, size, selected ? { id: selected } : {}, search),
-    [api, page, size, search, selected],
+    () => api.list('contacts',page,size,{
+      ...(selected?{id:selected}:{}),
+      ...(temperature==='all'?{}:{temperature}),
+    },search),
+    [api,page,size,search,selected,temperature],
   );
   return (
     <>
-      <div className="operational-toolbar">
-        <SearchInput
-          value={search}
-          onChange={(s) => {
-            setSearch(s);
-            setPage(0);
-          }}
-          placeholder="Buscar nome ou telefone..."
-        />
-        <div className="actions">
+      <GlobalFilters
+        fields={[{key:'temperature',label:'Temperatura',type:'select',defaultValue:'all',
+          options:[{value:'all',label:'Todas as temperaturas'},
+            ...Object.entries(temperatureLabels).map(([value,label])=>({value,label}))]}]}
+        values={{temperature}}
+        onApply={values=>{setTemperature(values.temperature);setPage(0);}}
+        search={{value:search,onChange:v=>{setSearch(v);setPage(0);},
+          placeholder:'Buscar nome ou telefone...'}}
+        actions={<>
           <ContactTransfer
             key={company.id + company.membershipId}
             canImport={can('contacts.import')}
@@ -77,8 +82,8 @@ export function RealContacts() {
               Novo contato
             </Button>
           )}
-        </div>
-      </div>
+        </>}
+      />
       {selected && (
         <Button
           variant="ghost"
@@ -206,10 +211,11 @@ export function RealCatalog({ labels = false }: { labels?: boolean }) {
   const { api, can, refresh, notice } = useOperational(),
         [search, setSearch] = useState(''),
     [editing, setEditing] = useState<CatalogRow | LabelRow | 'new' | null>(null);
+  const [kind,setKind]=useState('all');
   const query = useQuery(
-    async () =>
-      labels ? api.list('labels', page, size, {}, search) : api.list('catalog', page, size, {}, search),
-    [api, labels, page, size, search],
+    async () => labels ? api.list('labels',page,size,{},search)
+      : api.list('catalog',page,size,kind==='all'?{}:{kind},search),
+    [api,labels,page,size,search,kind],
   );
   function saved() {
     setEditing(null);
@@ -218,22 +224,18 @@ export function RealCatalog({ labels = false }: { labels?: boolean }) {
   }
   return (
     <>
-      <div className="operational-toolbar">
-        <SearchInput
-          value={search}
-          onChange={(s) => {
-            setSearch(s);
-            setPage(0);
-          }}
-          placeholder={labels ? 'Buscar etiqueta...' : 'Buscar serviço ou produto...'}
-        />
-        {can(labels ? 'labels.create' : 'catalog.create') && (
-          <Button onClick={() => setEditing('new')}>
-            <Plus size={16} />
-            {labels ? 'Nova etiqueta' : 'Novo serviço ou produto'}
-          </Button>
-        )}
-      </div>
+      <GlobalFilters
+        fields={labels?[]:[{key:'kind',label:'Tipo de item',type:'select',defaultValue:'all',
+          options:[{value:'all',label:'Todos os itens'},
+            {value:'service',label:'Serviços'},{value:'product',label:'Produtos'}]}]}
+        values={{kind}} onApply={values=>{setKind(values.kind);setPage(0);}}
+        search={{value:search,onChange:v=>{setSearch(v);setPage(0);},
+          placeholder:labels?'Buscar etiqueta...':'Buscar serviço ou produto...'}}
+        actions={can(labels?'labels.create':'catalog.create')&&
+          <Button onClick={()=>setEditing('new')}>
+            <Plus size={16}/>{labels?'Nova etiqueta':'Novo serviço ou produto'}
+          </Button>}
+      />
       <QueryState query={query} />
       {query.data && (
         <>
@@ -337,25 +339,23 @@ export function RealStrategies() {
   const { api, can, refresh, notice } = useOperational(),
         [search, setSearch] = useState(''),
     [editing, setEditing] = useState<StrategyRow | 'new' | null>(null);
-  const query = useQuery(() => api.list('strategies', page, size, {}, search), [api, page, size, search]);
+  const [status,setStatus]=useState('all');
+  const query = useQuery(
+    () => api.list('strategies',page,size,status==='all'?{}:{status},search),
+    [api,page,size,search,status],
+  );
   return (
     <>
-      <div className="operational-toolbar">
-        <SearchInput
-          value={search}
-          onChange={(s) => {
-            setSearch(s);
-            setPage(0);
-          }}
-          placeholder="Buscar estratégia..."
-        />
-        {can('strategies.create') && (
-          <Button onClick={() => setEditing('new')}>
-            <Plus size={16} />
-            Nova estratégia
-          </Button>
-        )}
-      </div>
+      <GlobalFilters
+        fields={[{key:'status',label:'Situação',type:'select',defaultValue:'all',
+          options:[{value:'all',label:'Todas'},{value:'planned',label:'Planejada'},
+            {value:'active',label:'Em andamento'},{value:'completed',label:'Concluída'}]}]}
+        values={{status}} onApply={values=>{setStatus(values.status);setPage(0);}}
+        search={{value:search,onChange:v=>{setSearch(v);setPage(0);},
+          placeholder:'Buscar estratégia...'}}
+        actions={can('strategies.create')&&
+          <Button onClick={()=>setEditing('new')}><Plus size={16}/>Nova estratégia</Button>}
+      />
       <QueryState query={query} />
       {query.data && (
         <>
@@ -572,26 +572,27 @@ export function RealTasks() {
     selected = params.get('registro') || '',
         [search, setSearch] = useState(''),
     [editing, setEditing] = useState<TaskRow | 'new' | null>(null);
+  const [status,setStatus]=useState('all');
   const query = useQuery(
-    () => api.list('tasks', page, size, selected ? { id: selected } : {}, search),
-    [api, page, size, search, selected],
+    () => api.list('tasks',page,size,{
+      ...(selected?{id:selected}:{}),...(status==='all'?{}:{status}),
+    },search),
+    [api,page,size,search,selected,status],
   );
   return (
     <>
-      <div className="operational-toolbar">
-        <SearchInput
-          value={search}
-          onChange={(s) => {
-            setSearch(s);
-            setPage(0);
-          }}
-          placeholder="Buscar tarefa..."
-        />
-        <Button disabled={!can('tasks.create')} onClick={() => setEditing('new')}>
-          <Plus size={16} />
-          Nova tarefa
-        </Button>
-      </div>
+      <GlobalFilters
+        fields={[{key:'status',label:'Situação das tarefas',type:'select',defaultValue:'all',
+          options:[{value:'all',label:'Todas'},
+            {value:'todo',label:'A fazer'},{value:'doing',label:'Em andamento'},
+            {value:'done',label:'Concluídas'}]}]}
+        values={{status}} onApply={values=>{setStatus(values.status);setPage(0);}}
+        search={{value:search,onChange:v=>{setSearch(v);setPage(0);},
+          placeholder:'Buscar tarefa...'}}
+        actions={<Button disabled={!can('tasks.create')} onClick={()=>setEditing('new')}>
+          <Plus size={16}/>Nova tarefa
+        </Button>}
+      />
       {selected && (
         <Button
           variant="ghost"

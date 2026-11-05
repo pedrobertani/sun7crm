@@ -41,3 +41,18 @@
  .finance-toolbar .actions { width:100%; }
  .finance-table { min-width:590px; }
 }
+
+/* Indicadores compactos no telefone: quatro valores visíveis em uma única dobra. */
+@media(max-width:760px) {
+  .finance-page .kpis { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px; }
+  .finance-page .kpi { min-width:0; min-height:115px; padding:12px 10px; }
+  .finance-page .kpi-top { font-size:11px; gap:5px; align-items:flex-start; }
+  .finance-page .kpi-icon svg { width:16px; height:16px; }
+  .finance-page .kpi-value { font-size:clamp(16px,4.5vw,23px); margin-top:8px; overflow-wrap:anywhere; }
+  .finance-page .kpi-foot { font-size:9px; line-height:1.35; }
+  .finance-page .global-filters-actions { flex:1 1 auto; }
+}
+@media(max-width:380px) {
+  .finance-page .kpi { padding:10px 8px; }
+  .finance-page .kpi-value { font-size:16px; }
+}

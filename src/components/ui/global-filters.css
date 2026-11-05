@@ -1,0 +1,35 @@
+/* Filtro único e parametrizável: consistente em módulos comerciais e administrativos. */
+.global-filters { display:grid; gap:9px; min-width:0; }
+.global-filters-bar { display:flex; flex-wrap:wrap; align-items:center; gap:10px; min-width:0; }
+.global-filters-bar > .search { flex:1 1 240px; min-width:185px; max-width:none; margin:0; }
+.global-filters-trigger { display:inline-flex; gap:9px; align-items:center; justify-content:center; flex:none; white-space:nowrap; }
+.global-filters-count { display:grid; place-items:center; height:21px; min-width:21px; padding:0 4px; border-radius:999px; background:var(--primary); color:var(--surface); font-size:11px; font-weight:800; }
+.global-filters-actions { display:flex; align-items:center; justify-content:flex-end; flex-wrap:wrap; gap:8px; margin-left:auto; }
+.global-filters-active { display:flex; align-items:center; flex-wrap:wrap; gap:7px; min-width:0; }
+.global-filter-chip { gap:5px; display:inline-flex; align-items:center; max-width:100%; white-space:normal; overflow-wrap:anywhere; font-size:11px; }
+.global-filter-context { display:inline-flex; align-items:center; min-height:30px; padding:5px 10px; border-radius:999px; background:var(--soft); color:var(--muted); font-size:11px; font-weight:600; }
+.global-filters-active .btn-link { padding-inline:6px; white-space:nowrap; }
+.dialog-content.dialog-content-filter { left:auto; right:0; top:0; transform:none; width:min(460px,100vw); max-height:100dvh; height:100dvh; border-radius:14px 0 0 14px; }
+.dialog-content.dialog-content-filter .dialog-body { flex:1; padding:0; margin:0; display:flex; flex-direction:column; min-height:0; }
+.dialog-content.dialog-content-filter .global-filters-form { display:flex; flex-direction:column; gap:0; min-height:100%; flex:1; }
+.global-filters-fields { padding:22px; display:grid; align-content:start; gap:17px; flex:1; }
+.global-filters-fields .form-row { min-width:0; }
+.global-filters-fields :is(select,input) { width:100%; min-height:44px; }
+.global-filters-footer { display:grid; grid-template-columns:1fr 1fr; gap:10px; padding:16px 22px max(16px,env(safe-area-inset-bottom)); border-top:1px solid var(--line); background:var(--surface); position:sticky; bottom:0; z-index:1; }
+.global-filters-footer .btn { justify-content:center; min-height:44px; }
+@media(max-width:760px) {
+ .global-filters-bar > .search { min-width:0; flex:1 1 165px; }
+ .global-filters-trigger { min-height:44px; }
+ .global-filters-actions { flex:1 1 100%; justify-content:flex-start; margin-left:0; }
+ .global-filters-actions > .btn { flex:1 1 auto; }
+ .dialog-content.dialog-content-filter { inset:0; top:0; left:0; right:0; width:100vw; height:100dvh; max-height:100dvh; border:0; border-radius:0; transform:none; }
+ .dialog-content-filter .dialog-head { padding:18px; }
+ .dialog-content-filter .global-filters-fields { padding:18px; }
+ .dialog-content-filter .global-filters-footer { padding:13px 18px max(13px,env(safe-area-inset-bottom)); }
+}
+@media(max-width:380px) {
+ .global-filters-bar > .search { flex-basis:100%; }
+ .global-filters-trigger { flex:1; }
+}
+
+.global-filters-error { color:var(--danger); margin:0; padding:8px 22px; font-size:12px; line-height:1.55; }

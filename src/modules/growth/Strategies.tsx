@@ -5,7 +5,8 @@ import { RecordTitle } from '../../components/RecordTitle';
 import { useCrm } from '../../app/context';
 import type { Strategy } from '../../domain/types';
 import { currency, today, uid } from '../../lib/format';
-import { Heading, SearchInput, FormActions, FormError } from '../../components/shared';
+import { Heading, FormActions, FormError } from '../../components/shared';
+import { GlobalFilters } from '../../components/ui/global-filters';
 import { Input } from '../../components/ui/input';
 import { Button } from '../../components/ui/button';
 import { Modal } from '../../components/ui/modal';
@@ -124,13 +125,12 @@ export function Strategies() {
         </div>
       </div>
       <section className="card">
-        <div className="toolbar">
-          <SearchInput value={query} onChange={(v) => { setQuery(v); pages.setPage(0); }} placeholder="Buscar estratégia" />
-          <label className="growth-filter">
-            Mês
-            <Input type="month" value={month} onChange={(e) => { setMonth(e.target.value); pages.setPage(0); }} />
-          </label>
-        </div>
+        <GlobalFilters
+          fields={[{key:'month',label:'Mês de referência',type:'month',defaultValue:today().slice(0,7),pin:true}]}
+          values={{month}}
+          onApply={values=>{setMonth(values.month);pages.setPage(0);}}
+          search={{value:query,onChange:v=>{setQuery(v);pages.setPage(0);},placeholder:'Buscar estratégia'}}
+        />
         <div className="table-wrap">
           <table>
             <thead>

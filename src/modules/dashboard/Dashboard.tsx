@@ -1,4 +1,5 @@
 import { ViewSwitcher } from '../../components/ui/view-switcher';
+import { GlobalFilters } from '../../components/ui/global-filters';
 import { filterCompanies } from '../../domain/filters';
 import { CHART_COLORS } from '../../lib/themes';
 import { useState } from 'react';
@@ -112,16 +113,13 @@ export function CompanyDashboard() {
           'Acompanhe o movimento comercial da ' + (company.displayName || company.name) + '.'
         }
       >
-        <select
-          aria-label="Período do dashboard"
-          value={days}
-          onChange={(e) => setDays(e.target.value)}
-        >
-          <option value="7">Últimos 7 dias</option>
-          <option value="30">Últimos 30 dias</option>
-          <option value="90">Últimos 90 dias</option>
-        </select>
       </Heading>
+      <GlobalFilters
+        fields={[{key:'days',label:'Período do dashboard',type:'select',defaultValue:'30',pin:true,
+          options:[{value:'7',label:'Últimos 7 dias'},
+            {value:'30',label:'Últimos 30 dias'},{value:'90',label:'Últimos 90 dias'}]}]}
+        values={{days}} onApply={values=>setDays(values.days)}
+      />
       <ViewSwitcher
         className="dashboard-tabs"
         label="Áreas do dashboard"
@@ -392,27 +390,21 @@ export function AdminDashboardView({
         title="Visão da plataforma"
         description="Acompanhe sua carteira, novos clientes e os próximos vencimentos."
       >
-        <select
-          aria-label="Filtro de empresas"
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-        >
-          <option value="all">Todas as empresas</option>
-          <option value="active">Ativas</option>
-          <option value="upcoming">Vencem em até 7 dias</option>
-          <option value="new">Novas no período</option>
-          <option value="overdue">Com vencimento passado</option>
-        </select>
-        <select
-          aria-label="Período administrativo"
-          value={days}
-          onChange={(e) => setDays(e.target.value)}
-        >
-          <option value="7">Últimos 7 dias</option>
-          <option value="30">Últimos 30 dias</option>
-          <option value="90">Últimos 90 dias</option>
-        </select>
       </Heading>
+      <GlobalFilters fields={[
+        {key:'portfolio',label:'Carteira de empresas',type:'select',defaultValue:'all',
+          options:[{value:'all',label:'Todas as empresas'},
+            {value:'active',label:'Ativas'},
+            {value:'upcoming',label:'Vencem em até 7 dias'},
+            {value:'new',label:'Novas no período'},
+            {value:'overdue',label:'Com vencimento passado'}]},
+        {key:'days',label:'Período administrativo',type:'select',defaultValue:'30',
+          options:[{value:'7',label:'Últimos 7 dias'},
+            {value:'30',label:'Últimos 30 dias'},
+            {value:'90',label:'Últimos 90 dias'}]},
+      ]} values={{portfolio:filter,days}} onApply={values=>{
+        setFilter(values.portfolio);setDays(values.days);
+      }} />
       <div className="kpis">
         <Kpi
           label="Empresas ativas"
