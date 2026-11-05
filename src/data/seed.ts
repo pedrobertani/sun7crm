@@ -191,6 +191,8 @@ export function createSeed(): Snapshot {
       opportunity.confirmedSaleAt = shiftDate(date, index === 0 ? -2 : -11) + 'T12:00:00.000Z';
       opportunity.confirmedSaleOwnerId = company.id + '-seller';
       opportunity.confirmedSaleCents = opportunity.value;
+      const board = boards.find(b => b.id === opportunity.boardId);
+      if (board) opportunity.stageId = board.stages[board.stages.length - 1].id;
     });
   }
   // Pagamento integral, entrada parcial e parcela futura; despesas e estornos apenas fictícios.
