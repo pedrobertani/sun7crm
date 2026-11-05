@@ -185,7 +185,7 @@ export function RealFinance() {
   const saleById=new Map(sales.map(s=>[s.opportunity_id,s]));
   const selectedSalesForExpense=can('finance.company')?sales:sales.filter(s=>s.membership_id===company.membershipId);
   const filterFields:FilterField[] = [
-    {key:'month',label:'Mês de referência',type:'month',defaultValue:today().slice(0,7)},
+    {key:'month',label:'Mês de referência',type:'month',defaultValue:today().slice(0,7),pin:true},
     {key:'seller',label:'Vendedor',type:'select',defaultValue:'all',
       options:[{value:'all',label:'Todos os permitidos'},...labels.map(label=>({value:label,label}))]},
     {key:'product',label:'Produto ou serviço',type:'select',defaultValue:'all',
