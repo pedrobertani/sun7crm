@@ -141,7 +141,7 @@ export function DemoFinance() {
     description="Acesso exclusivo para usuários autorizados pelo gestor."/>;
   const methodOptions=financeMethods.map(x=><option key={x.value} value={x.value}>{x.label}</option>);
   const filterFields:FilterField[]=[
-    {key:'month',label:'Mês de referência',type:'month',defaultValue:today().slice(0,7)},
+    {key:'month',label:'Mês de referência',type:'month',defaultValue:today().slice(0,7),pin:true},
     {key:'seller',label:'Vendedor',type:'select',defaultValue:'all',
       options:[{value:'all',label:'Todos os autorizados'},
         ...[...new Set(sales.map(x=>x.seller_name_snapshot))].map(label=>({value:label,label}))]},
