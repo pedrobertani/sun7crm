@@ -166,7 +166,7 @@ export function KanbanGlobalFilters({
     day:next.day,month:next.month,year:next.year,from:next.from,to:next.to,
   });
   return <GlobalFilters className="kanban-global-filters"
-    fields={fields} values={value}
+    fields={fields} values={{...value}}
     onApply={next=>onChange(asPeriod(next))}
     validate={next=>kanbanDateRange(asPeriod(next))||next.mode==='all'
       ? null : 'Confira o período informado antes de aplicar o filtro.'}
