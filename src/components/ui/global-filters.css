@@ -30,3 +30,5 @@
  .global-filters-bar > .search { flex-basis:100%; }
  .global-filters-trigger { flex:1; }
 }
+
+.global-filters-error { color:var(--danger); margin:0; padding:8px 22px; font-size:12px; line-height:1.55; }
