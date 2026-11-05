@@ -10,7 +10,8 @@ import { WhatsAppButton } from '../../components/WhatsAppButton';
 import { Button } from '../../components/ui/button';
 import { ViewSwitcher } from '../../components/ui/view-switcher';
 import { Pagination, paginatedRows, usePagination } from '../../components/ui/pagination';
-import { Heading, SearchInput } from '../../components/shared';
+import { Heading } from '../../components/shared';
+import { GlobalFilters } from '../../components/ui/global-filters';
 import { demoActivityReport, idleDays, type ActivityRow, type ActorActivity } from './activity';
 export function activityDate(value: string | null) {
   if (value && /^\d{4}-\d{2}-\d{2}$/.test(value)) return dateLabel(value);
@@ -74,34 +75,20 @@ export function ActivityReportView({
       />
       {tab === 'contacts' && (
       <section className="card report-table-section">
-        <div className="toolbar activity-toolbar">
-          <div className="report-search-field">
-            <span className="report-filter-caption">Buscar</span>
-            <SearchInput value={query} onChange={(v) => { setQuery(v); list.setPage(0); }} placeholder="Buscar cliente ou telefone" />
-          </div>
-          <label>
-            Responsável
-            <select value={owner} onChange={(e) => { setOwner(e.target.value); list.setPage(0); }}>
-              <option value="">Toda a equipe</option>
-              {owners.map(([id, name]) => (
-                <option key={id} value={id}>
-                  {name}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label>
-            Sem atividade há
-            <select value={days} onChange={(e) => { setDays(e.target.value); list.setPage(0); }}>
-              <option value="">Todos os clientes</option>
-              {[3, 7, 15, 30].map((d) => (
-                <option key={d} value={d}>
-                  {d} dias ou mais
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
+        <GlobalFilters
+          fields={[
+            {key:'owner',label:'Responsável',type:'select',defaultValue:'',
+              options:[{value:'',label:'Toda a equipe'},
+                ...owners.map(([value,label])=>({value,label}))]},
+            {key:'days',label:'Sem atividade há',type:'select',defaultValue:'7',
+              options:[{value:'',label:'Todos os clientes'},
+                ...[3,7,15,30].map(n=>({value:String(n),label:n+' dias ou mais'}))]},
+          ]}
+          values={{owner,days}}
+          onApply={values=>{setOwner(values.owner);setDays(values.days);list.setPage(0);}}
+          search={{value:query,onChange:v=>{setQuery(v);list.setPage(0);},
+            placeholder:'Buscar cliente ou telefone'}}
+        />
         <div className="activity-description">
           <strong>{shown.length} clientes encontrados</strong>
         </div>
