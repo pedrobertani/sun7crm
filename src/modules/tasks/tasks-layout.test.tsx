@@ -41,11 +41,12 @@ describe('Tarefas — layout anterior aprovado e paginação', () => {
       expect(html).toContain(label);
     }
   });
-  it('não perde tarefas ao navegar 10/50/100 ou exibir Todas', () => {
+  it('não perde tarefas ao navegar 10/25/50/100 sem carga ilimitada', () => {
     const tasks = Array.from({ length: 305 }, (_, index) => ({ id: index + 1 }));
     expect(visibleKanbanRows(tasks, 10, 0).rows).toHaveLength(10);
+    expect(visibleKanbanRows(tasks, 25, 3).rows).toEqual(tasks.slice(75, 100));
     expect(visibleKanbanRows(tasks, 50, 3).rows).toEqual(tasks.slice(150, 200));
     expect(visibleKanbanRows(tasks, 100, 3).rows).toHaveLength(5);
-    expect(visibleKanbanRows(tasks, 'all', 5)).toEqual({ rows: tasks, page: 0, total: 305 });
+    expect(visibleKanbanRows(tasks, 100, 9)).toEqual({ rows: tasks.slice(300, 305), page: 3, total: 305 });
   });
 });
