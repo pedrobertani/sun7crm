@@ -7,6 +7,7 @@ import { RecordTitle } from '../../components/RecordTitle';
 import { Button } from '../../components/ui/button';
 import { Pagination, type PageSize } from '../../components/ui/pagination';
 import { Modal } from '../../components/ui/modal';
+import { GlobalFilters } from '../../components/ui/global-filters';
 import { currency, dateLabel } from '../../lib/format';
 import { getSupabaseClient } from '../../lib/supabase';
 import { BillingCommandError } from './subscription';
@@ -20,7 +21,6 @@ import {
   methodLabels,
   validHistoryDates,
   type Charge,
-  type ChargeFilter,
   type ChargeHistory,
   type PaymentMethod,
 } from './charges';
@@ -129,6 +129,15 @@ export function BillingHistory({
   }, [history, filters.offset, pageSize]);
   const updateFilter = (values: Partial<typeof filters>) =>
     setFilters((current) => ({ ...current, ...values, offset: 0 }));
+  useEffect(() => {
+    if (companyId) return;
+    const timer = window.setTimeout(() => {
+      const trimmed = draftQuery.trim();
+      setFilters(current => current.query === trimmed
+        ? current : {...current,query:trimmed,offset:0});
+    }, 400);
+    return () => window.clearTimeout(timer);
+  }, [companyId,draftQuery]);
   function open(charge: Charge) {
     setSelected(charge);
     setAction(null);
@@ -182,68 +191,21 @@ export function BillingHistory({
           </p>
         </div>
       </div>
-      <div className="billing-filters">
-        {!companyId && (
-          <form
-            className="billing-company-search"
-            onSubmit={(e) => {
-              e.preventDefault();
-              updateFilter({ query: draftQuery.trim() });
-            }}
-          >
-            <label>
-              Empresa
-              <input
-                value={draftQuery}
-                maxLength={160}
-                onChange={(e) => setDraftQuery(e.target.value)}
-                placeholder="Buscar empresa"
-              />
-            </label>
-            <Button variant="outline" type="submit">
-              Buscar
-            </Button>
-          </form>
-        )}
-        <label>
-          Vencimentos de
-          <input
-            type="date"
-            value={filters.from}
-            onChange={(e) => updateFilter({ from: e.target.value })}
-          />
-        </label>
-        <label>
-          Até
-          <input
-            type="date"
-            value={filters.to}
-            onChange={(e) => updateFilter({ to: e.target.value })}
-          />
-        </label>
-        <label>
-          Situação
-          <select
-            value={filters.status}
-            onChange={(e) => updateFilter({ status: e.target.value as ChargeFilter })}
-          >
-            {Object.entries(chargeLabels).map(([key, label]) => (
-              <option key={key} value={key}>
-                {label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <Button
-          variant="ghost"
-          onClick={() => {
-            setDraftQuery('');
-            setFilters(defaultHistoryFilters);
-          }}
-        >
-          Limpar filtros
-        </Button>
-      </div>
+      <GlobalFilters
+        fields={[
+          {key:'from',label:'Vencimentos de',type:'date',defaultValue:''},
+          {key:'to',label:'Até',type:'date',defaultValue:''},
+          {key:'status',label:'Situação',type:'select',defaultValue:'all',
+            options:Object.entries(chargeLabels).map(([value,label])=>({value,label}))},
+        ]}
+        values={{from:filters.from,to:filters.to,status:filters.status}}
+        onApply={values=>updateFilter({
+          from:values.from,to:values.to,status:values.status as typeof filters.status,
+        })}
+        search={!companyId?{
+          value:draftQuery,onChange:setDraftQuery,placeholder:'Buscar empresa',
+        }:undefined}
+      />
       {invalidDates && (
         <FormError message="A data inicial deve ser anterior ou igual à data final." />
       )}
