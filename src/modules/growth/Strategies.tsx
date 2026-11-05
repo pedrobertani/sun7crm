@@ -126,7 +126,7 @@ export function Strategies() {
       </div>
       <section className="card">
         <GlobalFilters
-          fields={[{key:'month',label:'Mês de referência',type:'month',defaultValue:today().slice(0,7)}]}
+          fields={[{key:'month',label:'Mês de referência',type:'month',defaultValue:today().slice(0,7),pin:true}]}
           values={{month}}
           onApply={values=>{setMonth(values.month);pages.setPage(0);}}
           search={{value:query,onChange:v=>{setQuery(v);pages.setPage(0);},placeholder:'Buscar estratégia'}}
