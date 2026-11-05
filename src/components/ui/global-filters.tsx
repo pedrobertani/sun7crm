@@ -22,15 +22,20 @@ export interface FilterField {
   step?: number;
   /** Oculta um filtro sem perder seu estado (ex.: situação só na aba de recebíveis). */
   visible?: boolean;
+  /** Regra declarativa: mostra o campo somente quando outro filtro assume os valores indicados. */
+  when?: {key: string; values: readonly string[]};
 }
 export type FilterValues = Record<string, string>;
 
 export function resetFilterValues(fields: readonly FilterField[]): FilterValues {
   return Object.fromEntries(fields.map(field => [field.key, field.defaultValue]));
 }
+export function filterFieldVisible(field:FilterField, values:FilterValues):boolean {
+  return field.visible!==false && (!field.when || field.when.values.includes(values[field.when.key] ?? ''));
+}
 export function activeFilterFields(fields: readonly FilterField[], values: FilterValues): FilterField[] {
-  return fields.filter(field =>
-    field.visible !== false && (values[field.key] ?? field.defaultValue) !== field.defaultValue);
+  return fields.filter(field => filterFieldVisible(field,values)
+    && (values[field.key] ?? field.defaultValue) !== field.defaultValue);
 }
 export function filterValueLabel(field: FilterField, value: string): string {
   if (field.type === 'select') return field.options?.find(option => option.value === value)?.label ?? value;
@@ -68,8 +73,8 @@ export function GlobalFilters({
   const [open,setOpen] = useState(false);
   const [draft,setDraft] = useState<FilterValues>({});
   const instance = useId();
-  const available = fields.filter(f => f.visible !== false);
-  const active = activeFilterFields(available,values);
+  const available = fields.filter(f => filterFieldVisible(f,draft));
+  const active = activeFilterFields(fields,values);
   const defaults = () => resetFilterValues(fields);
   const openPanel = () => { setDraft({...defaults(),...values}); setOpen(true); };
   const clearAll = () => onApply(patchFilterValues(fields,values,defaults()));
@@ -78,7 +83,7 @@ export function GlobalFilters({
     <div className="global-filters-bar">
       {search && <SearchInput value={search.value} onChange={search.onChange}
         placeholder={search.placeholder || 'Buscar...'} />}
-      {available.length>0 && <Button type="button" variant="outline"
+      {fields.some(field=>field.visible!==false) && <Button type="button" variant="outline"
         className="global-filters-trigger" aria-label={active.length ? label + ', ' + active.length + ' ativos' : label}
         aria-haspopup="dialog" onClick={openPanel}>
         <ListFilter size={18} aria-hidden="true"/>{label}
