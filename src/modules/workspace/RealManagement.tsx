@@ -84,7 +84,6 @@ export function RealDashboard() {
   }, [api, from, to]);
   return (
     <>
-      <DashboardPeriodFilter from={from} to={to} onFromChange={setFrom} onToChange={setTo} />
       {activeTab !== 'achievements' && <QueryState query={query} />}
       <div className="dashboard-tabs-row">
         <ViewSwitcher
@@ -97,7 +96,10 @@ export function RealDashboard() {
           label,
         }))}
         />
-        <Link className="operational-text-link" to="/app/funil">Abrir funil →</Link>
+        <div className="dashboard-toolbar-actions">
+          <DashboardPeriodFilter from={from} to={to} onFromChange={setFrom} onToChange={setTo} />
+          {commercialAllowed && <Link className="operational-text-link" to="/app/funil">Abrir funil →</Link>}
+        </div>
       </div>
       {activeTab === 'commercial' && can('goals.view') && <GoalFunnel view="commercial" month={goalsMonth} />}
       {activeTab === 'achievements' && can('goals.view') && <GoalFunnel view="medals" month={goalsMonth} />}
