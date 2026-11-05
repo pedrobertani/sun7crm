@@ -41,7 +41,6 @@ import { currency, initials, uid, today } from '../../lib/format';
 import type { BoardKind, Opportunity } from '../../domain/types';
 import {
   Heading,
-  SearchInput,
   Empty,
   FormError,
   FormActions,
