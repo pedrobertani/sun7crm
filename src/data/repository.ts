@@ -18,6 +18,7 @@ export class BrowserRepository implements CrmRepository {
       if (!isSnapshot(data)) throw Error('Formato incompatível');
       const examples = marketingSeed(data.companies);
       const defaultGoals=createSeed();
+      const refreshShowcase = (data.demoSeedVersion || 0) < 2;
       const demoChampion='aurora-champion';
       const seededShowcase=defaultGoals.opportunities.filter(o=>o.confirmedSaleOwnerId===demoChampion);
       // Migração aditiva: preserva os cadastros locais de versões anteriores.
@@ -32,30 +33,41 @@ export class BrowserRepository implements CrmRepository {
             { id: c.id + '-warm', companyId: c.id, name: 'Morno', color: '#eab308' },
             { id: c.id + '-hot', companyId: c.id, name: 'Quente', color: '#ef4444' },
           ]),
-        opportunities: [...data.opportunities.map((o) =>
-          o.labelIds
-            ? o
-            : {
+        opportunities: [...data.opportunities.map((o) => {
+          const base = defaultGoals.opportunities.find(item => item.id === o.id);
+          const enriched = refreshShowcase && base
+            ? {
                 ...o,
-                labelIds: (() => {
-                  const t = data.contacts.find((c) => c.id === o.contactId)?.temperature;
-                  return ['cold', 'warm', 'hot'].includes(t || '') && !data.labels
-                    ? [o.companyId + '-' + t]
-                    : [];
-                })(),
-              },
-        ),...seededShowcase.filter(o=>!data.opportunities.some(old=>old.id===o.id))],
+                catalogIds: o.catalogIds?.length ? o.catalogIds : base.catalogIds,
+                confirmedSaleAt: o.confirmedSaleAt || base.confirmedSaleAt,
+                confirmedSaleOwnerId: o.confirmedSaleOwnerId || base.confirmedSaleOwnerId,
+                confirmedSaleCents: o.confirmedSaleCents || base.confirmedSaleCents,
+              } : o;
+          if (enriched.labelIds) return enriched;
+          const t = data.contacts.find(c => c.id === o.contactId)?.temperature;
+          return {...enriched, labelIds: ['cold', 'warm', 'hot'].includes(t || '') && !data.labels
+            ? [o.companyId + '-' + t] : []};
+        }),...seededShowcase.filter(o=>!data.opportunities.some(old=>old.id===o.id))],
         goalPlans:Array.isArray(data.goalPlans)?data.goalPlans:(defaultGoals.goalPlans||[]).filter(p=>data.companies.some(c=>c.id===p.companyId)),
         employeeGoals:[...(Array.isArray(data.employeeGoals)?data.employeeGoals:(defaultGoals.employeeGoals||[]).filter(p=>data.companies.some(c=>c.id===p.companyId))),...(defaultGoals.employeeGoals||[]).filter(p=>p.memberId===demoChampion&&!data.employeeGoals?.some(old=>old.memberId===p.memberId&&old.month===p.month))],
         contactHistory: Array.isArray(data.contactHistory) ? data.contactHistory : [],
-        catalog: data.catalog || [],
-        ambassadorCampaigns: data.ambassadorCampaigns || [],
-        ambassadorPayments: data.ambassadorPayments || [],
+        demoSeedVersion: 2,
+        demoFinance: refreshShowcase ? {
+          terms: { ...(defaultGoals.demoFinance?.terms || {}), ...(data.demoFinance?.terms || {}) },
+          movements: mergeDemoRecords(data.demoFinance?.movements || [], defaultGoals.demoFinance?.movements || []),
+        } : data.demoFinance,
+        catalog: refreshShowcase
+          ? mergeDemoRecords(data.catalog || [], defaultGoals.catalog || []) : data.catalog || [],
+        ambassadorCampaigns: refreshShowcase
+          ? mergeDemoRecords(data.ambassadorCampaigns || [], defaultGoals.ambassadorCampaigns || []) : data.ambassadorCampaigns || [],
+        ambassadorPayments: refreshShowcase
+          ? mergeDemoRecords(data.ambassadorPayments || [], defaultGoals.ambassadorPayments || []) : data.ambassadorPayments || [],
         strategies: Array.isArray(data.strategies) ? data.strategies : examples.strategies,
         ambassadors: Array.isArray(data.ambassadors) ? data.ambassadors : examples.ambassadors,
-        ambassadorSales: Array.isArray(data.ambassadorSales)
-          ? data.ambassadorSales
-          : examples.ambassadorSales,
+        ambassadorSales: refreshShowcase
+          ? mergeDemoRecords(Array.isArray(data.ambassadorSales) ? data.ambassadorSales : examples.ambassadorSales,
+              defaultGoals.ambassadorSales)
+          : Array.isArray(data.ambassadorSales) ? data.ambassadorSales : examples.ambassadorSales,
       };
     } catch {
       this.storage.removeItem(KEY);
@@ -70,6 +82,10 @@ export class BrowserRepository implements CrmRepository {
     this.write(data);
     return data;
   }
+}
+function mergeDemoRecords<T extends { id: string }>(existing: T[], seed: T[]): T[] {
+  const ids = new Set(existing.map(item => item.id));
+  return [...existing, ...seed.filter(item => !ids.has(item.id))];
 }
 function isSnapshot(x: unknown): x is Snapshot {
   if (!x || typeof x !== 'object') return false;
