@@ -7,7 +7,8 @@ import { BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, CartesianGrid,
 import { Button } from '../../components/ui/button';
 import { Pagination, paginatedRows, usePagination } from '../../components/ui/pagination';
 import { ViewSwitcher } from '../../components/ui/view-switcher';
-import { Empty, Kpi, Panel, SearchInput } from '../../components/shared';
+import { Empty, Kpi, Panel } from '../../components/shared';
+import { GlobalFilters, type FilterField } from '../../components/ui/global-filters';
 import { currency, dateLabel, today } from '../../lib/format';
 import { CHART_COLORS } from '../../lib/themes';
 import { getSupabaseClient } from '../../lib/supabase';
@@ -183,36 +184,39 @@ export function RealFinance() {
   const sortedMovements=[...filteredMovements].sort((a,b)=>b.posted_on.localeCompare(a.posted_on));
   const saleById=new Map(sales.map(s=>[s.opportunity_id,s]));
   const selectedSalesForExpense=can('finance.company')?sales:sales.filter(s=>s.membership_id===company.membershipId);
+  const filterFields:FilterField[] = [
+    {key:'month',label:'Mês de referência',type:'month',defaultValue:today().slice(0,7)},
+    {key:'seller',label:'Vendedor',type:'select',defaultValue:'all',
+      options:[{value:'all',label:'Todos os permitidos'},...labels.map(label=>({value:label,label}))]},
+    {key:'product',label:'Produto ou serviço',type:'select',defaultValue:'all',
+      options:[{value:'all',label:'Todos'},...products.map(label=>({value:label,label}))]},
+    {key:'method',label:'Forma de pagamento',type:'select',defaultValue:'all',
+      options:[{value:'all',label:'Todas'},...financeMethods.map(x=>({value:x.value,label:x.label}))]},
+    {key:'status',label:'Situação do recebível',type:'select',defaultValue:'all',
+      visible:tab==='receivables',
+      options:[{value:'all',label:'Todas'},{value:'pendente',label:'Pendente'},
+        {value:'parcial',label:'Parcial'},{value:'recebido',label:'Recebido'},
+        {value:'vencido',label:'Vencido'}]},
+  ];
   const reload=()=>{
     setSaleDetail(null);setExpenseEdit(null);setCorrection(null);
     refresh();query.retry();notice('Financeiro atualizado.');
   };
   return <div className="finance-page">
-    <div className="finance-toolbar">
-      <div className="actions">
-        <label className="form-row">Mês de referência
-          <input type="month" value={month} onChange={e=>{setMonth(e.target.value);pages.setPage(0);}}/>
-        </label>
-        <label className="form-row">Vendedor
-          <select aria-label="Filtrar vendedor" value={seller} onChange={e=>{setSeller(e.target.value);pages.setPage(0);}}>
-            <option value="all">Todos os permitidos</option>
-            {labels.map(n=><option key={n} value={n}>{n}</option>)}
-          </select>
-        </label>
-        <label className="form-row">Produto ou serviço
-          <select value={product} onChange={e=>{setProduct(e.target.value);pages.setPage(0);}}>
-            <option value="all">Todos</option>
-            {products.map(n=><option key={n} value={n}>{n}</option>)}
-          </select>
-        </label>
-        <label className="form-row">Forma de pagamento
-          <select value={method} onChange={e=>{setMethod(e.target.value);pages.setPage(0);}}>
-            <option value="all">Todas</option>
-            {financeMethods.map(m=><option key={m.value} value={m.value}>{m.label}</option>)}
-          </select>
-        </label>
-      </div>
-      <div className="actions">
+    <GlobalFilters
+      fields={filterFields}
+      values={{month,seller,product,method,status}}
+      onApply={v=>{
+        setMonth(v.month);
+        setSeller(v.seller);
+        setProduct(v.product);
+        setMethod(v.method);
+        setStatus(v.status);
+        pages.setPage(0);
+      }}
+      search={{value:search,onChange:v=>{setSearch(v);pages.setPage(0);},
+        placeholder:'Buscar cliente, vendedor, item ou lançamento...'}}
+      actions={<>
         {can('finance.expense')&&<Button onClick={()=>setExpenseEdit('new')}><Plus size={16}/>Nova despesa</Button>}
         {can('finance.export')&&<Button variant="outline" disabled={exporting} onClick={()=>{
           if(exporting)return;
@@ -220,12 +224,10 @@ export function RealFinance() {
           void exportFinanceXlsx(sortedMovements,sales).catch(()=>setExportError('Falha ao gerar o Excel.'))
             .finally(()=>setExporting(false));
         }}><Download size={16}/>Exportar Excel</Button>}
-      </div>
-    </div>
+      </>}
+    />
     <QueryState query={query}/>
     {exportError&&<p role="alert" className="form-error">{exportError}</p>}
-    <SearchInput value={search} onChange={v=>{setSearch(v);pages.setPage(0);}}
-      placeholder="Buscar cliente, vendedor, item ou lançamento..."/>
     <div className="kpis">
       <Kpi label="Vendas fechadas" value={currency(periodClosed)}
         foot="Vendas confirmadas no mês · não são recebimentos" icon={<CheckCircle2 size={19}/>}/>
@@ -266,17 +268,6 @@ export function RealFinance() {
       </Panel>
     </>}
     {tab==='receivables'&&<Panel title="Contas a receber" description="Vencimentos e pagamentos parciais; não se confunde com receita recebida.">
-      <div className="finance-actions">
-        <label className="form-row">Situação
-          <select value={status} onChange={e=>{setStatus(e.target.value);pages.setPage(0);}}>
-            <option value="all">Todas</option>
-            <option value="pendente">Pendente</option>
-            <option value="parcial">Parcial</option>
-            <option value="recebido">Recebido</option>
-            <option value="vencido">Vencido</option>
-          </select>
-        </label>
-      </div>
       <div className="table-wrap"><table className="finance-table"><thead><tr>
         <th>Vencimento</th><th>Cliente / vendedor</th><th>Parcela</th>
         <th>Valor</th><th>Recebido</th><th>Saldo</th><th>Situação</th>
