@@ -469,6 +469,41 @@ export class OperationalBackend {
       hasMore: (page + 1) * pageSize < result.count,
     };
   }
+  /**
+   * Busca multi-critério dos cards. Todas as condições, RLS e contagem exata são
+   * processadas no PostgreSQL ANTES do LIMIT/OFFSET; nenhuma carga ilimitada.
+   */
+  async searchKanbanCards(input:{
+    boardId:string;stageId:string;page:number;pageSize:10|25|50|100;
+    search:string;createdBetween?:{from:string;until:string};
+    labelIds:string[];catalogIds:string[];
+    ownerId?:string;temperature?:'unclassified'|'cold'|'warm'|'hot';closed?:boolean;
+  }):Promise<Page<CardRow>> {
+    if(!Number.isInteger(input.page)||input.page<0||input.page>100000
+      ||![10,25,50,100].includes(input.pageSize)
+      ||input.labelIds.length>30||input.catalogIds.length>30)
+      throw new BackendError('Filtros ou paginação inválidos.','INVALID_FILTER','validation');
+    const p_board=uuid(input.boardId),p_stage=uuid(input.stageId);
+    const p_label_ids=input.labelIds.map(uuid),p_catalog_ids=input.catalogIds.map(uuid);
+    const p_owner=input.ownerId?uuid(input.ownerId):null;
+    const response=await this.rpc<{rows:CardRow[];total:number}>(
+      'crm_search_kanban_cards',{
+        p_board,p_stage,p_page:input.page,p_page_size:input.pageSize,
+        p_search:input.search.trim().slice(0,100),
+        p_from:input.createdBetween?.from||null,
+        p_until:input.createdBetween?.until||null,
+        p_label_ids,p_catalog_ids,p_owner,
+        p_temperature:input.temperature||null,
+        p_closed:input.closed??null,
+      },
+    );
+    if(!Array.isArray(response.rows)||!Number.isSafeInteger(response.total)||response.total<0)
+      throw new BackendError('Resposta de paginação inválida.','INVALID_PAGE','validation');
+    return {
+      rows:response.rows,total:response.total,page:input.page,pageSize:input.pageSize,
+      hasMore:(input.page+1)*input.pageSize<response.total,
+    };
+  }
   async get<K extends keyof Resources>(resource: K, id: string): Promise<Resources[K]> {
     const page = await this.list(resource, 0, 1, { id: uuid(id) } as Partial<
       Record<keyof Resources[K], string>
