@@ -96,7 +96,7 @@ export function RealDashboard() {
           label,
         }))}
         />
-        <div className="dashboard-toolbar-actions">
+        <div className="dashboard-toolbar-actions" style={{display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 12, flexWrap: 'wrap', marginLeft: 'auto'}}>
           <DashboardPeriodFilter from={from} to={to} onFromChange={setFrom} onToChange={setTo} />
           {commercialAllowed && <Link className="operational-text-link" to="/app/funil">Abrir funil →</Link>}
         </div>
