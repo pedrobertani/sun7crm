@@ -25,13 +25,13 @@ describe('Kanban e gamificação de vendas',()=>{
  it('não exclui etapa com uma venda confirmada',()=>{
   const seed=createSeed();
   const board=seed.boards.find(b=>b.id==='aurora-leads')!;
-  const sale=seed.opportunities.find(o=>o.confirmedSaleAt&&o.companyId==='aurora'&&o.stageId!=='aurora-leads-0')!;
+  const sale=seed.opportunities.find(o=>o.confirmedSaleAt&&o.companyId==='aurora'&&o.confirmedSaleOwnerId==='aurora-champion'&&o.stageId!=='aurora-leads-0')!;
   expect(()=>removeStage(board,seed.opportunities,sale.stageId,board.stages[0].id)).toThrow('vendas confirmadas');
  });
  it('edição do card reaberto cancela venda contabilizada e não cria venda por si só',()=>{
   const seed=createSeed();
   const session={role:'manager' as const,companyId:'aurora',memberId:'aurora-manager'};
-  const sale=seed.opportunities.find(o=>o.confirmedSaleAt&&o.companyId==='aurora'&&o.stageId!=='aurora-leads-0')!;
+  const sale=seed.opportunities.find(o=>o.confirmedSaleAt&&o.companyId==='aurora'&&o.confirmedSaleOwnerId==='aurora-champion'&&o.stageId!=='aurora-leads-0')!;
   const result=saveCard(seed,session,{...sale,stageId:'aurora-leads-0'}).opportunities.find(o=>o.id===sale.id)!;
   expect(result.confirmedSaleAt).toBeUndefined();
   expect(result.confirmedSaleOwnerId).toBeUndefined();
