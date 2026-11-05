@@ -456,7 +456,7 @@ export function Kanban() {
                     </div>
                   )}
                 </div>
-                {pageSize !== 'all' && (
+                {(
                   <div className="kanban-column-pagination">
                     <Pagination
                       page={stagePage} size={pageSize} total={rows.length}
