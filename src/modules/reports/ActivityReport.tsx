@@ -80,7 +80,7 @@ export function ActivityReportView({
             {key:'owner',label:'Responsável',type:'select',defaultValue:'',
               options:[{value:'',label:'Toda a equipe'},
                 ...owners.map(([value,label])=>({value,label}))]},
-            {key:'days',label:'Sem atividade há',type:'select',defaultValue:'7',
+            {key:'days',label:'Sem atividade há',type:'select',defaultValue:'7',pin:true,
               options:[{value:'',label:'Todos os clientes'},
                 ...[3,7,15,30].map(n=>({value:String(n),label:n+' dias ou mais'}))]},
           ]}
