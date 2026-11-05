@@ -265,7 +265,7 @@ export function Tasks() {
                           Adicionar tarefa
                         </Button>
                       </div>
-                      {boardSize !== 'all' && rows.length > boardSize && (
+                      {rows.length > boardSize && (
                         <div className="kanban-column-pagination">
                           <Pagination
                             page={visible.page} size={boardSize} total={rows.length}
