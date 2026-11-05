@@ -19,7 +19,8 @@ import {
   type TaskStatus,
 } from '../../domain/tasks';
 import { today, dateLabel, uid, initials } from '../../lib/format';
-import { Heading, SearchInput, Empty, FormActions, FormError } from '../../components/shared';
+import { Heading, Empty, FormActions, FormError } from '../../components/shared';
+import { GlobalFilters } from '../../components/ui/global-filters';
 import { Button } from '../../components/ui/button';
 import { Modal } from '../../components/ui/modal';
 export function Tasks() {
@@ -143,20 +144,15 @@ export function Tasks() {
         <span className="muted result-count">{tasks.length} tarefas</span>
       </div>
       <div className={view === 'lista' ? 'card' : 'tasks-board-area'}>
-        <div className={'toolbar ' + (view === 'quadro' ? 'tasks-filterbar' : 'tasks-list-filterbar')}>
-          <TasksSegmented
-            label="Situação das tarefas"
-            value={filter}
-            onValueChange={(value) => changeParam('status', value)}
-            items={[
-              { value: 'all', label: 'Todas' },
-              { value: 'pending', label: 'Pendentes' },
-              { value: 'overdue', label: 'Atrasadas' },
-              { value: 'done', label: 'Concluídas' },
-            ]}
-          />
-          <SearchInput value={query} onChange={(v) => { setQuery(v); pages.setPage(0); setBoardPages({}); }} placeholder="Buscar tarefa" />
-        </div>
+        <GlobalFilters
+          fields={[{key:'status',label:'Situação das tarefas',type:'select',defaultValue:'all',
+            options:[{value:'all',label:'Todas'},{value:'pending',label:'Pendentes'},
+              {value:'overdue',label:'Atrasadas'},{value:'done',label:'Concluídas'}]}]}
+          values={{status:filter}}
+          onApply={values=>{changeParam('status',values.status);setBoardPages({});}}
+          search={{value:query,onChange:v=>{setQuery(v);pages.setPage(0);setBoardPages({});},
+            placeholder:'Buscar tarefa'}}
+        />
         {view === 'quadro' ? (
           <>
             <div className="kanban-scroll">
