@@ -2,7 +2,7 @@
 -- INVOKER aplica RLS de oportunidades, contatos e relações por empresa.
 begin;
 create or replace function public.crm_search_kanban_cards(
-  p_company uuid, p_board uuid, p_stage uuid default null,
+  p_company uuid, p_board uuid, p_stage uuid default null, p_contact uuid default null,
   p_page integer default 0, p_page_size integer default 10,
   p_search text default '', p_from timestamptz default null, p_until timestamptz default null,
   p_label_ids uuid[] default '{}', p_catalog_ids uuid[] default '{}',
@@ -31,6 +31,7 @@ begin
     from public.crm_opportunities o
     join public.crm_contacts c on c.company_id=o.company_id and c.id=o.contact_id
     where o.company_id=p_company and o.board_id=p_board
+      and (p_contact is null or o.contact_id=p_contact)
       and (p_stage is null or o.stage_id=p_stage)
       and (p_from is null or (o.created_at>=p_from and o.created_at<p_until))
       and (p_owner is null or c.owner_membership_id=p_owner)
@@ -62,7 +63,7 @@ begin
 end;
 $$;
 revoke all on function public.crm_search_kanban_cards(
- uuid,uuid,uuid,integer,integer,text,timestamptz,timestamptz,uuid[],uuid[],uuid,text,boolean
+ uuid,uuid,uuid,uuid,integer,integer,text,timestamptz,timestamptz,uuid[],uuid[],uuid,text,boolean
 ) from public,anon,authenticated,service_role;
 grant execute on function public.crm_search_kanban_cards(
  uuid,uuid,uuid,integer,integer,text,timestamptz,timestamptz,uuid[],uuid[],uuid,text,boolean
