@@ -13,6 +13,7 @@ import { useNavigate } from 'react-router-dom';
 import { useCardDrag } from '../../hooks/useCardDrag';
 import { readPeriod } from '../../domain/filters';
 import { KanbanGlobalFilters, initialKanbanPeriod, matchesKanbanPeriod, type KanbanPeriod } from './period-filter';
+import { cardFacetFields,matchDemoCardFacets,emptyCardFacets,type CardFacetValues } from './card-filters';
 import { Input } from '../../components/ui/input';
 import { useState, type FormEvent } from 'react';
 import { KanbanScroll } from '../../components/ui/kanban-scroll';
@@ -90,6 +91,7 @@ export function Kanban() {
   const strategies = data.strategies.filter((s) => s.companyId === session.companyId);
   const [query, setQuery] = useState('');
   const [stagePages, setStagePages] = useState<Record<string, number>>({});
+  const [facets,setFacets]=useState<CardFacetValues>(emptyCardFacets);
   const [pageSize, setPageSize] = useState<KanbanPageSize>(10);
   const changePageSize = (size: KanbanPageSize) => { setPageSize(size); setStagePages({}); };
   const [historyId, setHistoryId] = useState('');
@@ -106,19 +108,16 @@ export function Kanban() {
     kind: 'sale' | 'other';
   } | null>(null);
   const contacts = visibleContacts(data, session);
-  const opps = data.opportunities
-    .filter(
-      (o) =>
-        matchesKanbanPeriod(o.createdAt, dateFilter) &&
-        o.boardId === board.id &&
-        contacts.some((c) => c.id === o.contactId),
-    )
-    .filter((o) =>
-      contacts
-        .find((c) => c.id === o.contactId)
-        ?.name.toLocaleLowerCase()
-        .includes(query.toLocaleLowerCase()),
-    );
+  const normalized=query.trim().toLocaleLowerCase('pt-BR');
+  const opps=data.opportunities.filter(o=>{
+    const contact=contacts.find(c=>c.id===o.contactId);
+    return o.boardId===board.id && matchesKanbanPeriod(o.createdAt,dateFilter)
+      && matchDemoCardFacets(o,contact,facets,session.memberId)
+      && (!normalized||[contact?.name||'',contact?.phone||'',o.title||'']
+        .join(' ').toLocaleLowerCase('pt-BR').includes(normalized));
+  });
+  const visibleStages=facets.stage==='all'?board.stages:
+    board.stages.filter(s=>s.id===facets.stage);
   const manager = session.role === 'manager';
   const movable = manager || session.role === 'seller';
   function move(id: string, stage: string) {
@@ -330,12 +329,25 @@ export function Kanban() {
           )}
         </div>
         <KanbanGlobalFilters value={dateFilter} onChange={updateDateFilter}
+          facetFields={cardFacetFields({
+            stages:board.stages,labels,
+            catalog:(data.catalog||[]).filter(item=>item.companyId===session.companyId),
+            team:session.role==='manager'||(data.members.find(m=>m.id===session.memberId)?.permissions
+              ||legacyPermissions(session.role)).keys.includes('team.view')
+              ?data.members.filter(m=>m.companyId===session.companyId):[],
+          })}
+          facetValues={facets}
+          onFacetChange={values=>{
+            setFacets({stage:values.stage,labels:values.labels,catalog:values.catalog,
+              owner:values.owner,temperature:values.temperature,status:values.status});
+            setStagePages({});
+          }}
           search={query} onSearchChange={value=>{setQuery(value);setStagePages({});}}
-          placeholder="Buscar no quadro" />
+          placeholder="Buscar título ou nome do cliente..." />
       </div>
       <KanbanScroll key={board.id} label="Colunas do funil">
         <div className="kanban-board">
-          {board.stages.map((stage) => {
+          {visibleStages.map((stage) => {
             const rows = opps.filter((o) => o.stageId === stage.id);
             const visible = visibleKanbanRows(rows, pageSize, stagePages[stage.id] || 0);
             const stagePage = visible.page;
