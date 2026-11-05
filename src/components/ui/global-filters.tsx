@@ -38,6 +38,7 @@ export function filterSelectedValues(value:string,max=30):string[] {
 }
 export function toggleFilterSelection(value:string,id:string):string {
   const selected=filterSelectedValues(value);
+  if(!selected.includes(id)&&selected.length>=30) return JSON.stringify(selected);
   return JSON.stringify(selected.includes(id)?selected.filter(x=>x!==id):[...selected,id]);
 }
 
