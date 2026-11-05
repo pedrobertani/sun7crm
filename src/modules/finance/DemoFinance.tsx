@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { BarChart3, Plus, Wallet, Clock3, CheckCircle2, ArrowUpRight } from 'lucide-react';
 import { useCrm } from '../../app/context';
@@ -54,6 +54,7 @@ export function DemoFinance() {
   const [error,setError]=useState('');
   const [graph,setGraph]=useState<'bars'|'line'|'pie'>('bars');
   const pages=usePagination();
+  useEffect(()=>pages.setPage(0),[tab,movementType]);
   const termsMap=data.demoFinance?.terms||{};
   const moves=data.demoFinance?.movements||[];
   const sales:FinanceSale[]=data.opportunities.filter(o=>
@@ -163,7 +164,7 @@ export function DemoFinance() {
         {value:'vencido',label:'Vencido'}]},
   ];
   const movementRows=period.filter(m=>(tab!=='expenses'||m.kind==='expense')
-    &&(tab!=='movements'||movementType!=='income'||m.kind==='income'));
+    &&(tab!=='movements'||movementType!=='income'||m.kind==='income'||m.kind==='refund'));
   return <div className="finance-page">
     <Heading eyebrow="DEMONSTRAÇÃO · DADOS FICTÍCIOS" title="Financeiro"
       description="Vendas confirmadas geram recebíveis. Registre entradas e saídas separadamente."/>
