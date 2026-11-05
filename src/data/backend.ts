@@ -474,7 +474,7 @@ export class OperationalBackend {
    * processadas no PostgreSQL ANTES do LIMIT/OFFSET; nenhuma carga ilimitada.
    */
   async searchKanbanCards(input:{
-    boardId:string;stageId:string;page:number;pageSize:10|25|50|100;
+    boardId:string;stageId:string;contactId?:string;page:number;pageSize:10|25|50|100;
     search:string;createdBetween?:{from:string;until:string};
     labelIds:string[];catalogIds:string[];
     ownerId?:string;temperature?:'unclassified'|'cold'|'warm'|'hot';closed?:boolean;
@@ -488,7 +488,8 @@ export class OperationalBackend {
     const p_owner=input.ownerId?uuid(input.ownerId):null;
     const response=await this.rpc<{rows:CardRow[];total:number}>(
       'crm_search_kanban_cards',{
-        p_board,p_stage,p_page:input.page,p_page_size:input.pageSize,
+        p_board,p_stage,p_contact:input.contactId?uuid(input.contactId):null,
+        p_page:input.page,p_page_size:input.pageSize,
         p_search:input.search.trim().slice(0,100),
         p_from:input.createdBetween?.from||null,
         p_until:input.createdBetween?.until||null,
