@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { GlobalFilters, activeFilterFields, filterValueLabel, patchFilterValues,
-  resetFilterValues, type FilterField } from './global-filters';
+  resetFilterValues,filterSelectedValues,toggleFilterSelection,type FilterField } from './global-filters';
 
 const fields: FilterField[] = [
   {key:'month',label:'Mês de referência',type:'month',defaultValue:'2026-11'},
@@ -66,6 +66,17 @@ describe('GlobalFilters, o mesmo componente para todo o CRM', () => {
     expect(html).not.toContain('global-filters-count');
     expect(html).not.toContain('Remover filtro');
     expect(html).not.toContain('Limpar filtros');
+  });
+  it('seleção múltipla mantém escolhas combinadas e chips legíveis',()=>{
+    const field:FilterField={key:'labels',label:'Etiquetas',type:'multi-select',defaultValue:'[]',
+      options:[{value:'vip',label:'VIP'},{value:'retorno',label:'Retorno'},{value:'prioridade',label:'Prioridade'}]};
+    const chosen=toggleFilterSelection(toggleFilterSelection('[]','vip'),'retorno');
+    expect(filterSelectedValues(chosen)).toEqual(['vip','retorno']);
+    expect(filterValueLabel(field,chosen)).toBe('VIP, Retorno');
+    expect(activeFilterFields([field],{labels:chosen})).toHaveLength(1);
+    expect(toggleFilterSelection(chosen,'vip')).toBe('["retorno"]');
+    expect(filterSelectedValues('{"invalid":true}')).toEqual([]);
+    expect(filterSelectedValues('malformed')).toEqual([]);
   });
   it('continua acessível quando a tela só precisa de busca e não de filtros avançados', () => {
     const html=renderToStaticMarkup(<GlobalFilters fields={[]} values={{}}
