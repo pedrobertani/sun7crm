@@ -7,6 +7,8 @@ import { Input } from '../../components/ui/input';
 import { Modal } from '../../components/ui/modal';
 import { CurrencyInput } from '../../components/currency-input';
 import { Empty, SearchInput, TemperatureBadge } from '../../components/shared';
+import { GlobalFilters } from '../../components/ui/global-filters';
+import { temperatureLabels } from '../../domain/config';
 import { RecordTitle } from '../../components/RecordTitle';
 import { WhatsAppButton } from '../../components/WhatsAppButton';
 import type { ContactRow, CatalogRow, LabelRow, StrategyRow, TaskRow } from '../../data/backend';
@@ -38,22 +40,25 @@ export function RealContacts() {
   const     [search, setSearch] = useState(''),
     [editing, setEditing] = useState<ContactRow | 'new' | null>(null),
     [history, setHistory] = useState<ContactRow | null>(null);
+  const [temperature,setTemperature]=useState('all');
   const query = useQuery(
-    () => api.list('contacts', page, size, selected ? { id: selected } : {}, search),
-    [api, page, size, search, selected],
+    () => api.list('contacts',page,size,{
+      ...(selected?{id:selected}:{}),
+      ...(temperature==='all'?{}:{temperature}),
+    },search),
+    [api,page,size,search,selected,temperature],
   );
   return (
     <>
-      <div className="operational-toolbar">
-        <SearchInput
-          value={search}
-          onChange={(s) => {
-            setSearch(s);
-            setPage(0);
-          }}
-          placeholder="Buscar nome ou telefone..."
-        />
-        <div className="actions">
+      <GlobalFilters
+        fields={[{key:'temperature',label:'Temperatura',type:'select',defaultValue:'all',
+          options:[{value:'all',label:'Todas as temperaturas'},
+            ...Object.entries(temperatureLabels).map(([value,label])=>({value,label}))]}]}
+        values={{temperature}}
+        onApply={values=>{setTemperature(values.temperature);setPage(0);}}
+        search={{value:search,onChange:v=>{setSearch(v);setPage(0);},
+          placeholder:'Buscar nome ou telefone...'}}
+        actions={<>
           <ContactTransfer
             key={company.id + company.membershipId}
             canImport={can('contacts.import')}
@@ -77,8 +82,8 @@ export function RealContacts() {
               Novo contato
             </Button>
           )}
-        </div>
-      </div>
+        </>}
+      />
       {selected && (
         <Button
           variant="ghost"
