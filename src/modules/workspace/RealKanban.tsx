@@ -2,7 +2,7 @@ import { ViewSwitcher } from '../../components/ui/view-switcher';
 import { KanbanScroll } from '../../components/ui/kanban-scroll';
 import { Pagination } from '../../components/ui/pagination';
 import { KanbanSizeControl, type KanbanPageSize } from '../kanban/page-size';
-import { KanbanPeriodFilter, initialKanbanPeriod, kanbanDateRange, type KanbanPeriod } from '../kanban/period-filter';
+import { KanbanGlobalFilters, initialKanbanPeriod, kanbanDateRange, type KanbanPeriod } from '../kanban/period-filter';
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
@@ -20,7 +20,7 @@ import { Button } from '../../components/ui/button';
 import { Modal } from '../../components/ui/modal';
 import { Input } from '../../components/ui/input';
 import { CurrencyInput } from '../../components/currency-input';
-import { Empty, FormError, SearchInput } from '../../components/shared';
+import { Empty, FormError } from '../../components/shared';
 import { WhatsAppButton } from '../../components/WhatsAppButton';
 import type {
   BoardRow,
@@ -294,14 +294,13 @@ export function RealKanban() {
               )}
             </div>
             {board && (
-              <div className="kanban-filterbar">
-                <SearchInput
-                  value={search}
-                  onChange={(value) => { setSearch(value); setStagePages({}); }}
-                  placeholder="Buscar pelo título do card..."
-                />
-                <KanbanPeriodFilter value={dateFilter} onChange={updateDateFilter} />
-              </div>
+              <KanbanGlobalFilters
+                value={dateFilter}
+                onChange={updateDateFilter}
+                search={search}
+                onSearchChange={value=>{setSearch(value);setStagePages({});}}
+                placeholder="Buscar pelo título do card..."
+              />
             )}
           </div>
           {board ? (
