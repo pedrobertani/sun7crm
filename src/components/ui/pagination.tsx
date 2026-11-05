@@ -2,15 +2,16 @@ import { useState } from 'react';
 import { Button } from './button';
 import './pagination.css';
 
-export type PageSize = 10 | 50 | 100;
-export const PAGE_SIZES: PageSize[] = [10, 50, 100];
+export const PAGE_SIZES = [10, 25, 50, 100] as const;
+export type PageSize = typeof PAGE_SIZES[number];
 export const CAMPAIGN_PAGE_SIZE = 10;
 
 /** Shared state: reset the page when the user changes the page size or a filter. */
 export function usePagination(initialSize: PageSize = 10) {
   const [page, setPage] = useState(0);
-  const [size, setSizeState] = useState<PageSize>(initialSize);
+  const [size, setSizeState] = useState<PageSize>(PAGE_SIZES.includes(initialSize) ? initialSize : 10);
   const setSize = (next: PageSize) => {
+    if (!PAGE_SIZES.includes(next)) return;
     setSizeState(next);
     setPage(0);
   };
@@ -18,8 +19,9 @@ export function usePagination(initialSize: PageSize = 10) {
 }
 
 export function paginatedRows<T>(rows: T[], page: number, size: number): T[] {
-  const safePage = Math.min(Math.max(0, page), Math.max(0, Math.ceil(rows.length / size) - 1));
-  return rows.slice(safePage * size, (safePage + 1) * size);
+  const safeSize = PAGE_SIZES.includes(size as PageSize) ? size : 10;
+  const safePage = Math.min(Math.max(0, Number.isFinite(page) ? Math.trunc(page) : 0), Math.max(0, Math.ceil(rows.length / safeSize) - 1));
+  return rows.slice(safePage * safeSize, (safePage + 1) * safeSize);
 }
 
 /** Repeatable lists always show the page-size selector, even for a single page. */
@@ -50,7 +52,10 @@ export function Pagination({
           Exibir
           <select
             value={size}
-            onChange={(e) => onSizeChange(Number(e.target.value) as PageSize)}
+            onChange={(e) => {
+              const selected = Number(e.target.value);
+              if (PAGE_SIZES.includes(selected as PageSize)) onSizeChange(selected as PageSize);
+            }}
             aria-label="Registros por página"
             disabled={loading}
           >
