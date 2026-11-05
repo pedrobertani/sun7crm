@@ -30,6 +30,27 @@ describe('Contrato do ambiente real', () => {
     expect(requested!.searchParams.has('or')).toBe(false);
     expect(requested!.searchParams.has('and')).toBe(false);
   });
+  it('envia facetas como parâmetros tipados sem construir SQL no navegador',async()=>{
+    const rpc=vi.fn().mockResolvedValue({data:{rows:[{id:id(9)}],total:24},error:null});
+    const api=new OperationalBackend({rpc} as unknown as SupabaseClient,id(100));
+    const result=await api.searchKanbanCards({
+      boardId:id(3001),stageId:id(3101),page:1,pageSize:10,
+      search:"Ana; --",labelIds:[id(5501)],catalogIds:[id(5502)],
+      ownerId:id(12),temperature:'hot',closed:false,
+    });
+    expect(result).toEqual({rows:[{id:id(9)}],total:24,page:1,pageSize:10,hasMore:true});
+    expect(rpc).toHaveBeenCalledWith('crm_search_kanban_cards',expect.objectContaining({
+      p_company:id(100),p_board:id(3001),p_stage:id(3101),
+      p_page:1,p_page_size:10,p_search:'Ana; --',
+      p_label_ids:[id(5501)],p_catalog_ids:[id(5502)],
+      p_owner:id(12),p_temperature:'hot',p_closed:false,
+    }));
+    await expect(api.searchKanbanCards({
+      boardId:id(3001),stageId:id(3101),page:0,pageSize:1000 as 10,
+      search:'',labelIds:[],catalogIds:[],
+    })).rejects.toMatchObject({code:'INVALID_FILTER'});
+    expect(rpc).toHaveBeenCalledTimes(1);
+  });
   it('mantém o escopo da empresa na busca paginada e escapa curingas da busca', async () => {
     const calls: unknown[][] = [];
     const query = {
